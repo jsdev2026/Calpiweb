@@ -7,3 +7,5 @@ export const ORDER_MARGIN_RATIO = 0.1;
 export const WASTE_WARNING_THRESHOLD = 15;
 
 export const WALL_THICKNESS_MM = 100;
+
+export const DOOR_DEFAULT_WIDTH_MM = 900;

@@ -1,11 +1,9 @@
 import type { Tile, TilingStats } from '@/types/tiling';
 import { ORDER_MARGIN_RATIO } from '@/constants/businessRules';
-import { getPolygonArea } from '@/engine/geometry/polygon';
-import type { Point } from '@/types/plan';
 
 export const computeStats = (
   tiles: Tile[],
-  plan: Point[],
+  roomArea: number,
   tileWidth: number,
   tileHeight: number,
 ): TilingStats => {
@@ -20,7 +18,6 @@ export const computeStats = (
   const total = whole + cuts;
   const tileArea = tileWidth * tileHeight;
   const totalTilesArea = total * tileArea;
-  const roomArea = getPolygonArea(plan);
   const wasteArea = Math.max(0, totalTilesArea - roomArea);
   const wastePercent = totalTilesArea > 0 ? (wasteArea / totalTilesArea) * 100 : 0;
 

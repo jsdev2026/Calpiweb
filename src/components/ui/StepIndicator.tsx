@@ -12,28 +12,32 @@ interface StepIndicatorProps {
 }
 
 export const StepIndicator = ({ active, canGoTiling, onChange }: StepIndicatorProps) => (
-  <div className="flex items-center rounded-lg bg-slate-100 p-1">
+  <div className="flex items-center rounded-xl border border-zinc-800 bg-zinc-950 p-1">
     <button
       type="button"
       className={cn(
-        'flex items-center gap-2 rounded-md px-4 py-1.5 text-sm font-medium transition-colors',
-        active === 'PLAN' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-600 hover:text-slate-800',
+        'flex items-center gap-2 rounded-lg px-6 py-2 text-xs font-black uppercase tracking-widest transition-all',
+        active === 'PLAN'
+          ? 'bg-blue-600 text-white shadow-xl shadow-blue-900/20'
+          : 'text-zinc-500 hover:text-zinc-300',
       )}
       onClick={() => onChange('PLAN')}
     >
-      <Ruler size={16} /> 1. Plan 2D
+      <Ruler size={14} /> 1. Plan 2D
     </button>
     <button
       type="button"
       disabled={!canGoTiling}
       className={cn(
-        'flex items-center gap-2 rounded-md px-4 py-1.5 text-sm font-medium transition-colors',
-        active === 'TILING' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-600 hover:text-slate-800',
+        'flex items-center gap-2 rounded-lg px-6 py-2 text-xs font-black uppercase tracking-widest transition-all',
+        active === 'TILING'
+          ? 'bg-blue-600 text-white shadow-xl shadow-blue-900/20'
+          : 'text-zinc-500 hover:text-zinc-300',
         !canGoTiling && 'cursor-not-allowed opacity-50',
       )}
       onClick={() => canGoTiling && onChange('TILING')}
     >
-      <Grid size={16} /> 2. Calepinage
+      <Grid size={14} /> 2. Calepinage
     </button>
   </div>
 );

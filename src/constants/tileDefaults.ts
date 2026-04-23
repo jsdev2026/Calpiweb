@@ -1,18 +1,27 @@
-import type { TilingConfig } from '@/types/tiling';
+import type { TileLayout, TilingConfig } from '@/types/tiling';
 
 export const DEFAULT_TILING_CONFIG: TilingConfig = {
-  width: 600,
+  width: 300,
   height: 600,
-  joint: 2,
+  joint: 3,
   offsetX: 0,
   offsetY: 0,
-  stagger: 0,
-  color: '#e0f2fe',
+  stagger: 33,
+  angle: 0,
+  color: '#93c5fd',
+  layout: 'STRAIGHT',
 };
 
 export const STAGGER_PRESETS = [
-  { value: 0, label: 'Droit (0%)' },
-  { value: 0.5, label: 'Décalé 1/2 (50%)' },
-  { value: 0.333, label: 'Décalé 1/3 (33%)' },
-  { value: 0.25, label: 'Décalé 1/4 (25%)' },
+  { value: 0, label: '0%', sublabel: 'Droit' },
+  { value: 33, label: '33%', sublabel: '1/3' },
+  { value: 50, label: '50%', sublabel: '1/2' },
 ] as const;
+
+export const COLOR_PRESETS = ['#93c5fd', '#d6d3d1', '#86efac', '#fca5a5', '#c4b5fd'];
+
+export const LAYOUT_PRESETS: { value: TileLayout; label: string; sublabel: string }[] = [
+  { value: 'STRAIGHT',    label: 'Droit',            sublabel: 'Classique'        },
+  { value: 'HERRINGBONE', label: 'Bâton rompu',      sublabel: 'Alterné'          },
+  { value: 'CHEVRON',     label: 'Pte de hongrie',   sublabel: '45°'              },
+];

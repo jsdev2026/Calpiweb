@@ -1,3 +1,7 @@
+import type { Point } from '@/types/plan';
+
+export type TileLayout = 'STRAIGHT' | 'HERRINGBONE' | 'CHEVRON';
+
 export interface TilingConfig {
   width: number;
   height: number;
@@ -5,7 +9,9 @@ export interface TilingConfig {
   offsetX: number;
   offsetY: number;
   stagger: number;
+  angle: number;
   color: string;
+  layout: TileLayout;
 }
 
 export interface TileRect {
@@ -21,6 +27,7 @@ export interface Tile {
   id: string;
   rect: TileRect;
   type: TileType;
+  points?: Point[];
 }
 
 export interface TilingStats {

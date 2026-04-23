@@ -47,6 +47,25 @@ export const getIntersection = (A: Point, B: Point, C: Point, D: Point): Point |
   return null;
 };
 
+export const rotatePoint = (x: number, y: number, angleDeg: number, cx = 0, cy = 0): Point => {
+  const rad = (angleDeg * Math.PI) / 180;
+  const cos = Math.cos(rad);
+  const sin = Math.sin(rad);
+  return {
+    x: cos * (x - cx) - sin * (y - cy) + cx,
+    y: sin * (x - cx) + cos * (y - cy) + cy,
+  };
+};
+
+export const getPointOnSegment = (p: Point, a: Point, b: Point): Point & { t: number } => {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const lenSq = dx * dx + dy * dy;
+  if (lenSq === 0) return { ...a, t: 0 };
+  const t = Math.min(1, Math.max(0, ((p.x - a.x) * dx + (p.y - a.y) * dy) / lenSq));
+  return { x: a.x + dx * t, y: a.y + dy * t, t };
+};
+
 export const getBoundingBox = (pts: Point[]): BoundingBox => {
   if (pts.length === 0) return { minX: 0, minY: 0, maxX: 0, maxY: 0 };
   const xs = pts.map((p) => p.x);

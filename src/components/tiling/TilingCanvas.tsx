@@ -1,17 +1,56 @@
 'use client';
 
 import type { PointerEvent as ReactPointerEvent, RefObject } from 'react';
-import type { Plan, Point } from '@/types/plan';
+import type { Room } from '@/types/project';
+import type { Point } from '@/types/plan';
 import type { Tile, TilingConfig } from '@/types/tiling';
+import { getBoundingBox } from '@/engine/geometry/polygon';
+import { formatCm } from '@/utils/formatters';
+
+interface DimLineProps {
+  x1: number; y1: number;
+  x2: number; y2: number;
+  label: string;
+  perpOffset?: number;
+}
+
+const DimLine = ({ x1, y1, x2, y2, label, perpOffset = 500 }: DimLineProps) => {
+  const dx = x2 - x1, dy = y2 - y1;
+  const len = Math.hypot(dx, dy);
+  if (len < 10) return null;
+  const nx = -dy / len, ny = dx / len;
+  const ox = nx * perpOffset, oy = ny * perpOffset;
+  const dlx1 = x1 + ox, dly1 = y1 + oy;
+  const dlx2 = x2 + ox, dly2 = y2 + oy;
+  const midX = (dlx1 + dlx2) / 2, midY = (dly1 + dly2) / 2;
+  const ang = Math.atan2(dy, dx) * 180 / Math.PI;
+  const tLen = 120;
+
+  return (
+    <g className="pointer-events-none">
+      <line x1={x1} y1={y1} x2={dlx1 + ox * 0.15} y2={dly1 + oy * 0.15} stroke="#475569" strokeWidth={18} strokeDasharray="60,40" />
+      <line x1={x2} y1={y2} x2={dlx2 + ox * 0.15} y2={dly2 + oy * 0.15} stroke="#475569" strokeWidth={18} strokeDasharray="60,40" />
+      <line x1={dlx1} y1={dly1} x2={dlx2} y2={dly2} stroke="#64748b" strokeWidth={22} />
+      <line x1={dlx1 - nx * tLen} y1={dly1 - ny * tLen} x2={dlx1 + nx * tLen} y2={dly1 + ny * tLen} stroke="#64748b" strokeWidth={22} />
+      <line x1={dlx2 - nx * tLen} y1={dly2 - ny * tLen} x2={dlx2 + nx * tLen} y2={dly2 + ny * tLen} stroke="#64748b" strokeWidth={22} />
+      <g transform={`translate(${midX}, ${midY}) rotate(${ang})`}>
+        <rect x="-280" y="-210" width="560" height="240" fill="#0f172a" rx="50" />
+        <text x="0" y="-65" textAnchor="middle" fontSize="145" fill="#94a3b8" fontWeight="bold">
+          {label}
+        </text>
+      </g>
+    </g>
+  );
+};
 
 interface TilingCanvasProps {
   svgRef: RefObject<SVGSVGElement>;
-  plan: Plan;
+  rooms: Room[];
   tiles: Tile[];
   config: TilingConfig;
   scale: number;
   pan: Point;
-  isDraggingGrid: boolean;
+  showDimensions: boolean;
   onPointerDown: (e: ReactPointerEvent<SVGSVGElement>) => void;
   onPointerMove: (e: ReactPointerEvent<SVGSVGElement>) => void;
   onPointerUp: () => void;
@@ -19,22 +58,34 @@ interface TilingCanvasProps {
 
 export const TilingCanvas = ({
   svgRef,
-  plan,
+  rooms,
   tiles,
   config,
   scale,
   pan,
-  isDraggingGrid,
+  showDimensions,
   onPointerDown,
   onPointerMove,
   onPointerUp,
 }: TilingCanvasProps) => {
-  const pointsStr = plan.map((p) => `${p.x},${p.y}`).join(' ');
+  const validRooms = rooms.filter((r) => r.points.length >= 3);
+  const allPoints = validRooms.flatMap((r) => r.points);
+  const bbox = getBoundingBox(allPoints.length > 0 ? allPoints : [{ x: 0, y: 0 }]);
+  const centerX = (bbox.minX + bbox.maxX) / 2;
+  const centerY = (bbox.minY + bbox.maxY) / 2;
+
+  // Reference dimensions: only for straight layout at angle = 0
+  const canShowDims = showDimensions && config.angle === 0 && config.layout === 'STRAIGHT';
+  const stepX = config.width + config.joint;
+  const stepY = config.height + config.joint;
+  // HERRINGBONE tourne de -45° (la grille paramétrique l'intègre déjà)
+  // CHEVRON n'a pas de rotation supplémentaire (tuiles parallelogramme directes)
+  const effectiveAngle = config.angle + (config.layout === 'HERRINGBONE' ? -45 : 0);
 
   return (
     <svg
       ref={svgRef}
-      className={`h-full w-full ${isDraggingGrid ? 'cursor-grabbing' : 'cursor-grab'}`}
+      className="h-full w-full cursor-grab active:cursor-grabbing"
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
@@ -42,36 +93,161 @@ export const TilingCanvas = ({
     >
       <g transform={`translate(${pan.x}, ${pan.y}) scale(${scale})`}>
         <defs>
-          <clipPath id="roomClipPath">
-            <polygon points={pointsStr} />
+          <clipPath id="globalClip">
+            {validRooms.map((room) => (
+              <polygon
+                key={room.id}
+                points={room.points.map((p) => `${p.x},${p.y}`).join(' ')}
+              />
+            ))}
           </clipPath>
         </defs>
 
-        <polygon points={pointsStr} fill="#e2e8f0" stroke="#cbd5e1" strokeWidth={50} />
+        {validRooms.map((room) => (
+          <polygon
+            key={`bg-${room.id}`}
+            points={room.points.map((p) => `${p.x},${p.y}`).join(' ')}
+            fill="#09090b"
+          />
+        ))}
 
-        <g clipPath="url(#roomClipPath)">
-          {tiles.map((tile) => (
-            <rect
-              key={tile.id}
-              x={tile.rect.x}
-              y={tile.rect.y}
-              width={tile.rect.w}
-              height={tile.rect.h}
-              fill={tile.type === 'WHOLE' ? config.color : '#fbbf24'}
-              stroke="#cbd5e1"
-              strokeWidth={config.joint}
-              opacity={0.9}
-            />
-          ))}
+        <g clipPath="url(#globalClip)">
+          <g transform={`rotate(${effectiveAngle}, ${centerX}, ${centerY})`}>
+            {tiles.map((tile) =>
+              tile.points ? (
+                <polygon
+                  key={tile.id}
+                  points={tile.points.map((p) => `${p.x},${p.y}`).join(' ')}
+                  fill={tile.type === 'WHOLE' ? config.color : '#3f3f46'}
+                  stroke="#09090b"
+                  strokeWidth={config.joint}
+                />
+              ) : (
+                <rect
+                  key={tile.id}
+                  x={tile.rect.x}
+                  y={tile.rect.y}
+                  width={tile.rect.w}
+                  height={tile.rect.h}
+                  fill={tile.type === 'WHOLE' ? config.color : '#3f3f46'}
+                  stroke="#09090b"
+                  strokeWidth={config.joint}
+                />
+              )
+            )}
+          </g>
         </g>
 
-        <polygon
-          points={pointsStr}
-          fill="none"
-          stroke="#1e293b"
-          strokeWidth={80}
-          strokeLinejoin="round"
-        />
+        {/* Room walls and doors */}
+        {validRooms.map((room) =>
+          room.points.map((p, i) => {
+            const nextP = room.points[(i + 1) % room.points.length]!;
+            const isDoor = (room.edges[i] ?? 'WALL') === 'DOOR';
+            return (
+              <line
+                key={`edge-${room.id}-${i}`}
+                x1={p.x} y1={p.y} x2={nextP.x} y2={nextP.y}
+                stroke={isDoor ? '#f97316' : '#ea580c'}
+                strokeWidth={isDoor ? 50 : 80}
+                strokeLinecap="round"
+                strokeDasharray={isDoor ? '120,80' : undefined}
+              />
+            );
+          }),
+        )}
+
+        {/* Reference dimensions */}
+        {canShowDims && validRooms.map((room) => {
+          const pts = room.points;
+          if (pts.length < 3) return null;
+          const rb = getBoundingBox(pts);
+          const roomW = rb.maxX - rb.minX;
+          const roomH = rb.maxY - rb.minY;
+
+          // Find tile cut sizes at room boundary
+          const tilesInX = tiles.filter(
+            (t) => t.rect.x < rb.maxX && t.rect.x + t.rect.w > rb.minX,
+          );
+          const tilesInY = tiles.filter(
+            (t) => t.rect.y < rb.maxY && t.rect.y + t.rect.h > rb.minY,
+          );
+
+          const leftTileX = tilesInX.length > 0 ? Math.min(...tilesInX.map((t) => t.rect.x)) : rb.minX;
+          const topTileY = tilesInY.length > 0 ? Math.min(...tilesInY.map((t) => t.rect.y)) : rb.minY;
+
+          // Cut at left = visible width of first tile column
+          const leftCut = leftTileX < rb.minX ? (leftTileX + config.width - rb.minX) : 0;
+          // Cut at top = visible height of first tile row
+          const topCut = topTileY < rb.minY ? (topTileY + config.height - rb.minY) : 0;
+
+          // Full tiles repeat
+          const fullCountX = leftCut > 0
+            ? Math.floor((roomW - leftCut) / stepX)
+            : Math.floor(roomW / stepX);
+          const lastCutX = roomW - (leftCut > 0 ? leftCut : 0) - fullCountX * stepX;
+
+          const fullCountY = topCut > 0
+            ? Math.floor((roomH - topCut) / stepY)
+            : Math.floor(roomH / stepY);
+          const lastCutY = roomH - (topCut > 0 ? topCut : 0) - fullCountY * stepY;
+
+          const offset = 600;
+
+          return (
+            <g key={`dims-${room.id}`}>
+              {/* Room total width */}
+              <DimLine
+                x1={rb.minX} y1={rb.minY}
+                x2={rb.maxX} y2={rb.minY}
+                label={formatCm(roomW)}
+                perpOffset={-offset}
+              />
+              {/* Room total height */}
+              <DimLine
+                x1={rb.maxX} y1={rb.minY}
+                x2={rb.maxX} y2={rb.maxY}
+                label={formatCm(roomH)}
+                perpOffset={offset}
+              />
+              {/* Left cut tile */}
+              {leftCut > 10 && (
+                <DimLine
+                  x1={rb.minX} y1={rb.maxY + offset * 0.4}
+                  x2={rb.minX + leftCut} y2={rb.maxY + offset * 0.4}
+                  label={formatCm(leftCut)}
+                  perpOffset={offset * 0.6}
+                />
+              )}
+              {/* Right cut tile */}
+              {lastCutX > 10 && lastCutX < config.width - 10 && (
+                <DimLine
+                  x1={rb.maxX - lastCutX} y1={rb.maxY + offset * 0.4}
+                  x2={rb.maxX} y2={rb.maxY + offset * 0.4}
+                  label={formatCm(lastCutX)}
+                  perpOffset={offset * 0.6}
+                />
+              )}
+              {/* Top cut tile */}
+              {topCut > 10 && (
+                <DimLine
+                  x1={rb.minX - offset * 0.4} y1={rb.minY}
+                  x2={rb.minX - offset * 0.4} y2={rb.minY + topCut}
+                  label={formatCm(topCut)}
+                  perpOffset={-offset * 0.6}
+                />
+              )}
+              {/* Bottom cut tile */}
+              {lastCutY > 10 && lastCutY < config.height - 10 && (
+                <DimLine
+                  x1={rb.minX - offset * 0.4} y1={rb.maxY - lastCutY}
+                  x2={rb.minX - offset * 0.4} y2={rb.maxY}
+                  label={formatCm(lastCutY)}
+                  perpOffset={-offset * 0.6}
+                />
+              )}
+            </g>
+          );
+        })}
       </g>
     </svg>
   );

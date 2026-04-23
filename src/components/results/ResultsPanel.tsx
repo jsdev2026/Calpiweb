@@ -1,56 +1,52 @@
 'use client';
 
-import { AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Calculator } from 'lucide-react';
 import type { TilingStats } from '@/types/tiling';
 import { formatM2 } from '@/utils/formatters';
-import { WASTE_WARNING_THRESHOLD } from '@/constants/businessRules';
 
 interface ResultsPanelProps {
   stats: TilingStats | null;
 }
 
 export const ResultsPanel = ({ stats }: ResultsPanelProps) => (
-  <div className="border-t border-slate-200 pt-6">
-    <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-slate-800">
-      <CheckCircle2 size={20} className="text-emerald-600" /> Synthèse en direct
+  <div className="border-t border-zinc-800 bg-zinc-950 p-6">
+    <h3 className="mb-4 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-100">
+      <Calculator size={16} className="text-emerald-500" /> Devis Matériaux
     </h3>
 
     {stats ? (
       <div className="space-y-3">
-        <div className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 p-3">
-          <span className="text-sm text-slate-600">Surface pièce</span>
-          <span className="font-bold text-slate-800">{formatM2(stats.roomArea)}</span>
+        <div className="flex justify-between text-xs font-medium text-zinc-400">
+          <span>Surface</span>
+          <span className="font-mono font-bold text-zinc-100">{formatM2(stats.roomArea)}</span>
+        </div>
+        <div className="flex justify-between text-xs font-medium text-zinc-400">
+          <span>Carreaux pleins</span>
+          <span className="font-mono text-zinc-100">{stats.whole}</span>
+        </div>
+        <div className="flex justify-between text-xs font-medium text-zinc-400">
+          <span>Coupes</span>
+          <span className="font-mono text-zinc-100">{stats.cuts}</span>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className="flex flex-col items-center rounded-lg border border-blue-100 bg-blue-50 p-3">
-            <span className="mb-1 text-xs font-medium uppercase tracking-wider text-blue-600">
-              Entiers
-            </span>
-            <span className="text-2xl font-bold text-blue-800">{stats.whole}</span>
+        <div className="mt-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4">
+          <div className="mb-1 text-[10px] font-bold uppercase text-emerald-500">
+            Total à commander (+10%)
           </div>
-          <div className="flex flex-col items-center rounded-lg border border-amber-100 bg-amber-50 p-3">
-            <span className="mb-1 text-xs font-medium uppercase tracking-wider text-amber-600">
-              Coupes
-            </span>
-            <span className="text-2xl font-bold text-amber-800">{stats.cuts}</span>
+          <div className="text-2xl font-black tracking-tight text-emerald-400">
+            {stats.toOrder}{' '}
+            <span className="text-sm font-medium opacity-60">carreaux</span>
           </div>
         </div>
 
-        <div className="mt-2 flex items-center justify-between rounded-lg border border-emerald-100 bg-emerald-50 p-3">
-          <span className="text-sm font-medium text-emerald-800">À commander (+10%)</span>
-          <span className="text-xl font-bold text-emerald-700">{stats.toOrder}</span>
-        </div>
-
-        {stats.wastePercent > WASTE_WARNING_THRESHOLD && (
-          <div className="mt-2 flex items-start gap-2 rounded bg-amber-50 p-2 text-xs text-amber-700">
-            <AlertTriangle size={14} className="mt-0.5 shrink-0" />
+        {stats.wastePercent > 15 && (
+          <p className="rounded bg-amber-500/10 p-2 text-[10px] text-amber-400">
             Taux de perte élevé ({stats.wastePercent.toFixed(1)}%). Ajustez le point de départ.
-          </div>
+          </p>
         )}
       </div>
     ) : (
-      <p className="py-4 text-center text-sm text-slate-500">
+      <p className="py-4 text-center text-xs text-zinc-500">
         Tracez une pièce pour voir les résultats
       </p>
     )}

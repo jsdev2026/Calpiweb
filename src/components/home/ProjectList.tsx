@@ -1,8 +1,7 @@
 'use client';
 
-import { FolderOpen } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import type { Project } from '@/types/project';
-import { Button } from '@/components/ui/Button';
 import { ProjectCard } from './ProjectCard';
 
 interface ProjectListProps {
@@ -12,23 +11,20 @@ interface ProjectListProps {
   onDelete: (project: Project) => void;
 }
 
-export const ProjectList = ({ projects, onCreate, onOpen, onDelete }: ProjectListProps) => {
-  if (projects.length === 0) {
-    return (
-      <div className="rounded-xl border border-dashed border-slate-200 bg-white py-20 text-center">
-        <FolderOpen size={48} className="mx-auto mb-4 text-slate-300" />
-        <h3 className="text-lg font-medium text-slate-700">Aucun projet</h3>
-        <p className="mb-6 mt-1 text-slate-500">Commencez par créer votre premier calepinage.</p>
-        <Button onClick={onCreate}>Créer un projet</Button>
+export const ProjectList = ({ projects, onCreate, onOpen, onDelete }: ProjectListProps) => (
+  <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    {projects.map((p) => (
+      <ProjectCard key={p.id} project={p} onOpen={() => onOpen(p)} onDelete={() => onDelete(p)} />
+    ))}
+    <button
+      type="button"
+      onClick={onCreate}
+      className="group flex h-64 flex-col items-center justify-center gap-4 rounded-3xl border-2 border-dashed border-zinc-800 text-zinc-600 transition-all hover:border-blue-500/40 hover:bg-blue-500/5 hover:text-blue-500/60"
+    >
+      <div className="rounded-full bg-zinc-900 p-4 transition-colors group-hover:bg-blue-500/10">
+        <Plus size={40} />
       </div>
-    );
-  }
-
-  return (
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-      {projects.map((p) => (
-        <ProjectCard key={p.id} project={p} onOpen={() => onOpen(p)} onDelete={() => onDelete(p)} />
-      ))}
-    </div>
-  );
-};
+      <span className="text-xs font-black uppercase tracking-[0.2em]">Créer un projet</span>
+    </button>
+  </div>
+);

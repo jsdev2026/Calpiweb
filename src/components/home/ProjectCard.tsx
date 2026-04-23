@@ -1,6 +1,6 @@
 'use client';
 
-import { Trash2 } from 'lucide-react';
+import { ChevronRight, Trash2 } from 'lucide-react';
 import type { MouseEvent } from 'react';
 import type { Project } from '@/types/project';
 
@@ -24,27 +24,40 @@ export const ProjectCard = ({ project, onOpen, onDelete }: ProjectCardProps) => 
       onKeyDown={(e) => {
         if (e.key === 'Enter') onOpen();
       }}
-      className="group flex h-48 cursor-pointer flex-col rounded-xl border border-slate-200 bg-white p-5 transition-all hover:border-blue-300 hover:shadow-md"
+      className="group flex h-64 cursor-pointer flex-col justify-between rounded-3xl border border-zinc-800 bg-zinc-900/50 p-8 shadow-sm transition-all duration-500 hover:border-blue-500/50 hover:bg-zinc-900 hover:shadow-2xl hover:shadow-blue-500/5"
     >
-      <div className="mb-4 flex items-start justify-between">
-        <h3 className="truncate font-semibold text-slate-800 group-hover:text-blue-600">
-          {project.name}
-        </h3>
-        <button
-          type="button"
-          onClick={handleDelete}
-          className="p-1 text-slate-400 hover:text-red-500"
-          aria-label="Supprimer le projet"
-        >
-          <Trash2 size={16} />
-        </button>
-      </div>
-      <div className="flex-1 space-y-2 text-sm text-slate-500">
-        <p>Dernière modif : {new Date(project.updatedAt).toLocaleDateString()}</p>
-        <p>{project.plan.length > 2 ? 'Plan dessiné' : 'Plan vide'}</p>
-        <p>
-          Format : {project.config.width}×{project.config.height} mm
+      <div>
+        <div className="mb-2 flex items-start justify-between">
+          <h3 className="line-clamp-2 text-lg font-bold text-zinc-200 transition-colors group-hover:text-blue-400">
+            {project.name}
+          </h3>
+          <button
+            type="button"
+            onClick={handleDelete}
+            className="p-1 text-zinc-600 transition-colors hover:text-red-400"
+            aria-label="Supprimer le projet"
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
+        <p className="text-xs font-medium text-zinc-500">
+          {project.rooms.length} pièce{project.rooms.length > 1 ? 's' : ''} —{' '}
+          {project.rooms.reduce((n, r) => n + r.points.length, 0)} sommets
         </p>
+      </div>
+
+      <div className="flex items-end justify-between">
+        <div>
+          <p className="mb-0.5 text-[10px] font-black uppercase tracking-tighter text-zinc-600">
+            Dernière édition
+          </p>
+          <p className="font-mono text-xs text-zinc-400">
+            {new Date(project.updatedAt).toLocaleDateString()}
+          </p>
+        </div>
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-800 text-zinc-400 transition-all group-hover:bg-blue-600 group-hover:text-white">
+          <ChevronRight size={20} />
+        </div>
       </div>
     </div>
   );
