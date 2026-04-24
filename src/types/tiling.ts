@@ -10,6 +10,7 @@ export interface TilingConfig {
   offsetY: number;
   stagger: number;
   angle: number;
+  chevronAngle: number;
   color: string;
   layout: TileLayout;
 }

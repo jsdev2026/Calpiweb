@@ -17,10 +17,12 @@ export const TilingControls = ({ config, onChange }: TilingControlsProps) => {
   const [widthStr, setWidthStr] = useState(String(config.width));
   const [heightStr, setHeightStr] = useState(String(config.height));
   const [jointStr, setJointStr] = useState(String(config.joint));
+  const [chevronAngleStr, setChevronAngleStr] = useState(String(config.chevronAngle));
 
   useEffect(() => setWidthStr(String(config.width)), [config.width]);
   useEffect(() => setHeightStr(String(config.height)), [config.height]);
   useEffect(() => setJointStr(String(config.joint)), [config.joint]);
+  useEffect(() => setChevronAngleStr(String(config.chevronAngle)), [config.chevronAngle]);
 
   const commitWidth = () => {
     const v = parseInt(widthStr, 10);
@@ -37,6 +39,11 @@ export const TilingControls = ({ config, onChange }: TilingControlsProps) => {
     if (!isNaN(v) && v >= 0) update({ joint: v });
     else setJointStr(String(config.joint));
   };
+  const commitChevronAngle = () => {
+    const v = parseInt(chevronAngleStr, 10);
+    if (!isNaN(v) && v >= 15 && v <= 75) update({ chevronAngle: v });
+    else setChevronAngleStr(String(config.chevronAngle));
+  };
 
   return (
     <div className="flex-1 space-y-6 p-6">
@@ -52,6 +59,7 @@ export const TilingControls = ({ config, onChange }: TilingControlsProps) => {
             value={widthStr}
             onChange={(e) => setWidthStr(e.target.value)}
             onBlur={commitWidth}
+            onKeyDown={(e) => e.key === 'Enter' && commitWidth()}
           />
           <Input
             type="number"
@@ -59,6 +67,7 @@ export const TilingControls = ({ config, onChange }: TilingControlsProps) => {
             value={heightStr}
             onChange={(e) => setHeightStr(e.target.value)}
             onBlur={commitHeight}
+            onKeyDown={(e) => e.key === 'Enter' && commitHeight()}
           />
         </div>
         <Input
@@ -67,6 +76,7 @@ export const TilingControls = ({ config, onChange }: TilingControlsProps) => {
           value={jointStr}
           onChange={(e) => setJointStr(e.target.value)}
           onBlur={commitJoint}
+          onKeyDown={(e) => e.key === 'Enter' && commitJoint()}
         />
       </div>
 
@@ -93,6 +103,23 @@ export const TilingControls = ({ config, onChange }: TilingControlsProps) => {
           ))}
         </div>
       </div>
+
+      {/* Chevron angle: only relevant for chevron layout */}
+      {config.layout === 'CHEVRON' && (
+        <div className="space-y-3 border-t border-zinc-800 pt-6">
+          <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+            Angle de coupe (°)
+          </label>
+          <Input
+            type="number"
+            label="Angle (15–75°)"
+            value={chevronAngleStr}
+            onChange={(e) => setChevronAngleStr(e.target.value)}
+            onBlur={commitChevronAngle}
+            onKeyDown={(e) => e.key === 'Enter' && commitChevronAngle()}
+          />
+        </div>
+      )}
 
       {/* Stagger: only relevant for straight layout */}
       {config.layout === 'STRAIGHT' && (

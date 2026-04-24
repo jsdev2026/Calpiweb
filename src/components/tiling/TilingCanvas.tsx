@@ -78,9 +78,7 @@ export const TilingCanvas = ({
   const canShowDims = showDimensions && config.angle === 0 && config.layout === 'STRAIGHT';
   const stepX = config.width + config.joint;
   const stepY = config.height + config.joint;
-  // HERRINGBONE tourne de -45° (la grille paramétrique l'intègre déjà)
-  // CHEVRON n'a pas de rotation supplémentaire (tuiles parallelogramme directes)
-  const effectiveAngle = config.angle + (config.layout === 'HERRINGBONE' ? -45 : 0);
+  const effectiveAngle = config.angle;
 
   return (
     <svg

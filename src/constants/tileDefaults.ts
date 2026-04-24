@@ -8,6 +8,7 @@ export const DEFAULT_TILING_CONFIG: TilingConfig = {
   offsetY: 0,
   stagger: 33,
   angle: 0,
+  chevronAngle: 45,
   color: '#93c5fd',
   layout: 'STRAIGHT',
 };
