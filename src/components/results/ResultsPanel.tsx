@@ -9,24 +9,24 @@ interface ResultsPanelProps {
 }
 
 export const ResultsPanel = ({ stats }: ResultsPanelProps) => (
-  <div className="border-t border-zinc-800 bg-zinc-950 p-6">
-    <h3 className="mb-4 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-100">
+  <div className="border-t border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-6">
+    <h3 className="mb-4 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-gray-900 dark:text-zinc-100">
       <Calculator size={16} className="text-emerald-500" /> Devis Matériaux
     </h3>
 
     {stats ? (
       <div className="space-y-3">
-        <div className="flex justify-between text-xs font-medium text-zinc-400">
+        <div className="flex justify-between text-xs font-medium text-gray-500 dark:text-zinc-400">
           <span>Surface</span>
-          <span className="font-mono font-bold text-zinc-100">{formatM2(stats.roomArea)}</span>
+          <span className="font-mono font-bold text-gray-900 dark:text-zinc-100">{formatM2(stats.roomArea)}</span>
         </div>
-        <div className="flex justify-between text-xs font-medium text-zinc-400">
+        <div className="flex justify-between text-xs font-medium text-gray-500 dark:text-zinc-400">
           <span>Carreaux pleins</span>
-          <span className="font-mono text-zinc-100">{stats.whole}</span>
+          <span className="font-mono text-gray-900 dark:text-zinc-100">{stats.whole}</span>
         </div>
-        <div className="flex justify-between text-xs font-medium text-zinc-400">
+        <div className="flex justify-between text-xs font-medium text-gray-500 dark:text-zinc-400">
           <span>Coupes</span>
-          <span className="font-mono text-zinc-100">{stats.cuts}</span>
+          <span className="font-mono text-gray-900 dark:text-zinc-100">{stats.cuts}</span>
         </div>
 
         <div className="mt-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4">
@@ -46,7 +46,7 @@ export const ResultsPanel = ({ stats }: ResultsPanelProps) => (
         )}
       </div>
     ) : (
-      <p className="py-4 text-center text-xs text-zinc-500">
+      <p className="py-4 text-center text-xs text-gray-400 dark:text-zinc-500">
         Tracez une pièce pour voir les résultats
       </p>
     )}

@@ -39,7 +39,7 @@ export const RoomTabs = ({
   };
 
   return (
-    <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 rounded-2xl border border-zinc-800 bg-zinc-900/90 p-1.5 shadow-2xl backdrop-blur-md">
+    <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 p-1.5 shadow-2xl backdrop-blur-md">
       {rooms.map((room, i) => (
         <div key={room.id} className="group relative">
           {renamingId === room.id ? (
@@ -52,7 +52,7 @@ export const RoomTabs = ({
                 if (e.key === 'Enter') commitRename();
                 if (e.key === 'Escape') setRenamingId(null);
               }}
-              className="h-8 w-28 rounded-lg bg-zinc-700 px-3 text-center text-[11px] font-bold text-orange-400 outline-none"
+              className="h-8 w-28 rounded-lg bg-gray-100 dark:bg-zinc-700 px-3 text-center text-[11px] font-bold text-orange-600 dark:text-orange-400 outline-none"
             />
           ) : (
             <button
@@ -63,7 +63,7 @@ export const RoomTabs = ({
               className={`flex h-8 min-w-[2.5rem] items-center justify-center rounded-xl px-3 text-[11px] font-bold transition-all ${
                 room.id === activeRoomId
                   ? 'bg-orange-600 text-white shadow-md'
-                  : 'text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200'
+                  : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'
               }`}
             >
               {room.name ? room.name : `Pièce ${i + 1}`}
@@ -81,12 +81,12 @@ export const RoomTabs = ({
           )}
         </div>
       ))}
-      <div className="mx-1 h-5 w-px bg-zinc-700" />
+      <div className="mx-1 h-5 w-px bg-gray-200 dark:bg-zinc-700" />
       <button
         type="button"
         onClick={onAddRoom}
         title="Ajouter une pièce"
-        className="flex h-8 w-8 items-center justify-center rounded-xl text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-zinc-300"
+        className="flex h-8 w-8 items-center justify-center rounded-xl text-gray-400 dark:text-zinc-500 transition-colors hover:bg-gray-100 dark:hover:bg-zinc-800 hover:text-gray-700 dark:hover:text-zinc-300"
       >
         <Plus size={16} />
       </button>

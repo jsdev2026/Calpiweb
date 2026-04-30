@@ -105,7 +105,7 @@ export const TilingCanvas = ({
           <polygon
             key={`bg-${room.id}`}
             points={room.points.map((p) => `${p.x},${p.y}`).join(' ')}
-            fill="#09090b"
+            fill="var(--surf3)"
           />
         ))}
 

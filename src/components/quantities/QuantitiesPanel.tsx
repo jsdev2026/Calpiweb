@@ -50,7 +50,7 @@ const StatCard = ({ label, value, sub, accent = 'zinc' }: StatCardProps) => {
     orange: 'text-orange-400 border-orange-500/20 bg-orange-500/5',
     green: 'text-emerald-400 border-emerald-500/20 bg-emerald-500/5',
     blue: 'text-blue-400 border-blue-500/20 bg-blue-500/5',
-    zinc: 'text-zinc-200 border-zinc-700 bg-zinc-800/50',
+    zinc: 'text-gray-800 dark:text-zinc-200 border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800/50',
   };
   return (
     <div className={`rounded-2xl border p-5 ${colors[accent]}`}>
@@ -104,11 +104,11 @@ const QuantityPlanView = ({ result, config, rooms }: PlanViewProps) => {
 
   return (
     <div>
-      <h3 className="mb-3 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
+      <h3 className="mb-3 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 dark:text-zinc-500">
         Plan de calepinage annoté
       </h3>
 
-      <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950">
+      <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-950">
         <svg
           viewBox={`${vbX} ${vbY} ${vbW} ${vbH}`}
           className="w-full"
@@ -130,7 +130,7 @@ const QuantityPlanView = ({ result, config, rooms }: PlanViewProps) => {
             <polygon
               key={`bg-${room.id}`}
               points={room.points.map((p) => `${p.x},${p.y}`).join(' ')}
-              fill="#09090b"
+              fill="var(--surf3)"
             />
           ))}
 
@@ -219,13 +219,13 @@ const QuantityPlanView = ({ result, config, rooms }: PlanViewProps) => {
         </svg>
 
         {/* Legend */}
-        <div className="flex flex-wrap items-center gap-4 border-t border-zinc-800 px-5 py-3">
-          <div className="flex items-center gap-2 text-[11px] text-zinc-400">
+        <div className="flex flex-wrap items-center gap-4 border-t border-gray-200 dark:border-zinc-800 px-5 py-3">
+          <div className="flex items-center gap-2 text-[11px] text-gray-500 dark:text-zinc-400">
             <span className="inline-block h-3 w-5 rounded-sm" style={{ background: config.color, opacity: 0.75 }} />
             Entier
           </div>
           {result.cutGroups.slice(0, 6).map((g, i) => (
-            <div key={i} className="flex items-center gap-1.5 text-[11px] text-zinc-400">
+            <div key={i} className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-zinc-400">
               <span
                 className="inline-flex h-4 w-4 items-center justify-center rounded-sm text-[9px] font-black"
                 style={{
@@ -240,10 +240,10 @@ const QuantityPlanView = ({ result, config, rooms }: PlanViewProps) => {
             </div>
           ))}
           {result.cutGroups.length > 6 && (
-            <span className="text-[11px] text-zinc-600">+{result.cutGroups.length - 6} autres</span>
+            <span className="text-[11px] text-gray-400 dark:text-zinc-600">+{result.cutGroups.length - 6} autres</span>
           )}
           {result.totalReuseCount > 0 && (
-            <div className="flex items-center gap-1.5 text-[11px] text-zinc-400">
+            <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-zinc-400">
               <span className="text-emerald-400 font-bold">↩</span>
               chute réutilisée
             </div>
@@ -268,7 +268,7 @@ export const QuantitiesPanel = () => {
 
   if (result.totalTiles === 0) {
     return (
-      <div className="flex flex-1 items-center justify-center bg-zinc-950 text-zinc-500">
+      <div className="flex flex-1 items-center justify-center dark:bg-zinc-950 bg-gray-50 text-gray-500 dark:text-zinc-500">
         Tracez au moins une pièce fermée pour voir le quantitatif.
       </div>
     );
@@ -278,14 +278,14 @@ export const QuantitiesPanel = () => {
   const color = project?.config.color ?? '#93c5fd';
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden bg-zinc-950">
+    <div className="flex flex-1 flex-col overflow-hidden dark:bg-zinc-950 bg-gray-50">
       {/* Header */}
-      <div className="shrink-0 border-b border-zinc-800 bg-zinc-900 px-8 py-5">
-        <h2 className="text-lg font-black text-zinc-100">Tableau des quantités</h2>
-        <p className="mt-0.5 text-xs text-zinc-500">
-          Format&nbsp;: <span className="font-bold text-zinc-300">{tileLabel}</span> —
-          Joint&nbsp;: <span className="font-bold text-zinc-300">{result.joint}&nbsp;mm</span> —
-          Surface&nbsp;: <span className="font-bold text-zinc-300">{formatM2(result.roomArea)}</span>
+      <div className="shrink-0 border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-8 py-5">
+        <h2 className="text-lg font-black text-gray-900 dark:text-zinc-100">Tableau des quantités</h2>
+        <p className="mt-0.5 text-xs text-gray-500 dark:text-zinc-500">
+          Format&nbsp;: <span className="font-bold text-gray-700 dark:text-zinc-300">{tileLabel}</span> —
+          Joint&nbsp;: <span className="font-bold text-gray-700 dark:text-zinc-300">{result.joint}&nbsp;mm</span> —
+          Surface&nbsp;: <span className="font-bold text-gray-700 dark:text-zinc-300">{formatM2(result.roomArea)}</span>
         </p>
       </div>
 
@@ -329,13 +329,13 @@ export const QuantitiesPanel = () => {
               {' '}— les coupes marquées en vert dans le tableau peuvent être taillées dans les chutes d&apos;autres carreaux, évitant d&apos;ouvrir un nouveau carreau.
             </div>
           )}
-          <h3 className="mb-3 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
+          <h3 className="mb-3 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 dark:text-zinc-500">
             Détail des coupes
           </h3>
-          <div className="overflow-hidden rounded-2xl border border-zinc-800">
+          <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-zinc-800">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-zinc-800 bg-zinc-900 text-[10px] font-black uppercase tracking-wider text-zinc-500">
+                <tr className="border-b border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900 text-[10px] font-black uppercase tracking-wider text-gray-500 dark:text-zinc-500">
                   <th className="px-4 py-3 text-left">#</th>
                   <th className="px-4 py-3 text-left">Visuel</th>
                   <th className="px-4 py-3 text-left">Dimensions coupées</th>
@@ -343,7 +343,7 @@ export const QuantitiesPanel = () => {
                   <th className="px-4 py-3 text-left">Chute disponible</th>
                   <th className="px-4 py-3 text-right">Qté totale</th>
                   <th className="px-4 py-3 text-right">Récupérées</th>
-                  <th className="px-4 py-3 text-right font-black text-zinc-300">Carreaux nets</th>
+                  <th className="px-4 py-3 text-right font-black text-gray-700 dark:text-zinc-300">Carreaux nets</th>
                 </tr>
               </thead>
               <tbody>
@@ -353,7 +353,7 @@ export const QuantitiesPanel = () => {
                   return (
                     <tr
                       key={`${g.usedW}×${g.usedH}`}
-                      className={`border-b border-zinc-800/60 transition-colors hover:bg-zinc-900/60 ${i % 2 === 0 ? '' : 'bg-zinc-900/20'}`}
+                      className={`border-b border-gray-100 dark:border-zinc-800/60 transition-colors hover:bg-gray-50 dark:hover:bg-zinc-900/60 ${i % 2 === 0 ? '' : 'bg-gray-50/60 dark:bg-zinc-900/20'}`}
                     >
                       <td className="px-4 py-3">
                         <span
@@ -378,10 +378,10 @@ export const QuantitiesPanel = () => {
                         />
                       </td>
                       <td className="px-4 py-3">
-                        <span className="font-mono font-bold text-zinc-100">
+                        <span className="font-mono font-bold text-gray-900 dark:text-zinc-100">
                           {formatCm(g.usedW)} × {formatCm(g.usedH)}
                         </span>
-                        <div className="mt-0.5 text-[10px] text-zinc-500">
+                        <div className="mt-0.5 text-[10px] text-gray-500 dark:text-zinc-500">
                           {((g.usedW * g.usedH) / (result.tileW * result.tileH) * 100).toFixed(0)}% du carreau
                         </div>
                       </td>
@@ -400,15 +400,15 @@ export const QuantitiesPanel = () => {
                             <span className="font-mono font-bold text-emerald-400">
                               {formatCm(g.chuteW)} × {formatCm(g.chuteH)}
                             </span>
-                            <div className="mt-0.5 text-[10px] text-zinc-500">
+                            <div className="mt-0.5 text-[10px] text-gray-500 dark:text-zinc-500">
                               {((g.chuteW * g.chuteH) / (result.tileW * result.tileH) * 100).toFixed(0)}% récupérable
                             </div>
                           </>
                         ) : (
-                          <span className="text-zinc-600">—</span>
+                          <span className="text-gray-400 dark:text-zinc-600">—</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-right font-mono text-zinc-400">
+                      <td className="px-4 py-3 text-right font-mono text-gray-500 dark:text-zinc-400">
                         {g.totalCount}
                       </td>
                       <td className="px-4 py-3 text-right">
@@ -417,11 +417,11 @@ export const QuantitiesPanel = () => {
                             ↩ {g.reuseCount}
                           </span>
                         ) : (
-                          <span className="text-zinc-600">—</span>
+                          <span className="text-gray-400 dark:text-zinc-600">—</span>
                         )}
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <span className="font-mono text-base font-black text-zinc-100">
+                        <span className="font-mono text-base font-black text-gray-900 dark:text-zinc-100">
                           {g.netTiles}
                         </span>
                       </td>
@@ -430,11 +430,11 @@ export const QuantitiesPanel = () => {
                 })}
               </tbody>
               <tfoot>
-                <tr className="border-t border-zinc-700 bg-zinc-900">
-                  <td colSpan={5} className="px-4 py-3 text-xs font-bold text-zinc-400">
+                <tr className="border-t border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-900">
+                  <td colSpan={5} className="px-4 py-3 text-xs font-bold text-gray-500 dark:text-zinc-400">
                     Total coupes
                   </td>
-                  <td className="px-4 py-3 text-right font-mono font-bold text-zinc-300">
+                  <td className="px-4 py-3 text-right font-mono font-bold text-gray-700 dark:text-zinc-300">
                     {result.cuts.length}
                   </td>
                   <td className="px-4 py-3 text-right font-mono font-bold text-emerald-400">
@@ -456,14 +456,14 @@ export const QuantitiesPanel = () => {
               <div className="text-xs font-black uppercase tracking-widest text-orange-500/80">
                 Récapitulatif de commande
               </div>
-              <div className="mt-3 space-y-1.5 text-sm text-zinc-400">
+              <div className="mt-3 space-y-1.5 text-sm text-gray-500 dark:text-zinc-400">
                 <div className="flex justify-between gap-12">
                   <span>Carreaux entiers</span>
-                  <span className="font-mono font-bold text-zinc-200">{result.wholeCount}</span>
+                  <span className="font-mono font-bold text-gray-800 dark:text-zinc-200">{result.wholeCount}</span>
                 </div>
                 <div className="flex justify-between gap-12">
                   <span>Carreaux pour coupes</span>
-                  <span className="font-mono font-bold text-zinc-200">{result.tilesForCuts}</span>
+                  <span className="font-mono font-bold text-gray-800 dark:text-zinc-200">{result.tilesForCuts}</span>
                 </div>
                 {result.totalReuseCount > 0 && (
                   <div className="flex justify-between gap-12 text-emerald-400">
@@ -471,12 +471,12 @@ export const QuantitiesPanel = () => {
                     <span className="font-mono font-bold">−{result.totalReuseCount}</span>
                   </div>
                 )}
-                <div className="my-2 border-t border-zinc-700" />
-                <div className="flex justify-between gap-12 text-zinc-300">
+                <div className="my-2 border-t border-gray-200 dark:border-zinc-700" />
+                <div className="flex justify-between gap-12 text-gray-700 dark:text-zinc-300">
                   <span>Sous-total</span>
                   <span className="font-mono font-bold">{result.totalTiles}</span>
                 </div>
-                <div className="flex justify-between gap-12 text-zinc-500">
+                <div className="flex justify-between gap-12 text-gray-400 dark:text-zinc-500">
                   <span>Marge casse / perte (+10%)</span>
                   <span className="font-mono">+{result.toOrder - result.totalTiles}</span>
                 </div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { List, LayoutGrid, LogOut, Moon, Plus, Search, Sun } from 'lucide-react';
+import { List, LayoutGrid, LogOut, Moon, Plus, Search, Settings, Sun, X } from 'lucide-react';
 import { useProjectStore } from '@/store/projectStore';
 import { useUiStore } from '@/store/uiStore';
 import type { Project, ProjectStatus } from '@/types/project';
@@ -62,12 +62,118 @@ const PlanMiniature = ({ project, size = 140 }: { project: Project; size?: numbe
   );
 };
 
+// ── Project quick-settings modal ─────────────────────────────────────────────
+
+const STATUS_OPTIONS: { value: ProjectStatus; label: string }[] = [
+  { value: 'new', label: 'Nouveau' },
+  { value: 'wip', label: 'En cours' },
+  { value: 'done', label: 'Terminé' },
+];
+
+const ProjectSettingsModal = ({
+  project,
+  onClose,
+  onSave,
+}: {
+  project: Project;
+  onClose: () => void;
+  onSave: (name: string, status: ProjectStatus, client: ClientInfo | undefined) => void;
+}) => {
+  const [name, setName] = useState(project.name);
+  const [status, setStatus] = useState<ProjectStatus>(project.status);
+  const [clientName, setClientName] = useState(project.client?.name ?? '');
+  const [clientPhone, setClientPhone] = useState(project.client?.phone ?? '');
+  const [clientEmail, setClientEmail] = useState(project.client?.email ?? '');
+
+  const handleSave = () => {
+    const client: ClientInfo | undefined = clientName.trim()
+      ? { name: clientName.trim(), phone: clientPhone.trim() || undefined, email: clientEmail.trim() || undefined }
+      : undefined;
+    onSave(name.trim() || project.name, status, client);
+    onClose();
+  };
+
+  const fieldStyle = { background: 'var(--surf2)', border: '1px solid var(--bdr)', borderRadius: 'var(--rs)', padding: '7px 10px', fontSize: 13, color: 'var(--text)', outline: 'none', width: '100%' };
+  const labelStyle = { fontSize: 11, fontWeight: 600 as const, color: 'var(--muted)', textTransform: 'uppercase' as const, letterSpacing: '0.05em', display: 'block' as const, marginBottom: 4 };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-sm rounded-2xl p-6 shadow-2xl" style={{ background: 'var(--surf)', border: '1px solid var(--bdr)' }}>
+        <div className="mb-5 flex items-center justify-between">
+          <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>Paramètres du projet</h2>
+          <button type="button" onClick={onClose} className="rounded-lg p-1 transition-colors" style={{ color: 'var(--muted)' }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--surf2)'; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}>
+            <X size={16} />
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label style={labelStyle}>Nom du projet</label>
+            <input value={name} onChange={(e) => setName(e.target.value)} style={fieldStyle}
+              onFocus={(e) => { e.target.style.borderColor = 'var(--accent)'; }}
+              onBlur={(e) => { e.target.style.borderColor = 'var(--bdr)'; }} />
+          </div>
+
+          <div>
+            <label style={labelStyle}>Statut</label>
+            <div className="flex gap-2">
+              {STATUS_OPTIONS.map((opt) => (
+                <button key={opt.value} type="button" onClick={() => setStatus(opt.value)}
+                  className="flex-1 rounded-lg py-1.5 text-[12px] font-semibold transition-all"
+                  style={status === opt.value
+                    ? { background: 'var(--accent)', color: '#fff', border: '1px solid var(--accent)' }
+                    : { background: 'var(--surf2)', color: 'var(--text2)', border: '1px solid var(--bdr)' }}>
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ borderTop: '1px solid var(--bdr)', paddingTop: 12 }}>
+            <label style={{ ...labelStyle, marginBottom: 10 }}>Client</label>
+            <div className="space-y-2">
+              <input placeholder="Nom" value={clientName} onChange={(e) => setClientName(e.target.value)} style={fieldStyle}
+                onFocus={(e) => { e.target.style.borderColor = 'var(--accent)'; }}
+                onBlur={(e) => { e.target.style.borderColor = 'var(--bdr)'; }} />
+              <input placeholder="Téléphone" value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} style={fieldStyle}
+                onFocus={(e) => { e.target.style.borderColor = 'var(--accent)'; }}
+                onBlur={(e) => { e.target.style.borderColor = 'var(--bdr)'; }} />
+              <input placeholder="Email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} style={fieldStyle}
+                onFocus={(e) => { e.target.style.borderColor = 'var(--accent)'; }}
+                onBlur={(e) => { e.target.style.borderColor = 'var(--bdr)'; }} />
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6 flex gap-2">
+          <button type="button" onClick={onClose} className="flex-1 rounded-lg py-2 text-sm font-medium transition-colors"
+            style={{ background: 'var(--surf2)', color: 'var(--text2)', border: '1px solid var(--bdr)' }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--surf3)'; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--surf2)'; }}>
+            Annuler
+          </button>
+          <button type="button" onClick={handleSave} className="flex-1 rounded-lg py-2 text-sm font-semibold text-white transition-colors"
+            style={{ background: 'var(--accent)' }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--accent-d)'; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--accent)'; }}>
+            Enregistrer
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ── Project card (grid view) ──────────────────────────────────────────────────
 
 const ProjectCard = ({
-  project, onOpen, onDelete,
-}: { project: Project; onOpen: () => void; onDelete: () => void }) => {
+  project, onOpen, onDelete, onSettings,
+}: { project: Project; onOpen: () => void; onDelete: () => void; onSettings: (e: React.MouseEvent) => void }) => {
   const handleDelete = (e: React.MouseEvent) => { e.stopPropagation(); onDelete(); };
+  const handleSettings = (e: React.MouseEvent) => { e.stopPropagation(); onSettings(e); };
 
   return (
     <div
@@ -82,6 +188,15 @@ const ProjectCard = ({
       {/* Miniature */}
       <div className="relative overflow-hidden" style={{ height: 140 }}>
         <PlanMiniature project={project} size={140} />
+        <button
+          type="button" onClick={handleSettings}
+          aria-label="Paramètres"
+          className="absolute left-2 top-2 flex h-6 w-6 items-center justify-center rounded-md opacity-0 transition-opacity group-hover:opacity-100"
+          style={{ background: 'var(--surf)', color: 'var(--muted)', border: '1px solid var(--bdr)' }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--accent)'; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--muted)'; }}>
+          <Settings size={11} />
+        </button>
         <button
           type="button" onClick={handleDelete}
           aria-label="Supprimer"
@@ -120,9 +235,10 @@ const ProjectCard = ({
 // ── Project row (list view) ───────────────────────────────────────────────────
 
 const ProjectRow = ({
-  project, onOpen, onDelete,
-}: { project: Project; onOpen: () => void; onDelete: () => void }) => {
+  project, onOpen, onDelete, onSettings,
+}: { project: Project; onOpen: () => void; onDelete: () => void; onSettings: (e: React.MouseEvent) => void }) => {
   const handleDelete = (e: React.MouseEvent) => { e.stopPropagation(); onDelete(); };
+  const handleSettings = (e: React.MouseEvent) => { e.stopPropagation(); onSettings(e); };
 
   return (
     <div
@@ -155,7 +271,15 @@ const ProjectRow = ({
         </span>
       </div>
 
-      {/* Delete */}
+      {/* Settings + Delete */}
+      <button
+        type="button" onClick={handleSettings}
+        className="shrink-0 rounded p-1 opacity-0 transition-opacity group-hover:opacity-100"
+        style={{ color: 'var(--muted)' }}
+        onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--accent)'; }}
+        onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--muted)'; }}>
+        <Settings size={14} />
+      </button>
       <button
         type="button" onClick={handleDelete}
         className="shrink-0 rounded p-1 opacity-0 transition-opacity group-hover:opacity-100"
@@ -185,11 +309,15 @@ export default function HomePage() {
   const toggleDarkMode = useUiStore((s) => s.toggleDarkMode);
   const logout = useUiStore((s) => s.logout);
 
+  const setProjectInfo = useProjectStore((s) => s.setProjectInfo);
+  const setStatus = useProjectStore((s) => s.setStatus);
+
   const [filter, setFilter] = useState<Filter>('all');
   const [search, setSearch] = useState('');
   const [showNewModal, setShowNewModal] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [settingsProjectId, setSettingsProjectId] = useState<string | null>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { void hydrate(); }, [hydrate]);
@@ -219,6 +347,17 @@ export default function HomePage() {
     setActive(project.id);
     router.push(`/project/${project.id}`);
   };
+
+  const handleSaveSettings = (name: string, status: ProjectStatus, client: ClientInfo | undefined) => {
+    if (!settingsProjectId) return;
+    setActive(settingsProjectId);
+    setProjectInfo({ name, client });
+    setStatus(status);
+  };
+
+  const settingsProject = settingsProjectId
+    ? projects.find((p) => p.id === settingsProjectId) ?? null
+    : null;
 
   const filtered = projects.filter((p) => {
     if (filter !== 'all' && p.status !== filter) return false;
@@ -375,6 +514,7 @@ export default function HomePage() {
                 project={p}
                 onOpen={() => handleOpen(p)}
                 onDelete={() => { if (confirm('Supprimer ce projet ?')) void removeProject(p.id); }}
+                onSettings={() => setSettingsProjectId(p.id)}
               />
             ))}
             {/* New project card */}
@@ -411,6 +551,7 @@ export default function HomePage() {
                 project={p}
                 onOpen={() => handleOpen(p)}
                 onDelete={() => { if (confirm('Supprimer ce projet ?')) void removeProject(p.id); }}
+                onSettings={() => setSettingsProjectId(p.id)}
               />
             ))}
             {/* New project row */}
@@ -436,6 +577,14 @@ export default function HomePage() {
           defaultProjectName={`Nouveau projet ${projects.length + 1}`}
           onConfirm={(name, client) => { setShowNewModal(false); void handleCreate(name, client); }}
           onCancel={() => setShowNewModal(false)}
+        />
+      )}
+
+      {settingsProject && (
+        <ProjectSettingsModal
+          project={settingsProject}
+          onClose={() => setSettingsProjectId(null)}
+          onSave={handleSaveSettings}
         />
       )}
     </div>
