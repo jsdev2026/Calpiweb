@@ -6,26 +6,34 @@ import { clipPolygon } from '@/engine/geometry/clipper';
 import { computeTilingMultiRoom } from '@/engine/tiling/tilingEngine';
 import { ORDER_MARGIN_RATIO } from '@/constants/businessRules';
 
+// Un bord est considéré "coupé" si la dimension utilisée est inférieure à la
+// dimension nominale d'au moins cette tolérance.
+const CUT_TOLERANCE_MM = 5;
+
 export interface CutDetail {
   id: string;
-  roomId: string;        // room where this cut sits (closest / most-inside)
-  usedW: number;         // mm – dimension of the piece actually used
+  roomId: string;
+  usedW: number;           // mm – dimension du morceau posé
   usedH: number;
-  chuteW: number;        // mm – largest rectangular chute available after cut (0 if none)
+  cutEdgeCount: 1 | 2;    // 1 = coupe simple (3 bords usine), 2 = coupe d'angle (2 bords usine)
+  chuteW: number;          // mm – dimensions de la chute récupérable (0 si inexploitable)
   chuteH: number;
   chuteArea: number;
-  coveredById: string | null;   // this cut is fulfilled by another tile's chute
-  reusedForId: string | null;   // this tile's chute is used to fulfil another cut
+  clipCx: number;          // centre du morceau posé dans l'espace tuile (pour annotation sur le plan)
+  clipCy: number;
+  coveredById: string | null;   // cette coupe est satisfaite par la chute d'un autre carreau
+  reusedForId: string | null;   // la chute de ce carreau sert à satisfaire une autre coupe
 }
 
 export interface CutGroup {
   usedW: number;
   usedH: number;
+  cutEdgeCount: 1 | 2;
   chuteW: number;
   chuteH: number;
   totalCount: number;
-  reuseCount: number; // cuts within this group covered by chutes
-  netTiles: number;   // tiles to buy for this group
+  reuseCount: number;
+  netTiles: number;
 }
 
 export interface QuantityResult {
@@ -36,11 +44,11 @@ export interface QuantityResult {
   cuts: CutDetail[];
   cutGroups: CutGroup[];
   totalReuseCount: number;
-  tilesForCuts: number; // tiles bought for cuts (after reuse)
-  totalTiles: number;   // whole + tilesForCuts
-  toOrder: number;      // with margin
-  roomArea: number;     // mm²
-  tiles: Tile[];        // raw tile rects for plan view
+  tilesForCuts: number;
+  totalTiles: number;
+  toOrder: number;
+  roomArea: number;
+  tiles: Tile[];
 }
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -55,21 +63,33 @@ function tileSpaceRooms(rooms: Room[], angle: number, cx: number, cy: number): P
     );
 }
 
-function computeCutDimensions(
+// Calcule les dimensions réelles du morceau posé et de la chute,
+// en utilisant les dimensions nominales du carreau (tile.rect.w / tile.rect.h)
+// — ce qui corrige le cas herringbone où les carreaux alternent W×H et H×W.
+function computeCutInfo(
   tile: Tile,
   roomPolygons: Point[][],
-  tileW: number,
-  tileH: number,
-): { usedW: number; usedH: number; chuteW: number; chuteH: number } {
+): {
+  usedW: number;
+  usedH: number;
+  cutEdgeCount: 1 | 2;
+  chuteW: number;
+  chuteH: number;
+  chuteArea: number;
+  clipCx: number;
+  clipCy: number;
+} {
+  const tileW = tile.rect.w;
+  const tileH = tile.rect.h;
+
   const corners: Point[] = [
-    { x: tile.rect.x, y: tile.rect.y },
-    { x: tile.rect.x + tileW, y: tile.rect.y },
+    { x: tile.rect.x,         y: tile.rect.y         },
+    { x: tile.rect.x + tileW, y: tile.rect.y         },
     { x: tile.rect.x + tileW, y: tile.rect.y + tileH },
-    { x: tile.rect.x, y: tile.rect.y + tileH },
+    { x: tile.rect.x,         y: tile.rect.y + tileH },
   ];
 
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-
   for (const poly of roomPolygons) {
     const clipped = clipPolygon(corners, poly);
     for (const p of clipped) {
@@ -81,48 +101,76 @@ function computeCutDimensions(
   }
 
   if (minX === Infinity) {
-    // Fallback: bounding box intersection
-    minX = Math.max(tile.rect.x, Math.min(...roomPolygons.flatMap((p) => p.map((pt) => pt.x))));
-    minY = Math.max(tile.rect.y, Math.min(...roomPolygons.flatMap((p) => p.map((pt) => pt.y))));
-    maxX = Math.min(tile.rect.x + tileW, Math.max(...roomPolygons.flatMap((p) => p.map((pt) => pt.x))));
-    maxY = Math.min(tile.rect.y + tileH, Math.max(...roomPolygons.flatMap((p) => p.map((pt) => pt.y))));
+    return { usedW: tileW, usedH: tileH, cutEdgeCount: 1, chuteW: 0, chuteH: 0, chuteArea: 0, clipCx: tile.rect.x + tileW / 2, clipCy: tile.rect.y + tileH / 2 };
   }
 
   const usedW = Math.max(1, Math.round(Math.min(tileW, maxX - minX)));
   const usedH = Math.max(1, Math.round(Math.min(tileH, maxY - minY)));
+  const clipCx = (minX + maxX) / 2;
+  const clipCy = (minY + maxY) / 2;
 
-  // Compute all potential chute strips and keep the largest
-  const tx = tile.rect.x, ty = tile.rect.y;
-  const rightW = Math.round(tx + tileW - maxX);
-  const leftW = Math.round(minX - tx);
-  const bottomH = Math.round(ty + tileH - maxY);
-  const topH = Math.round(minY - ty);
+  const isCutW = usedW < tileW - CUT_TOLERANCE_MM;
+  const isCutH = usedH < tileH - CUT_TOLERANCE_MM;
 
-  const strips = [
-    { w: rightW, h: tileH },
-    { w: leftW, h: tileH },
-    { w: tileW, h: bottomH },
-    { w: tileW, h: topH },
-  ].filter((s) => s.w > 20 && s.h > 20);
+  // Nombre de bords de coupe : 1 (coupe simple) ou 2 (coupe d'angle)
+  const cutEdgeCount: 1 | 2 = isCutW && isCutH ? 2 : 1;
 
-  if (strips.length === 0) return { usedW, usedH, chuteW: 0, chuteH: 0 };
+  // Dimensions de la chute :
+  //   Coupe simple horizontale : bande pleine largeur  → tileW × (tileH − usedH)
+  //   Coupe simple verticale   : bande pleine hauteur  → (tileW − usedW) × tileH
+  //   Coupe d'angle            : rectangle de coin     → (tileW − usedW) × (tileH − usedH)
+  let chuteW: number, chuteH: number;
+  if (isCutW && isCutH) {
+    chuteW = tileW - usedW;
+    chuteH = tileH - usedH;
+  } else if (isCutH) {
+    chuteW = tileW;
+    chuteH = tileH - usedH;
+  } else {
+    chuteW = tileW - usedW;
+    chuteH = tileH;
+  }
 
-  const best = strips.reduce((a, b) => a.w * a.h >= b.w * b.h ? a : b);
-  return { usedW, usedH, chuteW: best.w, chuteH: best.h };
+  const viable = chuteW > 20 && chuteH > 20;
+  return {
+    usedW,
+    usedH,
+    cutEdgeCount,
+    chuteW: viable ? chuteW : 0,
+    chuteH: viable ? chuteH : 0,
+    chuteArea: viable ? chuteW * chuteH : 0,
+    clipCx,
+    clipCy,
+  };
 }
 
 // ─── reuse optimisation (greedy) ────────────────────────────────────────────
+//
+// Règle des bords d'usine :
+//   Coupe simple  (cutEdgeCount=1) → chute avec 3 bords usine → couvre tout type de coupe
+//   Coupe d'angle (cutEdgeCount=2) → chute avec 2 bords usine → couvre uniquement les coupes d'angle
+//
+// Contrainte : chute.cutEdgeCount <= cut.cutEdgeCount
+//   (une chute d'angle ne peut pas remplacer une coupe simple)
 
 function optimizeReuse(cuts: CutDetail[]): void {
-  // Sort: smallest used area first → their chutes are largest → available for larger cuts
   const sorted = [...cuts].sort((a, b) => a.usedW * a.usedH - b.usedW * b.usedH);
-  const pool: { w: number; h: number; fromId: string; used: boolean }[] = [];
+  const pool: {
+    w: number;
+    h: number;
+    fromId: string;
+    used: boolean;
+    cutEdgeCount: 1 | 2;
+  }[] = [];
 
   for (const cut of sorted) {
     let found = false;
     for (const chute of pool) {
       if (chute.used) continue;
-      const fitsNormal = chute.w >= cut.usedW && chute.h >= cut.usedH;
+      // Contrainte bords d'usine : la chute doit avoir au moins autant de bords
+      // usine que le poste de coupe l'exige.
+      if (chute.cutEdgeCount > cut.cutEdgeCount) continue;
+      const fitsNormal  = chute.w >= cut.usedW && chute.h >= cut.usedH;
       const fitsRotated = chute.w >= cut.usedH && chute.h >= cut.usedW;
       if (fitsNormal || fitsRotated) {
         chute.used = true;
@@ -134,7 +182,13 @@ function optimizeReuse(cuts: CutDetail[]): void {
       }
     }
     if (!found && cut.chuteW > 20 && cut.chuteH > 20) {
-      pool.push({ w: cut.chuteW, h: cut.chuteH, fromId: cut.id, used: false });
+      pool.push({
+        w: cut.chuteW,
+        h: cut.chuteH,
+        fromId: cut.id,
+        used: false,
+        cutEdgeCount: cut.cutEdgeCount,
+      });
     }
   }
 }
@@ -150,6 +204,7 @@ function groupCuts(cuts: CutDetail[]): CutGroup[] {
       map.set(key, {
         usedW: cut.usedW,
         usedH: cut.usedH,
+        cutEdgeCount: cut.cutEdgeCount,
         chuteW: cut.chuteW,
         chuteH: cut.chuteH,
         totalCount: 0,
@@ -188,20 +243,18 @@ export function analyzeQuantities(rooms: Room[], config: TilingConfig): Quantity
   const cy = (bbox.minY + bbox.maxY) / 2;
 
   const roomPolygons = tileSpaceRooms(validRooms, config.angle, cx, cy);
-
-  // Assign each cut tile to the room it belongs to most
   const roomIds = validRooms.map((r) => r.id);
 
   const cuts: CutDetail[] = tiles
     .filter((t) => t.type === 'CUT')
     .map((tile) => {
-      const { usedW, usedH, chuteW, chuteH } = computeCutDimensions(
-        tile, roomPolygons, config.width, config.height,
+      const { usedW, usedH, cutEdgeCount, chuteW, chuteH, chuteArea, clipCx, clipCy } = computeCutInfo(
+        tile,
+        roomPolygons,
       );
 
-      // Find closest room (by tile rect center)
-      const cx2 = tile.rect.x + config.width / 2;
-      const cy2 = tile.rect.y + config.height / 2;
+      const cx2 = tile.rect.x + tile.rect.w / 2;
+      const cy2 = tile.rect.y + tile.rect.h / 2;
       let bestRoom = roomIds[0]!;
       let bestDist = Infinity;
       for (let r = 0; r < roomPolygons.length; r++) {
@@ -216,8 +269,14 @@ export function analyzeQuantities(rooms: Room[], config: TilingConfig): Quantity
       return {
         id: tile.id,
         roomId: bestRoom,
-        usedW, usedH, chuteW, chuteH,
-        chuteArea: chuteW * chuteH,
+        usedW,
+        usedH,
+        cutEdgeCount,
+        chuteW,
+        chuteH,
+        chuteArea,
+        clipCx,
+        clipCy,
         coveredById: null,
         reusedForId: null,
       };

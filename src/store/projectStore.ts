@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Project, Room, EdgeType } from '@/types/project';
+import type { Project, Room, EdgeType, ProjectStatus, ClientInfo, Constraint } from '@/types/project';
 import type { Plan, Point } from '@/types/plan';
 import type { TilingConfig } from '@/types/tiling';
 import { projectsDb } from '@/lib/db';
@@ -33,11 +33,19 @@ function migrateProject(raw: unknown): Project {
   return {
     id: p.id as string,
     name: p.name as string,
+    client: (() => {
+      const raw = p.client;
+      if (!raw) return undefined;
+      if (typeof raw === 'string') return raw ? { name: raw } : undefined;
+      return raw as ClientInfo;
+    })(),
+    status: (p.status as ProjectStatus | undefined) ?? 'new',
     createdAt: p.createdAt as number,
     updatedAt: p.updatedAt as number,
     rooms,
     config,
     wallThickness: (p.wallThickness as number | undefined) ?? WALL_THICKNESS_MM,
+    constraints: (p.constraints as Constraint[] | undefined) ?? [],
   };
 }
 
@@ -47,7 +55,7 @@ interface ProjectState {
   hydrated: boolean;
 
   hydrate: () => Promise<void>;
-  create: () => Promise<Project>;
+  create: (data?: { name?: string; client?: ClientInfo }) => Promise<Project>;
   rename: (id: string, name: string) => void;
   remove: (id: string) => Promise<void>;
   setActive: (id: string | null) => void;
@@ -60,6 +68,17 @@ interface ProjectState {
 
   setConfig: (config: TilingConfig) => void;
   setWallThickness: (mm: number) => void;
+  setStatus: (status: ProjectStatus) => void;
+  setClient: (client: ClientInfo) => void;
+
+  // Constraint actions
+  addConstraint: (c: Constraint) => void;
+  removeConstraint: (id: string) => void;
+  updateConstraintValue: (id: string, value: Constraint['value']) => void;
+  /** Shift vertex indices for a given room when vertices are inserted/removed. */
+  shiftConstraintIndices: (roomId: string, afterIdx: number, delta: number) => void;
+
+  restoreSnapshot: (rooms: Room[], constraints: Constraint[]) => void;
 }
 
 const sortByUpdatedDesc = (a: Project, b: Project) => b.updatedAt - a.updatedAt;
@@ -75,16 +94,19 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     set({ projects: all.map(migrateProject).sort(sortByUpdatedDesc), hydrated: true });
   },
 
-  create: async () => {
+  create: async (data) => {
     const now = Date.now();
     const newProject: Project = {
       id: generateId(),
-      name: `Nouveau projet ${get().projects.length + 1}`,
+      name: data?.name ?? `Nouveau projet ${get().projects.length + 1}`,
+      client: data?.client,
+      status: 'new',
       createdAt: now,
       updatedAt: now,
       rooms: [{ id: generateId(), points: [], edges: [] }],
       config: { ...DEFAULT_TILING_CONFIG },
       wallThickness: WALL_THICKNESS_MM,
+      constraints: [],
     };
     await projectsDb.save(newProject);
     set({ projects: [newProject, ...get().projects], activeProjectId: newProject.id });
@@ -125,7 +147,11 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   },
 
   removeRoom: (roomId) => {
-    get().updateActive((p) => ({ ...p, rooms: p.rooms.filter((r) => r.id !== roomId) }));
+    get().updateActive((p) => ({
+      ...p,
+      rooms: p.rooms.filter((r) => r.id !== roomId),
+      constraints: p.constraints.filter((c) => c.pts.every((ref) => ref.roomId !== roomId)),
+    }));
   },
 
   updateRoom: (roomId, points, edges) => {
@@ -143,8 +169,42 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   },
 
   setConfig: (config) => get().updateActive((p) => ({ ...p, config })),
-
   setWallThickness: (mm) => get().updateActive((p) => ({ ...p, wallThickness: mm })),
+  setStatus: (status) => get().updateActive((p) => ({ ...p, status })),
+  setClient: (client) => get().updateActive((p) => ({ ...p, client })),
+
+  addConstraint: (c) => {
+    get().updateActive((p) => ({ ...p, constraints: [...p.constraints, c] }));
+  },
+
+  removeConstraint: (id) => {
+    get().updateActive((p) => ({ ...p, constraints: p.constraints.filter((c) => c.id !== id) }));
+  },
+
+  updateConstraintValue: (id, value) => {
+    get().updateActive((p) => ({
+      ...p,
+      constraints: p.constraints.map((c) => (c.id === id ? { ...c, value } : c)),
+    }));
+  },
+
+  shiftConstraintIndices: (roomId, afterIdx, delta) => {
+    get().updateActive((p) => ({
+      ...p,
+      constraints: p.constraints.map((c) => ({
+        ...c,
+        pts: c.pts.map((ref) =>
+          ref.roomId === roomId && ref.vertexIdx > afterIdx
+            ? { ...ref, vertexIdx: ref.vertexIdx + delta }
+            : ref,
+        ),
+      })),
+    }));
+  },
+
+  restoreSnapshot: (rooms, constraints) => {
+    get().updateActive((p) => ({ ...p, rooms, constraints }));
+  },
 }));
 
 export const selectActiveProject = (state: ProjectState): Project | null =>

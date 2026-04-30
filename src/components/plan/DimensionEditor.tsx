@@ -10,8 +10,6 @@ interface DimensionEditorProps {
   onChange: (value: string) => void;
   onSubmit: () => void;
   onCancel: () => void;
-  onAlignH?: () => void;
-  onAlignV?: () => void;
 }
 
 export const DimensionEditor = ({
@@ -21,8 +19,6 @@ export const DimensionEditor = ({
   onChange,
   onSubmit,
   onCancel,
-  onAlignH,
-  onAlignV,
 }: DimensionEditorProps) => {
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') onSubmit();
@@ -40,26 +36,6 @@ export const DimensionEditor = ({
           : { left: '50%', top: '1rem', transform: 'translateX(-50%)' }
       }
     >
-      {onAlignH && (
-        <button
-          type="button"
-          onClick={onAlignH}
-          title="Aligner horizontal"
-          className="rounded-lg bg-zinc-800 px-2 py-1.5 text-[10px] font-black text-zinc-400 transition-colors hover:bg-zinc-700 hover:text-orange-400"
-        >
-          H
-        </button>
-      )}
-      {onAlignV && (
-        <button
-          type="button"
-          onClick={onAlignV}
-          title="Aligner vertical"
-          className="rounded-lg bg-zinc-800 px-2 py-1.5 text-[10px] font-black text-zinc-400 transition-colors hover:bg-zinc-700 hover:text-orange-400"
-        >
-          V
-        </button>
-      )}
       <input
         type="number"
         step="0.1"

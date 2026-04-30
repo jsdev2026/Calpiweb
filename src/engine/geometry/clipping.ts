@@ -65,7 +65,9 @@ export const classifyTile = (
     }
   }
 
-  if (cornersInside > 0) return 'CUT';
+  // We've already verified that no WALL edge crosses this tile (door edges were skipped above).
+  // If some corners are still inside the room, the tile straddles only a door opening — treat it as whole.
+  if (cornersInside > 0) return 'WHOLE';
   if (roomPoly.length > 0 && pointInPolygon(roomPoly[0]!, corners)) return 'CUT';
 
   return 'OUTSIDE';

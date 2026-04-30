@@ -1,7 +1,7 @@
 import type { Point } from '@/types/plan';
-import type { Room } from '@/types/project';
+import type { EdgeType, Room } from '@/types/project';
 import type { Tile, TileType, TilingConfig, TilingResult } from '@/types/tiling';
-import { getBoundingBox, distance, rotatePoint, getPolygonArea } from '@/engine/geometry/polygon';
+import { getBoundingBox, distance, rotatePoint, getPolygonArea, pointInPolygon, getIntersection } from '@/engine/geometry/polygon';
 import { classifyTile, classifyPolygonTile } from '@/engine/geometry/clipping';
 import { computeStats } from './cutCalculator';
 
@@ -58,7 +58,7 @@ function buildHerringbonePositions(
   return result;
 }
 
-export const computeTiling = (plan: Point[], config: TilingConfig): TilingResult => {
+export const computeTiling = (plan: Point[], config: TilingConfig, edges?: EdgeType[]): TilingResult => {
   if (!plan || plan.length < 3) return { tiles: [], stats: null };
 
   const { width, height, stagger, angle, layout, joint, offsetX, offsetY } = config;
@@ -87,7 +87,7 @@ export const computeTiling = (plan: Point[], config: TilingConfig): TilingResult
       const rowStagger = (rowIndex % 2) * (stepX * staggerRatio);
       for (let x = startX - stepX - rowStagger; x < endX + stepX; x += stepX) {
         const rect = { x, y, w: width, h: height };
-        const type = classifyTile(rect, testPlan);
+        const type = classifyTile(rect, testPlan, edges);
         if (type !== 'OUTSIDE') {
           tiles.push({ id: `${x.toFixed(0)}-${y.toFixed(0)}`, rect, type });
         }
@@ -104,7 +104,7 @@ export const computeTiling = (plan: Point[], config: TilingConfig): TilingResult
 
     for (const pos of positions) {
       const rect = { x: pos.x, y: pos.y, w: pos.w, h: pos.h };
-      const type = classifyTile(rect, testPlan);
+      const type = classifyTile(rect, testPlan, edges);
       if (type !== 'OUTSIDE') {
         tiles.push({ id: `${pos.x.toFixed(1)}-${pos.y.toFixed(1)}-${pos.w}`, rect, type });
       }
@@ -168,7 +168,7 @@ export const computeTiling = (plan: Point[], config: TilingConfig): TilingResult
 export const computeTilingMultiRoom = (rooms: Room[], config: TilingConfig): TilingResult => {
   const valid = rooms.filter((r) => r.points.length >= 3);
   if (valid.length === 0) return { tiles: [], stats: null };
-  if (valid.length === 1) return computeTiling(valid[0]!.points, config);
+  if (valid.length === 1) return computeTiling(valid[0]!.points, config, valid[0]!.edges);
 
   const { width, height, stagger, angle, layout, joint, offsetX, offsetY } = config;
   const allPoints = valid.flatMap((r) => r.points);
@@ -272,6 +272,23 @@ export const computeTilingMultiRoom = (rooms: Room[], config: TilingConfig): Til
           const t = classifyPolygonTile(pts, testPoints);
           if (t === 'WHOLE') { bestType = 'WHOLE'; break; }
           if (t === 'CUT') bestType = 'CUT';
+        }
+
+        // Door-threshold fix: all polygon corners in the floor union and no wall edge crosses → WHOLE
+        if (bestType === 'CUT') {
+          const allInUnion = pts.every((p) => testRooms.some(({ testPoints }) => pointInPolygon(p, testPoints)));
+          if (allInUnion) {
+            const ptEdges = pts.map((p, i) => [p, pts[(i + 1) % pts.length]!] as [Point, Point]);
+            const wallCuts = testRooms.some(({ testPoints, edges }) =>
+              edges.some((et, i) => {
+                if (et === 'DOOR') return false;
+                const p1 = testPoints[i]!;
+                const p2 = testPoints[(i + 1) % testPoints.length]!;
+                return ptEdges.some((te) => !!getIntersection(te[0], te[1], p1, p2));
+              }),
+            );
+            if (!wallCuts) bestType = 'WHOLE';
+          }
         }
 
         if (bestType !== 'OUTSIDE') {
