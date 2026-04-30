@@ -79,11 +79,16 @@ const ProjectSettingsModal = ({
   onClose: () => void;
   onSave: (name: string, status: ProjectStatus, client: ClientInfo | undefined) => void;
 }) => {
+  const addNote = useProjectStore((s) => s.addNote);
+  const removeNote = useProjectStore((s) => s.removeNote);
+  const user = useUiStore((s) => s.user);
+
   const [name, setName] = useState(project.name);
   const [status, setStatus] = useState<ProjectStatus>(project.status);
   const [clientName, setClientName] = useState(project.client?.name ?? '');
   const [clientPhone, setClientPhone] = useState(project.client?.phone ?? '');
   const [clientEmail, setClientEmail] = useState(project.client?.email ?? '');
+  const [noteText, setNoteText] = useState('');
 
   const handleSave = () => {
     const client: ClientInfo | undefined = clientName.trim()
@@ -93,14 +98,22 @@ const ProjectSettingsModal = ({
     onClose();
   };
 
+  const handleAddNote = () => {
+    const text = noteText.trim();
+    if (!text) return;
+    addNote(text, user?.name ?? 'Utilisateur');
+    setNoteText('');
+  };
+
   const fieldStyle = { background: 'var(--surf2)', border: '1px solid var(--bdr)', borderRadius: 'var(--rs)', padding: '7px 10px', fontSize: 13, color: 'var(--text)', outline: 'none', width: '100%' };
   const labelStyle = { fontSize: 11, fontWeight: 600 as const, color: 'var(--muted)', textTransform: 'uppercase' as const, letterSpacing: '0.05em', display: 'block' as const, marginBottom: 4 };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-sm rounded-2xl p-6 shadow-2xl" style={{ background: 'var(--surf)', border: '1px solid var(--bdr)' }}>
-        <div className="mb-5 flex items-center justify-between">
+      <div className="relative z-10 flex w-full max-w-md flex-col rounded-2xl shadow-2xl" style={{ background: 'var(--surf)', border: '1px solid var(--bdr)', maxHeight: '90vh' }}>
+        {/* Header */}
+        <div className="flex shrink-0 items-center justify-between px-6 pt-6 pb-4">
           <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>Paramètres du projet</h2>
           <button type="button" onClick={onClose} className="rounded-lg p-1 transition-colors" style={{ color: 'var(--muted)' }}
             onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--surf2)'; }}
@@ -109,7 +122,8 @@ const ProjectSettingsModal = ({
           </button>
         </div>
 
-        <div className="space-y-4">
+        {/* Scrollable body */}
+        <div className="flex-1 overflow-y-auto px-6 pb-2 space-y-4">
           <div>
             <label style={labelStyle}>Nom du projet</label>
             <input value={name} onChange={(e) => setName(e.target.value)} style={fieldStyle}
@@ -146,9 +160,61 @@ const ProjectSettingsModal = ({
                 onBlur={(e) => { e.target.style.borderColor = 'var(--bdr)'; }} />
             </div>
           </div>
+
+          {/* Notes */}
+          <div style={{ borderTop: '1px solid var(--bdr)', paddingTop: 12 }}>
+            <label style={{ ...labelStyle, marginBottom: 10 }}>Notes</label>
+            <div className="flex gap-2">
+              <textarea
+                value={noteText}
+                onChange={(e) => setNoteText(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter' && e.ctrlKey) { e.preventDefault(); handleAddNote(); } }}
+                placeholder="Ajouter une note… (Ctrl+Entrée)"
+                rows={2}
+                style={{ ...fieldStyle, resize: 'none', lineHeight: '1.5' }}
+                onFocus={(e) => { e.target.style.borderColor = 'var(--accent)'; }}
+                onBlur={(e) => { e.target.style.borderColor = 'var(--bdr)'; }}
+              />
+              <button
+                type="button"
+                onClick={handleAddNote}
+                disabled={!noteText.trim()}
+                className="shrink-0 rounded-lg px-3 text-sm font-semibold text-white disabled:opacity-40"
+                style={{ background: 'var(--accent)', alignSelf: 'flex-end', paddingTop: 7, paddingBottom: 7 }}
+              >
+                Ajouter
+              </button>
+            </div>
+
+            {project.notes.length > 0 && (
+              <div className="mt-3 space-y-2">
+                {project.notes.map((note) => (
+                  <div key={note.id} className="group flex items-start gap-2 rounded-lg p-3" style={{ background: 'var(--surf2)', border: '1px solid var(--bdr)' }}>
+                    <div className="flex-1 min-w-0">
+                      <p style={{ fontSize: 13, color: 'var(--text)', lineHeight: '1.5', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{note.text}</p>
+                      <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>
+                        {note.authorName} · {new Date(note.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeNote(note.id)}
+                      className="shrink-0 rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100"
+                      style={{ color: 'var(--muted)' }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = '#ef4444'; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--muted)'; }}
+                    >
+                      <X size={13} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="mt-6 flex gap-2">
+        {/* Footer */}
+        <div className="shrink-0 flex gap-2 px-6 py-4" style={{ borderTop: '1px solid var(--bdr)' }}>
           <button type="button" onClick={onClose} className="flex-1 rounded-lg py-2 text-sm font-medium transition-colors"
             style={{ background: 'var(--surf2)', color: 'var(--text2)', border: '1px solid var(--bdr)' }}
             onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--surf3)'; }}
@@ -514,7 +580,7 @@ export default function HomePage() {
                 project={p}
                 onOpen={() => handleOpen(p)}
                 onDelete={() => { if (confirm('Supprimer ce projet ?')) void removeProject(p.id); }}
-                onSettings={() => setSettingsProjectId(p.id)}
+                onSettings={() => { setActive(p.id); setSettingsProjectId(p.id); }}
               />
             ))}
             {/* New project card */}
@@ -551,7 +617,7 @@ export default function HomePage() {
                 project={p}
                 onOpen={() => handleOpen(p)}
                 onDelete={() => { if (confirm('Supprimer ce projet ?')) void removeProject(p.id); }}
-                onSettings={() => setSettingsProjectId(p.id)}
+                onSettings={() => { setActive(p.id); setSettingsProjectId(p.id); }}
               />
             ))}
             {/* New project row */}
