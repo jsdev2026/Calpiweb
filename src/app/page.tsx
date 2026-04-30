@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Moon, Plus, Search, Sun } from 'lucide-react';
+import { List, LayoutGrid, LogOut, Moon, Plus, Search, Sun } from 'lucide-react';
 import { useProjectStore } from '@/store/projectStore';
 import { useUiStore } from '@/store/uiStore';
 import type { Project, ProjectStatus } from '@/types/project';
@@ -20,73 +20,94 @@ const FILTERS: { id: Filter; label: string }[] = [
   { id: 'done', label: 'Terminés' },
 ];
 
-// ─── Project card ─────────────────────────────────────────────────────────────
+// ── Plan miniature ────────────────────────────────────────────────────────────
+
+const PlanMiniature = ({ project, size = 140 }: { project: Project; size?: number }) => {
+  const allPoints = project.rooms.flatMap((r) => r.points);
+  if (allPoints.length < 3) {
+    return (
+      <div className="flex h-full items-center justify-center" style={{ background: 'var(--surf2)' }}>
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" style={{ opacity: 0.18 }}>
+          <rect x="3" y="3" width="12" height="12" rx="2" fill="var(--text)"/>
+          <rect x="17" y="3" width="12" height="12" rx="2" fill="var(--text)"/>
+          <rect x="3" y="17" width="12" height="12" rx="2" fill="var(--text)"/>
+          <rect x="17" y="17" width="12" height="12" rx="2" fill="var(--text)"/>
+        </svg>
+      </div>
+    );
+  }
+
+  const pad = 10;
+  const xs = allPoints.map((p) => p.x);
+  const ys = allPoints.map((p) => p.y);
+  const minX = Math.min(...xs), maxX = Math.max(...xs);
+  const minY = Math.min(...ys), maxY = Math.max(...ys);
+  const w = maxX - minX || 1, h = maxY - minY || 1;
+  const s = (size - pad * 2) / Math.max(w, h);
+  const ox = (size - w * s) / 2 - minX * s;
+  const oy = (size - h * s) / 2 - minY * s;
+
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ display: 'block', background: 'var(--surf2)' }}>
+      {project.rooms.map((room) => {
+        if (room.points.length < 3) return null;
+        const pts = room.points.map((p) => `${p.x * s + ox},${p.y * s + oy}`).join(' ');
+        return (
+          <g key={room.id}>
+            <polygon points={pts} fill="var(--surf3)" stroke="var(--accent)" strokeWidth="1.5" strokeLinejoin="round" />
+          </g>
+        );
+      })}
+    </svg>
+  );
+};
+
+// ── Project card (grid view) ──────────────────────────────────────────────────
 
 const ProjectCard = ({
-  project,
-  onOpen,
-  onDelete,
+  project, onOpen, onDelete,
 }: { project: Project; onOpen: () => void; onDelete: () => void }) => {
   const handleDelete = (e: React.MouseEvent) => { e.stopPropagation(); onDelete(); };
 
   return (
     <div
-      role="button"
-      tabIndex={0}
+      role="button" tabIndex={0}
       onClick={onOpen}
       onKeyDown={(e) => e.key === 'Enter' && onOpen()}
       className="group cursor-pointer overflow-hidden rounded-[var(--r)] border transition-all duration-200"
-      style={{
-        background: 'var(--surf)',
-        borderColor: 'var(--bdr)',
-        boxShadow: 'var(--sh)',
-      }}
+      style={{ background: 'var(--surf)', borderColor: 'var(--bdr)', boxShadow: 'var(--sh)' }}
       onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLDivElement).style.boxShadow = 'var(--sh-md)'; }}
       onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.transform = ''; (e.currentTarget as HTMLDivElement).style.boxShadow = 'var(--sh)'; }}
     >
-      {/* Miniature placeholder */}
-      <div className="flex h-[140px] items-center justify-center" style={{ background: 'var(--surf2)' }}>
-        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" style={{ opacity: 0.2 }}>
-          <rect x="4" y="4" width="15" height="15" rx="2" fill="var(--text)"/>
-          <rect x="21" y="4" width="15" height="15" rx="2" fill="var(--text)"/>
-          <rect x="4" y="21" width="15" height="15" rx="2" fill="var(--text)"/>
-          <rect x="21" y="21" width="15" height="15" rx="2" fill="var(--text)"/>
-        </svg>
+      {/* Miniature */}
+      <div className="relative overflow-hidden" style={{ height: 140 }}>
+        <PlanMiniature project={project} size={140} />
+        <button
+          type="button" onClick={handleDelete}
+          aria-label="Supprimer"
+          className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-md opacity-0 transition-opacity group-hover:opacity-100"
+          style={{ background: 'var(--surf)', color: 'var(--muted)', border: '1px solid var(--bdr)' }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = '#ef4444'; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--muted)'; }}>
+          <svg width="11" height="11" viewBox="0 0 14 14" fill="none"><path d="M2 3.5h10M5 3.5V2.5a.5.5 0 01.5-.5h3a.5.5 0 01.5.5v1m1 0l-.7 8a.5.5 0 01-.5.5H5.2a.5.5 0 01-.5-.5l-.7-8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </button>
       </div>
 
       {/* Body */}
-      <div className="p-4">
-        <div className="mb-1 flex items-start justify-between gap-2">
-          <h3
-            className="line-clamp-1 flex-1 text-[15px] font-semibold leading-snug"
-            style={{ fontFamily: 'var(--font-display)', color: 'var(--text)' }}
-          >
-            {project.name}
-          </h3>
-          <button
-            type="button"
-            onClick={handleDelete}
-            aria-label="Supprimer"
-            className="shrink-0 rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100"
-            style={{ color: 'var(--muted)' }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = '#ef4444'; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--muted)'; }}
-          >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 3.5h10M5 3.5V2.5a.5.5 0 01.5-.5h3a.5.5 0 01.5.5v1m1 0l-.7 8a.5.5 0 01-.5.5H5.2a.5.5 0 01-.5-.5l-.7-8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          </button>
-        </div>
+      <div className="p-3.5">
+        <h3 className="line-clamp-1 text-[14px] font-semibold leading-snug" style={{ color: 'var(--text)' }}>{project.name}</h3>
         {project.client?.name && (
-          <p className="mb-2 truncate text-[12.5px]" style={{ color: 'var(--text2)' }}>{project.client.name}</p>
+          <p className="mt-0.5 truncate text-[12px]" style={{ color: 'var(--text2)' }}>{project.client.name}</p>
         )}
-        <p className="text-[12px]" style={{ color: 'var(--muted)' }}>
+        <p className="mt-1 text-[11.5px]" style={{ color: 'var(--muted)' }}>
           {project.rooms.length} pièce{project.rooms.length !== 1 ? 's' : ''}
         </p>
       </div>
 
       {/* Footer */}
-      <div className="flex items-center justify-between border-t px-4 py-2.5" style={{ borderColor: 'var(--bdr)' }}>
-        <span className="text-[11.5px]" style={{ color: 'var(--muted)' }}>
-          {new Date(project.updatedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
+      <div className="flex items-center justify-between border-t px-3.5 py-2" style={{ borderColor: 'var(--bdr)' }}>
+        <span className="text-[11px]" style={{ color: 'var(--muted)' }}>
+          {new Date(project.updatedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
         </span>
         <span className={`rounded-full px-2 py-0.5 text-[10.5px] font-semibold ${STATUS_CLASS[project.status]}`}>
           {STATUS_LABELS[project.status]}
@@ -96,7 +117,60 @@ const ProjectCard = ({
   );
 };
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+// ── Project row (list view) ───────────────────────────────────────────────────
+
+const ProjectRow = ({
+  project, onOpen, onDelete,
+}: { project: Project; onOpen: () => void; onDelete: () => void }) => {
+  const handleDelete = (e: React.MouseEvent) => { e.stopPropagation(); onDelete(); };
+
+  return (
+    <div
+      role="button" tabIndex={0}
+      onClick={onOpen}
+      onKeyDown={(e) => e.key === 'Enter' && onOpen()}
+      className="group flex cursor-pointer items-center gap-4 rounded-[var(--rs)] border px-4 py-3 transition-all"
+      style={{ background: 'var(--surf)', borderColor: 'var(--bdr)', boxShadow: 'var(--sh)' }}
+      onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.background = 'var(--surf2)'; }}
+      onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.background = 'var(--surf)'; }}
+    >
+      {/* Mini thumbnail */}
+      <div className="shrink-0 overflow-hidden rounded" style={{ width: 48, height: 48 }}>
+        <PlanMiniature project={project} size={48} />
+      </div>
+
+      {/* Info */}
+      <div className="flex flex-1 items-center gap-4 min-w-0">
+        <div className="min-w-0 flex-1">
+          <h3 className="truncate text-[13.5px] font-semibold" style={{ color: 'var(--text)' }}>{project.name}</h3>
+          <p className="truncate text-[12px]" style={{ color: 'var(--text2)' }}>
+            {project.client?.name || '—'} · {project.rooms.length} pièce{project.rooms.length !== 1 ? 's' : ''}
+          </p>
+        </div>
+        <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${STATUS_CLASS[project.status]}`}>
+          {STATUS_LABELS[project.status]}
+        </span>
+        <span className="shrink-0 w-24 text-right text-[12px]" style={{ color: 'var(--muted)' }}>
+          {new Date(project.updatedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
+        </span>
+      </div>
+
+      {/* Delete */}
+      <button
+        type="button" onClick={handleDelete}
+        className="shrink-0 rounded p-1 opacity-0 transition-opacity group-hover:opacity-100"
+        style={{ color: 'var(--muted)' }}
+        onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = '#ef4444'; }}
+        onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--muted)'; }}>
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 3.5h10M5 3.5V2.5a.5.5 0 01.5-.5h3a.5.5 0 01.5.5v1m1 0l-.7 8a.5.5 0 01-.5.5H5.2a.5.5 0 01-.5-.5l-.7-8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+      </button>
+    </div>
+  );
+};
+
+// ── Page ──────────────────────────────────────────────────────────────────────
+
+type ViewMode = 'grid' | 'list';
 
 export default function HomePage() {
   const router = useRouter();
@@ -109,10 +183,14 @@ export default function HomePage() {
   const user = useUiStore((s) => s.user);
   const darkMode = useUiStore((s) => s.darkMode);
   const toggleDarkMode = useUiStore((s) => s.toggleDarkMode);
+  const logout = useUiStore((s) => s.logout);
 
   const [filter, setFilter] = useState<Filter>('all');
   const [search, setSearch] = useState('');
   const [showNewModal, setShowNewModal] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { void hydrate(); }, [hydrate]);
 
@@ -122,6 +200,15 @@ export default function HomePage() {
       if (!raw) router.push('/auth');
     }
   }, [user, router]);
+
+  // Close user menu on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) setShowUserMenu(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   const handleCreate = async (name: string, client: ClientInfo | undefined) => {
     const project = await createProject({ name, client });
@@ -167,7 +254,6 @@ export default function HomePage() {
           <span style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.2px' }}>CaléPlan</span>
         </div>
 
-        {/* Separator */}
         <div className="mx-4 h-5 w-px" style={{ background: 'var(--bdr)' }} />
 
         {/* Search */}
@@ -184,17 +270,63 @@ export default function HomePage() {
         </div>
 
         <div className="ml-auto flex items-center gap-2">
+          {/* View toggle */}
+          <div className="flex rounded-[var(--rs)] p-0.5" style={{ background: 'var(--surf2)', border: '1px solid var(--bdr)' }}>
+            <button type="button" onClick={() => setViewMode('grid')} className="flex h-6 w-6 items-center justify-center rounded transition-colors"
+              style={viewMode === 'grid' ? { background: 'var(--surf)', color: 'var(--accent)', boxShadow: 'var(--sh)' } : { color: 'var(--muted)' }}>
+              <LayoutGrid size={13} />
+            </button>
+            <button type="button" onClick={() => setViewMode('list')} className="flex h-6 w-6 items-center justify-center rounded transition-colors"
+              style={viewMode === 'list' ? { background: 'var(--surf)', color: 'var(--accent)', boxShadow: 'var(--sh)' } : { color: 'var(--muted)' }}>
+              <List size={13} />
+            </button>
+          </div>
+
           {/* Dark mode toggle */}
           <button type="button" onClick={toggleDarkMode} className="btn-icon" aria-label="Basculer le thème">
             {darkMode ? <Sun size={15} /> : <Moon size={15} />}
           </button>
 
-          {/* Avatar */}
-          <div className="flex items-center gap-2.5 rounded-[var(--rs)] px-2.5 py-1.5" style={{ background: 'var(--surf2)', border: '1px solid var(--bdr)' }}>
-            <div className="flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold text-white" style={{ background: 'var(--accent)' }}>{initials}</div>
-            <span style={{ fontSize: 12.5, fontWeight: 500, color: 'var(--text)' }}>{user?.name ?? 'Utilisateur'}</span>
-            {user?.plan && (
-              <span className="tag-pro rounded-full px-2 py-0.5 text-[10px] font-semibold">{planLabel[user.plan]}</span>
+          {/* User avatar + menu */}
+          <div className="relative" ref={userMenuRef}>
+            <button type="button"
+              onClick={() => setShowUserMenu((v) => !v)}
+              className="flex items-center gap-2.5 rounded-[var(--rs)] px-2.5 py-1.5 transition-colors"
+              style={{ background: 'var(--surf2)', border: '1px solid var(--bdr)' }}>
+              <div className="flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold text-white" style={{ background: 'var(--accent)' }}>{initials}</div>
+              <span style={{ fontSize: 12.5, fontWeight: 500, color: 'var(--text)' }}>{user?.name ?? 'Utilisateur'}</span>
+              {user?.plan && (
+                <span className="tag-pro rounded-full px-2 py-0.5 text-[10px] font-semibold">{planLabel[user.plan]}</span>
+              )}
+            </button>
+
+            {showUserMenu && (
+              <div className="absolute right-0 top-full z-50 mt-1 w-52 rounded-xl p-1 shadow-xl"
+                style={{ background: 'var(--surf)', border: '1px solid var(--bdr)' }}>
+                <div className="px-3 py-2">
+                  <p className="text-[13px] font-semibold" style={{ color: 'var(--text)' }}>{user?.name ?? 'Utilisateur'}</p>
+                  <p className="text-[11.5px]" style={{ color: 'var(--muted)' }}>{user?.email ?? ''}</p>
+                </div>
+                <div className="my-1 h-px" style={{ background: 'var(--bdr)' }} />
+                <button type="button"
+                  onClick={() => { setShowUserMenu(false); router.push('/auth?tab=plans'); }}
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[13px] transition-colors"
+                  style={{ color: 'var(--text2)' }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--surf2)'; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}>
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1L9 5h4l-3.2 2.4 1.2 3.9L7 9.1 3 11.3l1.2-3.9L1 5h4L7 1z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/></svg>
+                  Changer de forfait
+                </button>
+                <button type="button"
+                  onClick={() => { logout(); router.push('/auth'); }}
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[13px] transition-colors"
+                  style={{ color: '#ef4444' }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--surf2)'; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}>
+                  <LogOut size={13} />
+                  Se déconnecter
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -234,42 +366,69 @@ export default function HomePage() {
           ))}
         </div>
 
-        {/* Grid */}
-        <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
-          {filtered.map((p) => (
-            <ProjectCard
-              key={p.id}
-              project={p}
-              onOpen={() => handleOpen(p)}
-              onDelete={() => { if (confirm('Supprimer ce projet ?')) void removeProject(p.id); }}
-            />
-          ))}
+        {/* Grid view */}
+        {viewMode === 'grid' && (
+          <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))' }}>
+            {filtered.map((p) => (
+              <ProjectCard
+                key={p.id}
+                project={p}
+                onOpen={() => handleOpen(p)}
+                onDelete={() => { if (confirm('Supprimer ce projet ?')) void removeProject(p.id); }}
+              />
+            ))}
+            {/* New project card */}
+            <button
+              type="button"
+              onClick={() => setShowNewModal(true)}
+              className="group flex flex-col items-center justify-center gap-3 rounded-[var(--r)] border-2 border-dashed transition-all"
+              style={{ minHeight: 200, borderColor: 'var(--bdr2)', color: 'var(--muted)', cursor: 'pointer', background: 'transparent' }}
+              onMouseEnter={(e) => { const el = e.currentTarget as HTMLButtonElement; el.style.borderColor = 'var(--accent)'; el.style.background = 'var(--accent-l)'; el.style.color = 'var(--accent)'; }}
+              onMouseLeave={(e) => { const el = e.currentTarget as HTMLButtonElement; el.style.borderColor = 'var(--bdr2)'; el.style.background = 'transparent'; el.style.color = 'var(--muted)'; }}
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-full" style={{ background: 'var(--surf3)' }}>
+                <Plus size={22} />
+              </div>
+              <span style={{ fontSize: 12.5, fontWeight: 600, letterSpacing: '0.3px', textTransform: 'uppercase' }}>Nouveau projet</span>
+            </button>
+          </div>
+        )}
 
-          {/* New project card */}
-          <button
-            type="button"
-            onClick={() => setShowNewModal(true)}
-            className="group flex flex-col items-center justify-center gap-3 rounded-[var(--r)] border-2 border-dashed transition-all"
-            style={{ minHeight: 200, borderColor: 'var(--bdr2)', color: 'var(--muted)', cursor: 'pointer', background: 'transparent' }}
-            onMouseEnter={(e) => {
-              const el = e.currentTarget as HTMLButtonElement;
-              el.style.borderColor = 'var(--accent)';
-              el.style.background = 'var(--accent-l)';
-              el.style.color = 'var(--accent)';
-            }}
-            onMouseLeave={(e) => {
-              const el = e.currentTarget as HTMLButtonElement;
-              el.style.borderColor = 'var(--bdr2)';
-              el.style.background = 'transparent';
-              el.style.color = 'var(--muted)';
-            }}
-          >
-            <div className="flex h-10 w-10 items-center justify-center rounded-full" style={{ background: 'var(--surf3)' }}>
-              <Plus size={22} />
+        {/* List view */}
+        {viewMode === 'list' && (
+          <div className="flex flex-col gap-2">
+            {/* Header row */}
+            <div className="grid grid-cols-[48px_1fr_120px_140px_32px] items-center gap-4 px-4 pb-1 text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--muted)' }}>
+              <span />
+              <span>Projet</span>
+              <span className="text-center">Statut</span>
+              <span className="text-right">Modifié</span>
+              <span />
             </div>
-            <span style={{ fontSize: 12.5, fontWeight: 600, letterSpacing: '0.3px', textTransform: 'uppercase' }}>Nouveau projet</span>
-          </button>
-        </div>
+            {filtered.map((p) => (
+              <ProjectRow
+                key={p.id}
+                project={p}
+                onOpen={() => handleOpen(p)}
+                onDelete={() => { if (confirm('Supprimer ce projet ?')) void removeProject(p.id); }}
+              />
+            ))}
+            {/* New project row */}
+            <button
+              type="button"
+              onClick={() => setShowNewModal(true)}
+              className="flex items-center gap-3 rounded-[var(--rs)] border-2 border-dashed px-4 py-3 transition-all"
+              style={{ borderColor: 'var(--bdr2)', color: 'var(--muted)', cursor: 'pointer', background: 'transparent' }}
+              onMouseEnter={(e) => { const el = e.currentTarget as HTMLButtonElement; el.style.borderColor = 'var(--accent)'; el.style.color = 'var(--accent)'; el.style.background = 'var(--accent-l)'; }}
+              onMouseLeave={(e) => { const el = e.currentTarget as HTMLButtonElement; el.style.borderColor = 'var(--bdr2)'; el.style.color = 'var(--muted)'; el.style.background = 'transparent'; }}
+            >
+              <div className="flex h-8 w-8 items-center justify-center rounded" style={{ background: 'var(--surf3)' }}>
+                <Plus size={16} />
+              </div>
+              <span style={{ fontSize: 13, fontWeight: 600 }}>Nouveau projet</span>
+            </button>
+          </div>
+        )}
       </main>
 
       {showNewModal && (

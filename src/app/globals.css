@@ -26,6 +26,20 @@
   --sh-md: 0 4px 16px rgba(0,0,0,.09);
   --sh-lg: 0 12px 40px rgba(0,0,0,.13);
 
+  /* Canvas drawing area */
+  --canvas-bg:           #E8EBF0;
+  --canvas-dot:          #C4C7CC;
+  --canvas-poly-active:  rgba(226,232,240,0.95);
+  --canvas-poly-inact:   rgba(226,232,240,0.45);
+  --canvas-label-bg:     rgba(255,255,255,0.93);
+  --canvas-label-text:   #111827;
+  --canvas-label-muted:  #6B7280;
+  --canvas-ghost-bg:     rgba(248,248,250,0.88);
+  --canvas-wall-inact:   #9CA3AF;
+  --canvas-vtx-default:  #94A3B8;
+  --canvas-name-active:  #6B7280;
+  --canvas-name-inact:   #9CA3AF;
+
   --topbar: 48px;
   --tabs:   44px;
   --r:      10px;
@@ -45,6 +59,20 @@
 
   --bdr:  #30363D;
   --bdr2: #444C56;
+
+  /* Canvas drawing area — dark */
+  --canvas-bg:           #09090b;
+  --canvas-dot:          #27272a;
+  --canvas-poly-active:  #18181b;
+  --canvas-poly-inact:   rgba(24,24,27,0.38);
+  --canvas-label-bg:     rgba(24,24,27,0.95);
+  --canvas-label-text:   #f4f4f5;
+  --canvas-label-muted:  #a1a1aa;
+  --canvas-ghost-bg:     rgba(28,25,23,0.82);
+  --canvas-wall-inact:   #52525b;
+  --canvas-vtx-default:  #27272a;
+  --canvas-name-active:  #71717a;
+  --canvas-name-inact:   #3f3f46;
 }
 
 /* ─── Base ───────────────────────────────────────────────────────────────────── */

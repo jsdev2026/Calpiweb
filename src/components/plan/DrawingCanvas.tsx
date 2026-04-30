@@ -81,9 +81,10 @@ export const DrawingCanvas = ({
       <defs>
         <pattern id="grid" width={snapGrid * scale} height={snapGrid * scale}
           patternUnits="userSpaceOnUse" patternTransform={`translate(${pan.x}, ${pan.y})`}>
-          <circle cx="1" cy="1" r="1" fill="#27272a" />
+          <circle cx="1" cy="1" r="1" fill="var(--canvas-dot)" />
         </pattern>
       </defs>
+      <rect width="100%" height="100%" fill="var(--canvas-bg)" />
       <rect width="100%" height="100%" fill="url(#grid)" />
 
       <g transform={`translate(${pan.x}, ${pan.y}) scale(${scale})`}>
@@ -117,7 +118,7 @@ export const DrawingCanvas = ({
             <g key={`geom-${room.id}`}>
               {isClosed && (
                 <polygon points={pts.map((p) => `${p.x},${p.y}`).join(' ')}
-                  fill={isActive ? '#18181b' : '#18181b60'} stroke="none" />
+                  fill={isActive ? 'var(--canvas-poly-active)' : 'var(--canvas-poly-inact)'} stroke="none" />
               )}
 
               {/* Ghost preview line */}
@@ -135,7 +136,7 @@ export const DrawingCanvas = ({
                       strokeDasharray={`${120 / scale},${80 / scale}`} opacity={0.5} />
                     {d > 50 && (
                       <g transform={`translate(${midX}, ${midY}) rotate(${ang})`} className="pointer-events-none">
-                        <rect x="-270" y="-230" width="540" height="200" fill="#1c1917cc" rx="50" />
+                        <rect x="-270" y="-230" width="540" height="200" fill="var(--canvas-ghost-bg)" rx="50" />
                         <text x="0" y="-100" textAnchor="middle" fontSize="130" fontWeight="600" fill="#f97316cc"
                           style={{ fontFamily: 'system-ui' }}>{formatCm(d)}</text>
                       </g>
@@ -161,7 +162,7 @@ export const DrawingCanvas = ({
                     : isDoor ? '#f97316'
                     : hasH || hasV ? (isActive ? '#60a5fa' : '#1d4ed8')
                     : hasLen ? (isActive ? '#fbbf24' : '#92400e')
-                    : isActive ? '#ea580c' : '#52525b';
+                    : isActive ? '#ea580c' : 'var(--canvas-wall-inact)';
 
                 return (
                   <line key={`wall-${room.id}-${i}`} x1={p.x} y1={p.y} x2={np.x} y2={np.y}
@@ -188,20 +189,27 @@ export const DrawingCanvas = ({
                 const hasV = ec.some((c) => c.type === 'VERTICAL');
                 const hasLen = ec.some((c) => c.type === 'LENGTH');
 
-                const border = hasLen ? '#4ade80' : hasH || hasV ? '#3b82f6' : isDoor ? '#f97316' : isActive ? '#3f3f46' : '#27272a';
-                const textFill = hasLen ? '#86efac' : hasH || hasV ? '#93c5fd' : isDoor ? '#f97316' : isActive ? '#f4f4f5' : '#71717a';
-                const sw = hasLen || hasH || hasV ? 28 : 20;
+                const border = hasLen ? '#4ade80' : hasH || hasV ? '#3b82f6' : isDoor ? '#f97316' : 'var(--bdr2)';
+                const textFill = hasLen ? '#22c55e' : hasH || hasV ? '#3b82f6' : isDoor ? '#f97316' : 'var(--canvas-label-text)';
+                const sw = hasLen || hasH || hasV ? 28 : 18;
+
+                // Offset label perpendicular to wall to avoid overlap
+                const dx2 = np.x - p.x, dy2 = np.y - p.y;
+                const len2 = Math.sqrt(dx2 * dx2 + dy2 * dy2) || 1;
+                const perpOx = (-dy2 / len2) * 320;
+                const perpOy = (dx2 / len2) * 320;
 
                 return (
                   <g key={`cote-${room.id}-${i}`}
-                    transform={`translate(${midX}, ${midY}) rotate(${ang})`}
+                    transform={`translate(${midX + perpOx}, ${midY + perpOy}) rotate(${ang})`}
                     className="cursor-pointer"
                     onPointerDown={onEdgePointerDown(room.id, i, d)}>
                     {!isEditing && (
                       <>
-                        <rect x="-350" y="-300" width="700" height="250" fill="#18181b" rx="60"
+                        <rect x="-340" y="-240" width="680" height="220" fill="var(--canvas-label-bg)" rx="55"
                           stroke={border} strokeWidth={sw} />
-                        <text x="0" y="-130" textAnchor="middle" fontSize="160" fontWeight="bold" fill={textFill}>
+                        <text x="0" y="-90" textAnchor="middle" fontSize="150" fontWeight="700" fill={textFill}
+                          style={{ fontFamily: 'system-ui' }}>
                           {formatCm(d)}
                         </text>
                       </>
@@ -269,7 +277,8 @@ export const DrawingCanvas = ({
               {/* Room name */}
               {centroid && isClosed && (
                 <text x={centroid.x} y={centroid.y} textAnchor="middle" dominantBaseline="middle"
-                  fontSize="200" fontWeight="bold" fill={isActive ? '#71717a' : '#3f3f46'}
+                  fontSize="200" fontWeight="bold"
+                  fill={isActive ? 'var(--canvas-name-active)' : 'var(--canvas-name-inact)'}
                   className="pointer-events-none select-none">{room.name ?? ''}</text>
               )}
             </g>
@@ -301,14 +310,14 @@ export const DrawingCanvas = ({
                   : isFullyCon ? '#22c55e'
                   : isPartial ? '#f59e0b'
                   : isNearStart ? '#f97316'
-                  : isActive ? '#27272a' : '#3f3f46';
+                  : isActive ? 'var(--canvas-vtx-default)' : 'var(--canvas-name-inact)';
 
                 const stroke = isCoinSrc ? '#0891b2'
                   : isFixed ? '#7c3aed'
                   : isFullyCon ? '#16a34a'
                   : isPartial ? '#d97706'
                   : isStart ? '#f97316'
-                  : isActive ? '#ea580c' : '#52525b';
+                  : isActive ? '#ea580c' : 'var(--canvas-wall-inact)';
 
                 const r = isStart ? 260 : 90;
                 // Fully-constrained vertices block drag (spec §4) — show lock cursor

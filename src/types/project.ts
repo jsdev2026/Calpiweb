@@ -44,9 +44,17 @@ export interface ClientInfo {
   address?: string;
 }
 
+export interface ProjectNote {
+  id: string;
+  text: string;
+  createdAt: number;
+  authorName: string;
+}
+
 export interface Project {
   id: string;
   name: string;
+  description?: string;
   client?: ClientInfo;
   status: ProjectStatus;
   createdAt: number;
@@ -55,4 +63,5 @@ export interface Project {
   config: TilingConfig;
   wallThickness: number;
   constraints: Constraint[];
+  notes: ProjectNote[];
 }

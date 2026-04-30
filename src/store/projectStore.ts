@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Project, Room, EdgeType, ProjectStatus, ClientInfo, Constraint } from '@/types/project';
+import type { Project, Room, EdgeType, ProjectStatus, ClientInfo, Constraint, ProjectNote } from '@/types/project';
 import type { Plan, Point } from '@/types/plan';
 import type { TilingConfig } from '@/types/tiling';
 import { projectsDb } from '@/lib/db';
@@ -46,6 +46,8 @@ function migrateProject(raw: unknown): Project {
     config,
     wallThickness: (p.wallThickness as number | undefined) ?? WALL_THICKNESS_MM,
     constraints: (p.constraints as Constraint[] | undefined) ?? [],
+    description: p.description as string | undefined,
+    notes: (p.notes as ProjectNote[] | undefined) ?? [],
   };
 }
 
@@ -70,6 +72,10 @@ interface ProjectState {
   setWallThickness: (mm: number) => void;
   setStatus: (status: ProjectStatus) => void;
   setClient: (client: ClientInfo) => void;
+  setProjectInfo: (info: { name?: string; description?: string; client?: ClientInfo }) => void;
+
+  addNote: (text: string, authorName: string) => void;
+  removeNote: (noteId: string) => void;
 
   // Constraint actions
   addConstraint: (c: Constraint) => void;
@@ -107,6 +113,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       config: { ...DEFAULT_TILING_CONFIG },
       wallThickness: WALL_THICKNESS_MM,
       constraints: [],
+      notes: [],
     };
     await projectsDb.save(newProject);
     set({ projects: [newProject, ...get().projects], activeProjectId: newProject.id });
@@ -172,6 +179,22 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   setWallThickness: (mm) => get().updateActive((p) => ({ ...p, wallThickness: mm })),
   setStatus: (status) => get().updateActive((p) => ({ ...p, status })),
   setClient: (client) => get().updateActive((p) => ({ ...p, client })),
+  setProjectInfo: ({ name, description, client }) => {
+    get().updateActive((p) => ({
+      ...p,
+      ...(name !== undefined ? { name } : {}),
+      ...(description !== undefined ? { description } : {}),
+      ...(client !== undefined ? { client } : {}),
+    }));
+  },
+
+  addNote: (text, authorName) => {
+    const note: ProjectNote = { id: generateId(), text, createdAt: Date.now(), authorName };
+    get().updateActive((p) => ({ ...p, notes: [note, ...p.notes] }));
+  },
+  removeNote: (noteId) => {
+    get().updateActive((p) => ({ ...p, notes: p.notes.filter((n) => n.id !== noteId) }));
+  },
 
   addConstraint: (c) => {
     get().updateActive((p) => ({ ...p, constraints: [...p.constraints, c] }));

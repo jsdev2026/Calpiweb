@@ -85,7 +85,7 @@ function ref(roomId: string, vertexIdx: number): PointRef { return { roomId, ver
 
 // ── Component ──────────────────────────────────────────────────────────────
 
-export const PlanEditor = () => {
+export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) => {
   const rooms = useProjectStore((s) => selectActiveProject(s)?.rooms ?? []);
   const constraints = useProjectStore((s) => selectActiveProject(s)?.constraints ?? []);
   const wallThickness = useProjectStore((s) => selectActiveProject(s)?.wallThickness ?? 100);
@@ -119,11 +119,13 @@ export const PlanEditor = () => {
   const [violationFlash, setViolationFlash] = useState(false);
 
   const svgRef = useRef<SVGSVGElement | null>(null);
+  const historyRef = useRef(history);
   const roomsRef = useRef(rooms);
   const constraintsRef = useRef(constraints);
   const violationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wasViolatingDragRef = useRef(false);
   useEffect(() => { roomsRef.current = rooms; }, [rooms]);
+  useEffect(() => { historyRef.current = history; }, [history]);
   useEffect(() => { constraintsRef.current = constraints; }, [constraints]);
 
   // ── DOF ─────────────────────────────────────────────────────────────────
@@ -189,7 +191,14 @@ export const PlanEditor = () => {
       if (e.key === 'Control') setIsCtrlPressed(true);
       if (e.key === 'Enter' && tool === 'WALL') setTool('SELECT');
       if (e.key === 'Escape') { setEditingEdge(null); setDraggedVertex(null); setCoincideSource(null); }
-      if (e.key === 'z' && (e.ctrlKey || e.metaKey) && !e.shiftKey) { e.preventDefault(); handleUndo(); }
+      if (e.key === 'z' && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
+        e.preventDefault();
+        if (historyRef.current.length > 0) {
+          handleUndo();
+        } else if (onNavigateBack) {
+          onNavigateBack();
+        }
+      }
     };
     const up = (e: KeyboardEvent) => {
       if (e.key === 'Shift') setIsShiftPressed(false);
@@ -645,7 +654,7 @@ export const PlanEditor = () => {
   }
 
   return (
-    <div className="relative flex flex-1 overflow-hidden bg-zinc-950">
+    <div className="relative flex flex-1 overflow-hidden" style={{ background: 'var(--canvas-bg)' }}>
       {violationFlash && (
         <div className="pointer-events-none absolute left-1/2 top-4 z-30 -translate-x-1/2 rounded-lg border border-red-500/50 bg-red-950/90 px-4 py-2 text-sm font-medium text-red-300 shadow-xl backdrop-blur-sm">
           Contrainte impossible à satisfaire
@@ -667,13 +676,14 @@ export const PlanEditor = () => {
       />
 
       {/* Shortcuts hint */}
-      <div className="pointer-events-none absolute bottom-5 right-5 z-10 rounded-xl border border-zinc-800/60 bg-zinc-900/70 px-4 py-3 text-[11px] shadow-xl backdrop-blur-md">
-        <p className="mb-2 text-[9px] font-black uppercase tracking-[0.2em] text-zinc-600">Raccourcis</p>
-        <div className="grid grid-cols-[1fr_auto] items-center gap-x-5 gap-y-1.5 text-zinc-500">
+      <div className="pointer-events-none absolute bottom-5 right-5 z-10 rounded-xl px-4 py-3 text-[11px] shadow-xl backdrop-blur-md"
+        style={{ border: '1px solid var(--bdr)', background: 'var(--surf)', opacity: 0.9 }}>
+        <p className="mb-2 text-[9px] font-black uppercase tracking-[0.2em]" style={{ color: 'var(--muted)' }}>Raccourcis</p>
+        <div className="grid grid-cols-[1fr_auto] items-center gap-x-5 gap-y-1.5" style={{ color: 'var(--text2)' }}>
           <span>Fermer la forme</span><span className="text-right font-semibold text-orange-500/80">↵ Entrée</span>
-          <span>Orthogonalité</span><kbd className="justify-self-end rounded border border-zinc-700 bg-zinc-800/80 px-1.5 py-0.5 font-mono text-[9px] text-zinc-400">⇧ Maj</kbd>
-          <span>Sans aimantation</span><kbd className="justify-self-end rounded border border-zinc-700 bg-zinc-800/80 px-1.5 py-0.5 font-mono text-[9px] text-zinc-400">Ctrl</kbd>
-          <span>Annuler</span><kbd className="justify-self-end rounded border border-zinc-700 bg-zinc-800/80 px-1.5 py-0.5 font-mono text-[9px] text-zinc-400">Ctrl+Z</kbd>
+          <span>Orthogonalité</span><kbd className="justify-self-end rounded px-1.5 py-0.5 font-mono text-[9px]" style={{ border: '1px solid var(--bdr2)', background: 'var(--surf2)', color: 'var(--text2)' }}>⇧ Maj</kbd>
+          <span>Sans aimantation</span><kbd className="justify-self-end rounded px-1.5 py-0.5 font-mono text-[9px]" style={{ border: '1px solid var(--bdr2)', background: 'var(--surf2)', color: 'var(--text2)' }}>Ctrl</kbd>
+          <span>Annuler / Retour</span><kbd className="justify-self-end rounded px-1.5 py-0.5 font-mono text-[9px]" style={{ border: '1px solid var(--bdr2)', background: 'var(--surf2)', color: 'var(--text2)' }}>Ctrl+Z</kbd>
           <span>Cote / H / V</span><span className="text-right font-semibold text-orange-500/80">Clic mur</span>
           <span>Ancrer nœud</span><span className="text-right font-semibold text-violet-500/80">Outil 📌</span>
         </div>
