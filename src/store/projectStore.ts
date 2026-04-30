@@ -76,6 +76,7 @@ interface ProjectState {
 
   addNote: (text: string, authorName: string) => void;
   removeNote: (noteId: string) => void;
+  updateNote: (noteId: string, text: string) => void;
 
   // Constraint actions
   addConstraint: (c: Constraint) => void;
@@ -194,6 +195,12 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   },
   removeNote: (noteId) => {
     get().updateActive((p) => ({ ...p, notes: p.notes.filter((n) => n.id !== noteId) }));
+  },
+  updateNote: (noteId: string, text: string) => {
+    get().updateActive((p) => ({
+      ...p,
+      notes: p.notes.map((n) => (n.id === noteId ? { ...n, text } : n)),
+    }));
   },
 
   addConstraint: (c) => {

@@ -81,6 +81,7 @@ const ProjectSettingsModal = ({
 }) => {
   const addNote = useProjectStore((s) => s.addNote);
   const removeNote = useProjectStore((s) => s.removeNote);
+  const updateNote = useProjectStore((s) => s.updateNote);
   const user = useUiStore((s) => s.user);
 
   const [name, setName] = useState(project.name);
@@ -89,6 +90,8 @@ const ProjectSettingsModal = ({
   const [clientPhone, setClientPhone] = useState(project.client?.phone ?? '');
   const [clientEmail, setClientEmail] = useState(project.client?.email ?? '');
   const [noteText, setNoteText] = useState('');
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [editingText, setEditingText] = useState('');
 
   const handleSave = () => {
     const client: ClientInfo | undefined = clientName.trim()
@@ -103,6 +106,18 @@ const ProjectSettingsModal = ({
     if (!text) return;
     addNote(text, user?.name ?? 'Utilisateur');
     setNoteText('');
+  };
+
+  const startEdit = (note: { id: string; text: string }) => {
+    setEditingNoteId(note.id);
+    setEditingText(note.text);
+  };
+
+  const commitEdit = () => {
+    if (editingNoteId && editingText.trim()) {
+      updateNote(editingNoteId, editingText.trim());
+    }
+    setEditingNoteId(null);
   };
 
   const fieldStyle = { background: 'var(--surf2)', border: '1px solid var(--bdr)', borderRadius: 'var(--rs)', padding: '7px 10px', fontSize: 13, color: 'var(--text)', outline: 'none', width: '100%' };
@@ -189,23 +204,57 @@ const ProjectSettingsModal = ({
             {project.notes.length > 0 && (
               <div className="mt-3 space-y-2">
                 {project.notes.map((note) => (
-                  <div key={note.id} className="group flex items-start gap-2 rounded-lg p-3" style={{ background: 'var(--surf2)', border: '1px solid var(--bdr)' }}>
-                    <div className="flex-1 min-w-0">
-                      <p style={{ fontSize: 13, color: 'var(--text)', lineHeight: '1.5', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{note.text}</p>
-                      <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>
-                        {note.authorName} · {new Date(note.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => removeNote(note.id)}
-                      className="shrink-0 rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100"
-                      style={{ color: 'var(--muted)' }}
-                      onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = '#ef4444'; }}
-                      onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--muted)'; }}
-                    >
-                      <X size={13} />
-                    </button>
+                  <div key={note.id} className="group rounded-lg p-3" style={{ background: 'var(--surf2)', border: '1px solid var(--bdr)' }}>
+                    {editingNoteId === note.id ? (
+                      <div className="flex flex-col gap-2">
+                        <textarea
+                          value={editingText}
+                          onChange={(e) => setEditingText(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && e.ctrlKey) { e.preventDefault(); commitEdit(); }
+                            if (e.key === 'Escape') setEditingNoteId(null);
+                          }}
+                          rows={3}
+                          style={{ background: 'var(--surf)', border: '1px solid var(--accent)', borderRadius: 'var(--rs)', padding: '6px 8px', fontSize: 13, color: 'var(--text)', outline: 'none', width: '100%', resize: 'none', lineHeight: '1.5' }}
+                          autoFocus
+                        />
+                        <div className="flex gap-2">
+                          <button type="button" onClick={commitEdit}
+                            className="rounded-md px-3 py-1 text-[12px] font-semibold text-white"
+                            style={{ background: 'var(--accent)' }}>
+                            Enregistrer
+                          </button>
+                          <button type="button" onClick={() => setEditingNoteId(null)}
+                            className="rounded-md px-3 py-1 text-[12px] font-medium"
+                            style={{ background: 'var(--surf3)', color: 'var(--text2)' }}>
+                            Annuler
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-start gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p
+                            onClick={() => startEdit(note)}
+                            style={{ fontSize: 13, color: 'var(--text)', lineHeight: '1.5', whiteSpace: 'pre-wrap', wordBreak: 'break-word', cursor: 'text' }}
+                            title="Cliquer pour modifier"
+                          >{note.text}</p>
+                          <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>
+                            {note.authorName} · {new Date(note.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeNote(note.id)}
+                          className="shrink-0 rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100"
+                          style={{ color: 'var(--muted)' }}
+                          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = '#ef4444'; }}
+                          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--muted)'; }}
+                        >
+                          <X size={13} />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

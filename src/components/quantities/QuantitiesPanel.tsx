@@ -29,9 +29,9 @@ const TileThumbnail = ({ tileW, tileH, usedW, usedH, color, reused }: ThumbnailP
 
   return (
     <svg width={tw} height={th} className="shrink-0 overflow-visible">
-      <rect x={0} y={0} width={tw} height={th} fill="#27272a" rx="2" />
+      <rect x={0} y={0} width={tw} height={th} fill="var(--tile-thumb-bg)" rx="2" />
       <rect x={0} y={th - uh} width={uw} height={uh} fill={reused ? '#86efac' : color} rx="1" />
-      <rect x={0} y={0} width={tw} height={th} fill="none" stroke="#52525b" strokeWidth="1" rx="2" />
+      <rect x={0} y={0} width={tw} height={th} fill="none" stroke="var(--tile-thumb-bdr)" strokeWidth="1" rx="2" />
     </svg>
   );
 };
@@ -154,7 +154,7 @@ const QuantityPlanView = ({ result, config, rooms }: PlanViewProps) => {
                   fill = groupColor;
                   fillOpacity = 0.28;
                 } else {
-                  fill = '#27272a';
+                  fill = 'var(--tile-cut-bg)';
                   fillOpacity = 1;
                 }
 
@@ -167,7 +167,7 @@ const QuantityPlanView = ({ result, config, rooms }: PlanViewProps) => {
                       height={tile.rect.h}
                       fill={fill}
                       fillOpacity={fillOpacity}
-                      stroke="#09090b"
+                      stroke="var(--tile-joint)"
                       strokeWidth={config.joint}
                     />
                     {cut && groupInfo && (

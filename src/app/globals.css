@@ -40,6 +40,12 @@
   --canvas-name-active:  #6B7280;
   --canvas-name-inact:   #9CA3AF;
 
+  /* Tile visualization */
+  --tile-cut-bg:   #d1d5db;
+  --tile-joint:    #d1d5db;
+  --tile-thumb-bg: #e5e7eb;
+  --tile-thumb-bdr:#9ca3af;
+
   --topbar: 48px;
   --tabs:   44px;
   --r:      10px;
@@ -73,6 +79,12 @@
   --canvas-vtx-default:  #27272a;
   --canvas-name-active:  #71717a;
   --canvas-name-inact:   #3f3f46;
+
+  /* Tile visualization — dark */
+  --tile-cut-bg:   #3f3f46;
+  --tile-joint:    #09090b;
+  --tile-thumb-bg: #27272a;
+  --tile-thumb-bdr:#52525b;
 }
 
 /* ─── Base ───────────────────────────────────────────────────────────────────── */

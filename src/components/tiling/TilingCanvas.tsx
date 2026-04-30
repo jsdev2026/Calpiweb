@@ -116,8 +116,8 @@ export const TilingCanvas = ({
                 <polygon
                   key={tile.id}
                   points={tile.points.map((p) => `${p.x},${p.y}`).join(' ')}
-                  fill={tile.type === 'WHOLE' ? config.color : '#3f3f46'}
-                  stroke="#09090b"
+                  fill={tile.type === 'WHOLE' ? config.color : 'var(--tile-cut-bg)'}
+                  stroke="var(--tile-joint)"
                   strokeWidth={config.joint}
                 />
               ) : (
@@ -127,8 +127,8 @@ export const TilingCanvas = ({
                   y={tile.rect.y}
                   width={tile.rect.w}
                   height={tile.rect.h}
-                  fill={tile.type === 'WHOLE' ? config.color : '#3f3f46'}
-                  stroke="#09090b"
+                  fill={tile.type === 'WHOLE' ? config.color : 'var(--tile-cut-bg)'}
+                  stroke="var(--tile-joint)"
                   strokeWidth={config.joint}
                 />
               )
