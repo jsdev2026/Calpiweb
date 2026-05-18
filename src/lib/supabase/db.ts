@@ -8,7 +8,7 @@ export const supabaseDb = {
       .from('projects')
       .select('data')
       .order('updated_at', { ascending: false });
-    if (error) throw error;
+    if (error) throw new Error(`[${error.code}] ${error.message}`);
     return (data ?? []).map((row) => row.data as Project);
   },
 
@@ -36,13 +36,13 @@ export const supabaseDb = {
       data: { ...project, updatedAt: Date.now() },
       updated_at: new Date().toISOString(),
     });
-    if (error) throw error;
+    if (error) throw new Error(`[${error.code}] ${error.message}`);
   },
 
   async delete(id: string): Promise<void> {
     const supabase = createClient();
     const { error } = await supabase.from('projects').delete().eq('id', id);
-    if (error) throw error;
+    if (error) throw new Error(`[${error.code}] ${error.message}`);
   },
 
   async getProfile(): Promise<{ plan: 'free' | 'pro' }> {
@@ -51,7 +51,7 @@ export const supabaseDb = {
       .from('profiles')
       .select('plan')
       .single();
-    if (error) throw error;
+    if (error) throw new Error(`[${error.code}] ${error.message}`);
     return data as { plan: 'free' | 'pro' };
   },
 };
