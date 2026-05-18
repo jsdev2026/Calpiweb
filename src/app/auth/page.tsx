@@ -119,12 +119,12 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: 'var(--bg)' }}>
+    <div className="flex min-h-screen" style={{ background: 'var(--bg)' }}>
       <BrandPanel />
       <div className="flex flex-1 items-center justify-center overflow-y-auto p-6">
 
         {step === 'login' && (
-          <div className="w-full max-w-[420px] rounded-[var(--rl)] border p-9 shadow-[var(--sh-lg)]" style={{ background: 'var(--surf)', borderColor: 'var(--bdr)' }}>
+          <div className="w-full max-w-[420px] rounded-[var(--rl)] border p-6 md:p-9 shadow-[var(--sh-lg)]" style={{ background: 'var(--surf)', borderColor: 'var(--bdr)' }}>
             <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, color: 'var(--text)' }} className="mb-1">Connexion</h2>
             <p className="mb-7 text-[13px]" style={{ color: 'var(--text2)' }}>Bienvenue sur CaléPlan</p>
             {error && <p className="mb-4 rounded-lg p-3 text-[12.5px]" style={{ background: '#fef2f2', color: '#dc2626' }}>{error}</p>}
@@ -153,7 +153,7 @@ export default function AuthPage() {
         )}
 
         {step === 'register' && (
-          <div className="w-full max-w-[420px] rounded-[var(--rl)] border p-9 shadow-[var(--sh-lg)]" style={{ background: 'var(--surf)', borderColor: 'var(--bdr)' }}>
+          <div className="w-full max-w-[420px] rounded-[var(--rl)] border p-6 md:p-9 shadow-[var(--sh-lg)]" style={{ background: 'var(--surf)', borderColor: 'var(--bdr)' }}>
             <button type="button" onClick={() => { setError(null); setStep('login'); }} className="btn-ghost mb-5 -ml-2 gap-1.5 text-[12.5px]">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
               Retour
@@ -185,7 +185,7 @@ export default function AuthPage() {
         )}
 
         {step === 'forgot' && (
-          <div className="w-full max-w-[420px] rounded-[var(--rl)] border p-9 shadow-[var(--sh-lg)]" style={{ background: 'var(--surf)', borderColor: 'var(--bdr)' }}>
+          <div className="w-full max-w-[420px] rounded-[var(--rl)] border p-6 md:p-9 shadow-[var(--sh-lg)]" style={{ background: 'var(--surf)', borderColor: 'var(--bdr)' }}>
             <button type="button" onClick={() => { setError(null); setForgotSent(false); setStep('login'); }} className="btn-ghost mb-5 -ml-2 gap-1.5 text-[12.5px]">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
               Retour
