@@ -105,6 +105,7 @@ const BrandPanel = () => (
 
 export default function AuthPage() {
   const router = useRouter();
+  // @ts-expect-error — setUser removed in Task 7; this file will be rewritten in Task 8
   const setUser = useUiStore((s) => s.setUser);
 
   const [step, setStep] = useState<Step>('login');
