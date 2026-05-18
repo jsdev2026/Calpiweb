@@ -24,7 +24,55 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
   const [pan, setPan] = useState<Point>({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [showDimensions, setShowDimensions] = useState(false);
+  const [mobileTab, setMobileTab] = useState<'apercu' | 'reglages'>('apercu');
   const svgRef = useRef<SVGSVGElement | null>(null);
+  const tilingTouchRef = useRef<{ dist: number; midX: number; midY: number; panX: number; panY: number } | null>(null);
+
+  const handleTilingTouchStart = (e: React.TouchEvent) => {
+    e.preventDefault();
+    const t = e.touches;
+    if (t.length === 2) {
+      tilingTouchRef.current = {
+        dist: Math.hypot(t[1]!.clientX - t[0]!.clientX, t[1]!.clientY - t[0]!.clientY),
+        midX: (t[0]!.clientX + t[1]!.clientX) / 2,
+        midY: (t[0]!.clientY + t[1]!.clientY) / 2,
+        panX: pan.x, panY: pan.y,
+      };
+    } else if (t.length === 1) {
+      tilingTouchRef.current = { dist: 0, midX: t[0]!.clientX, midY: t[0]!.clientY, panX: pan.x, panY: pan.y };
+    }
+  };
+
+  const handleTilingTouchMove = (e: React.TouchEvent) => {
+    e.preventDefault();
+    const t = e.touches;
+    if (!tilingTouchRef.current) return;
+    if (t.length === 2) {
+      const dist = Math.hypot(t[1]!.clientX - t[0]!.clientX, t[1]!.clientY - t[0]!.clientY);
+      const midX = (t[0]!.clientX + t[1]!.clientX) / 2;
+      const midY = (t[0]!.clientY + t[1]!.clientY) / 2;
+      const svg = svgRef.current;
+      if (svg && tilingTouchRef.current.dist > 0) {
+        const ratio = dist / tilingTouchRef.current.dist;
+        const rect = svg.getBoundingClientRect();
+        setScale((s) => {
+          const ns = Math.max(0.005, Math.min(s * ratio, 4));
+          setPan((p) => ({
+            x: (midX - rect.left) - ((midX - rect.left) - p.x) * (ns / s),
+            y: (midY - rect.top) - ((midY - rect.top) - p.y) * (ns / s),
+          }));
+          return ns;
+        });
+      }
+      tilingTouchRef.current = { dist, midX, midY, panX: pan.x, panY: pan.y };
+    } else if (t.length === 1) {
+      const dx = t[0]!.clientX - tilingTouchRef.current.midX;
+      const dy = t[0]!.clientY - tilingTouchRef.current.midY;
+      setPan({ x: tilingTouchRef.current.panX + dx, y: tilingTouchRef.current.panY + dy });
+    }
+  };
+
+  const handleTilingTouchEnd = () => { tilingTouchRef.current = null; };
 
   const { tiles, stats } = useMemo(() => computeTilingMultiRoom(rooms, config), [rooms, config]);
 
@@ -75,8 +123,42 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
   const handlePointerUp = () => setIsDragging(false);
 
   return (
-    <div className="flex flex-1 overflow-hidden dark:bg-zinc-950 bg-gray-100">
-      <div className="relative flex flex-1 flex-col border-r border-gray-200 dark:border-zinc-900">
+    <div className="flex flex-1 flex-col overflow-hidden dark:bg-zinc-950 bg-gray-100 md:flex-row">
+
+      {/* Mobile tab bar */}
+      <div className="flex border-b border-gray-200 dark:border-zinc-800 md:hidden" style={{ background: 'var(--surf)' }}>
+        <button
+          type="button"
+          data-active={mobileTab === 'apercu' ? 'true' : 'false'}
+          onClick={() => setMobileTab('apercu')}
+          className="flex-1 py-2.5 text-[13px] font-medium transition-colors"
+          style={mobileTab === 'apercu'
+            ? { color: 'var(--accent)', borderBottom: '2px solid var(--accent)' }
+            : { color: 'var(--text2)', borderBottom: '2px solid transparent' }}>
+          Aperçu
+        </button>
+        <button
+          type="button"
+          data-active={mobileTab === 'reglages' ? 'true' : 'false'}
+          onClick={() => setMobileTab('reglages')}
+          className="flex-1 py-2.5 text-[13px] font-medium transition-colors"
+          style={mobileTab === 'reglages'
+            ? { color: 'var(--accent)', borderBottom: '2px solid var(--accent)' }
+            : { color: 'var(--text2)', borderBottom: '2px solid transparent' }}>
+          Réglages
+        </button>
+      </div>
+
+      {/* Canvas area — full width on mobile (Aperçu tab), left panel on desktop */}
+      <div className={`relative flex flex-1 flex-col border-r border-gray-200 dark:border-zinc-900 ${mobileTab === 'reglages' ? 'hidden md:flex' : 'flex'}`}>
+        {/* Mobile touch overlay for pan + pinch-to-zoom */}
+        <div
+          className="absolute inset-0 z-10 md:hidden"
+          style={{ touchAction: 'none' }}
+          onTouchStart={handleTilingTouchStart}
+          onTouchMove={handleTilingTouchMove}
+          onTouchEnd={handleTilingTouchEnd}
+        />
         <TilingCanvas
           svgRef={svgRef}
           rooms={rooms}
@@ -140,7 +222,8 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
         </div>
       </div>
 
-      <aside className="z-20 flex w-80 flex-col overflow-y-auto dark:bg-zinc-900 bg-white shadow-2xl">
+      {/* Controls sidebar — full width on mobile (Réglages tab), right panel on desktop */}
+      <aside className={`z-20 flex w-full flex-col overflow-y-auto dark:bg-zinc-900 bg-white shadow-2xl md:w-80 ${mobileTab === 'apercu' ? 'hidden md:flex' : 'flex'}`}>
         <TilingControls config={config} onChange={setConfig} />
         <ResultsPanel stats={stats} />
       </aside>
