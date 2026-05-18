@@ -12,12 +12,7 @@ vi.mock('@/lib/supabase/db', () => ({
 import { supabaseDb } from '@/lib/supabase/db';
 import { useProjectStore } from './projectStore';
 
-const mockSupabaseDb = supabaseDb as {
-  getAll: ReturnType<typeof vi.fn>;
-  save: ReturnType<typeof vi.fn>;
-  delete: ReturnType<typeof vi.fn>;
-  getProfile: ReturnType<typeof vi.fn>;
-};
+const mockSupabaseDb = vi.mocked(supabaseDb);
 
 describe('projectStore — free plan limit', () => {
   beforeEach(() => {
