@@ -1,0 +1,42 @@
+<h2>Question 5 sur 5 — Périmètre du V1</h2>
+<p class="subtitle">On ne peut pas tout livrer à la fois. Qu'est-ce qui doit absolument être là au lancement ?</p>
+
+<div class="options" data-multiselect>
+  <div class="option" data-choice="landing" onclick="toggleSelect(this)">
+    <div class="letter">1</div>
+    <div class="content">
+      <h3>Page d'accueil marketing</h3>
+      <p>Landing page publique : présentation du produit, tarifs, CTA "Essayer gratuitement". Indispensable pour acquérir des utilisateurs.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="auth" onclick="toggleSelect(this)">
+    <div class="letter">2</div>
+    <div class="content">
+      <h3>Authentification complète</h3>
+      <p>Inscription, connexion, mot de passe oublié, profil utilisateur. Déjà une page /auth esquissée dans le projet.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="cloud" onclick="toggleSelect(this)">
+    <div class="letter">3</div>
+    <div class="content">
+      <h3>Sauvegarde cloud des projets</h3>
+      <p>Migration IndexedDB → Supabase. Les projets suivent l'utilisateur sur tous ses appareils. Cœur de la proposition Pro.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="stripe" onclick="toggleSelect(this)">
+    <div class="letter">4</div>
+    <div class="content">
+      <h3>Paiement Stripe intégré</h3>
+      <p>Abonnement Pro 9€/mois + achat de projets unitaires (2,99€) et packages. Checkout Stripe + gestion des webhooks.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="dashboard" onclick="toggleSelect(this)">
+    <div class="letter">5</div>
+    <div class="content">
+      <h3>Dashboard utilisateur</h3>
+      <p>Espace "Mon compte" : plan actuel, historique des achats, solde de projets disponibles, gestion de l'abonnement.</p>
+    </div>
+  </div>
+</div>
+
+<p style="margin-top:20px; color:#6b7280; font-size:13px;">Tu peux sélectionner plusieurs éléments. Tout ne doit pas forcément être dans le V1.</p>

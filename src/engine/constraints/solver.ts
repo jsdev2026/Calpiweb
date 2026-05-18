@@ -68,6 +68,28 @@ function applyConstraint(c: SolverConstraint, pts: SolverPoint[]): void {
       movePoint(p2, p2.x - dx * error, p2.y - dy * error);
       break;
     }
+    case 'H_DISTANCE': {
+      const p1 = pts[c.pts[0]!];
+      const p2 = pts[c.pts[1]!];
+      if (!p1 || !p2 || typeof c.value !== 'number') return;
+      const dx = p2.x - p1.x;
+      const target = Math.sign(dx || 1) * c.value;
+      const errX = (dx - target) * 0.5;
+      movePoint(p1, p1.x + errX, p1.y);
+      movePoint(p2, p2.x - errX, p2.y);
+      break;
+    }
+    case 'V_DISTANCE': {
+      const p1 = pts[c.pts[0]!];
+      const p2 = pts[c.pts[1]!];
+      if (!p1 || !p2 || typeof c.value !== 'number') return;
+      const dy = p2.y - p1.y;
+      const target = Math.sign(dy || 1) * c.value;
+      const errY = (dy - target) * 0.5;
+      movePoint(p1, p1.x, p1.y + errY);
+      movePoint(p2, p2.x, p2.y - errY);
+      break;
+    }
     case 'POINT_ON_LINE': {
       const p = pts[c.pts[0]!];
       const p1 = pts[c.pts[1]!];
@@ -108,6 +130,16 @@ function residualOf(c: SolverConstraint, pts: SolverPoint[]): number {
       if (!p1 || !p2 || typeof c.value !== 'number') return 0;
       const dx = p2.x - p1.x, dy = p2.y - p1.y;
       return Math.abs(Math.sqrt(dx * dx + dy * dy) - c.value);
+    }
+    case 'H_DISTANCE': {
+      const p1 = pts[c.pts[0]!], p2 = pts[c.pts[1]!];
+      if (!p1 || !p2 || typeof c.value !== 'number') return 0;
+      return Math.abs(Math.abs(p2.x - p1.x) - c.value);
+    }
+    case 'V_DISTANCE': {
+      const p1 = pts[c.pts[0]!], p2 = pts[c.pts[1]!];
+      if (!p1 || !p2 || typeof c.value !== 'number') return 0;
+      return Math.abs(Math.abs(p2.y - p1.y) - c.value);
     }
     case 'POINT_ON_LINE': {
       const p = pts[c.pts[0]!], lp1 = pts[c.pts[1]!], lp2 = pts[c.pts[2]!];

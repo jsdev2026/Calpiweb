@@ -3,11 +3,27 @@ import type { TilingConfig } from './tiling';
 
 export type EdgeType = 'WALL' | 'DOOR';
 
+export interface Partition {
+  id: string;
+  p1: Point;
+  p2: Point;
+  thickness: number;
+}
+
+export interface ExcludedZone {
+  id: string;
+  points: Point[];
+  label?: string;
+}
+
 export interface Room {
   id: string;
   name?: string;
   points: Point[];
   edges: EdgeType[];
+  edgeThicknesses?: (number | undefined)[];
+  partitions?: Partition[];
+  excludedZones?: ExcludedZone[];
 }
 
 // ── Constraint system ──────────────────────────────────────────────────────
@@ -18,6 +34,8 @@ export type ConstraintType =
   | 'HORIZONTAL'    // two vertices share the same Y
   | 'VERTICAL'      // two vertices share the same X
   | 'LENGTH'        // fixed Euclidean distance between two vertices
+  | 'H_DISTANCE'    // fixed horizontal distance |x2 - x1|
+  | 'V_DISTANCE'    // fixed vertical distance |y2 - y1|
   | 'POINT_ON_LINE' // vertex projected onto a line (defined by two other vertices)
 
 export interface PointRef {

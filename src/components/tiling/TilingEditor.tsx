@@ -15,10 +15,11 @@ import { ResultsPanel } from '@/components/results/ResultsPanel';
 interface TilingEditorProps {
   rooms: Room[];
   config: TilingConfig;
+  wallThickness: number;
   setConfig: (config: TilingConfig) => void;
 }
 
-export const TilingEditor = ({ rooms, config, setConfig }: TilingEditorProps) => {
+export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: TilingEditorProps) => {
   const [scale, setScale] = useState(0.1);
   const [pan, setPan] = useState<Point>({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -84,6 +85,7 @@ export const TilingEditor = ({ rooms, config, setConfig }: TilingEditorProps) =>
           scale={scale}
           pan={pan}
           showDimensions={showDimensions}
+          wallThickness={wallThickness}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}

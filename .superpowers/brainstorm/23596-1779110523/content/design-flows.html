@@ -1,0 +1,101 @@
+<h2>Section 3 — Flux utilisateur &amp; données</h2>
+<p class="subtitle">Comment un utilisateur découvre, s'inscrit, et utilise TILEA</p>
+
+<!-- User Journey -->
+<div style="background:#0f172a; border-radius:10px; padding:16px; border:1px solid #1e293b; margin-bottom:20px;">
+  <div style="color:#6366f1; font-size:11px; font-weight:600; margin-bottom:12px;">PARCOURS UTILISATEUR</div>
+  <div style="display:flex; align-items:center; gap:0; flex-wrap:wrap;">
+    <div style="background:#1e293b; border-radius:6px; padding:10px 14px; text-align:center; min-width:90px;">
+      <div style="font-size:16px; margin-bottom:4px;">🌐</div>
+      <div style="color:#f8fafc; font-size:10px; font-weight:600;">Landing</div>
+      <div style="color:#64748b; font-size:9px;">tilea.fr</div>
+    </div>
+    <div style="color:#334155; font-size:18px; margin:0 4px;">→</div>
+    <div style="background:#1e293b; border-radius:6px; padding:10px 14px; text-align:center; min-width:90px;">
+      <div style="font-size:16px; margin-bottom:4px;">📧</div>
+      <div style="color:#f8fafc; font-size:10px; font-weight:600;">Inscription</div>
+      <div style="color:#64748b; font-size:9px;">email + mdp</div>
+    </div>
+    <div style="color:#334155; font-size:18px; margin:0 4px;">→</div>
+    <div style="background:#1e293b; border-radius:6px; padding:10px 14px; text-align:center; min-width:90px;">
+      <div style="font-size:16px; margin-bottom:4px;">🏠</div>
+      <div style="color:#f8fafc; font-size:10px; font-weight:600;">Dashboard</div>
+      <div style="color:#64748b; font-size:9px;">0 projet</div>
+    </div>
+    <div style="color:#334155; font-size:18px; margin:0 4px;">→</div>
+    <div style="background:#1e293b; border-radius:6px; padding:10px 14px; text-align:center; min-width:90px;">
+      <div style="font-size:16px; margin-bottom:4px;">✏️</div>
+      <div style="color:#f8fafc; font-size:10px; font-weight:600;">Éditeur</div>
+      <div style="color:#64748b; font-size:9px;">plan + calepin.</div>
+    </div>
+    <div style="color:#334155; font-size:18px; margin:0 4px;">→</div>
+    <div style="background:#1e293b; border-radius:6px; padding:10px 14px; text-align:center; min-width:90px;">
+      <div style="font-size:16px; margin-bottom:4px;">💾</div>
+      <div style="color:#f8fafc; font-size:10px; font-weight:600;">Sauvegarde</div>
+      <div style="color:#64748b; font-size:9px;">auto → Supabase</div>
+    </div>
+    <div style="color:#334155; font-size:18px; margin:0 4px;">→</div>
+    <div style="background:#1e1e3a; border-radius:6px; padding:10px 14px; text-align:center; min-width:90px; border:1px solid #4338ca;">
+      <div style="font-size:16px; margin-bottom:4px;">⚡</div>
+      <div style="color:#a5b4fc; font-size:10px; font-weight:600;">Upsell Pro</div>
+      <div style="color:#6366f1; font-size:9px;">2e projet</div>
+    </div>
+  </div>
+</div>
+
+<!-- Database Schema -->
+<div style="background:#0f172a; border-radius:10px; padding:16px; border:1px solid #1e293b; margin-bottom:20px;">
+  <div style="color:#10b981; font-size:11px; font-weight:600; margin-bottom:12px;">SCHÉMA BASE DE DONNÉES SUPABASE</div>
+  <div style="display:flex; gap:12px; flex-wrap:wrap;">
+    <div style="background:#111827; border-radius:6px; padding:12px; min-width:160px; border:1px solid #1e293b;">
+      <div style="color:#10b981; font-size:11px; font-weight:700; margin-bottom:8px;">auth.users</div>
+      <div style="font-family:monospace; font-size:10px; color:#64748b; line-height:1.8;">
+        id uuid PK<br>
+        email text<br>
+        created_at timestamp
+      </div>
+      <div style="color:#334155; font-size:9px; margin-top:6px;">← Géré par Supabase Auth</div>
+    </div>
+    <div style="display:flex; align-items:center; color:#334155; font-size:16px;">1:1</div>
+    <div style="background:#111827; border-radius:6px; padding:12px; min-width:160px; border:1px solid #1e293b;">
+      <div style="color:#6366f1; font-size:11px; font-weight:700; margin-bottom:8px;">profiles</div>
+      <div style="font-family:monospace; font-size:10px; color:#64748b; line-height:1.8;">
+        id uuid PK → auth.users<br>
+        plan text <span style="color:#334155">'free'|'pro'</span><br>
+        project_credits int <span style="color:#334155">-- V2</span><br>
+        stripe_customer_id text <span style="color:#334155">-- V2</span><br>
+        updated_at timestamp
+      </div>
+    </div>
+    <div style="display:flex; align-items:center; color:#334155; font-size:16px;">1:N</div>
+    <div style="background:#111827; border-radius:6px; padding:12px; min-width:200px; border:1px solid #1e293b;">
+      <div style="color:#f59e0b; font-size:11px; font-weight:700; margin-bottom:8px;">projects</div>
+      <div style="font-family:monospace; font-size:10px; color:#64748b; line-height:1.8;">
+        id uuid PK<br>
+        user_id uuid → profiles<br>
+        name text<br>
+        data jsonb <span style="color:#334155">-- Project complet</span><br>
+        created_at timestamp<br>
+        updated_at timestamp
+      </div>
+      <div style="color:#334155; font-size:9px; margin-top:6px;">RLS : user_id = auth.uid()</div>
+    </div>
+  </div>
+</div>
+
+<!-- Data Flow -->
+<div style="background:#0f172a; border-radius:10px; padding:16px; border:1px solid #1e293b;">
+  <div style="color:#f59e0b; font-size:11px; font-weight:600; margin-bottom:12px;">FLUX DE DONNÉES — SAUVEGARDE</div>
+  <div style="font-family:monospace; font-size:11px; color:#94a3b8; line-height:2.2; background:#111827; padding:14px; border-radius:6px;">
+    <span style="color:#6366f1;">projectStore.ts</span> setConfig() / updateRoom()<br>
+    &nbsp;&nbsp;↓ (inchangé)<br>
+    <span style="color:#f59e0b;">lib/supabase.ts</span> upsert(project) → <span style="color:#10b981;">Supabase PostgreSQL</span><br>
+    &nbsp;&nbsp;↓ auto-save après chaque action (debounce 1s)<br>
+    <span style="color:#6366f1;">projectStore.ts</span> hydrate() au chargement<br>
+    &nbsp;&nbsp;↓<br>
+    <span style="color:#f59e0b;">lib/supabase.ts</span> getAll(user_id) → liste des projets
+  </div>
+  <div style="margin-top:10px; color:#64748b; font-size:11px;">
+    <strong style="color:#94a3b8;">Sécurité :</strong> Row Level Security (RLS) Supabase garantit qu'un utilisateur ne peut accéder qu'à ses propres projets, même si quelqu'un connaît l'URL de l'API.
+  </div>
+</div>

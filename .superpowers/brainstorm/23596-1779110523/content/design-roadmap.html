@@ -1,0 +1,117 @@
+<h2>Section 4 — Déploiement &amp; feuille de route</h2>
+<p class="subtitle">Ce qui se construit, dans quel ordre, et comment ça se déploie</p>
+
+<!-- Deployment Pipeline -->
+<div style="background:#0f172a; border-radius:10px; padding:16px; border:1px solid #1e293b; margin-bottom:20px;">
+  <div style="color:#6366f1; font-size:11px; font-weight:600; margin-bottom:12px;">PIPELINE DE DÉPLOIEMENT</div>
+  <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+    <div style="background:#1e293b; border-radius:6px; padding:10px 14px; text-align:center;">
+      <div style="font-size:14px; margin-bottom:4px;">💻</div>
+      <div style="color:#f8fafc; font-size:10px; font-weight:600;">Dev local</div>
+      <div style="color:#64748b; font-size:9px;">next dev</div>
+    </div>
+    <div style="color:#334155; font-size:14px;">→</div>
+    <div style="background:#1e293b; border-radius:6px; padding:10px 14px; text-align:center;">
+      <div style="font-size:14px; margin-bottom:4px;">🐙</div>
+      <div style="color:#f8fafc; font-size:10px; font-weight:600;">GitHub</div>
+      <div style="color:#64748b; font-size:9px;">git push main</div>
+    </div>
+    <div style="color:#334155; font-size:14px;">→</div>
+    <div style="background:#1e1e3a; border-radius:6px; padding:10px 14px; text-align:center; border:1px solid #4338ca;">
+      <div style="font-size:14px; margin-bottom:4px;">▲</div>
+      <div style="color:#a5b4fc; font-size:10px; font-weight:600;">Vercel</div>
+      <div style="color:#6366f1; font-size:9px;">auto-deploy</div>
+    </div>
+    <div style="color:#334155; font-size:14px;">→</div>
+    <div style="background:#1e293b; border-radius:6px; padding:10px 14px; text-align:center;">
+      <div style="font-size:14px; margin-bottom:4px;">🌐</div>
+      <div style="color:#f8fafc; font-size:10px; font-weight:600;">tilea.fr</div>
+      <div style="color:#64748b; font-size:9px;">domaine custom</div>
+    </div>
+  </div>
+  <div style="margin-top:12px; background:#111827; border-radius:6px; padding:10px; font-family:monospace; font-size:10px; color:#64748b; line-height:1.8;">
+    <span style="color:#94a3b8;"># Variables d'environnement Vercel</span><br>
+    NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co<br>
+    NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...<br>
+    SUPABASE_SERVICE_ROLE_KEY=eyJ... <span style="color:#334155;"># serveur uniquement</span>
+  </div>
+</div>
+
+<!-- V1 vs V2 -->
+<div style="background:#0f172a; border-radius:10px; padding:16px; border:1px solid #1e293b; margin-bottom:20px;">
+  <div style="color:#10b981; font-size:11px; font-weight:600; margin-bottom:12px;">FEUILLE DE ROUTE</div>
+  <div style="display:flex; gap:12px; flex-wrap:wrap;">
+    <!-- V1 -->
+    <div style="flex:1; min-width:220px; background:#111827; border-radius:6px; padding:12px; border-left:3px solid #10b981;">
+      <div style="color:#10b981; font-size:12px; font-weight:700; margin-bottom:10px;">V1 — Lancement beta (3-4 sem.)</div>
+      <div style="display:flex; flex-direction:column; gap:6px;">
+        <div style="display:flex; align-items:center; gap:8px;"><span style="color:#10b981; font-size:10px;">✓</span><span style="color:#94a3b8; font-size:10px;">Landing page + grille tarifaire</span></div>
+        <div style="display:flex; align-items:center; gap:8px;"><span style="color:#10b981; font-size:10px;">✓</span><span style="color:#94a3b8; font-size:10px;">Auth Supabase (email + mdp)</span></div>
+        <div style="display:flex; align-items:center; gap:8px;"><span style="color:#10b981; font-size:10px;">✓</span><span style="color:#94a3b8; font-size:10px;">Migration IndexedDB → Supabase</span></div>
+        <div style="display:flex; align-items:center; gap:8px;"><span style="color:#10b981; font-size:10px;">✓</span><span style="color:#94a3b8; font-size:10px;">Dashboard + limite 1 projet gratuit</span></div>
+        <div style="display:flex; align-items:center; gap:8px;"><span style="color:#10b981; font-size:10px;">✓</span><span style="color:#94a3b8; font-size:10px;">Bannière upsell Pro</span></div>
+        <div style="display:flex; align-items:center; gap:8px;"><span style="color:#10b981; font-size:10px;">✓</span><span style="color:#94a3b8; font-size:10px;">Déploiement Vercel + domaine</span></div>
+        <div style="display:flex; align-items:center; gap:8px;"><span style="color:#334155; font-size:10px;">—</span><span style="color:#475569; font-size:10px;">Paiement Stripe (manuel en beta)</span></div>
+      </div>
+    </div>
+    <!-- V2 -->
+    <div style="flex:1; min-width:220px; background:#111827; border-radius:6px; padding:12px; border-left:3px solid #6366f1;">
+      <div style="color:#6366f1; font-size:12px; font-weight:700; margin-bottom:10px;">V2 — Monétisation (4-6 sem. après)</div>
+      <div style="display:flex; flex-direction:column; gap:6px;">
+        <div style="display:flex; align-items:center; gap:8px;"><span style="color:#6366f1; font-size:10px;">◦</span><span style="color:#94a3b8; font-size:10px;">Stripe checkout abonnement Pro</span></div>
+        <div style="display:flex; align-items:center; gap:8px;"><span style="color:#6366f1; font-size:10px;">◦</span><span style="color:#94a3b8; font-size:10px;">Achat unitaire projet (2,99 €)</span></div>
+        <div style="display:flex; align-items:center; gap:8px;"><span style="color:#6366f1; font-size:10px;">◦</span><span style="color:#94a3b8; font-size:10px;">Packages (5 projets, 20 projets)</span></div>
+        <div style="display:flex; align-items:center; gap:8px;"><span style="color:#6366f1; font-size:10px;">◦</span><span style="color:#94a3b8; font-size:10px;">Dashboard facturation / historique</span></div>
+        <div style="display:flex; align-items:center; gap:8px;"><span style="color:#6366f1; font-size:10px;">◦</span><span style="color:#94a3b8; font-size:10px;">Webhooks Stripe (activation plan)</span></div>
+        <div style="display:flex; align-items:center; gap:8px;"><span style="color:#6366f1; font-size:10px;">◦</span><span style="color:#94a3b8; font-size:10px;">Export PDF marque blanche</span></div>
+      </div>
+    </div>
+    <!-- V3 -->
+    <div style="flex:1; min-width:220px; background:#111827; border-radius:6px; padding:12px; border-left:3px solid #f59e0b;">
+      <div style="color:#f59e0b; font-size:12px; font-weight:700; margin-bottom:10px;">V3 — Croissance (selon traction)</div>
+      <div style="display:flex; flex-direction:column; gap:6px;">
+        <div style="display:flex; align-items:center; gap:8px;"><span style="color:#f59e0b; font-size:10px;">◦</span><span style="color:#94a3b8; font-size:10px;">Plan Équipe (multi-utilisateurs)</span></div>
+        <div style="display:flex; align-items:center; gap:8px;"><span style="color:#f59e0b; font-size:10px;">◦</span><span style="color:#94a3b8; font-size:10px;">Partage client (lien lecture seule)</span></div>
+        <div style="display:flex; align-items:center; gap:8px;"><span style="color:#f59e0b; font-size:10px;">◦</span><span style="color:#94a3b8; font-size:10px;">Bibliothèque de carreaux</span></div>
+        <div style="display:flex; align-items:center; gap:8px;"><span style="color:#f59e0b; font-size:10px;">◦</span><span style="color:#94a3b8; font-size:10px;">Devis client généré auto</span></div>
+        <div style="display:flex; align-items:center; gap:8px;"><span style="color:#f59e0b; font-size:10px;">◦</span><span style="color:#94a3b8; font-size:10px;">API négoces / fournisseurs</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- What stays / what changes -->
+<div style="background:#0f172a; border-radius:10px; padding:16px; border:1px solid #1e293b;">
+  <div style="color:#f59e0b; font-size:11px; font-weight:600; margin-bottom:12px;">CE QUI CHANGE vs CE QUI RESTE</div>
+  <div style="display:flex; gap:12px;">
+    <div style="flex:1; background:#111827; border-radius:6px; padding:12px;">
+      <div style="color:#10b981; font-size:11px; font-weight:600; margin-bottom:8px;">✓ Inchangé</div>
+      <div style="display:flex; flex-direction:column; gap:4px; font-size:10px; color:#64748b;">
+        <span>→ Tout engine/ (tilingEngine, quantityEngine…)</span>
+        <span>→ Tous les composants plan/ tiling/ quantities/</span>
+        <span>→ Le store Zustand (interface identique)</span>
+        <span>→ Les types TypeScript</span>
+        <span>→ Les tests unitaires existants</span>
+      </div>
+    </div>
+    <div style="flex:1; background:#111827; border-radius:6px; padding:12px;">
+      <div style="color:#f59e0b; font-size:11px; font-weight:600; margin-bottom:8px;">⚡ Modifié</div>
+      <div style="display:flex; flex-direction:column; gap:4px; font-size:10px; color:#64748b;">
+        <span>→ lib/db.ts → lib/supabase.ts</span>
+        <span>→ store/projectStore.ts (hydrate/save)</span>
+        <span>→ app/page.tsx (dashboard connecté)</span>
+        <span>→ middleware.ts (protection routes)</span>
+      </div>
+    </div>
+    <div style="flex:1; background:#111827; border-radius:6px; padding:12px;">
+      <div style="color:#6366f1; font-size:11px; font-weight:600; margin-bottom:8px;">+ Créé</div>
+      <div style="display:flex; flex-direction:column; gap:4px; font-size:10px; color:#64748b;">
+        <span>→ app/page.tsx (landing publique)</span>
+        <span>→ app/auth/page.tsx (complet)</span>
+        <span>→ app/dashboard/page.tsx</span>
+        <span>→ app/account/page.tsx</span>
+        <span>→ middleware.ts (auth guard)</span>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,55 @@
+<h2>3 approches pour migrer vers le SaaS</h2>
+<p class="subtitle">La question centrale : comment intégrer Supabase dans une app aujourd'hui 100 % locale ?</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Progressive — sync optionnelle (recommandé)</h3>
+      <p>IndexedDB reste la source de vérité pour les utilisateurs gratuits. Supabase s'ajoute comme couche de sync pour les Pro.</p>
+      <div style="margin-top:10px; font-family:monospace; font-size:12px; background:#0f172a; padding:10px; border-radius:6px; color:#94a3b8;">
+        Non connecté → IndexedDB (comme aujourd'hui)<br>
+        Gratuit (1 projet) → IndexedDB + compte Supabase<br>
+        Pro → IndexedDB + sync Supabase automatique
+      </div>
+      <div class="pros-cons" style="margin-top:10px;">
+        <div class="pros"><h4>Avantages</h4><ul><li>Moteur existant inchangé</li><li>V1 livrable en 3-4 semaines</li><li>Fonctionne hors ligne</li></ul></div>
+        <div class="cons"><h4>Inconvénients</h4><ul><li>Double source de vérité à gérer</li><li>Sync à implémenter soigneusement</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Cloud-first — Supabase comme seule source</h3>
+      <p>On remplace IndexedDB par Supabase. Tous les utilisateurs ont un compte, même gratuits. Architecture plus propre.</p>
+      <div style="margin-top:10px; font-family:monospace; font-size:12px; background:#0f172a; padding:10px; border-radius:6px; color:#94a3b8;">
+        Tout utilisateur → compte requis → projets dans Supabase<br>
+        Gratuit → limité à 1 projet en base<br>
+        Pro → illimité
+      </div>
+      <div class="pros-cons" style="margin-top:10px;">
+        <div class="pros"><h4>Avantages</h4><ul><li>Architecture simple et cohérente</li><li>Pas de sync à gérer</li><li>Multi-appareil natif</li></ul></div>
+        <div class="cons"><h4>Inconvénients</h4><ul><li>Nécessite internet en permanence</li><li>Migration IndexedDB existante à prévoir</li><li>Compte obligatoire dès le départ</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Offline-first PWA — cache local + sync différée</h3>
+      <p>IndexedDB reste le cache local. Un Service Worker synchronise avec Supabase quand la connexion est disponible. App installable.</p>
+      <div style="margin-top:10px; font-family:monospace; font-size:12px; background:#0f172a; padding:10px; border-radius:6px; color:#94a3b8;">
+        Modification locale → IndexedDB<br>
+        Quand online → sync automatique → Supabase<br>
+        Conflit → résolution last-write-wins
+      </div>
+      <div class="pros-cons" style="margin-top:10px;">
+        <div class="pros"><h4>Avantages</h4><ul><li>Fonctionne sur chantier sans réseau</li><li>App installable (PWA)</li></ul></div>
+        <div class="cons"><h4>Inconvénients</h4><ul><li>Complexité élevée (gestion conflits)</li><li>3-4× plus long à développer</li><li>Non recommandé en V1</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>

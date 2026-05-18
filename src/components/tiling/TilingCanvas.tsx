@@ -6,6 +6,7 @@ import type { Point } from '@/types/plan';
 import type { Tile, TilingConfig } from '@/types/tiling';
 import { getBoundingBox } from '@/engine/geometry/polygon';
 import { formatCm } from '@/utils/formatters';
+import { partitionToPolygon } from '@/engine/tiling/tilingEngine';
 
 interface DimLineProps {
   x1: number; y1: number;
@@ -51,6 +52,7 @@ interface TilingCanvasProps {
   scale: number;
   pan: Point;
   showDimensions: boolean;
+  wallThickness: number;
   onPointerDown: (e: ReactPointerEvent<SVGSVGElement>) => void;
   onPointerMove: (e: ReactPointerEvent<SVGSVGElement>) => void;
   onPointerUp: () => void;
@@ -64,6 +66,7 @@ export const TilingCanvas = ({
   scale,
   pan,
   showDimensions,
+  wallThickness,
   onPointerDown,
   onPointerMove,
   onPointerUp,
@@ -91,13 +94,27 @@ export const TilingCanvas = ({
     >
       <g transform={`translate(${pan.x}, ${pan.y}) scale(${scale})`}>
         <defs>
-          <clipPath id="globalClip">
-            {validRooms.map((room) => (
-              <polygon
-                key={room.id}
-                points={room.points.map((p) => `${p.x},${p.y}`).join(' ')}
-              />
-            ))}
+          <clipPath id="tiledClip" clipPathUnits="userSpaceOnUse">
+            <path
+              clipRule="evenodd"
+              fillRule="evenodd"
+              d={[
+                ...validRooms.map((r) =>
+                  `M ${r.points.map((p) => `${p.x},${p.y}`).join(' L ')} Z`
+                ),
+                ...validRooms.flatMap((r) =>
+                  (r.excludedZones ?? []).map((z) =>
+                    `M ${z.points.map((p) => `${p.x},${p.y}`).join(' L ')} Z`
+                  )
+                ),
+                ...validRooms.flatMap((r) =>
+                  (r.partitions ?? []).map((pt) => {
+                    const poly = partitionToPolygon(pt);
+                    return `M ${poly.map((p) => `${p.x},${p.y}`).join(' L ')} Z`;
+                  })
+                ),
+              ].join(' ')}
+            />
           </clipPath>
         </defs>
 
@@ -109,7 +126,7 @@ export const TilingCanvas = ({
           />
         ))}
 
-        <g clipPath="url(#globalClip)">
+        <g clipPath="url(#tiledClip)">
           <g transform={`rotate(${effectiveAngle}, ${centerX}, ${centerY})`}>
             {tiles.map((tile) =>
               tile.points ? (
@@ -136,22 +153,56 @@ export const TilingCanvas = ({
           </g>
         </g>
 
+        {/* Excluded zones — amber outline */}
+        {validRooms.map((room) =>
+          (room.excludedZones ?? []).map((zone) => (
+            <polygon
+              key={`ez-${zone.id}`}
+              points={zone.points.map((p) => `${p.x},${p.y}`).join(' ')}
+              fill="rgba(251,191,36,0.10)"
+              stroke="#f59e0b"
+              strokeWidth={40}
+              strokeDasharray="120,80"
+              className="pointer-events-none"
+            />
+          ))
+        )}
+
         {/* Room walls and doors */}
         {validRooms.map((room) =>
           room.points.map((p, i) => {
             const nextP = room.points[(i + 1) % room.points.length]!;
             const isDoor = (room.edges[i] ?? 'WALL') === 'DOOR';
+            const edgeThick = room.edgeThicknesses?.[i] ?? wallThickness;
             return (
               <line
                 key={`edge-${room.id}-${i}`}
                 x1={p.x} y1={p.y} x2={nextP.x} y2={nextP.y}
                 stroke={isDoor ? '#f97316' : '#ea580c'}
-                strokeWidth={isDoor ? 50 : 80}
+                strokeWidth={isDoor ? edgeThick * 0.5 : edgeThick}
                 strokeLinecap="round"
-                strokeDasharray={isDoor ? '120,80' : undefined}
+                strokeDasharray={isDoor ? `${edgeThick * 1.2},${edgeThick * 0.8}` : undefined}
               />
             );
           }),
+        )}
+
+        {/* Partitions — filled polygon showing actual thickness */}
+        {validRooms.map((room) =>
+          (room.partitions ?? []).map((pt) => {
+            const poly = partitionToPolygon(pt);
+            return (
+              <polygon
+                key={`part-${pt.id}`}
+                points={poly.map((p) => `${p.x},${p.y}`).join(' ')}
+                fill="var(--canvas-wall-inact)"
+                opacity={0.85}
+                stroke="#a78bfa"
+                strokeWidth={20}
+                className="pointer-events-none"
+              />
+            );
+          })
         )}
 
         {/* Reference dimensions */}

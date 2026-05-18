@@ -84,6 +84,18 @@ export function analyzeDOF(rooms: Room[], constraints: Constraint[]): DOFMap {
         if (p1Full && p2Part && !p2Full) { cx.set(k2, true); cy.set(k2, true); changed = true; }
         if (p2Full && p1Part && !p1Full) { cx.set(k1, true); cy.set(k1, true); changed = true; }
       }
+
+      if (c.type === 'H_DISTANCE') {
+        if ((cx.get(k1) || cx.get(k2)) && (!cx.get(k1) || !cx.get(k2))) {
+          cx.set(k1, true); cx.set(k2, true); changed = true;
+        }
+      }
+
+      if (c.type === 'V_DISTANCE') {
+        if ((cy.get(k1) || cy.get(k2)) && (!cy.get(k1) || !cy.get(k2))) {
+          cy.set(k1, true); cy.set(k2, true); changed = true;
+        }
+      }
     }
   }
 

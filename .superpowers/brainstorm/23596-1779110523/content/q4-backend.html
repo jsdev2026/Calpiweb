@@ -1,0 +1,38 @@
+<h2>Question 4 sur 5 — Stack backend &amp; auth</h2>
+<p class="subtitle">L'app est aujourd'hui 100 % navigateur (IndexedDB). Le SaaS nécessite un backend pour les comptes, le cloud et les paiements.</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Supabase (recommandé)</h3>
+      <p><strong>Auth :</strong> email/password + Google OAuth intégré.<br>
+      <strong>Base de données :</strong> PostgreSQL hébergé, API auto-générée.<br>
+      <strong>Paiements :</strong> Stripe (intégré séparément).<br>
+      <strong>Hosting :</strong> Vercel (Next.js natif).</p>
+      <div style="margin-top:8px; color:#10b981; font-size:12px;">✓ Open-source · Gratuit jusqu'à 2 projets Supabase · Déploiement rapide</div>
+    </div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Clerk (auth) + PlanetScale (DB)</h3>
+      <p><strong>Auth :</strong> Clerk gère tout (UI, sessions, OAuth) — zéro code auth.<br>
+      <strong>Base de données :</strong> PlanetScale MySQL serverless.<br>
+      <strong>Paiements :</strong> Stripe.<br>
+      <strong>Hosting :</strong> Vercel.</p>
+      <div style="margin-top:8px; color:#f59e0b; font-size:12px;">⚡ Auth la plus rapide à intégrer · Payant au-delà du free tier</div>
+    </div>
+  </div>
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>NextAuth + PostgreSQL (self-managed)</h3>
+      <p><strong>Auth :</strong> NextAuth.js (bibliothèque Next.js officielle).<br>
+      <strong>Base de données :</strong> PostgreSQL sur Railway ou Neon.<br>
+      <strong>Paiements :</strong> Stripe.<br>
+      <strong>Hosting :</strong> Vercel.</p>
+      <div style="margin-top:8px; color:#6b7280; font-size:12px;">⚙ 100 % contrôle · Plus de configuration · Gratuit</div>
+    </div>
+  </div>
+</div>

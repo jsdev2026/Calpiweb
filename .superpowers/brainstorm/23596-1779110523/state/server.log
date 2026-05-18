@@ -1,0 +1,11 @@
+{"type":"server-started","port":58908,"host":"0.0.0.0","url_host":"localhost","url":"http://localhost:58908","screen_dir":"/workspaces/Calpiweb/.superpowers/brainstorm/23596-1779110523/content","state_dir":"/workspaces/Calpiweb/.superpowers/brainstorm/23596-1779110523/state"}
+{"type":"screen-added","file":"/workspaces/Calpiweb/.superpowers/brainstorm/23596-1779110523/content/q1-target-users.html"}
+{"type":"screen-added","file":"/workspaces/Calpiweb/.superpowers/brainstorm/23596-1779110523/content/q2-freemium-gate.html"}
+{"type":"screen-added","file":"/workspaces/Calpiweb/.superpowers/brainstorm/23596-1779110523/content/q3-pricing.html"}
+{"type":"screen-added","file":"/workspaces/Calpiweb/.superpowers/brainstorm/23596-1779110523/content/q4-backend.html"}
+{"type":"screen-added","file":"/workspaces/Calpiweb/.superpowers/brainstorm/23596-1779110523/content/q5-v1-scope.html"}
+{"type":"screen-added","file":"/workspaces/Calpiweb/.superpowers/brainstorm/23596-1779110523/content/approaches.html"}
+{"type":"screen-added","file":"/workspaces/Calpiweb/.superpowers/brainstorm/23596-1779110523/content/design-pages.html"}
+{"type":"screen-added","file":"/workspaces/Calpiweb/.superpowers/brainstorm/23596-1779110523/content/design-flows.html"}
+{"type":"screen-added","file":"/workspaces/Calpiweb/.superpowers/brainstorm/23596-1779110523/content/design-roadmap.html"}
+{"type":"server-stopped","reason":"idle timeout"}
