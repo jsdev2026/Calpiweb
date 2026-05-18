@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import { Space_Grotesk, DM_Sans } from 'next/font/google';
 import { ThemeProvider } from '@/components/ThemeProvider';
@@ -17,6 +17,11 @@ const dmSans = DM_Sans({
   weight: ['300', '400', '500', '600'],
   display: 'swap',
 });
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+};
 
 export const metadata: Metadata = {
   title: 'CaléPlan — Calepinage professionnel',
