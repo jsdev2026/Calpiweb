@@ -434,6 +434,7 @@ export default function DashboardPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [settingsProjectId, setSettingsProjectId] = useState<string | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { void hydrate(); }, [hydrate]);
@@ -500,96 +501,124 @@ export default function DashboardPage() {
     <div className="flex min-h-screen flex-col" style={{ background: 'var(--bg)' }}>
 
       {/* Topbar */}
-      <header className="shell-topbar px-6" style={{ position: 'sticky', top: 0, zIndex: 30 }}>
-        {/* Logo */}
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg" style={{ background: 'var(--accent)' }}>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.2" fill="white"/>
-              <rect x="9" y="1.5" width="5.5" height="5.5" rx="1.2" fill="white" fillOpacity=".7"/>
-              <rect x="1.5" y="9" width="5.5" height="5.5" rx="1.2" fill="white" fillOpacity=".7"/>
-              <rect x="9" y="9" width="5.5" height="5.5" rx="1.2" fill="white"/>
-            </svg>
-          </div>
-          <span style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.2px' }}>CaléPlan</span>
-        </div>
+      <header className="sticky top-0 z-30 flex flex-wrap items-center border-b px-4 md:px-6"
+        style={{ background: 'var(--surf)', borderColor: 'var(--bdr)', minHeight: 'var(--topbar)' }}>
 
-        <div className="mx-4 h-5 w-px" style={{ background: 'var(--bdr)' }} />
-
-        {/* Search */}
-        <div className="relative">
-          <Search size={13} style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)' }} />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Rechercher un projet…"
-            style={{ width: 240, paddingLeft: 28, paddingRight: 10, paddingTop: 5, paddingBottom: 5, background: 'var(--surf2)', border: '1px solid var(--bdr)', borderRadius: 'var(--rs)', fontSize: 13, color: 'var(--text)', outline: 'none' }}
-            onFocus={(e) => { e.target.style.borderColor = 'var(--accent)'; }}
-            onBlur={(e) => { e.target.style.borderColor = 'var(--bdr)'; }}
-          />
-        </div>
-
-        <div className="ml-auto flex items-center gap-2">
-          {/* View toggle */}
-          <div className="flex rounded-[var(--rs)] p-0.5" style={{ background: 'var(--surf2)', border: '1px solid var(--bdr)' }}>
-            <button type="button" onClick={() => setViewMode('grid')} className="flex h-6 w-6 items-center justify-center rounded transition-colors"
-              style={viewMode === 'grid' ? { background: 'var(--surf)', color: 'var(--accent)', boxShadow: 'var(--sh)' } : { color: 'var(--muted)' }}>
-              <LayoutGrid size={13} />
-            </button>
-            <button type="button" onClick={() => setViewMode('list')} className="flex h-6 w-6 items-center justify-center rounded transition-colors"
-              style={viewMode === 'list' ? { background: 'var(--surf)', color: 'var(--accent)', boxShadow: 'var(--sh)' } : { color: 'var(--muted)' }}>
-              <List size={13} />
-            </button>
+        {/* Row 1 */}
+        <div className="flex h-[var(--topbar)] w-full items-center md:contents">
+          {/* Logo */}
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg" style={{ background: 'var(--accent)' }}>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.2" fill="white"/>
+                <rect x="9" y="1.5" width="5.5" height="5.5" rx="1.2" fill="white" fillOpacity=".7"/>
+                <rect x="1.5" y="9" width="5.5" height="5.5" rx="1.2" fill="white" fillOpacity=".7"/>
+                <rect x="9" y="9" width="5.5" height="5.5" rx="1.2" fill="white"/>
+              </svg>
+            </div>
+            <span style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.2px' }}>CaléPlan</span>
           </div>
 
-          {/* Dark mode toggle */}
-          <button type="button" onClick={toggleDarkMode} className="btn-icon" aria-label="Basculer le thème">
-            {darkMode ? <Sun size={15} /> : <Moon size={15} />}
-          </button>
+          {/* Desktop: separator + search */}
+          <div className="mx-4 hidden h-5 w-px md:block" style={{ background: 'var(--bdr)' }} />
+          <div className="relative hidden md:block">
+            <Search size={13} style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)' }} />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Rechercher un projet…"
+              style={{ width: 240, paddingLeft: 28, paddingRight: 10, paddingTop: 5, paddingBottom: 5, background: 'var(--surf2)', border: '1px solid var(--bdr)', borderRadius: 'var(--rs)', fontSize: 13, color: 'var(--text)', outline: 'none' }}
+              onFocus={(e) => { e.target.style.borderColor = 'var(--accent)'; }}
+              onBlur={(e) => { e.target.style.borderColor = 'var(--bdr)'; }}
+            />
+          </div>
 
-          {/* User avatar + menu */}
-          <div className="relative" ref={userMenuRef}>
-            <button type="button"
-              onClick={() => setShowUserMenu((v) => !v)}
-              className="flex items-center gap-2.5 rounded-[var(--rs)] px-2.5 py-1.5 transition-colors"
-              style={{ background: 'var(--surf2)', border: '1px solid var(--bdr)' }}>
-              <div className="flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold text-white" style={{ background: 'var(--accent)' }}>{initials}</div>
-              <span style={{ fontSize: 12.5, fontWeight: 500, color: 'var(--text)' }}>{user?.name ?? 'Utilisateur'}</span>
-              {user?.plan && (
-                <span className="tag-pro rounded-full px-2 py-0.5 text-[10px] font-semibold">{planLabel[user.plan]}</span>
-              )}
+          {/* Right controls */}
+          <div className="ml-auto flex items-center gap-2">
+            {/* Search toggle — mobile only */}
+            <button type="button" onClick={() => setSearchOpen((v) => !v)} className="btn-icon md:hidden" aria-label="Rechercher">
+              <Search size={15} />
             </button>
 
-            {showUserMenu && (
-              <div className="absolute right-0 top-full z-50 mt-1 w-52 rounded-xl p-1 shadow-xl"
-                style={{ background: 'var(--surf)', border: '1px solid var(--bdr)' }}>
-                <div className="px-3 py-2">
-                  <p className="text-[13px] font-semibold" style={{ color: 'var(--text)' }}>{user?.name ?? 'Utilisateur'}</p>
-                  <p className="text-[11.5px]" style={{ color: 'var(--muted)' }}>{user?.email ?? ''}</p>
+            {/* View toggle — desktop only */}
+            <div className="hidden md:flex rounded-[var(--rs)] p-0.5" style={{ background: 'var(--surf2)', border: '1px solid var(--bdr)' }}>
+              <button type="button" onClick={() => setViewMode('grid')} className="flex h-6 w-6 items-center justify-center rounded transition-colors"
+                style={viewMode === 'grid' ? { background: 'var(--surf)', color: 'var(--accent)', boxShadow: 'var(--sh)' } : { color: 'var(--muted)' }}>
+                <LayoutGrid size={13} />
+              </button>
+              <button type="button" onClick={() => setViewMode('list')} className="flex h-6 w-6 items-center justify-center rounded transition-colors"
+                style={viewMode === 'list' ? { background: 'var(--surf)', color: 'var(--accent)', boxShadow: 'var(--sh)' } : { color: 'var(--muted)' }}>
+                <List size={13} />
+              </button>
+            </div>
+
+            {/* Dark mode toggle */}
+            <button type="button" onClick={toggleDarkMode} className="btn-icon" aria-label="Basculer le thème">
+              {darkMode ? <Sun size={15} /> : <Moon size={15} />}
+            </button>
+
+            {/* User avatar + menu */}
+            <div className="relative" ref={userMenuRef}>
+              <button type="button"
+                onClick={() => setShowUserMenu((v) => !v)}
+                className="flex items-center gap-2.5 rounded-[var(--rs)] px-2.5 py-1.5 transition-colors"
+                style={{ background: 'var(--surf2)', border: '1px solid var(--bdr)' }}>
+                <div className="flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold text-white" style={{ background: 'var(--accent)' }}>{initials}</div>
+                <span className="hidden sm:block" style={{ fontSize: 12.5, fontWeight: 500, color: 'var(--text)' }}>{user?.name ?? 'Utilisateur'}</span>
+                {user?.plan && (
+                  <span className="tag-pro hidden sm:block rounded-full px-2 py-0.5 text-[10px] font-semibold">{planLabel[user.plan]}</span>
+                )}
+              </button>
+
+              {showUserMenu && (
+                <div className="absolute right-0 top-full z-50 mt-1 w-52 rounded-xl p-1 shadow-xl"
+                  style={{ background: 'var(--surf)', border: '1px solid var(--bdr)' }}>
+                  <div className="px-3 py-2">
+                    <p className="text-[13px] font-semibold" style={{ color: 'var(--text)' }}>{user?.name ?? 'Utilisateur'}</p>
+                    <p className="text-[11.5px]" style={{ color: 'var(--muted)' }}>{user?.email ?? ''}</p>
+                  </div>
+                  <div className="my-1 h-px" style={{ background: 'var(--bdr)' }} />
+                  <button type="button"
+                    onClick={() => { setShowUserMenu(false); router.push('/account'); }}
+                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[13px] transition-colors"
+                    style={{ color: 'var(--text2)' }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--surf2)'; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}>
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1L9 5h4l-3.2 2.4 1.2 3.9L7 9.1 3 11.3l1.2-3.9L1 5h4L7 1z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/></svg>
+                    Changer de forfait
+                  </button>
+                  <button type="button"
+                    onClick={() => void logout().then(() => router.push('/auth'))}
+                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[13px] transition-colors"
+                    style={{ color: '#ef4444' }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--surf2)'; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}>
+                    <LogOut size={13} />
+                    Se déconnecter
+                  </button>
                 </div>
-                <div className="my-1 h-px" style={{ background: 'var(--bdr)' }} />
-                <button type="button"
-                  onClick={() => { setShowUserMenu(false); router.push('/account'); }}
-                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[13px] transition-colors"
-                  style={{ color: 'var(--text2)' }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--surf2)'; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}>
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1L9 5h4l-3.2 2.4 1.2 3.9L7 9.1 3 11.3l1.2-3.9L1 5h4L7 1z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/></svg>
-                  Changer de forfait
-                </button>
-                <button type="button"
-                  onClick={() => void logout().then(() => router.push('/auth'))}
-                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[13px] transition-colors"
-                  style={{ color: '#ef4444' }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--surf2)'; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}>
-                  <LogOut size={13} />
-                  Se déconnecter
-                </button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
+
+        {/* Row 2: Search expanded (mobile only) */}
+        {searchOpen && (
+          <div className="w-full pb-2 md:hidden">
+            <div className="relative">
+              <Search size={13} style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)' }} />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Rechercher un projet…"
+                autoFocus
+                style={{ width: '100%', paddingLeft: 28, paddingRight: 10, paddingTop: 6, paddingBottom: 6, background: 'var(--surf2)', border: '1px solid var(--bdr)', borderRadius: 'var(--rs)', fontSize: 13, color: 'var(--text)', outline: 'none' }}
+                onFocus={(e) => { e.target.style.borderColor = 'var(--accent)'; }}
+                onBlur={(e) => { e.target.style.borderColor = 'var(--bdr)'; }}
+              />
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Body */}
@@ -645,8 +674,8 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        {/* Grid view */}
-        {viewMode === 'grid' && (
+        {/* Grid view — always on mobile, toggled on desktop */}
+        <div className={viewMode === 'list' ? 'block md:hidden' : 'block'}>
           <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))' }}>
             {filtered.map((p) => (
               <ProjectCard
@@ -657,11 +686,11 @@ export default function DashboardPage() {
                 onSettings={() => { setActive(p.id); setSettingsProjectId(p.id); }}
               />
             ))}
-            {/* New project card */}
+            {/* New project card — hidden on mobile (FAB is used instead) */}
             <button
               type="button"
               onClick={() => setShowNewModal(true)}
-              className="group flex flex-col items-center justify-center gap-3 rounded-[var(--r)] border-2 border-dashed transition-all"
+              className="group hidden md:flex flex-col items-center justify-center gap-3 rounded-[var(--r)] border-2 border-dashed transition-all"
               style={{ minHeight: 200, borderColor: 'var(--bdr2)', color: 'var(--muted)', cursor: 'pointer', background: 'transparent' }}
               onMouseEnter={(e) => { const el = e.currentTarget as HTMLButtonElement; el.style.borderColor = 'var(--accent)'; el.style.background = 'var(--accent-l)'; el.style.color = 'var(--accent)'; }}
               onMouseLeave={(e) => { const el = e.currentTarget as HTMLButtonElement; el.style.borderColor = 'var(--bdr2)'; el.style.background = 'transparent'; el.style.color = 'var(--muted)'; }}
@@ -672,12 +701,11 @@ export default function DashboardPage() {
               <span style={{ fontSize: 12.5, fontWeight: 600, letterSpacing: '0.3px', textTransform: 'uppercase' }}>Nouveau projet</span>
             </button>
           </div>
-        )}
+        </div>
 
-        {/* List view */}
+        {/* List view — desktop only */}
         {viewMode === 'list' && (
-          <div className="flex flex-col gap-2">
-            {/* Header row */}
+          <div className="hidden md:flex flex-col gap-2">
             <div className="grid grid-cols-[48px_1fr_120px_140px_32px] items-center gap-4 px-4 pb-1 text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--muted)' }}>
               <span />
               <span>Projet</span>
@@ -694,7 +722,6 @@ export default function DashboardPage() {
                 onSettings={() => { setActive(p.id); setSettingsProjectId(p.id); }}
               />
             ))}
-            {/* New project row */}
             <button
               type="button"
               onClick={() => setShowNewModal(true)}
@@ -711,6 +738,17 @@ export default function DashboardPage() {
           </div>
         )}
       </main>
+
+      {/* FAB — mobile only */}
+      <button
+        type="button"
+        onClick={() => setShowNewModal(true)}
+        className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-2xl md:hidden"
+        style={{ background: 'var(--accent)', color: '#fff' }}
+        aria-label="Nouveau projet"
+      >
+        <Plus size={26} />
+      </button>
 
       {showNewModal && (
         <NewProjectModal
