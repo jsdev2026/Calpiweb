@@ -17,10 +17,10 @@ export default function LandingPage() {
           </div>
           <span style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>CaléPlan</span>
         </div>
-        <nav className="flex items-center gap-4">
-          <a href="#tarifs" className="text-[13.5px]" style={{ color: 'var(--text2)' }}>Tarifs</a>
+        <nav className="flex items-center gap-3">
+          <a href="#tarifs" className="hidden md:block text-[13.5px]" style={{ color: 'var(--text2)' }}>Tarifs</a>
           <Link href="/auth" className="text-[13.5px] font-medium" style={{ color: 'var(--text2)' }}>Connexion</Link>
-          <Link href="/auth" className="btn-primary text-[13px] px-4 py-2">Commencer gratuitement</Link>
+          <Link href="/auth" className="btn-primary hidden md:flex text-[13px] px-4 py-2">Commencer gratuitement</Link>
         </nav>
       </header>
 
@@ -35,9 +35,9 @@ export default function LandingPage() {
         <p className="mb-10 max-w-xl text-[16px] leading-relaxed" style={{ color: 'var(--text2)' }}>
           Dessinez vos pièces, simulez la pose et obtenez un quantitatif précis en quelques minutes. Sauvegarde cloud automatique.
         </p>
-        <div className="flex flex-wrap justify-center gap-4">
-          <Link href="/auth" className="btn-primary px-7 py-3 text-[15px]">Commencer gratuitement</Link>
-          <a href="#fonctions" className="rounded-xl border px-7 py-3 text-[15px] font-medium transition-colors" style={{ borderColor: 'var(--bdr)', color: 'var(--text2)', background: 'var(--surf)' }}>
+        <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:flex-wrap sm:justify-center">
+          <Link href="/auth" className="btn-primary px-7 py-3 text-[15px] text-center">Commencer gratuitement</Link>
+          <a href="#fonctions" className="rounded-xl border px-7 py-3 text-[15px] font-medium text-center transition-colors" style={{ borderColor: 'var(--bdr)', color: 'var(--text2)', background: 'var(--surf)' }}>
             Voir les fonctions
           </a>
         </div>
