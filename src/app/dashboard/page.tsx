@@ -624,7 +624,7 @@ export default function DashboardPage() {
       {/* Body */}
       <main className="flex-1 px-7 py-6">
         <div className="mb-6">
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 800, color: 'var(--text)', letterSpacing: '-0.5px' }} className="mb-0.5">Mes projets</h1>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 400, color: 'var(--text)' }} className="mb-0.5">Mes projets</h1>
           <p style={{ fontSize: 13, color: 'var(--text2)' }}>Bonjour {user?.name?.split(' ')[0] ?? ''} — {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
         </div>
 

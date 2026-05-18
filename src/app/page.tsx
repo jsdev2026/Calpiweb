@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 
 // ── Product canvas mockup ─────────────────────────────────────────────────────
@@ -198,7 +200,7 @@ export default function LandingPage() {
                 <rect x="9" y="9" width="5.5" height="5.5" rx="1.2" fill="white" />
               </svg>
             </div>
-            <span style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, color: '#E6EDF3', letterSpacing: '-0.3px' }}>CaléPlan</span>
+            <span style={{ fontFamily: 'var(--font-body)', fontSize: 15, fontWeight: 700, color: '#E6EDF3', letterSpacing: '-0.2px' }}>CaléPlan</span>
           </div>
           <nav className="flex items-center gap-2">
             <a href="#tarifs" className="hidden md:block px-3 py-1.5 text-[13px] rounded-lg transition-colors"
@@ -257,15 +259,15 @@ export default function LandingPage() {
 
               <h1 style={{
                 fontFamily: 'var(--font-display)',
-                fontSize: 'clamp(38px, 5.5vw, 62px)',
-                fontWeight: 800,
+                fontSize: 'clamp(30px, 4vw, 48px)',
+                fontWeight: 400,
                 color: '#E6EDF3',
-                lineHeight: 1.05,
-                letterSpacing: '-1.5px',
-                marginBottom: 24,
+                lineHeight: 1.18,
+                letterSpacing: '0',
+                marginBottom: 22,
               }}>
-                Calepinage<br />
-                <span style={{ color: '#E8671A' }}>sans erreur</span>,<br />
+                Calepinage{' '}
+                <em style={{ color: '#E8671A', fontStyle: 'italic' }}>sans erreur</em>,<br />
                 livraison précise.
               </h1>
 
@@ -332,13 +334,13 @@ export default function LandingPage() {
           <div className="grid grid-cols-2 divide-x divide-orange-600 md:grid-cols-4">
             {[
               { value: '3', label: 'Modes de pose' },
-              { value: '1cm²', label: 'Précision du calcul' },
+              { value: '1 cm²', label: 'Précision du calcul' },
               { value: '100%', label: 'Cloud · Sauvegarde auto' },
-              { value: '<2min', label: 'De la pièce au devis' },
+              { value: '< 2 min', label: 'De la pièce au devis' },
             ].map(({ value, label }) => (
               <div key={label} className="px-6 py-5 text-center">
-                <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 800, color: '#fff' }}>{value}</div>
-                <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.75)', marginTop: 2 }}>{label}</div>
+                <div style={{ fontFamily: 'var(--font-body)', fontSize: 19, fontWeight: 700, color: '#fff', letterSpacing: '-0.3px' }}>{value}</div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', marginTop: 3 }}>{label}</div>
               </div>
             ))}
           </div>
@@ -350,7 +352,7 @@ export default function LandingPage() {
         <div className="mx-auto max-w-6xl px-6 py-20">
           <div className="mb-14 text-center">
             <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.2em]" style={{ color: '#E8671A' }}>Fonctionnalités</p>
-            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(26px, 4vw, 40px)', fontWeight: 800, color: '#111827', letterSpacing: '-0.8px' }}>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(24px, 3vw, 36px)', fontWeight: 400, color: '#111827' }}>
               Du plan au bon de commande
             </h2>
           </div>
@@ -409,7 +411,7 @@ export default function LandingPage() {
                 }}>
                   {icon}
                 </div>
-                <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 700, color: '#111827', marginBottom: 10 }}>{title}</h3>
+                <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 17, fontWeight: 400, color: '#111827', marginBottom: 10 }}>{title}</h3>
                 <p style={{ fontSize: 13.5, lineHeight: 1.65, color: '#6B7280', marginBottom: 18 }}>{desc}</p>
                 <div style={{
                   borderTop: '1px solid #F3F4F6', paddingTop: 14,
@@ -426,7 +428,7 @@ export default function LandingPage() {
         <div className="mx-auto max-w-6xl px-6 py-20">
           <div className="mb-14 text-center">
             <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.2em]" style={{ color: '#E8671A' }}>Tarifs</p>
-            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(26px, 4vw, 40px)', fontWeight: 800, color: '#E6EDF3', letterSpacing: '-0.8px' }}>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(24px, 3vw, 36px)', fontWeight: 400, color: '#E6EDF3' }}>
               Simple. Transparent.
             </h2>
           </div>
@@ -438,9 +440,9 @@ export default function LandingPage() {
               border: '1px solid rgba(255,255,255,0.08)',
               borderRadius: 20, padding: '32px 32px 28px',
             }}>
-              <div style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Gratuit</div>
+              <div style={{ fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Gratuit</div>
               <div className="mb-8 flex items-baseline gap-1.5">
-                <span style={{ fontFamily: 'var(--font-display)', fontSize: 48, fontWeight: 800, color: '#E6EDF3', letterSpacing: '-2px' }}>0€</span>
+                <span style={{ fontFamily: 'var(--font-display)', fontSize: 48, fontWeight: 400, color: '#E6EDF3', letterSpacing: '-0.5px' }}>0€</span>
                 <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)' }}>pour toujours</span>
               </div>
               <ul className="mb-8 space-y-3">
@@ -481,7 +483,7 @@ export default function LandingPage() {
                 pointerEvents: 'none',
               }} />
               <div className="mb-5 flex items-start justify-between">
-                <div style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, color: '#E8671A', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Pro</div>
+                <div style={{ fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 700, color: '#E8671A', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Pro</div>
                 <div style={{
                   padding: '3px 10px', borderRadius: 20,
                   background: 'rgba(232,103,26,0.15)', border: '1px solid rgba(232,103,26,0.3)',
@@ -489,7 +491,7 @@ export default function LandingPage() {
                 }}>Recommandé</div>
               </div>
               <div className="mb-8 flex items-baseline gap-1.5">
-                <span style={{ fontFamily: 'var(--font-display)', fontSize: 48, fontWeight: 800, color: '#E6EDF3', letterSpacing: '-2px' }}>9€</span>
+                <span style={{ fontFamily: 'var(--font-display)', fontSize: 48, fontWeight: 400, color: '#E6EDF3', letterSpacing: '-0.5px' }}>9€</span>
                 <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>/mois</span>
               </div>
               <ul className="mb-8 space-y-3">
@@ -530,7 +532,7 @@ export default function LandingPage() {
                 <rect x="9" y="9" width="5.5" height="5.5" rx="1.2" fill="white" />
               </svg>
             </div>
-            <span style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--font-display)' }}>CaléPlan</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--font-body)' }}>CaléPlan</span>
           </div>
           <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)' }}>
             © {new Date().getFullYear()} CaléPlan ·{' '}

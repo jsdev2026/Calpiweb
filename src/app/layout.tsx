@@ -1,13 +1,14 @@
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
-import { Syne, DM_Sans } from 'next/font/google';
+import { DM_Serif_Display, DM_Sans } from 'next/font/google';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import './globals.css';
 
-const syne = Syne({
+const dmSerifDisplay = DM_Serif_Display({
   subsets: ['latin'],
   variable: '--font-display',
-  weight: ['600', '700', '800'],
+  weight: ['400'],
+  style: ['normal', 'italic'],
   display: 'swap',
 });
 
@@ -30,7 +31,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="fr" suppressHydrationWarning className={`${syne.variable} ${dmSans.variable}`}>
+    <html lang="fr" suppressHydrationWarning className={`${dmSerifDisplay.variable} ${dmSans.variable}`}>
       <head>
         {/* Prevent dark-mode flash before React hydrates */}
         <script dangerouslySetInnerHTML={{ __html: `(function(){try{if(localStorage.getItem('caleplan_dark')==='true')document.documentElement.setAttribute('data-dark','true');}catch(e){}})();` }} />
