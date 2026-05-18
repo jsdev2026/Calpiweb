@@ -249,6 +249,60 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
   const [excludePoints, setExcludePoints] = useState<Point[]>([]);
 
   const svgRef = useRef<SVGSVGElement | null>(null);
+  const touchRef = useRef<{ dist: number; midX: number; midY: number; panX: number; panY: number } | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    e.preventDefault();
+    const t = e.touches;
+    if (t.length === 2) {
+      const dx = t[1]!.clientX - t[0]!.clientX;
+      const dy = t[1]!.clientY - t[0]!.clientY;
+      touchRef.current = {
+        dist: Math.hypot(dx, dy),
+        midX: (t[0]!.clientX + t[1]!.clientX) / 2,
+        midY: (t[0]!.clientY + t[1]!.clientY) / 2,
+        panX: pan.x,
+        panY: pan.y,
+      };
+    } else if (t.length === 1) {
+      touchRef.current = { dist: 0, midX: t[0]!.clientX, midY: t[0]!.clientY, panX: pan.x, panY: pan.y };
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    e.preventDefault();
+    const t = e.touches;
+    if (!touchRef.current) return;
+    if (t.length === 2) {
+      const dx = t[1]!.clientX - t[0]!.clientX;
+      const dy = t[1]!.clientY - t[0]!.clientY;
+      const dist = Math.hypot(dx, dy);
+      const midX = (t[0]!.clientX + t[1]!.clientX) / 2;
+      const midY = (t[0]!.clientY + t[1]!.clientY) / 2;
+      const svg = svgRef.current;
+      if (svg && touchRef.current.dist > 0) {
+        const ratio = dist / touchRef.current.dist;
+        const rect = svg.getBoundingClientRect();
+        const mx = midX - rect.left;
+        const my = midY - rect.top;
+        setScale((s) => {
+          const ns = Math.max(0.005, Math.min(s * ratio, 4));
+          setPan((p) => ({ x: mx - (mx - p.x) * (ns / s), y: my - (my - p.y) * (ns / s) }));
+          return ns;
+        });
+      }
+      touchRef.current = { dist, midX, midY, panX: pan.x, panY: pan.y };
+    } else if (t.length === 1) {
+      const dx = t[0]!.clientX - touchRef.current.midX;
+      const dy = t[0]!.clientY - touchRef.current.midY;
+      setPan({ x: touchRef.current.panX + dx, y: touchRef.current.panY + dy });
+    }
+  };
+
+  const handleTouchEnd = () => {
+    touchRef.current = null;
+  };
+
   const lastClickRef = useRef<{ time: number; x: number; y: number }>({ time: 0, x: 0, y: 0 });
   const historyRef = useRef(history);
   const roomsRef = useRef(rooms);
@@ -1251,6 +1305,23 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
 
   return (
     <div className="relative flex flex-1 overflow-hidden" style={{ background: 'var(--canvas-bg)' }}>
+      {/* Mobile: info banner */}
+      <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-center px-4 py-2 md:hidden"
+        style={{ background: 'var(--surf)', borderBottom: '1px solid var(--bdr)' }}>
+        <p className="text-[12px] font-medium" style={{ color: 'var(--text2)' }}>
+          La création de plans est disponible sur ordinateur ou tablette
+        </p>
+      </div>
+
+      {/* Mobile: touch overlay for pan + pinch-to-zoom */}
+      <div
+        className="absolute inset-0 z-10 md:hidden"
+        style={{ touchAction: 'none' }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      />
+
       {violationFlash && (
         <div className="pointer-events-none absolute left-1/2 top-4 z-30 -translate-x-1/2 rounded-lg border border-red-500/50 bg-red-950/90 px-4 py-2 text-sm font-medium text-red-300 shadow-xl backdrop-blur-sm">
           Contrainte impossible à satisfaire
