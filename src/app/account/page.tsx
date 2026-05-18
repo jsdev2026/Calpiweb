@@ -27,7 +27,7 @@ export default function AccountPage() {
         </button>
       </header>
 
-      <main className="mx-auto w-full max-w-lg px-6 py-12">
+      <main className="mx-auto w-full max-w-lg px-4 md:px-6 py-12">
         <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 700, color: 'var(--text)' }} className="mb-8">Mon compte</h1>
 
         {/* Profile card */}
@@ -74,7 +74,7 @@ export default function AccountPage() {
         <div className="rounded-2xl border p-6" style={{ background: 'var(--surf)', borderColor: 'var(--bdr)' }}>
           <h2 className="mb-4 text-[14px] font-semibold" style={{ color: 'var(--text)' }}>Session</h2>
           <button type="button" onClick={() => void handleLogout()}
-            className="rounded-xl border px-5 py-2.5 text-[13.5px] font-medium transition-colors"
+            className="w-full md:w-auto rounded-xl border px-5 py-2.5 text-[13.5px] font-medium transition-colors"
             style={{ borderColor: '#ef4444', color: '#ef4444' }}
             onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = '#fef2f2'; }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}>
