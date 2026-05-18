@@ -430,6 +430,7 @@ export default function DashboardPage() {
   const [filter, setFilter] = useState<Filter>('all');
   const [search, setSearch] = useState('');
   const [showNewModal, setShowNewModal] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [settingsProjectId, setSettingsProjectId] = useState<string | null>(null);
@@ -448,12 +449,17 @@ export default function DashboardPage() {
   }, []);
 
   const handleCreate = async (name: string, client: ClientInfo | undefined) => {
+    setCreateError(null);
     try {
       const project = await createProject({ name, client });
       router.push(`/project/${project.id}`);
     } catch (err) {
       if (err instanceof Error && err.message === 'PROJECT_LIMIT_REACHED') {
         setShowNewModal(false);
+      } else {
+        const msg = err instanceof Error ? err.message : 'Erreur inconnue';
+        setCreateError(msg);
+        console.error('Erreur création projet:', err);
       }
     }
   };
@@ -592,6 +598,14 @@ export default function DashboardPage() {
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 700, color: 'var(--text)' }} className="mb-0.5">Mes projets</h1>
           <p style={{ fontSize: 13, color: 'var(--text2)' }}>Bonjour {user?.name?.split(' ')[0] ?? ''} — {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
         </div>
+
+        {/* Error banner */}
+        {createError && (
+          <div className="mb-5 flex items-center justify-between rounded-xl border px-5 py-3" style={{ background: '#fef2f2', borderColor: '#ef4444' }}>
+            <p className="text-[13px]" style={{ color: '#dc2626' }}>Erreur : {createError}</p>
+            <button type="button" onClick={() => setCreateError(null)} style={{ color: '#dc2626', fontSize: 18, lineHeight: 1 }}>×</button>
+          </div>
+        )}
 
         {/* KPIs */}
         <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
