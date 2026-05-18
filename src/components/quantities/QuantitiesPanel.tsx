@@ -335,7 +335,7 @@ export const QuantitiesPanel = () => {
         {project && <QuantityPlanView result={result} config={project.config} rooms={project.rooms} />}
 
         {/* Cut groups table */}
-        <div>
+        <div className="overflow-x-auto">
           {result.totalReuseCount > 0 && (
             <div className="mb-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-5 py-4 text-sm text-emerald-400">
               <span className="font-bold">↩ {result.totalReuseCount} chute{result.totalReuseCount > 1 ? 's' : ''} réutilisable{result.totalReuseCount > 1 ? 's' : ''}</span>
@@ -345,7 +345,7 @@ export const QuantitiesPanel = () => {
           <h3 className="mb-3 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 dark:text-zinc-500">
             Détail des coupes
           </h3>
-          <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-zinc-800">
+          <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-zinc-800 min-w-[640px]">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900 text-[10px] font-black uppercase tracking-wider text-gray-500 dark:text-zinc-500">
