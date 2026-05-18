@@ -508,15 +508,15 @@ export default function DashboardPage() {
         <div className="flex h-[var(--topbar)] w-full items-center md:contents">
           {/* Logo */}
           <div className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg" style={{ background: 'var(--accent)' }}>
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg" style={{ background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent-d) 100%)', boxShadow: '0 2px 8px rgba(232,103,26,0.35)' }}>
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.2" fill="white"/>
-                <rect x="9" y="1.5" width="5.5" height="5.5" rx="1.2" fill="white" fillOpacity=".7"/>
-                <rect x="1.5" y="9" width="5.5" height="5.5" rx="1.2" fill="white" fillOpacity=".7"/>
+                <rect x="9" y="1.5" width="5.5" height="5.5" rx="1.2" fill="white" fillOpacity=".65"/>
+                <rect x="1.5" y="9" width="5.5" height="5.5" rx="1.2" fill="white" fillOpacity=".65"/>
                 <rect x="9" y="9" width="5.5" height="5.5" rx="1.2" fill="white"/>
               </svg>
             </div>
-            <span style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.2px' }}>CaléPlan</span>
+            <span style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.3px' }}>CaléPlan</span>
           </div>
 
           {/* Desktop: separator + search */}
@@ -624,7 +624,7 @@ export default function DashboardPage() {
       {/* Body */}
       <main className="flex-1 px-7 py-6">
         <div className="mb-6">
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 700, color: 'var(--text)' }} className="mb-0.5">Mes projets</h1>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 800, color: 'var(--text)', letterSpacing: '-0.5px' }} className="mb-0.5">Mes projets</h1>
           <p style={{ fontSize: 13, color: 'var(--text2)' }}>Bonjour {user?.name?.split(' ')[0] ?? ''} — {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
         </div>
 
