@@ -437,12 +437,6 @@ export default function HomePage() {
 
   useEffect(() => { void hydrate(); }, [hydrate]);
 
-  useEffect(() => {
-    if (user === null && typeof window !== 'undefined') {
-      const raw = localStorage.getItem('caleplan_user');
-      if (!raw) router.push('/auth');
-    }
-  }, [user, router]);
 
   // Close user menu on outside click
   useEffect(() => {
@@ -572,7 +566,7 @@ export default function HomePage() {
                   Changer de forfait
                 </button>
                 <button type="button"
-                  onClick={() => { logout(); router.push('/auth'); }}
+                  onClick={() => void logout().then(() => router.push('/auth'))}
                   className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[13px] transition-colors"
                   style={{ color: '#ef4444' }}
                   onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--surf2)'; }}

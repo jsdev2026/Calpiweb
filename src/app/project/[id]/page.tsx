@@ -389,7 +389,7 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
                   Changer de forfait
                 </button>
                 <button type="button"
-                  onClick={() => { logout(); router.push('/auth'); }}
+                  onClick={() => void logout().then(() => router.push('/auth'))}
                   className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[13px] transition-colors"
                   style={{ color: '#ef4444' }}
                   onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--surf2)'; }}
@@ -441,6 +441,7 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
             <TilingEditor
               rooms={activeProject.rooms}
               config={activeProject.config}
+              wallThickness={activeProject.wallThickness}
               setConfig={setConfig}
             />
           </div>

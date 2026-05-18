@@ -52,7 +52,7 @@ export const useUiStore = create<UiState>((set, get) => ({
         id: authUser.id,
         name: authUser.user_metadata?.name ?? authUser.email?.split('@')[0] ?? 'Utilisateur',
         email: authUser.email ?? '',
-        plan: (profile?.plan ?? 'free') as 'free' | 'pro',
+        plan: profile?.plan === 'pro' ? 'pro' : 'free',
       },
     });
   },
