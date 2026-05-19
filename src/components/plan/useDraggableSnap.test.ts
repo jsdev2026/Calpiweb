@@ -1,5 +1,5 @@
 // src/components/plan/useDraggableSnap.test.ts
-import { renderHook, act } from '@testing-library/react';
+import { renderHook } from '@testing-library/react';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useDraggableSnap } from './useDraggableSnap';
 

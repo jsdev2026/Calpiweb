@@ -31,8 +31,10 @@ interface UseDraggableSnapOptions {
 }
 
 export function useDraggableSnap({ storageKey, defaultZone }: UseDraggableSnapOptions) {
-  const stored = typeof localStorage !== 'undefined' ? localStorage.getItem(storageKey) : null;
-  const [zone, setZone] = useState<SnapZone>((stored as SnapZone | null) ?? defaultZone);
+  const [zone, setZone] = useState<SnapZone>(() => {
+    const stored = typeof localStorage !== 'undefined' ? localStorage.getItem(storageKey) : null;
+    return (stored as SnapZone | null) ?? defaultZone;
+  });
   const [isDragging, setIsDragging] = useState(false);
   const [nearestZone, setNearestZone] = useState<SnapZone | null>(null);
   const isDraggingRef = useRef(isDragging);
