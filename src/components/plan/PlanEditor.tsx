@@ -14,7 +14,8 @@ import { analyzeDOF, ptKey } from '@/engine/constraints/dofAnalyzer';
 import { PlanToolbar, type PlanTool } from './PlanToolbar';
 import { DimensionEditor } from './DimensionEditor';
 import { WallEdgeEditor } from './WallEdgeEditor';
-import { RoomTabs } from './RoomTabs';
+import { RoomPanel } from './RoomPanel';
+import { useDraggableSnap } from './useDraggableSnap';
 import {
   DrawingCanvas,
   type EditingEdgeState, type HoveredEdge, type SnapPreview,
@@ -248,6 +249,9 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
   const [violationFlash, setViolationFlash] = useState(false);
   const [partitionOrigin, setPartitionOrigin] = useState<Point | null>(null);
   const [excludePoints, setExcludePoints] = useState<Point[]>([]);
+
+  const { zone: roomZone, isDragging: roomDragging, handlePointerDown: handleRoomPointerDown } =
+    useDraggableSnap({ storageKey: 'calpiweb-room-panel-zone', defaultZone: 'SIDE' });
 
   const svgRef = useRef<SVGSVGElement | null>(null);
   const touchRef = useRef<{ dist: number; midX: number; midY: number; panX: number; panY: number } | null>(null);
@@ -1364,9 +1368,17 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
         onClearRoom={handleClearRoom}
       />
 
-      <RoomTabs rooms={rooms} activeRoomId={activeRoomId}
-        onSelectRoom={setActiveRoomId} onAddRoom={handleAddRoom}
-        onRemoveRoom={handleRemoveRoom} onRenameRoom={renameRoom} />
+      <RoomPanel
+        rooms={rooms}
+        activeRoomId={activeRoomId}
+        onSelectRoom={setActiveRoomId}
+        onAddRoom={handleAddRoom}
+        onRemoveRoom={handleRemoveRoom}
+        onRenameRoom={renameRoom}
+        zone={roomZone}
+        isDragging={roomDragging}
+        onPointerDown={handleRoomPointerDown}
+      />
 
       <div className="pointer-events-none absolute bottom-5 right-5 z-10 rounded-xl px-4 py-3 text-[11px] shadow-xl backdrop-blur-md"
         style={{ border: '1px solid var(--bdr)', background: 'var(--surf)', opacity: 0.9 }}>

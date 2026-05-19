@@ -39,7 +39,7 @@ export const RoomTabs = ({
   };
 
   return (
-    <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 p-1.5 shadow-2xl backdrop-blur-md">
+    <div className="flex items-center gap-1 rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 p-1.5 shadow-2xl backdrop-blur-md">
       {rooms.map((room, i) => (
         <div key={room.id} className="group relative">
           {renamingId === room.id ? (
