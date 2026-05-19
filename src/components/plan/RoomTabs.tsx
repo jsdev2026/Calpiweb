@@ -11,6 +11,7 @@ interface RoomTabsProps {
   onAddRoom: () => void;
   onRemoveRoom: (id: string) => void;
   onRenameRoom: (id: string, name: string) => void;
+  vertical?: boolean;
 }
 
 export const RoomTabs = ({
@@ -20,6 +21,7 @@ export const RoomTabs = ({
   onAddRoom,
   onRemoveRoom,
   onRenameRoom,
+  vertical = false,
 }: RoomTabsProps) => {
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
@@ -39,7 +41,7 @@ export const RoomTabs = ({
   };
 
   return (
-    <div className="flex items-center gap-1 rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 p-1.5 shadow-2xl backdrop-blur-md">
+    <div className={`${vertical ? 'flex-col' : 'flex items-center'} flex gap-1 rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 p-1.5 shadow-2xl backdrop-blur-md`}>
       {rooms.map((room, i) => (
         <div key={room.id} className="group relative">
           {renamingId === room.id ? (
@@ -81,7 +83,7 @@ export const RoomTabs = ({
           )}
         </div>
       ))}
-      <div className="mx-1 h-5 w-px bg-gray-200 dark:bg-zinc-700" />
+      <div className={vertical ? 'my-0.5 h-px w-full bg-gray-200 dark:bg-zinc-700' : 'mx-1 h-5 w-px bg-gray-200 dark:bg-zinc-700'} />
       <button
         type="button"
         onClick={onAddRoom}

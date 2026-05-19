@@ -77,6 +77,7 @@ export const RoomPanel = ({
         onAddRoom={onAddRoom}
         onRemoveRoom={onRemoveRoom}
         onRenameRoom={onRenameRoom}
+        vertical={zone === 'SIDE'}
       />
     </div>
   </>
