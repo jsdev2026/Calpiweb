@@ -10,8 +10,6 @@ import { groupCuts } from './groupCuts';
 import type { QuantityResult } from './types';
 
 export type { TileEdgeSide, PieceEdges, CutRecord, CutGroup, QuantityResult } from './types';
-// Backwards-compat alias used by QuantitiesPanel (removed in Task 6)
-export type { CutRecord as CutDetail } from './types';
 
 function tileSpaceRooms(rooms: Room[], angle: number, cx: number, cy: number): Point[][] {
   return rooms

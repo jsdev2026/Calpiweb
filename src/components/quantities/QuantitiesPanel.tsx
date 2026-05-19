@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { selectActiveProject, useProjectStore } from '@/store/projectStore';
-import { analyzeQuantities, type QuantityResult, type CutDetail, type PieceEdges } from '@/engine/quantities/quantityEngine';
+import { analyzeQuantities, type QuantityResult, type CutRecord, type PieceEdges } from '@/engine/quantities/quantityEngine';
 import { formatCm, formatM2 } from '@/utils/formatters';
 import type { Room } from '@/types/project';
 import type { TilingConfig } from '@/types/tiling';
@@ -103,7 +103,7 @@ const QuantityPlanView = ({ result, config, rooms }: PlanViewProps) => {
   const cx = (bbox.minX + bbox.maxX) / 2;
   const cy = (bbox.minY + bbox.maxY) / 2;
 
-  const cutMap = new Map<string, CutDetail>(result.cuts.map((c) => [c.id, c]));
+  const cutMap = new Map<string, CutRecord>(result.cuts.map((c) => [c.id, c]));
 
   // Map: "usedW×usedH" → { index, color }
   const groupMap = new Map(
