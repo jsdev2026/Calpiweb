@@ -52,8 +52,8 @@ describe('assignOffcuts', () => {
     expect(b.coveredById).toBeNull();
   });
 
-  it('trois coupes identiques : 1ère génère chute, 2ème couverte, 3ème génère chute', () => {
-    // usedW=60, usedH=80 ; chute=140×80 (suffisante pour couvrir 60×80)
+  it('trois coupes identiques : 1ère génère chute, 2ème couverte, résidu couvre la 3ème', () => {
+    // usedW=60, usedH=80 ; chute=140×80 → couvre b, résidu 80×80 → couvre c
     const records = [
       makeRecord('a', 60, 80, 140, 80),
       makeRecord('b', 60, 80, 140, 80),
@@ -61,10 +61,10 @@ describe('assignOffcuts', () => {
     ];
     assignOffcuts(records);
     const covered = records.filter((r) => r.coveredById !== null);
-    expect(covered).toHaveLength(1);
-    // 2 tuiles nettes pour 3 coupes
+    expect(covered).toHaveLength(2);
+    // 1 tuile nette pour 3 coupes (chute secondaire en action)
     const nets = records.filter((r) => r.coveredById === null).length;
-    expect(nets).toBe(2);
+    expect(nets).toBe(1);
   });
 
   it('best-fit : utilise la plus petite chute suffisante (60×60) plutôt que 150×150', () => {
@@ -95,6 +95,26 @@ describe('assignOffcuts', () => {
     const target = makeRecord('target', 45, 45, 0, 0, FACTORY, FACTORY);
     assignOffcuts([src, target]);
     expect(target.coveredById).toBe('src');
+  });
+
+  it('chute secondaire : 50×100 couvre 50×50, résidu 50×50 couvre un second 50×50', () => {
+    // An edge cut (50×100) produces a 50×100 chute.
+    // That chute covers corner1 (50×50), leaving a 50×50 residual.
+    // The residual then covers corner2 (50×50).
+    // Net result: 1 tile instead of 2 for the three cuts.
+    // chuteEdges: left='cut' because the chute is the strip to the right of the RIGHT_CUT edge piece.
+    const cornerEdges: PieceEdges = { left: 'factory', right: 'cut', top: 'factory', bottom: 'cut' };
+    const chuteEdges: PieceEdges = { left: 'cut', right: 'factory', top: 'factory', bottom: 'factory' };
+    const edge    = makeRecord('edge',    50, 100, 50, 100, RIGHT_CUT, chuteEdges);
+    const corner1 = makeRecord('corner1', 50,  50,  0,   0, cornerEdges);
+    const corner2 = makeRecord('corner2', 50,  50,  0,   0, cornerEdges);
+    assignOffcuts([edge, corner1, corner2]);
+    // edge's chute covers corner1
+    expect(corner1.coveredById).toBe('edge');
+    expect(edge.reusedForId).toBe('corner1');
+    // corner1's residual (50×50) covers corner2
+    expect(corner2.coveredById).toBe('corner1');
+    expect(corner1.reusedForId).toBe('corner2');
   });
 });
 
