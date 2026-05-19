@@ -53,10 +53,11 @@ describe('assignOffcuts', () => {
   });
 
   it('trois coupes identiques : 1ère génère chute, 2ème couverte, 3ème génère chute', () => {
+    // usedW=60, usedH=80 ; chute=140×80 (suffisante pour couvrir 60×80)
     const records = [
-      makeRecord('a', 160, 160, 40, 160),
-      makeRecord('b', 160, 160, 40, 160),
-      makeRecord('c', 160, 160, 40, 160),
+      makeRecord('a', 60, 80, 140, 80),
+      makeRecord('b', 60, 80, 140, 80),
+      makeRecord('c', 60, 80, 140, 80),
     ];
     assignOffcuts(records);
     const covered = records.filter((r) => r.coveredById !== null);
