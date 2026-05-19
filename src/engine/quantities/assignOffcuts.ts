@@ -20,8 +20,7 @@ export function canReuseFor(
       if (ok) return true;
     }
     // Rotate 90° CW: left←bottom, top←left, right←top, bottom←right
-    const nl = eb, nt = el, nr = et, nb = er;
-    el = nl; et = nt; er = nr; eb = nb;
+    [el, et, er, eb] = [eb, el, et, er];
     [ew, eh] = [eh, ew];
   }
   return false;
@@ -34,6 +33,8 @@ export function assignOffcuts(records: CutRecord[]): void {
   const pool: {
     w: number; h: number; edges: PieceEdges; fromId: string; used: boolean;
   }[] = [];
+
+  const recordById = new Map(records.map((r) => [r.id, r]));
 
   for (const record of sorted) {
     // Best-fit: find smallest chute in pool that still satisfies this cut
@@ -49,9 +50,10 @@ export function assignOffcuts(records: CutRecord[]): void {
     }
 
     if (bestIdx >= 0) {
-      pool[bestIdx]!.used = true;
-      record.coveredById = pool[bestIdx]!.fromId;
-      const src = records.find((r) => r.id === pool[bestIdx]!.fromId);
+      const chosen = pool[bestIdx]!;
+      chosen.used = true;
+      record.coveredById = chosen.fromId;
+      const src = recordById.get(chosen.fromId);
       if (src) src.reusedForId = record.id;
     } else if (record.chuteW > 0 && record.chuteH > 0) {
       pool.push({

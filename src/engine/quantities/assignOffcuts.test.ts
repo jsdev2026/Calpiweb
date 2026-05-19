@@ -84,19 +84,16 @@ describe('assignOffcuts', () => {
     const src = makeRecord('src', 160, 120, 80, 40, RIGHT_CUT, FACTORY);
     // target needs 35×70 — edges factory partout
     const target = makeRecord('target', 35, 70, 0, 0, FACTORY, FACTORY);
-    src.chuteEdges = FACTORY;
     assignOffcuts([src, target]);
     expect(target.coveredById).toBe('src');
   });
 
-  it('chute insuffisante en dimensions ne couvre pas', () => {
-    // Chute 48×48 (< 50mm seuil → chuteW=0 normalement)
-    // Ici on force manuellement pour tester canReuseFor directement
+  it('seuil MIN_CHUTE_MM appliqué par buildCutTable : assignOffcuts tente la réutilisation si chuteW > 0', () => {
+    // buildCutTable zeroes out sub-50mm offcuts before assignOffcuts runs.
+    // Here we force chuteW=48 manually to verify assignOffcuts does not re-apply the threshold.
     const src = makeRecord('src', 160, 160, 48, 48, RIGHT_CUT, FACTORY);
     const target = makeRecord('target', 45, 45, 0, 0, FACTORY, FACTORY);
     assignOffcuts([src, target]);
-    // MIN_CHUTE_MM s'applique dans buildCutTable (qui met chuteW=0 si < 50mm).
-    // assignOffcuts ne re-vérifie pas ce seuil : si chuteW > 0, elle tente la réutilisation.
     expect(target.coveredById).toBe('src');
   });
 });
