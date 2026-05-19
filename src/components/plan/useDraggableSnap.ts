@@ -4,12 +4,15 @@ import type { PointerEvent as ReactPointerEvent } from 'react';
 
 export type SnapZone = 'SIDE' | 'TOP' | 'BOTTOM';
 
+// topbar (48px) + tabs (44px)
+const CANVAS_TOP_PX = 92;
+
 function getZoneCenters(): Record<SnapZone, { x: number; y: number }> {
   const w = typeof window !== 'undefined' ? window.innerWidth  : 1280;
   const h = typeof window !== 'undefined' ? window.innerHeight : 800;
   return {
-    SIDE:   { x: 80,    y: 160 },
-    TOP:    { x: w / 2, y: 40 },
+    SIDE:   { x: 80,    y: CANVAS_TOP_PX + 68 },
+    TOP:    { x: w / 2, y: CANVAS_TOP_PX + 40 },
     BOTTOM: { x: w / 2, y: h - 40 },
   };
 }

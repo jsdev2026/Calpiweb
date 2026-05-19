@@ -43,8 +43,8 @@ export const PlanToolbar = ({
   onClearRoom,
 }: PlanToolbarProps) => (
   <div
-    className="absolute left-4 top-4 z-10 hidden md:flex flex-col gap-1.5 overflow-y-auto rounded-2xl p-2 shadow-2xl backdrop-blur-md"
-    style={{ border: '1px solid var(--bdr)', background: 'var(--surf)', boxShadow: 'var(--sh-lg)', maxHeight: 'calc(100vh - 120px)', scrollbarWidth: 'none' }}>
+    className="absolute left-4 top-4 z-10 hidden md:flex flex-col gap-1 overflow-y-auto rounded-2xl p-1.5 shadow-2xl backdrop-blur-md"
+    style={{ border: '1px solid var(--bdr)', background: 'var(--surf)', boxShadow: 'var(--sh-lg)', maxHeight: 'calc(100vh - 108px)', scrollbarWidth: 'none' }}>
 
     {/* ── Drawing tools ── */}
     <p className="text-center text-[7px] font-black uppercase tracking-widest" style={{ color: 'var(--muted)' }}>Dessin</p>

@@ -19,15 +19,18 @@ interface RoomPanelProps {
   onPointerDown: (e: ReactPointerEvent) => void;
 }
 
+// topbar (48px) + tabs (44px) = canvas starts at 92px from viewport top
+const CANVAS_TOP_PX = 92;
+
 const PANEL_STYLE: Record<SnapZone, React.CSSProperties> = {
-  SIDE:   { position: 'fixed', left: 72, top: 16, zIndex: 10 },
-  TOP:    { position: 'fixed', top: 16, left: '50%', transform: 'translateX(-50%)', zIndex: 10 },
+  SIDE:   { position: 'fixed', left: 72, top: CANVAS_TOP_PX + 16, zIndex: 10 },
+  TOP:    { position: 'fixed', top: CANVAS_TOP_PX + 16, left: '50%', transform: 'translateX(-50%)', zIndex: 10 },
   BOTTOM: { position: 'fixed', bottom: 16, left: '50%', transform: 'translateX(-50%)', zIndex: 10 },
 };
 
 const DROP_ZONE_STYLE: Record<SnapZone, React.CSSProperties> = {
-  SIDE:   { position: 'fixed', left: 64,   top:  8, width: 140, height: 200, zIndex: 9, borderRadius: 16 },
-  TOP:    { position: 'fixed', left: '25%', top: 4,  width: '50%', height: 56, zIndex: 9, borderRadius: 16 },
+  SIDE:   { position: 'fixed', left: 64,   top: CANVAS_TOP_PX + 8, width: 140, height: 200, zIndex: 9, borderRadius: 16 },
+  TOP:    { position: 'fixed', left: '25%', top: CANVAS_TOP_PX + 4, width: '50%', height: 56, zIndex: 9, borderRadius: 16 },
   BOTTOM: { position: 'fixed', left: '25%', bottom: 4, width: '50%', height: 56, zIndex: 9, borderRadius: 16 },
 };
 
