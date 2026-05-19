@@ -34,12 +34,13 @@ describe('buildCutTable', () => {
   });
 
   it('coupe en coin bas-droit : bords droit et bas cut', () => {
-    // Tuile à (170, 170, 60, 60) — dépasse à droite et en bas
+    // Tuile à (170, 170, 60, 60) — dépasse à droite et en bas de 30px chacun
     const tile: Tile = { id: 't2', rect: { x: 170, y: 170, w: 60, h: 60 }, type: 'CUT' };
     const [rec] = buildCutTable([tile], [ROOM], ['r1']);
     expect(rec!.pieceEdges.right).toBe('cut');
     expect(rec!.pieceEdges.bottom).toBe('cut');
-    expect(rec!.chuteArea).toBeGreaterThan(0);
+    // Both strips are 30mm wide < MIN_CHUTE_MM=50 → chute not viable
+    expect(rec!.chuteArea).toBe(0);
   });
 
   it('chute de 40 mm (< 50 mm) → chuteW=0, chuteH=0, chuteArea=0', () => {

@@ -112,10 +112,8 @@ export function buildCutTable(
           : { left: 'factory', right: 'factory', top: 'cut', bottom: 'factory' };
       }
 
-      // Corner cuts always yield a reusable offcut; single-direction cuts require both dims >= MIN_CHUTE_MM
-      const viable = (isCutH && isCutV)
-        ? (chuteW > 0 && chuteH > 0)
-        : (chuteW >= MIN_CHUTE_MM && chuteH >= MIN_CHUTE_MM);
+      // Both dims must be >= MIN_CHUTE_MM for any cut type (spec requirement)
+      const viable = chuteW >= MIN_CHUTE_MM && chuteH >= MIN_CHUTE_MM;
 
       // Assign roomId by proximity (tile center ↔ room polygon center)
       const cx2 = x + w / 2, cy2 = y + h / 2;
