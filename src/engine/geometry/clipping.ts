@@ -1,7 +1,7 @@
 import type { Point } from '@/types/plan';
 import type { EdgeType } from '@/types/project';
 import type { TileRect, TileType } from '@/types/tiling';
-import { getIntersection, pointInPolygon } from './polygon';
+import { pointInPolygon } from './polygon';
 
 // Returns true only when segment A→B and segment C→D genuinely cross (not a pure
 // vertex-to-vertex corner touch where both t and u are at their respective endpoints).
