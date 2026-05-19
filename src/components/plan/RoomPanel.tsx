@@ -63,7 +63,7 @@ export const RoomPanel = ({
       style={PANEL_STYLE[zone]}
     >
       <div
-        className="absolute -left-5 top-1/2 -translate-y-1/2 flex h-8 w-5 cursor-grab items-center justify-center rounded-l-lg opacity-0 transition-opacity group-hover:opacity-100 active:cursor-grabbing"
+        className="absolute -right-5 top-1/2 -translate-y-1/2 flex h-8 w-5 cursor-grab items-center justify-center rounded-r-lg opacity-0 transition-opacity group-hover:opacity-100 active:cursor-grabbing"
         style={{ background: 'var(--surf)', border: '1px solid var(--bdr)' }}
         onPointerDown={onPointerDown}
       >
