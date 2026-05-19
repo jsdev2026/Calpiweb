@@ -43,64 +43,61 @@ export const PlanToolbar = ({
   onClearRoom,
 }: PlanToolbarProps) => (
   <div
-    className="absolute left-4 top-4 z-10 hidden md:flex flex-col gap-1 overflow-y-auto rounded-2xl p-1.5 shadow-2xl backdrop-blur-md"
+    className="absolute left-4 top-4 z-10 hidden md:flex flex-col gap-0.5 overflow-y-auto rounded-2xl p-1.5 shadow-2xl backdrop-blur-md"
     style={{ border: '1px solid var(--bdr)', background: 'var(--surf)', boxShadow: 'var(--sh-lg)', maxHeight: 'calc(100vh - 108px)', scrollbarWidth: 'none' }}>
 
     {/* ── Drawing tools ── */}
-    <p className="text-center text-[7px] font-black uppercase tracking-widest" style={{ color: 'var(--muted)' }}>Dessin</p>
     <ToolTooltip {...TOOL_TOOLTIPS.SELECT}>
-      <Button variant={tool === 'SELECT' ? 'active' : 'tool'} size="icon"
+      <Button variant={tool === 'SELECT' ? 'active' : 'tool'} size="icon" className="h-8 w-8"
         onClick={() => onChangeTool('SELECT')}>
-        <MousePointer2 size={18} />
+        <MousePointer2 size={16} />
       </Button>
     </ToolTooltip>
     <ToolTooltip {...TOOL_TOOLTIPS.WALL}>
-      <Button variant={tool === 'WALL' ? 'active' : 'tool'} size="icon"
+      <Button variant={tool === 'WALL' ? 'active' : 'tool'} size="icon" className="h-8 w-8"
         onClick={() => onChangeTool('WALL')}>
-        <PenTool size={18} />
+        <PenTool size={16} />
       </Button>
     </ToolTooltip>
     <ToolTooltip {...TOOL_TOOLTIPS.DOOR}>
-      <Button variant={tool === 'DOOR' ? 'active' : 'tool'} size="icon"
+      <Button variant={tool === 'DOOR' ? 'active' : 'tool'} size="icon" className="h-8 w-8"
         onClick={() => onChangeTool('DOOR')}>
-        <DoorOpen size={18} />
+        <DoorOpen size={16} />
       </Button>
     </ToolTooltip>
 
-    <div className="mx-auto h-px w-8" style={{ background: 'var(--bdr)' }} />
+    <div className="mx-auto h-px w-6" style={{ background: 'var(--bdr)' }} />
 
     {/* ── Zone tools ── */}
-    <p className="text-center text-[7px] font-black uppercase tracking-widest" style={{ color: 'var(--muted)' }}>Zones</p>
     <ToolTooltip {...TOOL_TOOLTIPS.PARTITION}>
       <button type="button" onClick={() => onChangeTool('PARTITION')}
-        className={`flex h-9 w-9 items-center justify-center rounded-xl transition-all ${
+        className={`flex h-8 w-8 items-center justify-center rounded-xl transition-all ${
           tool === 'PARTITION'
             ? 'bg-violet-500 text-white shadow-md shadow-violet-500/30'
             : 'hover:bg-violet-100 dark:hover:bg-violet-900/30 hover:text-violet-600 dark:hover:text-violet-300'
         }`}
         style={tool !== 'PARTITION' ? { color: 'var(--text2)' } : {}}>
-        <SplitSquareVertical size={18} />
+        <SplitSquareVertical size={16} />
       </button>
     </ToolTooltip>
     <ToolTooltip {...TOOL_TOOLTIPS.EXCLUDE}>
       <button type="button" onClick={() => onChangeTool('EXCLUDE')}
-        className={`flex h-9 w-9 items-center justify-center rounded-xl transition-all ${
+        className={`flex h-8 w-8 items-center justify-center rounded-xl transition-all ${
           tool === 'EXCLUDE'
             ? 'bg-amber-500 text-white shadow-md shadow-amber-500/30'
             : 'hover:bg-amber-100 dark:hover:bg-amber-900/30 hover:text-amber-600 dark:hover:text-amber-300'
         }`}
         style={tool !== 'EXCLUDE' ? { color: 'var(--text2)' } : {}}>
-        <Square size={18} />
+        <Square size={16} />
       </button>
     </ToolTooltip>
 
-    <div className="mx-auto h-px w-8" style={{ background: 'var(--bdr)' }} />
+    <div className="mx-auto h-px w-6" style={{ background: 'var(--bdr)' }} />
 
     {/* ── Constraint tools ── */}
-    <p className="text-center text-[7px] font-black uppercase tracking-widest" style={{ color: 'var(--muted)' }}>Contr.</p>
     <ToolTooltip {...TOOL_TOOLTIPS.APPLY_H}>
       <button type="button" onClick={() => onChangeTool('APPLY_H')}
-        className={`flex h-9 w-9 items-center justify-center rounded-xl text-[13px] font-black transition-all ${
+        className={`flex h-8 w-8 items-center justify-center rounded-xl text-[12px] font-black transition-all ${
           tool === 'APPLY_H'
             ? 'bg-blue-500 text-white shadow-md shadow-blue-500/30'
             : 'hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-300'
@@ -111,7 +108,7 @@ export const PlanToolbar = ({
     </ToolTooltip>
     <ToolTooltip {...TOOL_TOOLTIPS.APPLY_V}>
       <button type="button" onClick={() => onChangeTool('APPLY_V')}
-        className={`flex h-9 w-9 items-center justify-center rounded-xl text-[13px] font-black transition-all ${
+        className={`flex h-8 w-8 items-center justify-center rounded-xl text-[12px] font-black transition-all ${
           tool === 'APPLY_V'
             ? 'bg-blue-500 text-white shadow-md shadow-blue-500/30'
             : 'hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-300'
@@ -122,29 +119,29 @@ export const PlanToolbar = ({
     </ToolTooltip>
     <ToolTooltip {...TOOL_TOOLTIPS.COINCIDE}>
       <button type="button" onClick={() => onChangeTool('COINCIDE')}
-        className={`flex h-9 w-9 items-center justify-center rounded-xl transition-all ${
+        className={`flex h-8 w-8 items-center justify-center rounded-xl transition-all ${
           tool === 'COINCIDE'
             ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/30'
             : 'hover:bg-emerald-100 dark:hover:bg-emerald-900/30 hover:text-emerald-600 dark:hover:text-emerald-300'
         }`}
         style={tool !== 'COINCIDE' ? { color: 'var(--text2)' } : {}}>
-        <Magnet size={18} />
+        <Magnet size={16} />
       </button>
     </ToolTooltip>
     <ToolTooltip {...TOOL_TOOLTIPS.DIMENSION}>
       <button type="button" onClick={() => onChangeTool('DIMENSION')}
-        className={`flex h-9 w-9 items-center justify-center rounded-xl transition-all ${
+        className={`flex h-8 w-8 items-center justify-center rounded-xl transition-all ${
           tool === 'DIMENSION'
             ? 'bg-orange-500 text-white shadow-md shadow-orange-500/30'
             : 'hover:bg-orange-100 dark:hover:bg-orange-900/30 hover:text-orange-600 dark:hover:text-orange-300'
         }`}
         style={tool !== 'DIMENSION' ? { color: 'var(--text2)' } : {}}>
-        <Ruler size={16} />
+        <Ruler size={15} />
       </button>
     </ToolTooltip>
     <ToolTooltip {...TOOL_TOOLTIPS.THICKNESS}>
       <button type="button" onClick={() => onChangeTool('THICKNESS')}
-        className={`flex h-9 w-9 items-center justify-center rounded-xl text-[13px] font-black transition-all ${
+        className={`flex h-8 w-8 items-center justify-center rounded-xl text-[12px] font-black transition-all ${
           tool === 'THICKNESS'
             ? 'bg-slate-500 text-white shadow-md shadow-slate-500/30'
             : 'hover:bg-slate-100 dark:hover:bg-slate-900/30 hover:text-slate-600 dark:hover:text-slate-300'
@@ -155,32 +152,32 @@ export const PlanToolbar = ({
     </ToolTooltip>
     <ToolTooltip {...TOOL_TOOLTIPS.ANCHOR}>
       <button type="button" onClick={() => onChangeTool('ANCHOR')}
-        className={`flex h-9 w-9 items-center justify-center rounded-xl transition-all ${
+        className={`flex h-8 w-8 items-center justify-center rounded-xl transition-all ${
           tool === 'ANCHOR'
             ? 'bg-violet-500 text-white shadow-md shadow-violet-500/30'
             : 'hover:bg-violet-100 dark:hover:bg-violet-900/30 hover:text-violet-600 dark:hover:text-violet-300'
         }`}
         style={tool !== 'ANCHOR' ? { color: 'var(--text2)' } : {}}>
-        <Pin size={18} />
+        <Pin size={16} />
       </button>
     </ToolTooltip>
 
-    <div className="mx-auto h-px w-8" style={{ background: 'var(--bdr)' }} />
+    <div className="mx-auto h-px w-6" style={{ background: 'var(--bdr)' }} />
 
     {/* ── Actions ── */}
     <ToolTooltip {...TOOL_TOOLTIPS.undo}>
-      <Button variant="ghost" size="icon" onClick={onUndo} disabled={!canUndo}>
-        <Undo size={18} />
+      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onUndo} disabled={!canUndo}>
+        <Undo size={16} />
       </Button>
     </ToolTooltip>
     <ToolTooltip {...TOOL_TOOLTIPS.redo}>
-      <Button variant="ghost" size="icon" onClick={onRedo} disabled={!canRedo}>
-        <Redo2 size={18} />
+      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onRedo} disabled={!canRedo}>
+        <Redo2 size={16} />
       </Button>
     </ToolTooltip>
     <ToolTooltip {...TOOL_TOOLTIPS.clear}>
-      <Button variant="danger" size="icon" onClick={onClearRoom}>
-        <Trash2 size={18} />
+      <Button variant="danger" size="icon" className="h-8 w-8" onClick={onClearRoom}>
+        <Trash2 size={16} />
       </Button>
     </ToolTooltip>
 
