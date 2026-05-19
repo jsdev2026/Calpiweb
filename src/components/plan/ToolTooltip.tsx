@@ -1,7 +1,7 @@
 // src/components/plan/ToolTooltip.tsx
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 interface ToolTooltipProps {
@@ -15,6 +15,12 @@ export const ToolTooltip = ({ label, description, children }: ToolTooltipProps) 
   const [pos, setPos] = useState({ top: 0, left: 0 });
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
 
   const handleMouseEnter = () => {
     timerRef.current = setTimeout(() => {
@@ -32,9 +38,9 @@ export const ToolTooltip = ({ label, description, children }: ToolTooltipProps) 
   };
 
   return (
-    <div ref={wrapRef} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+    <div ref={wrapRef} data-testid="tooltip-wrapper" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
       {children}
-      {visible && typeof document !== 'undefined' &&
+      {visible &&
         createPortal(
           <div
             className="pointer-events-none fixed z-50 rounded-xl px-3 py-2 text-xs shadow-xl"

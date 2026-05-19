@@ -13,7 +13,7 @@ describe('ToolTooltip', () => {
         <button>btn</button>
       </ToolTooltip>,
     );
-    fireEvent.mouseEnter(screen.getByRole('button').parentElement!);
+    fireEvent.mouseEnter(screen.getByTestId('tooltip-wrapper'));
     expect(screen.queryByText('Une description')).toBeNull();
   });
 
@@ -24,7 +24,7 @@ describe('ToolTooltip', () => {
         <button>btn</button>
       </ToolTooltip>,
     );
-    fireEvent.mouseEnter(screen.getByRole('button').parentElement!);
+    fireEvent.mouseEnter(screen.getByTestId('tooltip-wrapper'));
     act(() => { vi.advanceTimersByTime(600); });
     expect(screen.getByText('Outil')).toBeDefined();
     expect(screen.getByText('Une description')).toBeDefined();
@@ -37,7 +37,7 @@ describe('ToolTooltip', () => {
         <button>btn</button>
       </ToolTooltip>,
     );
-    const wrapper = screen.getByRole('button').parentElement!;
+    const wrapper = screen.getByTestId('tooltip-wrapper');
     fireEvent.mouseEnter(wrapper);
     act(() => { vi.advanceTimersByTime(600); });
     fireEvent.mouseLeave(wrapper);
@@ -51,7 +51,7 @@ describe('ToolTooltip', () => {
         <button>btn</button>
       </ToolTooltip>,
     );
-    const wrapper = screen.getByRole('button').parentElement!;
+    const wrapper = screen.getByTestId('tooltip-wrapper');
     fireEvent.mouseEnter(wrapper);
     act(() => { vi.advanceTimersByTime(300); });
     fireEvent.mouseLeave(wrapper);
