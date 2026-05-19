@@ -3,6 +3,20 @@ import type { EdgeType } from '@/types/project';
 import type { TileRect, TileType } from '@/types/tiling';
 import { getIntersection, pointInPolygon } from './polygon';
 
+// Returns true only when segment A→B and segment C→D genuinely cross (not a pure
+// vertex-to-vertex corner touch where both t and u are at their respective endpoints).
+const EPS = 1e-9;
+const tileEdgeCrossesWall = (A: Point, B: Point, C: Point, D: Point): boolean => {
+  const denom = (D.y - C.y) * (B.x - A.x) - (D.x - C.x) * (B.y - A.y);
+  if (denom === 0) return false;
+  const t = ((D.x - C.x) * (A.y - C.y) - (D.y - C.y) * (A.x - C.x)) / denom;
+  const u = ((C.y - A.y) * (A.x - B.x) - (C.x - A.x) * (A.y - B.y)) / denom;
+  if (t < 0 || t > 1 || u < 0 || u > 1) return false;
+  const tAtEnd = t <= EPS || t >= 1 - EPS;
+  const uAtEnd = u <= EPS || u >= 1 - EPS;
+  return !(tAtEnd || uAtEnd);
+};
+
 export const classifyTile = (
   tileRect: TileRect,
   roomPoly: Point[],
@@ -59,7 +73,7 @@ export const classifyTile = (
     const p1 = roomPoly[i]!;
     const p2 = roomPoly[(i + 1) % roomPoly.length]!;
     for (const edge of tileEdges) {
-      if (getIntersection(edge[0], edge[1], p1, p2)) {
+      if (tileEdgeCrossesWall(edge[0], edge[1], p1, p2)) {
         return 'CUT';
       }
     }

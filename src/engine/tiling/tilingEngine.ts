@@ -104,21 +104,17 @@ function filterExcluded(
 }
 
 function buildGrid(
-  centerX: number,
-  centerY: number,
-  maxRadius: number,
+  bbox: { minX: number; minY: number; maxX: number; maxY: number },
   config: TilingConfig,
 ): { startX: number; startY: number; endX: number; endY: number; stepX: number; stepY: number } {
   const { width, height, joint, offsetX, offsetY } = config;
   const stepX = width + joint;
   const stepY = height + joint;
-  const safetyMargin = Math.max(width, height) * 2;
-  const gridSide = maxRadius * 2 + safetyMargin;
   return {
-    startX: centerX - gridSide / 2 + (offsetX % stepX),
-    startY: centerY - gridSide / 2 + (offsetY % stepY),
-    endX: centerX + gridSide / 2,
-    endY: centerY + gridSide / 2,
+    startX: bbox.minX + (offsetX % stepX),
+    startY: bbox.minY + (offsetY % stepY),
+    endX: bbox.maxX,
+    endY: bbox.maxY,
     stepX,
     stepY,
   };
@@ -184,7 +180,8 @@ export const computeTiling = (
 
   if (layout === 'STRAIGHT') {
     const staggerRatio = stagger / 100;
-    const { startX, startY, endX, endY, stepX, stepY } = buildGrid(centerX, centerY, maxRadius, config);
+    const testBbox = getBoundingBox(testPlan);
+    const { startX, startY, endX, endY, stepX, stepY } = buildGrid(testBbox, config);
     const tiles: Tile[] = [];
     let rowIndex = 0;
 
@@ -301,7 +298,9 @@ export const computeTilingMultiRoom = (rooms: Room[], config: TilingConfig): Til
 
   if (layout === 'STRAIGHT') {
     const staggerRatio = stagger / 100;
-    const { startX, startY, endX, endY, stepX, stepY } = buildGrid(centerX, centerY, maxRadius, config);
+    const allTestPoints = testRooms.flatMap((r) => r.testPoints);
+    const testBbox = getBoundingBox(allTestPoints);
+    const { startX, startY, endX, endY, stepX, stepY } = buildGrid(testBbox, config);
     let rowIndex = 0;
 
     for (let y = startY - stepY; y < endY + stepY; y += stepY) {

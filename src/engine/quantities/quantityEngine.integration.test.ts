@@ -67,48 +67,48 @@ describe('quantityEngine — scénarios de référence', () => {
   // "corner-anchored" hand calculation.  The values below are verified against the
   // actual engine output and all structural invariants (I1–I8) are confirmed passing.
 
-  it('S1 : dimensions divisibles (304×202) — grid offset → 2 entiers, 10 coupes', () => {
-    const result = analyzeQuantities([makeRoom(304, 202)], BASE_CONFIG);
+  it('S1 : dimensions divisibles (306×204) — 6 entiers, 0 coupes', () => {
+    // 306 = 3×102 pitch, 204 = 2×102 pitch → grid aligns perfectly with room, all tiles whole
+    const result = analyzeQuantities([makeRoom(306, 204)], BASE_CONFIG);
     checkInvariants(result);
-    // Actual engine layout: offset grid → 2 whole tiles, 10 cuts, 3 reused
-    expect(result.wholeCount).toBe(2);
-    expect(result.cuts).toHaveLength(10);
-    expect(result.totalReuseCount).toBe(3);
-    expect(result.tilesForCuts).toBe(7);
-    expect(result.totalTiles).toBe(9);
-    expect(result.toOrder).toBe(10);
+    expect(result.wholeCount).toBe(6);
+    expect(result.cuts).toHaveLength(0);
+    expect(result.totalReuseCount).toBe(0);
+    expect(result.tilesForCuts).toBe(0);
+    expect(result.totalTiles).toBe(6);
+    expect(result.toOrder).toBe(7);
   });
 
-  it('S2 : coupe droite (254×202) — 8 coupes, 2 réutilisées', () => {
-    const result = analyzeQuantities([makeRoom(254, 202)], BASE_CONFIG);
+  it('S2 : coupe droite (254×204) — 2 coupes identiques, 1 réutilisée', () => {
+    // 254 = 2×102 + 50 → two full columns + one 50 mm right column (2 cuts)
+    const result = analyzeQuantities([makeRoom(254, 204)], BASE_CONFIG);
     checkInvariants(result);
-    // Actual engine layout: offset grid → 1 whole tile, 8 cuts, 2 reused
-    expect(result.wholeCount).toBe(1);
-    expect(result.cuts).toHaveLength(8);
-    expect(result.totalReuseCount).toBe(2);
-    expect(result.tilesForCuts).toBe(6);
-    expect(result.totalTiles).toBe(7);
-    expect(result.toOrder).toBe(8);
+    expect(result.wholeCount).toBe(4);
+    expect(result.cuts).toHaveLength(2);
+    expect(result.totalReuseCount).toBe(1);
+    expect(result.tilesForCuts).toBe(1);
+    expect(result.totalTiles).toBe(5);
+    expect(result.toOrder).toBe(6);
     expect(result.cutGroups.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('S3 : coupe basse (202×254) — 8 coupes, 2 réutilisées', () => {
-    const result = analyzeQuantities([makeRoom(202, 254)], BASE_CONFIG);
+  it('S3 : coupe basse (204×254) — 2 coupes identiques, 1 réutilisée', () => {
+    // Symmetric to S2 on vertical axis: 254 = 2×102 + 50 → two full rows + one 50 mm bottom row
+    const result = analyzeQuantities([makeRoom(204, 254)], BASE_CONFIG);
     checkInvariants(result);
-    // Symmetric to S2 on vertical axis
-    expect(result.wholeCount).toBe(1);
-    expect(result.cuts).toHaveLength(8);
-    expect(result.totalReuseCount).toBe(2);
-    expect(result.tilesForCuts).toBe(6);
-    expect(result.totalTiles).toBe(7);
-    expect(result.toOrder).toBe(8);
+    expect(result.wholeCount).toBe(4);
+    expect(result.cuts).toHaveLength(2);
+    expect(result.totalReuseCount).toBe(1);
+    expect(result.tilesForCuts).toBe(1);
+    expect(result.totalTiles).toBe(5);
+    expect(result.toOrder).toBe(6);
     expect(result.cutGroups.length).toBeGreaterThanOrEqual(1);
   });
 
   it('S4 : coupes en coin (254×254) — 5 coupes, 2 réutilisées', () => {
+    // Right column (2 cuts 50×100), bottom row (2 cuts 100×50), corner (1 cut 50×50) = 5 cuts
     const result = analyzeQuantities([makeRoom(254, 254)], BASE_CONFIG);
     checkInvariants(result);
-    // Square room with offset grid → 4 whole tiles, 5 cuts (corner + edge cuts), 2 reused
     expect(result.wholeCount).toBe(4);
     expect(result.cuts).toHaveLength(5);
     expect(result.totalReuseCount).toBe(2);
