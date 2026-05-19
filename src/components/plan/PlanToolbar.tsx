@@ -1,6 +1,6 @@
 'use client';
 
-import { DoorOpen, Magnet, MousePointer2, PenTool, Pin, Ruler, Trash2, Undo, SplitSquareVertical, Square } from 'lucide-react';
+import { DoorOpen, Magnet, MousePointer2, PenTool, Pin, Redo2, Ruler, Trash2, Undo, SplitSquareVertical, Square } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { ToolTooltip } from './ToolTooltip';
 
@@ -9,8 +9,10 @@ export type PlanTool = 'SELECT' | 'WALL' | 'DOOR' | 'APPLY_H' | 'APPLY_V' | 'COI
 interface PlanToolbarProps {
   tool: PlanTool;
   canUndo: boolean;
+  canRedo: boolean;
   onChangeTool: (tool: PlanTool) => void;
   onUndo: () => void;
+  onRedo: () => void;
   onClearRoom: () => void;
 }
 
@@ -34,8 +36,10 @@ const TOOL_TOOLTIPS = {
 export const PlanToolbar = ({
   tool,
   canUndo,
+  canRedo,
   onChangeTool,
   onUndo,
+  onRedo,
   onClearRoom,
 }: PlanToolbarProps) => (
   <div
@@ -167,6 +171,11 @@ export const PlanToolbar = ({
     <ToolTooltip {...TOOL_TOOLTIPS.undo}>
       <Button variant="ghost" size="icon" onClick={onUndo} disabled={!canUndo}>
         <Undo size={18} />
+      </Button>
+    </ToolTooltip>
+    <ToolTooltip {...TOOL_TOOLTIPS.redo}>
+      <Button variant="ghost" size="icon" onClick={onRedo} disabled={!canRedo}>
+        <Redo2 size={18} />
       </Button>
     </ToolTooltip>
     <ToolTooltip {...TOOL_TOOLTIPS.clear}>

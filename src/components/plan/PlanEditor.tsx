@@ -243,7 +243,8 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
   const [snapPreview, setSnapPreview] = useState<SnapPreview | null>(null);
   const [originPoint, setOriginPoint] = useState<Point | null>(null);
   const [coincideSource, setCoincideSource] = useState<{ roomId: string; idx: number } | null>(null);
-  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [past,   setPast]   = useState<HistoryEntry[]>([]);
+  const [future, setFuture] = useState<HistoryEntry[]>([]);
   const [violationFlash, setViolationFlash] = useState(false);
   const [partitionOrigin, setPartitionOrigin] = useState<Point | null>(null);
   const [excludePoints, setExcludePoints] = useState<Point[]>([]);
@@ -304,13 +305,15 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
   };
 
   const lastClickRef = useRef<{ time: number; x: number; y: number }>({ time: 0, x: 0, y: 0 });
-  const historyRef = useRef(history);
+  const pastRef   = useRef(past);
+  const futureRef = useRef(future);
   const roomsRef = useRef(rooms);
   const constraintsRef = useRef(constraints);
   const violationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wasViolatingDragRef = useRef(false);
   useEffect(() => { roomsRef.current = rooms; }, [rooms]);
-  useEffect(() => { historyRef.current = history; }, [history]);
+  useEffect(() => { pastRef.current = past; },     [past]);
+  useEffect(() => { futureRef.current = future; }, [future]);
   useEffect(() => { constraintsRef.current = constraints; }, [constraints]);
 
   // ── DOF (virtual rooms = rooms + zones + partitions) ──────────────────────
@@ -340,10 +343,11 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
   // ── History ───────────────────────────────────────────────────────────────
 
   const pushHistory = useCallback(() => {
-    setHistory((prev) => [{
+    setPast((prev) => [{
       rooms: deepCloneRooms(roomsRef.current),
       constraints: [...constraintsRef.current],
     }, ...prev.slice(0, 49)]);
+    setFuture([]);
   }, []);
 
   // ── Solver: applies updates to rooms, zones, and partitions ───────────────
@@ -403,8 +407,13 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
       }
       if (e.key === 'z' && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
         e.preventDefault();
-        if (historyRef.current.length > 0) handleUndo();
+        if (pastRef.current.length > 0) handleUndo();
         else if (onNavigateBack) onNavigateBack();
+      }
+      if ((e.key === 'y' && (e.ctrlKey || e.metaKey)) ||
+          (e.key === 'z' && (e.ctrlKey || e.metaKey) && e.shiftKey)) {
+        e.preventDefault();
+        if (futureRef.current.length > 0) handleRedo();
       }
     };
     const up = (e: KeyboardEvent) => {
@@ -1219,12 +1228,29 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
   // ── Actions ───────────────────────────────────────────────────────────────
 
   const handleUndo = () => {
-    setHistory((prev) => {
-      if (!prev.length) return prev;
-      const [entry, ...rest] = prev;
-      restoreSnapshot(entry!.rooms, entry!.constraints);
-      return rest;
-    });
+    const p = pastRef.current;
+    if (!p.length) return;
+    const [entry, ...rest] = p;
+    const current: HistoryEntry = {
+      rooms: deepCloneRooms(roomsRef.current),
+      constraints: [...constraintsRef.current],
+    };
+    setFuture((f) => [current, ...f.slice(0, 49)]);
+    setPast(rest);
+    restoreSnapshot(entry!.rooms, entry!.constraints);
+  };
+
+  const handleRedo = () => {
+    const f = futureRef.current;
+    if (!f.length) return;
+    const [entry, ...rest] = f;
+    const current: HistoryEntry = {
+      rooms: deepCloneRooms(roomsRef.current),
+      constraints: [...constraintsRef.current],
+    };
+    setPast((p) => [current, ...p.slice(0, 49)]);
+    setFuture(rest);
+    restoreSnapshot(entry!.rooms, entry!.constraints);
   };
 
   const handleClearRoom = () => {
@@ -1329,9 +1355,13 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
       )}
 
       <PlanToolbar
-        tool={tool} canUndo={history.length > 0}
+        tool={tool}
+        canUndo={past.length > 0}
+        canRedo={future.length > 0}
         onChangeTool={(t) => { setTool(t); setCoincideSource(null); setDimensionSource(null); setPartitionOrigin(null); setExcludePoints([]); setEditingThicknessEdge(null); setEditingPartitionDimension(null); }}
-        onUndo={handleUndo} onClearRoom={handleClearRoom}
+        onUndo={handleUndo}
+        onRedo={handleRedo}
+        onClearRoom={handleClearRoom}
       />
 
       <RoomTabs rooms={rooms} activeRoomId={activeRoomId}
@@ -1346,6 +1376,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
           <span>Orthogonalité</span><kbd className="justify-self-end rounded px-1.5 py-0.5 font-mono text-[9px]" style={{ border: '1px solid var(--bdr2)', background: 'var(--surf2)', color: 'var(--text2)' }}>⇧ Maj</kbd>
           <span>Sans aimantation</span><kbd className="justify-self-end rounded px-1.5 py-0.5 font-mono text-[9px]" style={{ border: '1px solid var(--bdr2)', background: 'var(--surf2)', color: 'var(--text2)' }}>Ctrl</kbd>
           <span>Annuler</span><kbd className="justify-self-end rounded px-1.5 py-0.5 font-mono text-[9px]" style={{ border: '1px solid var(--bdr2)', background: 'var(--surf2)', color: 'var(--text2)' }}>Ctrl+Z</kbd>
+          <span>Rétablir</span><kbd className="justify-self-end rounded px-1.5 py-0.5 font-mono text-[9px]" style={{ border: '1px solid var(--bdr2)', background: 'var(--surf2)', color: 'var(--text2)' }}>Ctrl+Y</kbd>
           <span>Cote / H / V</span><span className="text-right font-semibold text-orange-500/80">Clic mur/cloison/zone</span>
           <span>Ancrer nœud</span><span className="text-right font-semibold text-violet-500/80">Outil 📌</span>
           <span>Suppr. cloison/zone</span><span className="text-right font-semibold" style={{ color: 'var(--muted)' }}>Clic dessus</span>
