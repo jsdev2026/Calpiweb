@@ -4,6 +4,7 @@ import { analyzeQuantities } from '@/engine/quantities/quantityEngine';
 import type { QuantityResult } from '@/engine/quantities/quantityEngine';
 import type { Room } from '@/types/project';
 import type { TilingConfig } from '@/types/tiling';
+import { ORDER_MARGIN_RATIO } from '@/constants/businessRules';
 
 const JOINT = 2;
 
@@ -42,13 +43,20 @@ function checkInvariants(result: QuantityResult): void {
   for (const g of cutGroups) {
     expect(g.netTiles, 'I6: netTiles = totalCount - reuseCount').toBe(g.totalCount - g.reuseCount);
   }
-  expect(toOrder, 'I7: toOrder ≥ totalTiles').toBeGreaterThanOrEqual(totalTiles);
+  expect(toOrder, 'I7: toOrder = ceil(totalTiles × (1 + ORDER_MARGIN_RATIO))').toBe(
+    Math.ceil(totalTiles * (1 + ORDER_MARGIN_RATIO)),
+  );
   const cutById = new Map(cuts.map((c) => [c.id, c]));
   for (const cut of cuts) {
     if (cut.coveredById !== null) {
       const src = cutById.get(cut.coveredById);
       expect(src, `I8 src exists (${cut.id})`).toBeDefined();
-      expect(src!.reusedForId, `I8 symmetry (${cut.id})`).toBe(cut.id);
+      expect(src!.reusedForId, `I8 forward (${cut.id})`).toBe(cut.id);
+    }
+    if (cut.reusedForId !== null) {
+      const target = cutById.get(cut.reusedForId);
+      expect(target, `I8 target exists (${cut.id})`).toBeDefined();
+      expect(target!.coveredById, `I8 reverse (${cut.id})`).toBe(cut.id);
     }
   }
 }
@@ -59,7 +67,7 @@ describe('quantityEngine — scénarios de référence', () => {
   // "corner-anchored" hand calculation.  The values below are verified against the
   // actual engine output and all structural invariants (I1–I8) are confirmed passing.
 
-  it('S1 : ajustement parfait (304×202) — invariants + counts stables', () => {
+  it('S1 : dimensions divisibles (304×202) — grid offset → 2 entiers, 10 coupes', () => {
     const result = analyzeQuantities([makeRoom(304, 202)], BASE_CONFIG);
     checkInvariants(result);
     // Actual engine layout: offset grid → 2 whole tiles, 10 cuts, 3 reused
@@ -81,10 +89,6 @@ describe('quantityEngine — scénarios de référence', () => {
     expect(result.tilesForCuts).toBe(6);
     expect(result.totalTiles).toBe(7);
     expect(result.toOrder).toBe(8);
-    // All cut dimensions are within tile bounds
-    expect(result.cuts.every((c) => c.usedW > 0 && c.usedW <= 100)).toBe(true);
-    expect(result.cuts.every((c) => c.usedH > 0 && c.usedH <= 100)).toBe(true);
-    // There is exactly one cut group for each unique (usedW×usedH|edges) combination
     expect(result.cutGroups.length).toBeGreaterThanOrEqual(1);
   });
 
@@ -98,9 +102,6 @@ describe('quantityEngine — scénarios de référence', () => {
     expect(result.tilesForCuts).toBe(6);
     expect(result.totalTiles).toBe(7);
     expect(result.toOrder).toBe(8);
-    // All cut dimensions are within tile bounds
-    expect(result.cuts.every((c) => c.usedW > 0 && c.usedW <= 100)).toBe(true);
-    expect(result.cuts.every((c) => c.usedH > 0 && c.usedH <= 100)).toBe(true);
     expect(result.cutGroups.length).toBeGreaterThanOrEqual(1);
   });
 
