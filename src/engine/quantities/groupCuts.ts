@@ -2,7 +2,7 @@
 import type { CutRecord, CutGroup, PieceEdges } from './types';
 
 function edgeKey(pe: PieceEdges): string {
-  return `${pe.left[0]}${pe.right[0]}${pe.top[0]}${pe.bottom[0]}`;
+  return `${pe.left}|${pe.right}|${pe.top}|${pe.bottom}`;
 }
 
 export function groupCuts(records: CutRecord[]): CutGroup[] {
@@ -11,6 +11,7 @@ export function groupCuts(records: CutRecord[]): CutGroup[] {
   for (const rec of records) {
     const key = `${rec.usedW}×${rec.usedH}|${edgeKey(rec.pieceEdges)}`;
     if (!map.has(key)) {
+      // Chute fields taken from first record in group — spec §groupCuts "valeurs du premier record"
       map.set(key, {
         usedW: rec.usedW,
         usedH: rec.usedH,

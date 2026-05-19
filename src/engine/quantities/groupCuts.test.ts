@@ -65,14 +65,16 @@ describe('groupCuts', () => {
   });
 
   it('groupes triés par netTiles*usedW*usedH décroissant', () => {
-    // Groupe A : 1 tile nette de 80×80 = score 6400
-    // Groupe B : 2 tiles nettes de 30×45 = score 2700
+    // Groupe 30×45 : 2 tiles nettes → score 2×30×45=2700
+    // Groupe 80×80 : 1 tile nette  → score 1×80×80=6400 → premier
     const records = [
       makeRecord('a', 30, 45, RIGHT_CUT),
-      makeRecord('b', 30, 45, LEFT_CUT),       // groupe distinct
+      makeRecord('b', 30, 45, RIGHT_CUT),
       makeRecord('c', 80, 80, FACTORY),
     ];
     const groups = groupCuts(records);
     expect(groups[0]!.usedW).toBe(80);
+    expect(groups[0]!.totalCount).toBe(1);
+    expect(groups[1]!.totalCount).toBe(2);
   });
 });
