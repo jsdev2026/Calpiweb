@@ -14,7 +14,7 @@ export const ResultsPanel = ({ result }: ResultsPanelProps) => (
       <BarChart3 size={16} className="text-emerald-500" /> Quantitatif
     </h3>
 
-    {result.totalTiles > 0 ? (
+    {result.roomArea > 0 ? (
       <div className="space-y-3">
         <div className="flex justify-between text-xs font-medium text-gray-500 dark:text-zinc-400">
           <span>Surface</span>

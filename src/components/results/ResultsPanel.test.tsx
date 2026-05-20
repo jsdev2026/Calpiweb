@@ -1,18 +1,18 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import { ResultsPanel } from './ResultsPanel';
-import type { QuantityResult } from '@/engine/quantities/quantityEngine';
+import type { QuantityResult, CutRecord } from '@/engine/quantities/quantityEngine';
 
 const makeResult = (overrides: Partial<QuantityResult> = {}): QuantityResult => ({
   tileW: 300, tileH: 300, joint: 3,
   wholeCount: 10,
-  cuts: Array.from({ length: 3 }) as QuantityResult['cuts'],
+  cuts: Array(3).fill({} as CutRecord) as QuantityResult['cuts'],
   cutGroups: [],
   totalReuseCount: 2,
   tilesForCuts: 3,
   totalTiles: 13,
   toOrder: 15,
-  roomArea: 9.5,
+  roomArea: 9_500_000,
   tiles: [],
   ...overrides,
 });
@@ -25,10 +25,11 @@ describe('ResultsPanel', () => {
 
   it('shows wholeCount, cuts.length, totalReuseCount, toOrder', () => {
     render(<ResultsPanel result={makeResult()} />);
-    expect(screen.getByText('10')).toBeDefined();  // wholeCount
-    expect(screen.getByText('3')).toBeDefined();   // cuts.length
-    expect(screen.getByText('2')).toBeDefined();   // totalReuseCount
-    expect(screen.getByText('15')).toBeDefined();  // toOrder
+    expect(screen.getByText('10')).toBeDefined();       // wholeCount
+    expect(screen.getByText('3')).toBeDefined();        // cuts.length
+    expect(screen.getByText('2')).toBeDefined();        // totalReuseCount
+    expect(screen.getByText('15')).toBeDefined();       // toOrder
+    expect(screen.getByText('9.50 m²')).toBeDefined(); // surface
   });
 
   it('shows empty state when totalTiles is 0', () => {
