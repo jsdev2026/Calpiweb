@@ -929,7 +929,11 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
       const dimType: 'H_DISTANCE' | 'V_DISTANCE' = absDx >= absDy ? 'H_DISTANCE' : 'V_DISTANCE';
       setEditingPartitionDimType(dimType);
       setEditingPartitionDimension({ fromRef, toRef });
-      setEditPartitionDimValue(((dimType === 'H_DISTANCE' ? absDx : absDy) / 10).toFixed(1));
+      const rawVal = dimType === 'H_DISTANCE' ? absDx : absDy;
+      const fromRoom = rooms.find((r) => r.id === fromRef.roomId);
+      const syntheticC = { id: '', type: dimType as 'H_DISTANCE' | 'V_DISTANCE', pts: [fromRef, toRef] };
+      const dimOpenOffset = fromRoom ? constraintInteriorOffset(syntheticC, fromRoom, wallThickness) : 0;
+      setEditPartitionDimValue(((rawVal - dimOpenOffset) / 10).toFixed(1));
       setDimensionSource(null); return;
     }
     if (tool === 'ANCHOR') {
@@ -986,7 +990,11 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
       const dimType: 'H_DISTANCE' | 'V_DISTANCE' = absDx >= absDy ? 'H_DISTANCE' : 'V_DISTANCE';
       setEditingPartitionDimType(dimType);
       setEditingPartitionDimension({ fromRef, toRef });
-      setEditPartitionDimValue(((dimType === 'H_DISTANCE' ? absDx : absDy) / 10).toFixed(1));
+      const rawVal = dimType === 'H_DISTANCE' ? absDx : absDy;
+      const fromRoom = rooms.find((r) => r.id === fromRef.roomId);
+      const syntheticC = { id: '', type: dimType as 'H_DISTANCE' | 'V_DISTANCE', pts: [fromRef, toRef] };
+      const dimOpenOffset = fromRoom ? constraintInteriorOffset(syntheticC, fromRoom, wallThickness) : 0;
+      setEditPartitionDimValue(((rawVal - dimOpenOffset) / 10).toFixed(1));
       setDimensionSource(null); return;
     }
     if (tool === 'ANCHOR') {
@@ -1040,7 +1048,11 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
       const dimType: 'H_DISTANCE' | 'V_DISTANCE' = absDx >= absDy ? 'H_DISTANCE' : 'V_DISTANCE';
       setEditingPartitionDimType(dimType);
       setEditingPartitionDimension({ fromRef, toRef });
-      setEditPartitionDimValue(((dimType === 'H_DISTANCE' ? absDx : absDy) / 10).toFixed(1));
+      const rawVal = dimType === 'H_DISTANCE' ? absDx : absDy;
+      const fromRoom = rooms.find((r) => r.id === fromRef.roomId);
+      const syntheticC = { id: '', type: dimType as 'H_DISTANCE' | 'V_DISTANCE', pts: [fromRef, toRef] };
+      const dimOpenOffset = fromRoom ? constraintInteriorOffset(syntheticC, fromRoom, wallThickness) : 0;
+      setEditPartitionDimValue(((rawVal - dimOpenOffset) / 10).toFixed(1));
       setDimensionSource(null); return;
     }
     if (tool === 'ANCHOR') {
@@ -1198,7 +1210,6 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
     const valCm = parseFloat(editPartitionDimValue);
     if (isNaN(valCm) || valCm <= 0) { setEditingPartitionDimension(null); return; }
     const { fromRef, toRef } = editingPartitionDimension;
-    const valueMm = valCm * 10;
     const existing = constraints.find((c) =>
       (c.type === 'LENGTH' || c.type === 'H_DISTANCE' || c.type === 'V_DISTANCE') &&
       c.pts.length >= 2 &&
@@ -1206,6 +1217,10 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
        (c.pts[0]!.roomId === toRef.roomId && c.pts[0]!.vertexIdx === toRef.vertexIdx && c.pts[1]!.roomId === fromRef.roomId && c.pts[1]!.vertexIdx === fromRef.vertexIdx))
     );
     const cType = existing?.type ?? editingPartitionDimType;
+    const fromRoom = rooms.find((r) => r.id === fromRef.roomId);
+    const syntheticC = { id: '', type: cType as Constraint['type'], pts: [fromRef, toRef] };
+    const submitOffset = fromRoom ? constraintInteriorOffset(syntheticC, fromRoom, wallThickness) : 0;
+    const valueMm = valCm * 10 + submitOffset;
     const newId = existing?.id ?? generateId();
     const newCs = existing
       ? constraints.map((c) => c.id === existing.id ? { ...c, value: valueMm } : c)
