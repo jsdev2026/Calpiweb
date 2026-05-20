@@ -7,7 +7,7 @@ import type { Room } from '@/types/project';
 import type { Point } from '@/types/plan';
 import type { TilingConfig } from '@/types/tiling';
 import { getBoundingBox } from '@/engine/geometry/polygon';
-import { computeTilingMultiRoom } from '@/engine/tiling/tilingEngine';
+import { analyzeQuantities } from '@/engine/quantities/quantityEngine';
 import { TilingCanvas } from './TilingCanvas';
 import { TilingControls } from './TilingControls';
 import { ResultsPanel } from '@/components/results/ResultsPanel';
@@ -74,7 +74,7 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
 
   const handleTilingTouchEnd = () => { tilingTouchRef.current = null; };
 
-  const { tiles, stats } = useMemo(() => computeTilingMultiRoom(rooms, config), [rooms, config]);
+  const result = useMemo(() => analyzeQuantities(rooms, config), [rooms, config]);
 
   const validRooms = rooms.filter((r) => r.points.length >= 3);
 
@@ -162,7 +162,7 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
         <TilingCanvas
           svgRef={svgRef}
           rooms={rooms}
-          tiles={tiles}
+          tiles={result.tiles}
           config={config}
           scale={scale}
           pan={pan}
@@ -225,7 +225,7 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
       {/* Controls sidebar — full width on mobile (Réglages tab), right panel on desktop */}
       <aside className={`z-20 flex w-full flex-col overflow-y-auto dark:bg-zinc-900 bg-white shadow-2xl md:w-80 ${mobileTab === 'apercu' ? 'hidden md:flex' : 'flex'}`}>
         <TilingControls config={config} onChange={setConfig} />
-        <ResultsPanel stats={stats} />
+        <ResultsPanel result={result} />
       </aside>
     </div>
   );
