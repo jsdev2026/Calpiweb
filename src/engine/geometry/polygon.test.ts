@@ -133,7 +133,9 @@ describe('insetRoomPolygon', () => {
     const result = insetRoomPolygon(room, 0);
     expect(result).toHaveLength(4);
     expect(result[0]).toEqual({ x: 0, y: 0 });
+    expect(result[1]).toEqual({ x: 2000, y: 0 });
     expect(result[2]).toEqual({ x: 2000, y: 3000 });
+    expect(result[3]).toEqual({ x: 0, y: 3000 });
   });
 
   it('insets uniformly: 100mm walls → 50mm inset per side', () => {
@@ -158,5 +160,28 @@ describe('insetRoomPolygon', () => {
   it('returns original points for degenerate polygon (< 3 pts)', () => {
     const room: Room = { id: 'r', points: [{ x: 0, y: 0 }, { x: 1, y: 0 }], edges: [] };
     expect(insetRoomPolygon(room, 100)).toEqual(room.points);
+  });
+
+  it('handles CCW winding: reversed rectangle insets correctly', () => {
+    // CCW in y-down: (0,0)→(0,3000)→(2000,3000)→(2000,0)
+    const room: Room = {
+      id: 'r2',
+      points: [{ x: 0, y: 0 }, { x: 0, y: 3000 }, { x: 2000, y: 3000 }, { x: 2000, y: 0 }],
+      edges: ['WALL', 'WALL', 'WALL', 'WALL'],
+    };
+    const result = insetRoomPolygon(room, 100); // 50mm inset
+    expect(result).toHaveLength(4);
+    // Inset should shrink the polygon inward regardless of winding direction
+    expect(result[0]!.x).toBeGreaterThanOrEqual(0);
+    expect(result[0]!.y).toBeGreaterThanOrEqual(0);
+    expect(result[2]!.x).toBeLessThanOrEqual(2000);
+    expect(result[2]!.y).toBeLessThanOrEqual(3000);
+    // The bounding box of inset polygon should be strictly smaller
+    const minX = Math.min(...result.map(p => p.x));
+    const maxX = Math.max(...result.map(p => p.x));
+    const minY = Math.min(...result.map(p => p.y));
+    const maxY = Math.max(...result.map(p => p.y));
+    expect(maxX - minX).toBeLessThan(2000); // narrower than original
+    expect(maxY - minY).toBeLessThan(3000); // shorter than original
   });
 });

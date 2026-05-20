@@ -104,6 +104,7 @@ export function insetRoomPolygon(room: Room, defaultThickness: number): Point[] 
     const q = pts[(i + 1) % n]!;
     shoelace += p.x * q.y - q.x * p.y;
   }
+  if (Math.abs(shoelace) < 1e-9) return pts; // degenerate (collinear) polygon
   // CW in y-down → inward is left of edge direction: normal = (-dy, dx).
   // CCW in y-down → inward is right of edge direction: normal = (dy, -dx).
   const sign = shoelace > 0 ? 1 : -1;
