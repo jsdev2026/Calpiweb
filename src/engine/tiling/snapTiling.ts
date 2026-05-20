@@ -8,6 +8,12 @@ export interface SnapResult {
   kind: 'wall-vertex' | 'wall-midpoint' | 'tile-corner' | 'tile-midpoint';
 }
 
+interface BestCandidate {
+  priority: number;
+  dist: number;
+  result: SnapResult;
+}
+
 export function snapToTiling(
   worldPt: Point,
   rooms: Room[],
@@ -16,17 +22,14 @@ export function snapToTiling(
   scale: number,
 ): SnapResult | null {
   const radius = 15 / scale;
-  let best: { priority: number; dist: number; result: SnapResult } | null = null;
+  const state: { best: BestCandidate | null } = { best: null };
 
   const consider = (pt: Point, kind: SnapResult['kind'], priority: number) => {
     const dist = Math.hypot(pt.x - worldPt.x, pt.y - worldPt.y);
     if (dist > radius) return;
-    if (
-      !best ||
-      priority < best.priority ||
-      (priority === best.priority && dist < best.dist)
-    ) {
-      best = { priority, dist, result: { point: { x: pt.x, y: pt.y }, kind } };
+    const candidate: BestCandidate = { priority, dist, result: { point: { x: pt.x, y: pt.y }, kind } };
+    if (!state.best || priority < state.best.priority || (priority === state.best.priority && dist < state.best.dist)) {
+      state.best = candidate;
     }
   };
 
@@ -69,7 +72,7 @@ export function snapToTiling(
     }
   }
 
-  return best?.result ?? null;
+  return state.best ? state.best.result : null;
 }
 
 export function getParallelAngle(
