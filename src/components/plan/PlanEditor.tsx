@@ -186,6 +186,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
   const rooms = useProjectStore((s) => selectActiveProject(s)?.rooms ?? []);
   const constraints = useProjectStore((s) => selectActiveProject(s)?.constraints ?? []);
   const wallThickness = useProjectStore((s) => selectActiveProject(s)?.wallThickness ?? 100);
+  const setWallThickness = useProjectStore((s) => s.setWallThickness);
   const updateRoom = useProjectStore((s) => s.updateRoom);
   const addRoom = useProjectStore((s) => s.addRoom);
   const removeRoom = useProjectStore((s) => s.removeRoom);
@@ -1392,6 +1393,8 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
         onUndo={handleUndo}
         onRedo={handleRedo}
         onClearRoom={handleClearRoom}
+        wallThickness={wallThickness}
+        onWallThicknessChange={setWallThickness}
       />
 
       <RoomPanel

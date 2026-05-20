@@ -3,6 +3,7 @@
 import { DoorOpen, Magnet, MousePointer2, PenTool, Pin, Redo2, Ruler, Trash2, Undo, SplitSquareVertical, Square } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { ToolTooltip } from './ToolTooltip';
+import { WallThicknessControl } from './WallThicknessControl';
 
 export type PlanTool = 'SELECT' | 'WALL' | 'DOOR' | 'APPLY_H' | 'APPLY_V' | 'COINCIDE' | 'ANCHOR' | 'PARTITION' | 'EXCLUDE' | 'DIMENSION' | 'THICKNESS';
 
@@ -14,6 +15,8 @@ interface PlanToolbarProps {
   onUndo: () => void;
   onRedo: () => void;
   onClearRoom: () => void;
+  wallThickness: number;
+  onWallThicknessChange: (mm: number) => void;
 }
 
 const TOOL_TOOLTIPS = {
@@ -41,6 +44,8 @@ export const PlanToolbar = ({
   onUndo,
   onRedo,
   onClearRoom,
+  wallThickness,
+  onWallThicknessChange,
 }: PlanToolbarProps) => (
   <div
     className="absolute left-4 top-4 z-10 hidden md:flex flex-col gap-0.5 overflow-y-auto rounded-2xl p-1.5 shadow-2xl backdrop-blur-md"
@@ -180,6 +185,9 @@ export const PlanToolbar = ({
         <Trash2 size={16} />
       </Button>
     </ToolTooltip>
+
+    <div className="mx-auto h-px w-6" style={{ background: 'var(--bdr)' }} />
+    <WallThicknessControl wallThickness={wallThickness} onChange={onWallThicknessChange} />
 
   </div>
 );
