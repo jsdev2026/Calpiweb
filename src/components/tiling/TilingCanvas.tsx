@@ -4,7 +4,7 @@ import type { PointerEvent as ReactPointerEvent, RefObject } from 'react';
 import type { Room } from '@/types/project';
 import type { Point } from '@/types/plan';
 import type { Tile, TilingConfig } from '@/types/tiling';
-import { getBoundingBox } from '@/engine/geometry/polygon';
+import { getBoundingBox, insetRoomPolygon } from '@/engine/geometry/polygon';
 import { formatCm } from '@/utils/formatters';
 import { partitionToPolygon } from '@/engine/tiling/tilingEngine';
 
@@ -100,7 +100,7 @@ export const TilingCanvas = ({
               fillRule="evenodd"
               d={[
                 ...validRooms.map((r) =>
-                  `M ${r.points.map((p) => `${p.x},${p.y}`).join(' L ')} Z`
+                  `M ${insetRoomPolygon(r, wallThickness).map((p) => `${p.x},${p.y}`).join(' L ')} Z`
                 ),
                 ...validRooms.flatMap((r) =>
                   (r.excludedZones ?? []).map((z) =>
@@ -121,7 +121,7 @@ export const TilingCanvas = ({
         {validRooms.map((room) => (
           <polygon
             key={`bg-${room.id}`}
-            points={room.points.map((p) => `${p.x},${p.y}`).join(' ')}
+            points={insetRoomPolygon(room, wallThickness).map((p) => `${p.x},${p.y}`).join(' ')}
             fill="var(--surf3)"
           />
         ))}
