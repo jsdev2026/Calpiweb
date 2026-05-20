@@ -11,6 +11,7 @@ import { generateId } from '@/utils/id';
 import { selectActiveProject, useProjectStore } from '@/store/projectStore';
 import { buildAndSolve, solveAndValidate } from '@/engine/constraints/solver';
 import { analyzeDOF, ptKey } from '@/engine/constraints/dofAnalyzer';
+import { constraintInteriorOffset } from '@/engine/constraints/interiorOffset';
 import { PlanToolbar, type PlanTool } from './PlanToolbar';
 import { DimensionEditor } from './DimensionEditor';
 import { WallEdgeEditor } from './WallEdgeEditor';
@@ -903,7 +904,12 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
     }
     setEditingEdgeConstraintType(cType);
     setEditingEdge({ roomId, edgeIndex });
-    setEditValue((value / 10).toFixed(1));
+    const displayOffset = constraintInteriorOffset(
+      { id: '', type: cType, pts: [{ roomId, vertexIdx: a }, { roomId, vertexIdx: b }] },
+      room,
+      wallThickness,
+    );
+    setEditValue(((value - displayOffset) / 10).toFixed(1));
     const currentThickness = room.edgeThicknesses?.[edgeIndex] ?? wallThickness;
     setEditingEdgeThicknessValue((currentThickness / 10).toFixed(0));
   };
@@ -1104,8 +1110,13 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
     const room = rooms.find((r) => r.id === editingEdge.roomId); if (!room) { setEditingEdge(null); return; }
     const n = room.points.length, eIdx = editingEdge.edgeIndex;
     const p1Ref = ref(room.id, eIdx), p2Ref = ref(room.id, (eIdx + 1) % n);
-    const valueMm = valCm * 10;
     const cType = editingEdgeConstraintType;
+    const offset = constraintInteriorOffset(
+      { id: '', type: cType as Constraint['type'], pts: [p1Ref, p2Ref] },
+      room,
+      wallThickness,
+    );
+    const valueMm = valCm * 10 + offset;
     // Remove all existing dimension constraints on this edge (any type) before adding the new one.
     const oldIds = edgeDimConstraintIds(editingEdge.roomId, eIdx, n);
     const csWithoutOld = constraints.filter((c) => !oldIds.includes(c.id));
