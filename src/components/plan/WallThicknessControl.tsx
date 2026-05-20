@@ -26,8 +26,8 @@ export const WallThicknessControl = ({ wallThickness, onChange }: WallThicknessC
         defaultValue={defaultCm}
         onBlur={(e) => commit(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && commit((e.target as HTMLInputElement).value)}
-        className="h-8 w-8 rounded-xl text-center text-[11px] font-bold outline-none transition-colors hover:bg-gray-100 dark:hover:bg-zinc-800"
-        style={{ background: 'var(--surf)', color: 'var(--text1)' }}
+        className="h-8 w-8 rounded-xl text-center text-[11px] font-bold outline-none transition-colors bg-gray-50 border border-gray-200 dark:bg-zinc-900 dark:border-zinc-800 hover:bg-gray-100 dark:hover:bg-zinc-800"
+        style={{ color: 'var(--text2)' }}
       />
     </div>
   );
