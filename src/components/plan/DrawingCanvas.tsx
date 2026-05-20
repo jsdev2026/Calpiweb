@@ -8,6 +8,7 @@ import { angle, distance } from '@/engine/geometry/polygon';
 import { formatCm } from '@/utils/formatters';
 import type { DOFMap } from '@/engine/constraints/dofAnalyzer';
 import { ptKey } from '@/engine/constraints/dofAnalyzer';
+import { constraintInteriorOffset } from '@/engine/constraints/interiorOffset';
 import type { PlanTool } from './PlanToolbar';
 
 export interface HoveredEdge { roomId: string; edgeIndex: number; t: number; }
@@ -403,8 +404,10 @@ export const DrawingCanvas = ({
                 const hasDirC = hasH || hasV;
                 const textColor = hasDistC ? '#22c55e' : hasDirC ? '#60a5fa' : isDoor ? '#f97316' : 'var(--canvas-label-text)';
                 const dirIcon = hasH ? 'H ' : hasV ? 'V ' : '';
-                const dimVal = hDistC && typeof hDistC.value === 'number' ? formatCm(hDistC.value)
-                  : vDistC && typeof vDistC.value === 'number' ? formatCm(vDistC.value)
+                const hvC = hDistC ?? vDistC;
+                const hvOffset = hvC ? constraintInteriorOffset(hvC, room, wallThickness) : 0;
+                const dimVal = hDistC && typeof hDistC.value === 'number' ? formatCm(hDistC.value - hvOffset)
+                  : vDistC && typeof vDistC.value === 'number' ? formatCm(vDistC.value - hvOffset)
                   : lenC && typeof lenC.value === 'number' ? formatCm(lenC.value)
                   : formatCm(edgeLen);
                 const thickPart = thickOverride !== undefined ? ` E:${Math.round(thickOverride / 10)}` : '';
