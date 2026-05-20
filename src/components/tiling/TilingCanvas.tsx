@@ -1,6 +1,6 @@
 'use client';
 
-import type { PointerEvent as ReactPointerEvent, RefObject } from 'react';
+import type { PointerEvent as ReactPointerEvent, RefObject, ReactNode, MouseEvent } from 'react';
 import type { Room } from '@/types/project';
 import type { Point } from '@/types/plan';
 import type { Tile, TilingConfig } from '@/types/tiling';
@@ -16,11 +16,13 @@ interface TilingCanvasProps {
   config: TilingConfig;
   scale: number;
   pan: Point;
-  showDimensions: boolean;
+  activeTool: 'pan' | 'dimension';
   wallThickness: number;
+  dimensionLayer: ReactNode;
   onPointerDown: (e: ReactPointerEvent<SVGSVGElement>) => void;
   onPointerMove: (e: ReactPointerEvent<SVGSVGElement>) => void;
   onPointerUp: () => void;
+  onClick: (e: MouseEvent<SVGSVGElement>) => void;
 }
 
 export const TilingCanvas = ({
@@ -30,11 +32,13 @@ export const TilingCanvas = ({
   config,
   scale,
   pan,
-  showDimensions,
+  activeTool,
   wallThickness,
+  dimensionLayer,
   onPointerDown,
   onPointerMove,
   onPointerUp,
+  onClick,
 }: TilingCanvasProps) => {
   const validRooms = rooms.filter((r) => r.points.length >= 3);
   const allPoints = validRooms.flatMap((r) => r.points);
@@ -43,19 +47,18 @@ export const TilingCanvas = ({
   const centerY = (bbox.minY + bbox.maxY) / 2;
 
   // Reference dimensions: only for straight layout at angle = 0
-  const canShowDims = showDimensions && config.angle === 0 && config.layout === 'STRAIGHT';
-  const stepX = config.width + config.joint;
-  const stepY = config.height + config.joint;
+  const canShowDims = activeTool === 'dimension' && config.angle === 0 && config.layout === 'STRAIGHT';
   const effectiveAngle = config.angle;
 
   return (
     <svg
       ref={svgRef}
-      className="h-full w-full cursor-grab active:cursor-grabbing"
+      className={`h-full w-full ${activeTool === 'dimension' ? 'cursor-crosshair' : 'cursor-grab active:cursor-grabbing'}`}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerLeave={onPointerUp}
+      onClick={onClick}
     >
       <g transform={`translate(${pan.x}, ${pan.y}) scale(${scale})`}>
         <defs>
@@ -177,91 +180,25 @@ export const TilingCanvas = ({
           const rb = getBoundingBox(pts);
           const roomW = rb.maxX - rb.minX;
           const roomH = rb.maxY - rb.minY;
-
-          // Find tile cut sizes at room boundary
-          const tilesInX = tiles.filter(
-            (t) => t.rect.x < rb.maxX && t.rect.x + t.rect.w > rb.minX,
-          );
-          const tilesInY = tiles.filter(
-            (t) => t.rect.y < rb.maxY && t.rect.y + t.rect.h > rb.minY,
-          );
-
-          const leftTileX = tilesInX.length > 0 ? Math.min(...tilesInX.map((t) => t.rect.x)) : rb.minX;
-          const topTileY = tilesInY.length > 0 ? Math.min(...tilesInY.map((t) => t.rect.y)) : rb.minY;
-
-          // Cut at left = visible width of first tile column
-          const leftCut = leftTileX < rb.minX ? (leftTileX + config.width - rb.minX) : 0;
-          // Cut at top = visible height of first tile row
-          const topCut = topTileY < rb.minY ? (topTileY + config.height - rb.minY) : 0;
-
-          // Full tiles repeat
-          const fullCountX = leftCut > 0
-            ? Math.floor((roomW - leftCut) / stepX)
-            : Math.floor(roomW / stepX);
-          const lastCutX = roomW - (leftCut > 0 ? leftCut : 0) - fullCountX * stepX;
-
-          const fullCountY = topCut > 0
-            ? Math.floor((roomH - topCut) / stepY)
-            : Math.floor(roomH / stepY);
-          const lastCutY = roomH - (topCut > 0 ? topCut : 0) - fullCountY * stepY;
-
           const offset = 600;
-
           return (
             <g key={`dims-${room.id}`}>
-              {/* Room total width */}
               <DimLine
                 x1={rb.minX} y1={rb.minY}
                 x2={rb.maxX} y2={rb.minY}
                 label={formatCm(roomW)}
                 perpOffset={-offset}
               />
-              {/* Room total height */}
               <DimLine
                 x1={rb.maxX} y1={rb.minY}
                 x2={rb.maxX} y2={rb.maxY}
                 label={formatCm(roomH)}
                 perpOffset={offset}
               />
-              {/* Left cut tile */}
-              {leftCut > 10 && (
-                <DimLine
-                  x1={rb.minX} y1={rb.maxY + offset * 0.4}
-                  x2={rb.minX + leftCut} y2={rb.maxY + offset * 0.4}
-                  label={formatCm(leftCut)}
-                  perpOffset={offset * 0.6}
-                />
-              )}
-              {/* Right cut tile */}
-              {lastCutX > 10 && lastCutX < config.width - 10 && (
-                <DimLine
-                  x1={rb.maxX - lastCutX} y1={rb.maxY + offset * 0.4}
-                  x2={rb.maxX} y2={rb.maxY + offset * 0.4}
-                  label={formatCm(lastCutX)}
-                  perpOffset={offset * 0.6}
-                />
-              )}
-              {/* Top cut tile */}
-              {topCut > 10 && (
-                <DimLine
-                  x1={rb.minX - offset * 0.4} y1={rb.minY}
-                  x2={rb.minX - offset * 0.4} y2={rb.minY + topCut}
-                  label={formatCm(topCut)}
-                  perpOffset={-offset * 0.6}
-                />
-              )}
-              {/* Bottom cut tile */}
-              {lastCutY > 10 && lastCutY < config.height - 10 && (
-                <DimLine
-                  x1={rb.minX - offset * 0.4} y1={rb.maxY - lastCutY}
-                  x2={rb.minX - offset * 0.4} y2={rb.maxY}
-                  label={formatCm(lastCutY)}
-                  perpOffset={-offset * 0.6}
-                />
-              )}
             </g>
           );
         })}
+        {dimensionLayer}
       </g>
     </svg>
   );

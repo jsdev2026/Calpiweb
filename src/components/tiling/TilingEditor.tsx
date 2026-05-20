@@ -3,13 +3,17 @@
 import { Ruler } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
+import React from 'react';
 import type { Room } from '@/types/project';
 import type { Point } from '@/types/plan';
 import type { TilingConfig } from '@/types/tiling';
 import { getBoundingBox } from '@/engine/geometry/polygon';
 import { analyzeQuantities } from '@/engine/quantities/quantityEngine';
+import { useProjectStore, selectActiveProject } from '@/store/projectStore';
+import { useTilingDimension } from '@/hooks/useTilingDimension';
 import { TilingCanvas } from './TilingCanvas';
 import { TilingControls } from './TilingControls';
+import { TilingDimensionLayer } from './TilingDimensionLayer';
 import { ResultsPanel } from '@/components/results/ResultsPanel';
 
 interface TilingEditorProps {
@@ -23,7 +27,7 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
   const [scale, setScale] = useState(0.1);
   const [pan, setPan] = useState<Point>({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
-  const [showDimensions, setShowDimensions] = useState(false);
+  const [activeTool, setActiveTool] = useState<'pan' | 'dimension'>('pan');
   const [mobileTab, setMobileTab] = useState<'apercu' | 'reglages'>('apercu');
   const svgRef = useRef<SVGSVGElement | null>(null);
   const tilingTouchRef = useRef<{ dist: number; midX: number; midY: number; panX: number; panY: number } | null>(null);
@@ -76,6 +80,20 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
 
   const result = useMemo(() => analyzeQuantities(rooms, config, wallThickness), [rooms, config, wallThickness]);
 
+  const dimensions = useProjectStore((s) => selectActiveProject(s)?.tilingDimensions ?? []);
+
+  const dimHook = useTilingDimension(rooms, result.tiles, wallThickness, scale, activeTool === 'dimension');
+
+  const dimensionLayer = (
+    <TilingDimensionLayer
+      activeTool={activeTool}
+      dimensions={dimensions}
+      hoverSnap={dimHook.hoverSnap}
+      preview={dimHook.preview}
+      onContextMenu={dimHook.onContextMenu}
+    />
+  );
+
   const validRooms = rooms.filter((r) => r.points.length >= 3);
 
   useEffect(() => {
@@ -114,13 +132,41 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
     return () => svg.removeEventListener('wheel', handleWheel);
   }, [scale, pan]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && activeTool === 'dimension') setActiveTool('pan');
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeTool]);
+
+  const toWorld = (e: { clientX: number; clientY: number }): Point => {
+    const rect = svgRef.current!.getBoundingClientRect();
+    return { x: (e.clientX - rect.left - pan.x) / scale, y: (e.clientY - rect.top - pan.y) / scale };
+  };
+
   const handlePointerDown = (e: ReactPointerEvent<SVGSVGElement>) => {
+    if (activeTool === 'dimension') return;
     if (e.button === 0) setIsDragging(true);
   };
+
   const handlePointerMove = (e: ReactPointerEvent<SVGSVGElement>) => {
+    if (activeTool === 'dimension') {
+      dimHook.onPointerMove(toWorld(e));
+      return;
+    }
     if (isDragging) setPan({ x: pan.x + e.movementX, y: pan.y + e.movementY });
   };
-  const handlePointerUp = () => setIsDragging(false);
+
+  const handlePointerUp = () => {
+    if (activeTool === 'dimension') return;
+    setIsDragging(false);
+  };
+
+  const handleClick = (e: React.MouseEvent<SVGSVGElement>) => {
+    if (activeTool !== 'dimension') return;
+    dimHook.onClick(toWorld(e), e.ctrlKey);
+  };
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden dark:bg-zinc-950 bg-gray-100 md:flex-row">
@@ -166,11 +212,13 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
           config={config}
           scale={scale}
           pan={pan}
-          showDimensions={showDimensions}
+          activeTool={activeTool}
           wallThickness={wallThickness}
+          dimensionLayer={dimensionLayer}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
+          onClick={handleClick}
         />
 
         {/* Bottom controls: angle + offsets */}
@@ -178,13 +226,12 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
           {/* Dimensions toggle */}
           <button
             type="button"
-            onClick={() => setShowDimensions((v) => !v)}
-            title={config.layout !== 'STRAIGHT' || config.angle !== 0 ? 'Cotation disponible uniquement en pose droite à 0°' : 'Afficher / masquer les côtes'}
-            disabled={config.layout !== 'STRAIGHT' || config.angle !== 0}
+            onClick={() => setActiveTool((t) => t === 'dimension' ? 'pan' : 'dimension')}
+            title="Placer des côtes (Échap pour quitter)"
             className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all ${
-              showDimensions
+              activeTool === 'dimension'
                 ? 'border border-orange-500/50 bg-orange-500/10 text-orange-400'
-                : 'border border-gray-300 dark:border-zinc-700 bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-zinc-500 hover:border-gray-400 dark:hover:border-zinc-500 disabled:opacity-30'
+                : 'border border-gray-300 dark:border-zinc-700 bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-zinc-500 hover:border-gray-400 dark:hover:border-zinc-500'
             }`}
           >
             <Ruler size={12} /> Côtes
