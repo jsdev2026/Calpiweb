@@ -274,7 +274,7 @@ export const QuantitiesPanel = () => {
 
   const result = useMemo(() => {
     if (!project) return null;
-    return analyzeQuantities(project.rooms, project.config);
+    return analyzeQuantities(project.rooms, project.config, project.wallThickness);
   }, [project]);
 
   if (!result) return null;

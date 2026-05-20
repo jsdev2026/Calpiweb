@@ -270,6 +270,10 @@ export const computeTiling = (
 export const computeTilingMultiRoom = (rooms: Room[], config: TilingConfig, wallThickness = 0): TilingResult => {
   const valid = rooms.filter((r) => r.points.length >= 3);
   if (valid.length === 0) return { tiles: [], stats: null };
+  // Note: computeTiling derives its rotation pivot from the inset polygon bbox.
+  // For rectangular rooms this equals the raw bbox center (symmetric inset).
+  // For irregular rooms with asymmetric wall thickness and angle !== 0, a small
+  // pivot offset may occur. Acceptable for current use cases.
   if (valid.length === 1) return computeTiling(
     insetRoomPolygon(valid[0]!, wallThickness), config, valid[0]!.edges, valid[0]!.excludedZones, valid[0]!.partitions,
   );
@@ -413,7 +417,7 @@ export const computeTilingMultiRoom = (rooms: Room[], config: TilingConfig, wall
   );
 
   // Net area for statistics
-  const totalRoomArea = valid.reduce((sum, r) => sum + getPolygonArea(r.points), 0);
+  const totalRoomArea = valid.reduce((sum, r) => sum + getPolygonArea(insetRoomPolygon(r, wallThickness)), 0);
   const excArea =
     allExcludedZones.reduce((s, z) => s + getPolygonArea(z.points), 0) +
     allPartitionPolygons.reduce((s, p) => s + getPolygonArea(p), 0);
