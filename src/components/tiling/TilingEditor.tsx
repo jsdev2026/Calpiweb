@@ -140,8 +140,9 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [activeTool]);
 
-  const toWorld = (e: { clientX: number; clientY: number }): Point => {
-    const rect = svgRef.current!.getBoundingClientRect();
+  const toWorld = (e: { clientX: number; clientY: number }): Point | null => {
+    const rect = svgRef.current?.getBoundingClientRect();
+    if (!rect) return null;
     return { x: (e.clientX - rect.left - pan.x) / scale, y: (e.clientY - rect.top - pan.y) / scale };
   };
 
@@ -152,7 +153,8 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
 
   const handlePointerMove = (e: ReactPointerEvent<SVGSVGElement>) => {
     if (activeTool === 'dimension') {
-      dimHook.onPointerMove(toWorld(e));
+      const pt = toWorld(e);
+      if (pt) dimHook.onPointerMove(pt);
       return;
     }
     if (isDragging) setPan({ x: pan.x + e.movementX, y: pan.y + e.movementY });
@@ -165,7 +167,8 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
 
   const handleClick = (e: React.MouseEvent<SVGSVGElement>) => {
     if (activeTool !== 'dimension') return;
-    dimHook.onClick(toWorld(e), e.ctrlKey);
+    const pt = toWorld(e);
+    if (pt) dimHook.onClick(pt, e.ctrlKey);
   };
 
   return (

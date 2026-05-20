@@ -15,11 +15,38 @@ type Phase = 'picking_start' | 'picking_end';
 const PERP_OFFSET = 600;
 const DIR_CYCLE: DimDirection[] = ['H', 'V', 'parallel'];
 
+function computePerpOffset(
+  rx1: number, ry1: number, rx2: number, ry2: number,
+  rooms: Room[],
+): number {
+  const dx = rx2 - rx1;
+  const dy = ry2 - ry1;
+  const len = Math.hypot(dx, dy);
+  if (len < 1) return PERP_OFFSET;
+  const nx = -dy / len;
+  const ny = dx / len;
+  const midX = (rx1 + rx2) / 2;
+  const midY = (ry1 + ry2) / 2;
+  const validRooms = rooms.filter((r) => r.points.length >= 3);
+  if (validRooms.length === 0) return PERP_OFFSET;
+  let cx = 0, cy = 0;
+  for (const r of validRooms) {
+    const bb = getBoundingBox(r.points);
+    cx += (bb.minX + bb.maxX) / 2;
+    cy += (bb.minY + bb.maxY) / 2;
+  }
+  cx /= validRooms.length;
+  cy /= validRooms.length;
+  const dot = (cx - midX) * nx + (cy - midY) * ny;
+  return dot > 0 ? -PERP_OFFSET : PERP_OFFSET;
+}
+
 export interface DimPreview {
   p1: Point;
   p2: Point;
   direction: DimDirection;
   parallelAngle?: number;
+  perpOffset: number;
 }
 
 export function useTilingDimension(
@@ -56,18 +83,34 @@ export function useTilingDimension(
 
   const effectiveDirection = manualDirection ?? autoDirection;
 
-  const preview: DimPreview | null =
-    phase === 'picking_end' && p1 !== null && hoverSnap !== null
-      ? {
-          p1,
-          p2: hoverSnap.point,
-          direction: effectiveDirection,
-          parallelAngle:
-            effectiveDirection === 'parallel'
-              ? (getParallelAngle(p1, rooms, wallThickness) ?? 0)
-              : undefined,
-        }
-      : null;
+  const preview: DimPreview | null = (() => {
+    if (phase !== 'picking_end' || p1 === null || hoverSnap === null) return null;
+    const dir = effectiveDirection;
+    const target = hoverSnap.point;
+    const parallelAngle = dir === 'parallel' ? (getParallelAngle(p1, rooms, wallThickness) ?? 0) : undefined;
+
+    let rx2: number, ry2: number;
+    if (dir === 'H') {
+      rx2 = target.x; ry2 = p1.y;
+    } else if (dir === 'V') {
+      rx2 = p1.x; ry2 = target.y;
+    } else {
+      const angle = parallelAngle ?? 0;
+      const cos = Math.cos(angle);
+      const sin = Math.sin(angle);
+      const proj = (target.x - p1.x) * cos + (target.y - p1.y) * sin;
+      rx2 = p1.x + proj * cos;
+      ry2 = p1.y + proj * sin;
+    }
+
+    return {
+      p1,
+      p2: target,
+      direction: dir,
+      parallelAngle,
+      perpOffset: computePerpOffset(p1.x, p1.y, rx2, ry2, rooms),
+    };
+  })();
 
   const onPointerMove = useCallback(
     (worldPt: Point) => {
@@ -125,28 +168,7 @@ export function useTilingDimension(
         ry2 = p1.y + proj * sin;
       }
 
-      const perpOffset = (() => {
-        const dx = rx2 - p1.x;
-        const dy = ry2 - p1.y;
-        const len = Math.hypot(dx, dy);
-        if (len < 1) return PERP_OFFSET;
-        const nx = -dy / len;
-        const ny = dx / len;
-        const midX = (p1.x + rx2) / 2;
-        const midY = (p1.y + ry2) / 2;
-        const validRooms = rooms.filter((r) => r.points.length >= 3);
-        if (validRooms.length === 0) return PERP_OFFSET;
-        let cx = 0, cy = 0;
-        for (const r of validRooms) {
-          const bb = getBoundingBox(r.points);
-          cx += (bb.minX + bb.maxX) / 2;
-          cy += (bb.minY + bb.maxY) / 2;
-        }
-        cx /= validRooms.length;
-        cy /= validRooms.length;
-        const dot = (cx - midX) * nx + (cy - midY) * ny;
-        return dot > 0 ? -PERP_OFFSET : PERP_OFFSET;
-      })();
+      const perpOffset = computePerpOffset(p1.x, p1.y, rx2, ry2, rooms);
 
       const dim: TilingDimension = {
         id: generateId(),

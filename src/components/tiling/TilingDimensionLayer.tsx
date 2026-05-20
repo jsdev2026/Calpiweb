@@ -77,7 +77,7 @@ export const TilingDimensionLayer = ({
 
       {/* Preview dimension (during picking_end) */}
       {preview && (() => {
-        const pd = projectDim(preview.p1, preview.p2, preview.direction, preview.parallelAngle, 600);
+        const pd = projectDim(preview.p1, preview.p2, preview.direction, preview.parallelAngle, preview.perpOffset);
         if (!hasLength(pd)) return null;
         return (
           <g className="pointer-events-none" opacity={0.6}>
