@@ -5,8 +5,10 @@ import {
   getBoundingBox,
   getIntersection,
   getPolygonArea,
+  insetRoomPolygon,
   pointInPolygon,
 } from './polygon';
+import type { Room } from '@/types/project';
 
 describe('distance', () => {
   it('returns 0 for identical points', () => {
@@ -112,5 +114,49 @@ describe('getBoundingBox', () => {
       { x: 50, y: 200 },
     ];
     expect(getBoundingBox(poly)).toEqual({ minX: 10, minY: 5, maxX: 100, maxY: 200 });
+  });
+});
+
+// CW rectangle in y-down SVG: (0,0)→(2000,0)→(2000,3000)→(0,3000)
+function makeRect(w: number, h: number, edgeThicknesses?: (number | undefined)[]): Room {
+  return {
+    id: 'r1',
+    points: [{ x: 0, y: 0 }, { x: w, y: 0 }, { x: w, y: h }, { x: 0, y: h }],
+    edges: ['WALL', 'WALL', 'WALL', 'WALL'],
+    edgeThicknesses,
+  };
+}
+
+describe('insetRoomPolygon', () => {
+  it('returns copy of points when thickness is 0', () => {
+    const room = makeRect(2000, 3000);
+    const result = insetRoomPolygon(room, 0);
+    expect(result).toHaveLength(4);
+    expect(result[0]).toEqual({ x: 0, y: 0 });
+    expect(result[2]).toEqual({ x: 2000, y: 3000 });
+  });
+
+  it('insets uniformly: 100mm walls → 50mm inset per side', () => {
+    const room = makeRect(2000, 3000);
+    const result = insetRoomPolygon(room, 100);
+    expect(result).toHaveLength(4);
+    expect(result[0]).toEqual({ x: 50, y: 50 });
+    expect(result[1]).toEqual({ x: 1950, y: 50 });
+    expect(result[2]).toEqual({ x: 1950, y: 2950 });
+    expect(result[3]).toEqual({ x: 50, y: 2950 });
+  });
+
+  it('respects per-edge thickness: edges [100,200,100,200]', () => {
+    const room = makeRect(2000, 3000, [100, 200, 100, 200]);
+    const result = insetRoomPolygon(room, 0);
+    expect(result[0]).toEqual({ x: 100, y: 50 });
+    expect(result[1]).toEqual({ x: 1900, y: 50 });
+    expect(result[2]).toEqual({ x: 1900, y: 2950 });
+    expect(result[3]).toEqual({ x: 100, y: 2950 });
+  });
+
+  it('returns original points for degenerate polygon (< 3 pts)', () => {
+    const room: Room = { id: 'r', points: [{ x: 0, y: 0 }, { x: 1, y: 0 }], edges: [] };
+    expect(insetRoomPolygon(room, 100)).toEqual(room.points);
   });
 });
