@@ -36,6 +36,8 @@ const TOOL_TOOLTIPS = {
   clear:     { label: 'Effacer la pièce',        description: 'Supprime tous les points de la pièce active' },
 } as const;
 
+const TB_CARD = 'bg-gray-50 border border-gray-200 dark:bg-zinc-900 dark:border-zinc-800';
+
 export const PlanToolbar = ({
   tool,
   canUndo,
@@ -80,7 +82,7 @@ export const PlanToolbar = ({
         className={`flex h-8 w-8 items-center justify-center rounded-xl transition-all ${
           tool === 'PARTITION'
             ? 'bg-violet-500 text-white shadow-md shadow-violet-500/30'
-            : 'hover:bg-violet-100 dark:hover:bg-violet-900/30 hover:text-violet-600 dark:hover:text-violet-300'
+            : `${TB_CARD} hover:bg-violet-100 dark:hover:bg-violet-900/30 hover:text-violet-600 dark:hover:text-violet-300`
         }`}
         style={tool !== 'PARTITION' ? { color: 'var(--text2)' } : {}}>
         <SplitSquareVertical size={16} />
@@ -91,7 +93,7 @@ export const PlanToolbar = ({
         className={`flex h-8 w-8 items-center justify-center rounded-xl transition-all ${
           tool === 'EXCLUDE'
             ? 'bg-amber-500 text-white shadow-md shadow-amber-500/30'
-            : 'hover:bg-amber-100 dark:hover:bg-amber-900/30 hover:text-amber-600 dark:hover:text-amber-300'
+            : `${TB_CARD} hover:bg-amber-100 dark:hover:bg-amber-900/30 hover:text-amber-600 dark:hover:text-amber-300`
         }`}
         style={tool !== 'EXCLUDE' ? { color: 'var(--text2)' } : {}}>
         <Square size={16} />
@@ -106,7 +108,7 @@ export const PlanToolbar = ({
         className={`flex h-8 w-8 items-center justify-center rounded-xl text-[12px] font-black transition-all ${
           tool === 'APPLY_H'
             ? 'bg-blue-500 text-white shadow-md shadow-blue-500/30'
-            : 'hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-300'
+            : `${TB_CARD} hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-300`
         }`}
         style={tool !== 'APPLY_H' ? { color: 'var(--text2)' } : {}}>
         H
@@ -117,7 +119,7 @@ export const PlanToolbar = ({
         className={`flex h-8 w-8 items-center justify-center rounded-xl text-[12px] font-black transition-all ${
           tool === 'APPLY_V'
             ? 'bg-blue-500 text-white shadow-md shadow-blue-500/30'
-            : 'hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-300'
+            : `${TB_CARD} hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-300`
         }`}
         style={tool !== 'APPLY_V' ? { color: 'var(--text2)' } : {}}>
         V
@@ -128,7 +130,7 @@ export const PlanToolbar = ({
         className={`flex h-8 w-8 items-center justify-center rounded-xl transition-all ${
           tool === 'COINCIDE'
             ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/30'
-            : 'hover:bg-emerald-100 dark:hover:bg-emerald-900/30 hover:text-emerald-600 dark:hover:text-emerald-300'
+            : `${TB_CARD} hover:bg-emerald-100 dark:hover:bg-emerald-900/30 hover:text-emerald-600 dark:hover:text-emerald-300`
         }`}
         style={tool !== 'COINCIDE' ? { color: 'var(--text2)' } : {}}>
         <Magnet size={16} />
@@ -139,7 +141,7 @@ export const PlanToolbar = ({
         className={`flex h-8 w-8 items-center justify-center rounded-xl transition-all ${
           tool === 'DIMENSION'
             ? 'bg-orange-500 text-white shadow-md shadow-orange-500/30'
-            : 'hover:bg-orange-100 dark:hover:bg-orange-900/30 hover:text-orange-600 dark:hover:text-orange-300'
+            : `${TB_CARD} hover:bg-orange-100 dark:hover:bg-orange-900/30 hover:text-orange-600 dark:hover:text-orange-300`
         }`}
         style={tool !== 'DIMENSION' ? { color: 'var(--text2)' } : {}}>
         <Ruler size={15} />
@@ -150,7 +152,7 @@ export const PlanToolbar = ({
         className={`flex h-8 w-8 items-center justify-center rounded-xl text-[12px] font-black transition-all ${
           tool === 'THICKNESS'
             ? 'bg-slate-500 text-white shadow-md shadow-slate-500/30'
-            : 'hover:bg-slate-100 dark:hover:bg-slate-900/30 hover:text-slate-600 dark:hover:text-slate-300'
+            : `${TB_CARD} hover:bg-slate-100 dark:hover:bg-slate-900/30 hover:text-slate-600 dark:hover:text-slate-300`
         }`}
         style={tool !== 'THICKNESS' ? { color: 'var(--text2)' } : {}}>
         E
@@ -161,7 +163,7 @@ export const PlanToolbar = ({
         className={`flex h-8 w-8 items-center justify-center rounded-xl transition-all ${
           tool === 'ANCHOR'
             ? 'bg-violet-500 text-white shadow-md shadow-violet-500/30'
-            : 'hover:bg-violet-100 dark:hover:bg-violet-900/30 hover:text-violet-600 dark:hover:text-violet-300'
+            : `${TB_CARD} hover:bg-violet-100 dark:hover:bg-violet-900/30 hover:text-violet-600 dark:hover:text-violet-300`
         }`}
         style={tool !== 'ANCHOR' ? { color: 'var(--text2)' } : {}}>
         <Pin size={16} />
