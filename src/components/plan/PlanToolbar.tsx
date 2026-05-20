@@ -64,16 +64,17 @@ export const PlanToolbar = ({
         <PenTool size={16} />
       </Button>
     </ToolTooltip>
+    <WallThicknessControl wallThickness={wallThickness} onChange={onWallThicknessChange} />
+
+    <div className="mx-auto h-px w-6" style={{ background: 'var(--bdr)' }} />
+
+    {/* ── Openings & zone tools ── */}
     <ToolTooltip {...TOOL_TOOLTIPS.DOOR}>
       <Button variant={tool === 'DOOR' ? 'active' : 'tool'} size="icon" className="h-8 w-8"
         onClick={() => onChangeTool('DOOR')}>
         <DoorOpen size={16} />
       </Button>
     </ToolTooltip>
-
-    <div className="mx-auto h-px w-6" style={{ background: 'var(--bdr)' }} />
-
-    {/* ── Zone tools ── */}
     <ToolTooltip {...TOOL_TOOLTIPS.PARTITION}>
       <button type="button" onClick={() => onChangeTool('PARTITION')}
         className={`flex h-8 w-8 items-center justify-center rounded-xl transition-all ${
@@ -186,8 +187,6 @@ export const PlanToolbar = ({
       </Button>
     </ToolTooltip>
 
-    <div className="mx-auto h-px w-6" style={{ background: 'var(--bdr)' }} />
-    <WallThicknessControl wallThickness={wallThickness} onChange={onWallThicknessChange} />
 
   </div>
 );
