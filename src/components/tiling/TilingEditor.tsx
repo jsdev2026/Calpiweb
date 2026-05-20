@@ -74,7 +74,7 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
 
   const handleTilingTouchEnd = () => { tilingTouchRef.current = null; };
 
-  const result = useMemo(() => analyzeQuantities(rooms, config), [rooms, config]);
+  const result = useMemo(() => analyzeQuantities(rooms, config, wallThickness), [rooms, config, wallThickness]);
 
   const validRooms = rooms.filter((r) => r.points.length >= 3);
 

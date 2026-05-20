@@ -1,7 +1,7 @@
 import type { Room } from '@/types/project';
 import type { Point } from '@/types/plan';
 import type { TilingConfig } from '@/types/tiling';
-import { getBoundingBox, rotatePoint } from '@/engine/geometry/polygon';
+import { getBoundingBox, rotatePoint, insetRoomPolygon } from '@/engine/geometry/polygon';
 import { computeTilingMultiRoom } from '@/engine/tiling/tilingEngine';
 import { ORDER_MARGIN_RATIO } from '@/constants/businessRules';
 import { buildCutTable } from './buildCutTable';
@@ -11,19 +11,20 @@ import type { QuantityResult } from './types';
 
 export type { TileEdgeSide, PieceEdges, CutRecord, CutGroup, QuantityResult } from './types';
 
-function tileSpaceRooms(rooms: Room[], angle: number, cx: number, cy: number): Point[][] {
+function tileSpaceRooms(rooms: Room[], angle: number, cx: number, cy: number, wallThickness = 0): Point[][] {
   return rooms
     .filter((r) => r.points.length >= 3)
-    .map((r) =>
-      angle !== 0
-        ? r.points.map((p) => rotatePoint(p.x, p.y, -angle, cx, cy))
-        : r.points,
-    );
+    .map((r) => {
+      const inset = insetRoomPolygon(r, wallThickness);
+      return angle !== 0
+        ? inset.map((p) => rotatePoint(p.x, p.y, -angle, cx, cy))
+        : inset;
+    });
 }
 
-export function analyzeQuantities(rooms: Room[], config: TilingConfig): QuantityResult {
+export function analyzeQuantities(rooms: Room[], config: TilingConfig, wallThickness = 0): QuantityResult {
   const validRooms = rooms.filter((r) => r.points.length >= 3);
-  const { tiles, stats } = computeTilingMultiRoom(rooms, config);
+  const { tiles, stats } = computeTilingMultiRoom(rooms, config, wallThickness);
 
   if (validRooms.length === 0 || !stats) {
     return {
@@ -39,7 +40,7 @@ export function analyzeQuantities(rooms: Room[], config: TilingConfig): Quantity
   const cx = (bbox.minX + bbox.maxX) / 2;
   const cy = (bbox.minY + bbox.maxY) / 2;
 
-  const roomPolygons = tileSpaceRooms(validRooms, config.angle, cx, cy);
+  const roomPolygons = tileSpaceRooms(validRooms, config.angle, cx, cy, wallThickness);
   const roomIds = validRooms.map((r) => r.id);
 
   const cuts = buildCutTable(tiles, roomPolygons, roomIds);

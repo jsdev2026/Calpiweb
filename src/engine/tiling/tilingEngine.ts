@@ -1,7 +1,7 @@
 import type { Point } from '@/types/plan';
 import type { EdgeType, ExcludedZone, Partition, Room } from '@/types/project';
 import type { Tile, TileType, TilingConfig, TilingResult } from '@/types/tiling';
-import { getBoundingBox, distance, rotatePoint, getPolygonArea, pointInPolygon, getIntersection } from '@/engine/geometry/polygon';
+import { getBoundingBox, distance, rotatePoint, getPolygonArea, pointInPolygon, getIntersection, insetRoomPolygon } from '@/engine/geometry/polygon';
 import { classifyTile, classifyPolygonTile } from '@/engine/geometry/clipping';
 import { computeStats } from './cutCalculator';
 
@@ -267,11 +267,11 @@ export const computeTiling = (
   return { tiles: filtered, stats: computeStats(filtered, netArea, width, height) };
 };
 
-export const computeTilingMultiRoom = (rooms: Room[], config: TilingConfig): TilingResult => {
+export const computeTilingMultiRoom = (rooms: Room[], config: TilingConfig, wallThickness = 0): TilingResult => {
   const valid = rooms.filter((r) => r.points.length >= 3);
   if (valid.length === 0) return { tiles: [], stats: null };
   if (valid.length === 1) return computeTiling(
-    valid[0]!.points, config, valid[0]!.edges, valid[0]!.excludedZones, valid[0]!.partitions,
+    insetRoomPolygon(valid[0]!, wallThickness), config, valid[0]!.edges, valid[0]!.excludedZones, valid[0]!.partitions,
   );
 
   const { width, height, stagger, angle, layout, joint, offsetX, offsetY } = config;
@@ -286,13 +286,16 @@ export const computeTilingMultiRoom = (rooms: Room[], config: TilingConfig): Til
     if (d > maxRadius) maxRadius = d;
   }
 
-  const testRooms = valid.map((r) => ({
-    testPoints:
-      angle !== 0
-        ? r.points.map((p) => rotatePoint(p.x, p.y, -angle, centerX, centerY))
-        : r.points,
-    edges: r.edges,
-  }));
+  const testRooms = valid.map((r) => {
+    const inset = insetRoomPolygon(r, wallThickness);
+    return {
+      testPoints:
+        angle !== 0
+          ? inset.map((p) => rotatePoint(p.x, p.y, -angle, centerX, centerY))
+          : inset,
+      edges: r.edges,
+    };
+  });
 
   const tiles: Tile[] = [];
 

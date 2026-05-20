@@ -117,4 +117,17 @@ describe('quantityEngine — scénarios de référence', () => {
     expect(result.toOrder).toBe(8);
     expect(result.cutGroups.length).toBeGreaterThanOrEqual(2);
   });
+
+  it('S-WT: wall thickness inset reduces tile count (300×300 room, 100mm walls)', () => {
+    // Without inset: center-anchored 4×4 = 16 whole tiles in 300×300 room with 100mm tiles
+    const room = makeRoom(300, 300);
+    const config = { ...BASE_CONFIG, width: 100, height: 100, joint: 0 };
+    const resultNoWall = analyzeQuantities([room], config, 0);
+    expect(resultNoWall.wholeCount).toBe(16);
+
+    // With 100mm walls (50mm inset per side): effective interior is 200×200
+    // Grid realigns to inset bbox, producing fewer whole tiles
+    const resultWithWall = analyzeQuantities([room], config, 100);
+    expect(resultWithWall.wholeCount).toBeLessThan(16);
+  });
 });
