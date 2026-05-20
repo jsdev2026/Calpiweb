@@ -1,7 +1,7 @@
 'use client';
 
 import type { MouseEvent } from 'react';
-import type { TilingDimension } from '@/types/tilingDimension';
+import type { TilingDimension, DimDirection } from '@/types/tilingDimension';
 import type { Point } from '@/types/plan';
 import type { SnapResult } from '@/engine/tiling/snapTiling';
 import type { DimPreview } from '@/hooks/useTilingDimension';
@@ -26,7 +26,7 @@ interface ProjectedDim {
 function projectDim(
   p1: Point,
   p2: Point,
-  direction: string,
+  direction: DimDirection,
   parallelAngle: number | undefined,
   perpOffset: number,
 ): ProjectedDim {
@@ -50,7 +50,7 @@ function projectDim(
 }
 
 function hasLength(pd: ProjectedDim): boolean {
-  return Math.abs(pd.x2 - pd.x1) + Math.abs(pd.y2 - pd.y1) >= 10;
+  return Math.hypot(pd.x2 - pd.x1, pd.y2 - pd.y1) >= 10;
 }
 
 export const TilingDimensionLayer = ({

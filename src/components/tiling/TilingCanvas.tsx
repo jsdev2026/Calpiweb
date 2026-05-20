@@ -59,6 +59,7 @@ export const TilingCanvas = ({
       onPointerUp={onPointerUp}
       onPointerLeave={onPointerUp}
       onClick={onClick}
+      onContextMenu={(e) => { if (activeTool === 'dimension') e.preventDefault(); }}
     >
       <g transform={`translate(${pan.x}, ${pan.y}) scale(${scale})`}>
         <defs>

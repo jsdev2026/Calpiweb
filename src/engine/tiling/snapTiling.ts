@@ -52,6 +52,9 @@ export function snapToTiling(
   }
 
   // Priority 3: tile-corner (four corners of tile.rect)
+  // NOTE: tile.rect is in pre-rotation grid space. Snapping is only accurate
+  // for STRAIGHT layout at angle=0. For other layouts/angles, snap targets may
+  // differ from the rendered tile positions.
   for (const tile of tiles) {
     const { x, y, w, h } = tile.rect;
     for (const pt of [
