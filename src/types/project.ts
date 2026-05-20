@@ -1,5 +1,8 @@
 import type { Point } from './plan';
 import type { TilingConfig } from './tiling';
+import type { TilingDimension } from './tilingDimension';
+
+export type { TilingDimension };
 
 export type EdgeType = 'WALL' | 'DOOR';
 
@@ -82,4 +85,5 @@ export interface Project {
   wallThickness: number;
   constraints: Constraint[];
   notes: ProjectNote[];
+  tilingDimensions?: TilingDimension[];
 }

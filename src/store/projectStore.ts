@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Project, Room, EdgeType, ProjectStatus, ClientInfo, Constraint, ProjectNote, Partition, ExcludedZone } from '@/types/project';
+import type { Project, Room, EdgeType, ProjectStatus, ClientInfo, Constraint, ProjectNote, Partition, ExcludedZone, TilingDimension } from '@/types/project';
 import type { Plan, Point } from '@/types/plan';
 import type { TilingConfig } from '@/types/tiling';
 import { supabaseDb } from '@/lib/supabase/db';
@@ -51,6 +51,7 @@ function migrateProject(raw: unknown): Project {
     constraints: (p.constraints as Constraint[] | undefined) ?? [],
     description: p.description as string | undefined,
     notes: (p.notes as ProjectNote[] | undefined) ?? [],
+    tilingDimensions: p.tilingDimensions as TilingDimension[] | undefined,
   };
 }
 
@@ -103,6 +104,10 @@ interface ProjectState {
   updateExcludedZonePoints: (roomId: string, zoneId: string, points: Point[]) => void;
 
   clearPartitionsAndZones: (roomId: string) => void;
+
+  // Tiling dimension actions
+  addTilingDimension: (dim: TilingDimension) => void;
+  removeTilingDimension: (id: string) => void;
 }
 
 const sortByUpdatedDesc = (a: Project, b: Project) => b.updatedAt - a.updatedAt;
@@ -349,6 +354,16 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       };
     });
   },
+
+  addTilingDimension: (dim) => get().updateActive((p) => ({
+    ...p,
+    tilingDimensions: [...(p.tilingDimensions ?? []), dim],
+  })),
+
+  removeTilingDimension: (id) => get().updateActive((p) => ({
+    ...p,
+    tilingDimensions: (p.tilingDimensions ?? []).filter((d) => d.id !== id),
+  })),
 }));
 
 export const selectActiveProject = (state: ProjectState): Project | null =>
