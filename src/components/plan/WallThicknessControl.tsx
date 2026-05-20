@@ -14,22 +14,24 @@ export const WallThicknessControl = ({ wallThickness, onChange }: WallThicknessC
   };
 
   return (
-    <div className="flex items-center gap-1 px-0.5">
+    <div className="flex flex-col items-center gap-0.5 px-0.5 py-0.5">
       <span className="text-[9px] font-black uppercase tracking-[0.15em]" style={{ color: 'var(--muted)' }}>
         ép.
       </span>
-      <input
-        key={wallThickness}
-        type="number"
-        step="0.5"
-        min="5"
-        defaultValue={defaultCm}
-        onBlur={(e) => commit(e.target.value)}
-        onKeyDown={(e) => e.key === 'Enter' && commit((e.target as HTMLInputElement).value)}
-        className="w-10 rounded-md bg-zinc-100 dark:bg-zinc-800 px-1 py-0.5 text-center text-[10px] font-bold outline-none"
-        style={{ color: 'var(--text1)' }}
-      />
-      <span className="text-[9px] font-semibold" style={{ color: 'var(--muted)' }}>cm</span>
+      <div className="flex items-center gap-0.5">
+        <input
+          key={wallThickness}
+          type="number"
+          step="0.5"
+          min="5"
+          defaultValue={defaultCm}
+          onBlur={(e) => commit(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && commit((e.target as HTMLInputElement).value)}
+          className="w-10 rounded-md bg-zinc-100 dark:bg-zinc-800 px-1 py-0.5 text-center text-[10px] font-bold outline-none"
+          style={{ color: 'var(--text1)' }}
+        />
+        <span className="text-[9px] font-semibold" style={{ color: 'var(--muted)' }}>cm</span>
+      </div>
     </div>
   );
 };
