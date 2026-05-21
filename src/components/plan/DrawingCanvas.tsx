@@ -406,10 +406,15 @@ export const DrawingCanvas = ({
                 const dirIcon = hasH ? 'H ' : hasV ? 'V ' : '';
                 const hOffset = hDistC ? constraintInteriorOffset(hDistC, room, wallThickness) : 0;
                 const vOffset = vDistC ? constraintInteriorOffset(vDistC, room, wallThickness) : 0;
+                const fallbackType = Math.abs(dxE) >= Math.abs(dyE) ? 'H_DISTANCE' : 'V_DISTANCE';
+                const fallbackOffset = constraintInteriorOffset(
+                  { id: '', type: fallbackType, pts: [{ roomId: room.id, vertexIdx: i }, { roomId: room.id, vertexIdx: (i + 1) % pts.length }] },
+                  room, wallThickness,
+                );
                 const dimVal = hDistC && typeof hDistC.value === 'number' ? formatCm(hDistC.value - hOffset)
                   : vDistC && typeof vDistC.value === 'number' ? formatCm(vDistC.value - vOffset)
                   : lenC && typeof lenC.value === 'number' ? formatCm(lenC.value)
-                  : formatCm(edgeLen);
+                  : formatCm(edgeLen - fallbackOffset);
                 const thickPart = thickOverride !== undefined ? ` E:${Math.round(thickOverride / 10)}` : '';
                 const mainLabel = `${dirIcon}${dimVal}${thickPart}`;
                 const showLabel = screenLen > 65 || isHov;
