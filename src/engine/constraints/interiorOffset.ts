@@ -44,8 +44,6 @@ export function constraintInteriorOffset(
   }
   const [p1ref, p2ref] = [constraint.pts[0]!, constraint.pts[1]!];
   if (p1ref.roomId !== p2ref.roomId) return 0;
-  if (room.id !== p1ref.roomId) return 0;
-  // H_DISTANCE is bounded by vertical walls; V_DISTANCE by horizontal ones.
   const preferVertical = constraint.type === 'H_DISTANCE';
   return (
     halfThicknessAt(p1ref.vertexIdx, room, defaultThickness, preferVertical) +
