@@ -29,6 +29,11 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
   const [isDragging, setIsDragging] = useState(false);
   const [activeTool, setActiveTool] = useState<'pan' | 'dimension'>('pan');
   const [mobileTab, setMobileTab] = useState<'apercu' | 'reglages'>('apercu');
+  const [dimDrag, setDimDrag] = useState<{
+    id: string; nx: number; ny: number;
+    startPerp: number; startMX: number; startMY: number;
+  } | null>(null);
+  const [livePerpOverride, setLivePerpOverride] = useState<{ id: string; perpOffset: number } | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const tilingTouchRef = useRef<{ dist: number; midX: number; midY: number; panX: number; panY: number } | null>(null);
 
@@ -81,18 +86,9 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
   const result = useMemo(() => analyzeQuantities(rooms, config, wallThickness), [rooms, config, wallThickness]);
 
   const dimensions = useProjectStore((s) => selectActiveProject(s)?.tilingDimensions ?? []);
+  const updateTilingDimensionPerpOffset = useProjectStore((s) => s.updateTilingDimensionPerpOffset);
 
   const dimHook = useTilingDimension(rooms, result.tiles, wallThickness, scale, activeTool === 'dimension');
-
-  const dimensionLayer = (
-    <TilingDimensionLayer
-      activeTool={activeTool}
-      dimensions={dimensions}
-      hoverSnap={dimHook.hoverSnap}
-      preview={dimHook.preview}
-      onContextMenu={dimHook.onContextMenu}
-    />
-  );
 
   const validRooms = rooms.filter((r) => r.points.length >= 3);
 
@@ -146,12 +142,32 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
     return { x: (e.clientX - rect.left - pan.x) / scale, y: (e.clientY - rect.top - pan.y) / scale };
   };
 
+  const handleDimDragStart = (
+    id: string, nx: number, ny: number, startPerp: number,
+    e: React.PointerEvent<SVGGElement>,
+  ) => {
+    e.preventDefault();
+    svgRef.current?.setPointerCapture(e.pointerId);
+    const world = toWorld(e);
+    if (!world) return;
+    setDimDrag({ id, nx, ny, startPerp, startMX: world.x, startMY: world.y });
+    setLivePerpOverride({ id, perpOffset: startPerp });
+  };
+
   const handlePointerDown = (e: ReactPointerEvent<SVGSVGElement>) => {
     if (activeTool === 'dimension') return;
     if (e.button === 0) setIsDragging(true);
   };
 
   const handlePointerMove = (e: ReactPointerEvent<SVGSVGElement>) => {
+    if (dimDrag) {
+      const world = toWorld(e);
+      if (!world) return;
+      const delta = (world.x - dimDrag.startMX) * dimDrag.nx
+                  + (world.y - dimDrag.startMY) * dimDrag.ny;
+      setLivePerpOverride({ id: dimDrag.id, perpOffset: dimDrag.startPerp + delta });
+      return;
+    }
     if (activeTool === 'dimension') {
       const pt = toWorld(e);
       if (pt) dimHook.onPointerMove(pt);
@@ -161,6 +177,14 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
   };
 
   const handlePointerUp = () => {
+    if (dimDrag) {
+      if (livePerpOverride) {
+        updateTilingDimensionPerpOffset(dimDrag.id, livePerpOverride.perpOffset);
+      }
+      setDimDrag(null);
+      setLivePerpOverride(null);
+      return;
+    }
     if (activeTool === 'dimension') return;
     setIsDragging(false);
   };
@@ -170,6 +194,19 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
     const pt = toWorld(e);
     if (pt) dimHook.onClick(pt, e.ctrlKey);
   };
+
+  const dimensionLayer = (
+    <TilingDimensionLayer
+      activeTool={activeTool}
+      dimensions={dimensions}
+      hoverSnap={dimHook.hoverSnap}
+      preview={dimHook.preview}
+      scale={scale}
+      livePerpOverride={livePerpOverride}
+      onContextMenu={dimHook.onContextMenu}
+      onDimDragStart={handleDimDragStart}
+    />
+  );
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden dark:bg-zinc-950 bg-gray-100 md:flex-row">
