@@ -404,10 +404,10 @@ export const DrawingCanvas = ({
                 const hasDirC = hasH || hasV;
                 const textColor = hasDistC ? '#22c55e' : hasDirC ? '#60a5fa' : isDoor ? '#f97316' : 'var(--canvas-label-text)';
                 const dirIcon = hasH ? 'H ' : hasV ? 'V ' : '';
-                const hvC = hDistC ?? vDistC;
-                const hvOffset = hvC ? constraintInteriorOffset(hvC, room, wallThickness) : 0;
-                const dimVal = hDistC && typeof hDistC.value === 'number' ? formatCm(hDistC.value - hvOffset)
-                  : vDistC && typeof vDistC.value === 'number' ? formatCm(vDistC.value - hvOffset)
+                const hOffset = hDistC ? constraintInteriorOffset(hDistC, room, wallThickness) : 0;
+                const vOffset = vDistC ? constraintInteriorOffset(vDistC, room, wallThickness) : 0;
+                const dimVal = hDistC && typeof hDistC.value === 'number' ? formatCm(hDistC.value - hOffset)
+                  : vDistC && typeof vDistC.value === 'number' ? formatCm(vDistC.value - vOffset)
                   : lenC && typeof lenC.value === 'number' ? formatCm(lenC.value)
                   : formatCm(edgeLen);
                 const thickPart = thickOverride !== undefined ? ` E:${Math.round(thickOverride / 10)}` : '';
