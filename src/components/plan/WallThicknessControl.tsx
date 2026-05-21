@@ -29,6 +29,7 @@ export const WallThicknessControl = ({ wallThickness, onChange }: WallThicknessC
         className="h-8 w-8 rounded-xl text-center text-[11px] font-bold outline-none transition-colors bg-gray-50 border border-gray-200 dark:bg-zinc-900 dark:border-zinc-800 hover:bg-gray-100 dark:hover:bg-zinc-800"
         style={{ color: 'var(--text2)' }}
       />
+      <span className="text-[9px] font-semibold" style={{ color: 'var(--muted)' }}>cm</span>
     </div>
   );
 };

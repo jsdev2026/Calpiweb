@@ -66,7 +66,6 @@ export const PlanToolbar = ({
         <PenTool size={16} />
       </Button>
     </ToolTooltip>
-    <WallThicknessControl wallThickness={wallThickness} onChange={onWallThicknessChange} />
 
     <div className="mx-auto h-px w-6" style={{ background: 'var(--bdr)' }} />
 
@@ -189,6 +188,8 @@ export const PlanToolbar = ({
       </Button>
     </ToolTooltip>
 
+    <div className="mx-auto h-px w-6" style={{ background: 'var(--bdr)' }} />
+    <WallThicknessControl wallThickness={wallThickness} onChange={onWallThicknessChange} />
 
   </div>
 );
