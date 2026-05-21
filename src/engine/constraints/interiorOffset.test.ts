@@ -44,4 +44,36 @@ describe('constraintInteriorOffset', () => {
     const c: Constraint = { id: 'c', type: 'H_DISTANCE', pts: [{ roomId: 'r1', vertexIdx: 0 }, { roomId: 'r1', vertexIdx: 1 }] };
     expect(constraintInteriorOffset(c, roomOverride, DEFAULT_T)).toBe(175); // 100 + 75
   });
+
+  it('returns 0 for constraint.pts with fewer than 2 points', () => {
+    const c: Constraint = { id: 'c', type: 'H_DISTANCE', pts: [{ roomId: 'r1', vertexIdx: 0 }] };
+    expect(constraintInteriorOffset(c, room, DEFAULT_T)).toBe(0);
+  });
+
+  it('returns 0 for diagonal edge (score < 0.5 threshold)', () => {
+    // Create a nearly-horizontal rectangle where all adjacent edges have score < 0.5
+    // For H_DISTANCE with preferVerticalEdge=true, score = ady/total
+    // We need both edges at each vertex to have ady < 0.5*total (i.e., more horizontal than vertical)
+    const almostHorizontalRoom: Room = {
+      id: 'r1',
+      points: [{ x: 0, y: 0 }, { x: 10000, y: 1 }, { x: 10001, y: 1 }, { x: 1, y: 0 }],
+      edges: ['WALL', 'WALL', 'WALL', 'WALL'],
+    };
+    // At vertex 0:
+    //   edge3 (1,0)→(0,0): ady=0, adx=1, score_v=0/1=0 - FAILS
+    //   edge0 (0,0)→(10000,1): ady=1, adx=10000, score_v=1/10001≈0.0001 - FAILS
+    //   Best score = 0 < 0.5 ✓
+    // At vertex 1:
+    //   edge0 (0,0)→(10000,1): score_v≈0.0001 - FAILS
+    //   edge1 (10000,1)→(10001,1): ady=0, adx=1, score_v=0 - FAILS
+    //   Best score = 0 < 0.5 ✓
+    const c: Constraint = { id: 'c', type: 'H_DISTANCE', pts: [{ roomId: 'r1', vertexIdx: 0 }, { roomId: 'r1', vertexIdx: 1 }] };
+    expect(constraintInteriorOffset(c, almostHorizontalRoom, DEFAULT_T)).toBe(0);
+  });
+
+  it('returns 0 when room.id does not match constraint roomId', () => {
+    const wrongRoom: Room = { ...room, id: 'r_other' };
+    const c: Constraint = { id: 'c', type: 'H_DISTANCE', pts: [{ roomId: 'r1', vertexIdx: 0 }, { roomId: 'r1', vertexIdx: 1 }] };
+    expect(constraintInteriorOffset(c, wrongRoom, DEFAULT_T)).toBe(0);
+  });
 });

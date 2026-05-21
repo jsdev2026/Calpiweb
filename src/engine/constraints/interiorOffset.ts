@@ -4,7 +4,7 @@ function halfThicknessAt(
   nodeIdx: number,
   room: Room,
   defaultThickness: number,
-  preferVertical: boolean,
+  preferVerticalEdge: boolean,
 ): number {
   const n = room.points.length;
   const edgeIndices = [(nodeIdx - 1 + n) % n, nodeIdx];
@@ -19,7 +19,7 @@ function halfThicknessAt(
     const ady = Math.abs(p2.y - p1.y);
     const total = adx + ady;
     if (total < 0.001) continue;
-    const score = preferVertical ? ady / total : adx / total;
+    const score = preferVerticalEdge ? ady / total : adx / total;
     if (score > bestScore) {
       bestScore = score;
       bestEdge = eIdx;
@@ -44,9 +44,11 @@ export function constraintInteriorOffset(
   }
   const [p1ref, p2ref] = [constraint.pts[0]!, constraint.pts[1]!];
   if (p1ref.roomId !== p2ref.roomId) return 0;
-  const preferVertical = constraint.type === 'H_DISTANCE';
+  if (p1ref.roomId !== room.id) return 0;
+  // H_DISTANCE span is horizontal, so the bounding walls are vertical edges
+  const preferVerticalEdge = constraint.type === 'H_DISTANCE';
   return (
-    halfThicknessAt(p1ref.vertexIdx, room, defaultThickness, preferVertical) +
-    halfThicknessAt(p2ref.vertexIdx, room, defaultThickness, preferVertical)
+    halfThicknessAt(p1ref.vertexIdx, room, defaultThickness, preferVerticalEdge) +
+    halfThicknessAt(p2ref.vertexIdx, room, defaultThickness, preferVerticalEdge)
   );
 }
