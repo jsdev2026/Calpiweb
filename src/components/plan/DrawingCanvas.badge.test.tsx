@@ -16,5 +16,5 @@ it('badge label for H_DISTANCE 3100mm with 100mm walls shows 300cm interior', ()
   };
   const offset = constraintInteriorOffset(c, room, 100);
   expect(offset).toBe(100);
-  expect((c.value as number) - offset).toBe(3000); // 300 cm
+  expect(c.value as number - offset).toBe(3000); // 300 cm
 });
