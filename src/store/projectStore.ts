@@ -108,6 +108,7 @@ interface ProjectState {
   // Tiling dimension actions
   addTilingDimension: (dim: TilingDimension) => void;
   removeTilingDimension: (id: string) => void;
+  updateTilingDimensionPerpOffset: (id: string, perpOffset: number) => void;
 }
 
 const sortByUpdatedDesc = (a: Project, b: Project) => b.updatedAt - a.updatedAt;
@@ -363,6 +364,13 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   removeTilingDimension: (id) => get().updateActive((p) => ({
     ...p,
     tilingDimensions: (p.tilingDimensions ?? []).filter((d) => d.id !== id),
+  })),
+
+  updateTilingDimensionPerpOffset: (id, perpOffset) => get().updateActive((p) => ({
+    ...p,
+    tilingDimensions: (p.tilingDimensions ?? []).map((d) =>
+      d.id === id ? { ...d, perpOffset } : d,
+    ),
   })),
 }));
 
