@@ -146,8 +146,9 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
     id: string, nx: number, ny: number, startPerp: number,
     e: React.PointerEvent<SVGGElement>,
   ) => {
+    if (!svgRef.current) return;
     e.preventDefault();
-    svgRef.current?.setPointerCapture(e.pointerId);
+    svgRef.current.setPointerCapture(e.pointerId);
     const world = toWorld(e);
     if (!world) return;
     setDimDrag({ id, nx, ny, startPerp, startMX: world.x, startMY: world.y });
