@@ -63,7 +63,7 @@ describe('CutGroupCard', () => {
   });
 
   it('shows chute when chuteW and chuteH are both > 20', () => {
-    render(<CutGroupCard {...defaultProps} group={makeGroup({ chuteW: 150, chuteH: 300 })} />);
+    render(<CutGroupCard {...defaultProps} />);
     expect(screen.getByText('Chute 15.0 cm×30.0 cm')).toBeDefined();
   });
 
