@@ -85,8 +85,12 @@ export const QuantityPlanView = ({ result, config, rooms, highlightGroup }: Quan
 
                 const isHighlighted = highlightGroup !== null && !isWhole && groupNumber === highlightGroup;
 
-                const fill = isWhole ? config.color : isReused ? '#052e16' : '#1e293b';
-                const fillOpacity = isWhole ? 0.7 : 1;
+                const fill = isWhole
+                  ? config.color
+                  : isReused && groupColor
+                    ? groupColor
+                    : 'var(--tile-cut-bg)';
+                const fillOpacity = isWhole ? 0.7 : isReused ? 0.28 : 1;
 
                 return (
                   <g
@@ -121,7 +125,7 @@ export const QuantityPlanView = ({ result, config, rooms, highlightGroup }: Quan
                           fontSize={labelSize}
                           fontWeight="600"
                           fontFamily="system-ui, -apple-system, sans-serif"
-                          fill={isReused ? '#4ade80' : (groupColor ?? '#a1a1aa')}
+                          fill={groupColor ?? '#a1a1aa'}
                         >
                           {isReused ? '↩' : groupInfo.index + 1}
                         </text>
