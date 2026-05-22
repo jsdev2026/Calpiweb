@@ -287,6 +287,8 @@ export const QuantitiesPanel = () => {
 
   const tileLabel = `${formatCm(result.tileW)} × ${formatCm(result.tileH)}`;
   const color = project?.config.color ?? '#93c5fd';
+  const totalCutArea = result.cuts.reduce((sum, c) => sum + c.usedW * c.usedH, 0);
+  const reuseArea = result.cuts.filter((c) => c.coveredById !== null).reduce((sum, c) => sum + c.usedW * c.usedH, 0);
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden dark:bg-zinc-950 bg-gray-50">
@@ -313,13 +315,13 @@ export const QuantitiesPanel = () => {
           <StatCard
             label="Coupes nécessaires"
             value={result.cuts.length}
-            sub={`${result.cutGroups.length} format${result.cutGroups.length > 1 ? 's' : ''} distinct${result.cutGroups.length > 1 ? 's' : ''}`}
+            sub={`${result.cutGroups.length} format${result.cutGroups.length > 1 ? 's' : ''} distinct${result.cutGroups.length > 1 ? 's' : ''} · ${formatM2(totalCutArea)}`}
             accent="zinc"
           />
           <StatCard
             label="Chutes réutilisées"
             value={result.totalReuseCount}
-            sub={result.totalReuseCount > 0 ? `${result.totalReuseCount} carreau${result.totalReuseCount > 1 ? 'x' : ''} économisé${result.totalReuseCount > 1 ? 's' : ''}` : 'Aucune économie'}
+            sub={result.totalReuseCount > 0 ? `${result.totalReuseCount} carreau${result.totalReuseCount > 1 ? 'x' : ''} économisé${result.totalReuseCount > 1 ? 's' : ''} · ${formatM2(reuseArea)}` : 'Aucune économie'}
             accent={result.totalReuseCount > 0 ? 'green' : 'zinc'}
           />
           <StatCard
@@ -475,22 +477,34 @@ export const QuantitiesPanel = () => {
               <div className="mt-3 space-y-1.5 text-sm text-gray-500 dark:text-zinc-400">
                 <div className="flex justify-between gap-12">
                   <span>Carreaux entiers</span>
-                  <span className="font-mono font-bold text-gray-800 dark:text-zinc-200">{result.wholeCount}</span>
+                  <div className="text-right">
+                    <div className="font-mono font-bold text-gray-800 dark:text-zinc-200">{result.wholeCount}</div>
+                    <div className="text-[10px] opacity-60">{formatM2(result.wholeCount * result.tileW * result.tileH)}</div>
+                  </div>
                 </div>
                 <div className="flex justify-between gap-12">
                   <span>Carreaux pour coupes</span>
-                  <span className="font-mono font-bold text-gray-800 dark:text-zinc-200">{result.tilesForCuts}</span>
+                  <div className="text-right">
+                    <div className="font-mono font-bold text-gray-800 dark:text-zinc-200">{result.tilesForCuts}</div>
+                    <div className="text-[10px] opacity-60">{formatM2(result.tilesForCuts * result.tileW * result.tileH)}</div>
+                  </div>
                 </div>
                 {result.totalReuseCount > 0 && (
                   <div className="flex justify-between gap-12 text-emerald-400">
                     <span>Économies (réutilisation chutes)</span>
-                    <span className="font-mono font-bold">−{result.totalReuseCount}</span>
+                    <div className="text-right">
+                      <div className="font-mono font-bold">−{result.totalReuseCount}</div>
+                      <div className="text-[10px] opacity-60">−{formatM2(reuseArea)}</div>
+                    </div>
                   </div>
                 )}
                 <div className="my-2 border-t border-gray-200 dark:border-zinc-700" />
                 <div className="flex justify-between gap-12 text-gray-700 dark:text-zinc-300">
                   <span>Sous-total</span>
-                  <span className="font-mono font-bold">{result.totalTiles}</span>
+                  <div className="text-right">
+                    <div className="font-mono font-bold">{result.totalTiles}</div>
+                    <div className="text-[10px] opacity-60">{formatM2(result.totalTiles * result.tileW * result.tileH)}</div>
+                  </div>
                 </div>
                 <div className="flex justify-between gap-12 text-gray-400 dark:text-zinc-500">
                   <span>Marge casse / perte (+10%)</span>
@@ -505,7 +519,10 @@ export const QuantitiesPanel = () => {
               <div className="mt-1 text-xs font-bold uppercase tracking-wider text-orange-500/70">
                 carreaux à commander
               </div>
-              <div className="mt-2 text-[10px] text-zinc-500">
+              <div className="mt-0.5 text-sm font-semibold text-orange-400 opacity-70">
+                {formatM2(result.toOrder * result.tileW * result.tileH)}
+              </div>
+              <div className="mt-1 text-[10px] text-zinc-500">
                 {tileLabel}
               </div>
             </div>
