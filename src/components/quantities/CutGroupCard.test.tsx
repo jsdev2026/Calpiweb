@@ -31,7 +31,7 @@ describe('CutGroupCard', () => {
 
   it('renders cut dimensions as formatted cm', () => {
     render(<CutGroupCard {...defaultProps} />);
-    expect(screen.getByText('15.0 cm × 30.0 cm')).toBeDefined();
+    expect(screen.getByText('15.0 cm×30.0 cm')).toBeDefined();
   });
 
   it('shows reuse badge when reuseCount > 0', () => {
@@ -62,13 +62,13 @@ describe('CutGroupCard', () => {
     expect(onHighlight).toHaveBeenCalledWith(null);
   });
 
-  it('shows chute sub-line when chuteW and chuteH are both > 20', () => {
+  it('shows chute when chuteW and chuteH are both > 20', () => {
     render(<CutGroupCard {...defaultProps} group={makeGroup({ chuteW: 150, chuteH: 300 })} />);
-    expect(screen.getByText(/Chute disponible/)).toBeDefined();
+    expect(screen.getByText('Chute 15.0 cm×30.0 cm')).toBeDefined();
   });
 
-  it('hides chute sub-line when chuteW is <= 20', () => {
+  it('hides chute when chuteW is <= 20', () => {
     render(<CutGroupCard {...defaultProps} group={makeGroup({ chuteW: 20, chuteH: 300 })} />);
-    expect(screen.queryByText(/Chute disponible/)).toBeNull();
+    expect(screen.queryByText(/^Chute/)).toBeNull();
   });
 });

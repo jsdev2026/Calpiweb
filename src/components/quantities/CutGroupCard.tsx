@@ -18,7 +18,7 @@ interface ThumbnailProps {
 }
 
 const TileThumbnail = ({ tileW, tileH, usedW, usedH, pieceEdges, color, reused }: ThumbnailProps) => {
-  const maxDim = 32;
+  const maxDim = 18;
   const scale = Math.min(maxDim / tileW, maxDim / tileH);
   const tw = tileW * scale;
   const th = tileH * scale;
@@ -28,7 +28,7 @@ const TileThumbnail = ({ tileW, tileH, usedW, usedH, pieceEdges, color, reused }
   const py = th - uh;
   const cutColor = '#f97316';
   const factoryColor = '#52525b';
-  const sw = 1.5;
+  const sw = 1.2;
   const dash = '3,2';
 
   return (
@@ -67,58 +67,66 @@ export const CutGroupCard = ({
 
   return (
     <div
-      className="flex items-center gap-2.5 rounded-lg border border-gray-200 bg-white px-3 py-2 transition-colors hover:bg-gray-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800"
+      className="overflow-hidden rounded-md border border-gray-200 bg-white transition-colors hover:bg-gray-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800"
       style={{ borderLeftColor: groupColor, borderLeftWidth: 3 }}
       onMouseEnter={() => onHighlight(groupIndex + 1)}
       onMouseLeave={() => onHighlight(null)}
     >
-      {/* Badge */}
-      <span
-        className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-black"
-        style={{
-          background: `${groupColor}20`,
-          color: groupColor,
-          border: `1.5px solid ${groupColor}40`,
-        }}
-      >
-        {groupIndex + 1}
-      </span>
+      {/* Main row */}
+      <div className="flex items-center gap-1.5 px-2 py-1">
+        {/* Badge */}
+        <span
+          className="inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full text-[8px] font-black"
+          style={{
+            background: `${groupColor}20`,
+            color: groupColor,
+            border: `1.5px solid ${groupColor}40`,
+          }}
+        >
+          {groupIndex + 1}
+        </span>
 
-      {/* Thumbnail */}
-      <TileThumbnail
-        tileW={tileW}
-        tileH={tileH}
-        usedW={group.usedW}
-        usedH={group.usedH}
-        pieceEdges={group.pieceEdges}
-        color={tileColor}
-        reused={group.reuseCount > 0}
-      />
+        {/* Thumbnail */}
+        <TileThumbnail
+          tileW={tileW}
+          tileH={tileH}
+          usedW={group.usedW}
+          usedH={group.usedH}
+          pieceEdges={group.pieceEdges}
+          color={tileColor}
+          reused={group.reuseCount > 0}
+        />
 
-      {/* Info block */}
-      <div className="min-w-0 flex-1">
-        <div className="font-mono text-sm font-bold text-gray-900 dark:text-zinc-100">
-          {formatCm(group.usedW)} × {formatCm(group.usedH)}
-        </div>
-        {hasBigChute && (
-          <div className="mt-0.5 text-[11px] text-gray-400 dark:text-zinc-500">
-            Chute disponible&nbsp;: {formatCm(group.chuteW)} × {formatCm(group.chuteH)}
-          </div>
-        )}
-        {group.reuseCount > 0 && (
-          <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
-            ↩&nbsp;{group.reuseCount} taillée{group.reuseCount > 1 ? 's' : ''} dans une chute
-          </div>
-        )}
+        {/* Dimensions */}
+        <span className="shrink-0 font-mono text-[11px] font-bold text-gray-900 dark:text-zinc-100">
+          {formatCm(group.usedW)}×{formatCm(group.usedH)}
+        </span>
+
+        {/* Chute */}
+        <span className="flex-1 truncate text-[9px] text-gray-400 dark:text-zinc-500">
+          {hasBigChute ? `Chute ${formatCm(group.chuteW)}×${formatCm(group.chuteH)}` : ''}
+        </span>
+
+        {/* Nets */}
+        <span
+          className={`shrink-0 text-[11px] font-black tabular-nums ${
+            group.reuseCount > 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-gray-900 dark:text-zinc-100'
+          }`}
+        >
+          {group.netTiles}
+          <span className="text-[8px] font-normal text-gray-400 dark:text-zinc-500">&nbsp;nets</span>
+        </span>
       </div>
 
-      {/* Qty block */}
-      <div className="shrink-0 text-right">
-        <div className="text-xs text-gray-400 dark:text-zinc-500">×{group.totalCount} total</div>
-        <div className={`text-sm font-black tabular-nums ${group.reuseCount > 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-gray-900 dark:text-zinc-100'}`}>
-          {group.netTiles} nets
+      {/* Reuse micro-line — only rendered when reuseCount > 0 */}
+      {group.reuseCount > 0 && (
+        <div
+          className="border-t border-emerald-500/10 bg-emerald-500/5 py-0.5 text-[9px] font-semibold text-emerald-400"
+          style={{ paddingLeft: '3.25rem' }}
+        >
+          ↩&nbsp;{group.reuseCount} taillée{group.reuseCount > 1 ? 's' : ''} dans une chute
         </div>
-      </div>
+      )}
     </div>
   );
 };
