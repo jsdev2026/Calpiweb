@@ -67,7 +67,7 @@ export const CutGroupCard = ({
 
   return (
     <div
-      className="flex items-start gap-3 rounded-xl border border-zinc-800 bg-zinc-900 p-3 transition-colors hover:bg-zinc-800"
+      className="flex items-start gap-3 rounded-xl border border-gray-200 bg-white p-3 transition-colors hover:bg-gray-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800"
       style={{ borderLeftColor: groupColor, borderLeftWidth: 3 }}
       onMouseEnter={() => onHighlight(groupIndex + 1)}
       onMouseLeave={() => onHighlight(null)}
@@ -97,11 +97,11 @@ export const CutGroupCard = ({
 
       {/* Info block */}
       <div className="min-w-0 flex-1">
-        <div className="font-mono text-sm font-bold text-zinc-100">
+        <div className="font-mono text-sm font-bold text-gray-900 dark:text-zinc-100">
           {formatCm(group.usedW)} × {formatCm(group.usedH)}
         </div>
         {hasBigChute && (
-          <div className="mt-0.5 text-[11px] text-zinc-500">
+          <div className="mt-0.5 text-[11px] text-gray-400 dark:text-zinc-500">
             Chute disponible&nbsp;: {formatCm(group.chuteW)} × {formatCm(group.chuteH)}
           </div>
         )}
@@ -114,8 +114,8 @@ export const CutGroupCard = ({
 
       {/* Qty block */}
       <div className="shrink-0 text-right">
-        <div className="text-xs text-zinc-500">×{group.totalCount} total</div>
-        <div className={`text-sm font-black tabular-nums ${group.reuseCount > 0 ? 'text-emerald-400' : 'text-zinc-100'}`}>
+        <div className="text-xs text-gray-400 dark:text-zinc-500">×{group.totalCount} total</div>
+        <div className={`text-sm font-black tabular-nums ${group.reuseCount > 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-gray-900 dark:text-zinc-100'}`}>
           {group.netTiles} nets
         </div>
       </div>

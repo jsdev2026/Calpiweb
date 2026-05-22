@@ -62,9 +62,9 @@ describe('QuantitiesPanel', () => {
     expect(screen.getByText('Carreaux entiers')).toBeDefined();
   });
 
-  it('renders "TOTAL À COMMANDER" heading', () => {
+  it('renders "Total à commander" in the stat strip', () => {
     render(<QuantitiesPanel />);
-    expect(screen.getByText('TOTAL À COMMANDER')).toBeDefined();
+    expect(screen.getByText('Total à commander')).toBeDefined();
   });
 
   it('renders the QuantityPlanView', () => {
