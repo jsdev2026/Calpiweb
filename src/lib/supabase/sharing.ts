@@ -59,9 +59,10 @@ export const sharingDb = {
     type: 'share_added' | 'share_removed',
   ): Promise<void> {
     const supabase = createClient();
-    await supabase
+    const { error } = await supabase
       .from('project_notifications')
       .insert({ user_id: userId, project_id: projectId, type });
+    if (error) console.error('[sharingDb.addNotification]', error.message);
   },
 
   async acquireLock(projectId: string): Promise<'acquired' | 'locked_by_other'> {
@@ -95,10 +96,11 @@ export const sharingDb = {
 
   async releaseLock(projectId: string): Promise<void> {
     const supabase = createClient();
-    await supabase
+    const { error } = await supabase
       .from('project_locks')
       .delete()
       .eq('project_id', projectId);
+    if (error) console.error('[sharingDb.releaseLock]', error.message);
   },
 
   async refreshLock(projectId: string): Promise<void> {
@@ -150,9 +152,10 @@ export const sharingDb = {
 
   async markNotificationsSeen(): Promise<void> {
     const supabase = createClient();
-    await supabase
+    const { error } = await supabase
       .from('project_notifications')
       .update({ seen: true })
       .eq('seen', false);
+    if (error) console.error('[sharingDb.markNotificationsSeen]', error.message);
   },
 };
