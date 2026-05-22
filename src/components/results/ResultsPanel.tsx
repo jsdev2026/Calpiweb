@@ -41,6 +41,9 @@ export const ResultsPanel = ({ result }: ResultsPanelProps) => (
             {result.toOrder}{' '}
             <span className="text-sm font-medium opacity-60">carreaux</span>
           </div>
+          <div className="mt-1 text-sm font-semibold text-emerald-400 opacity-70">
+            {formatM2(result.toOrder * result.tileW * result.tileH)}
+          </div>
         </div>
       </div>
     ) : (

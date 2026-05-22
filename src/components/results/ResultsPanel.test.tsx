@@ -32,6 +32,12 @@ describe('ResultsPanel', () => {
     expect(screen.getByText('9.50 m²')).toBeDefined(); // surface
   });
 
+  it('shows toOrder tile surface in m²', () => {
+    render(<ResultsPanel result={makeResult()} />);
+    // toOrder=15, tileW=300, tileH=300 → 15 × 300 × 300 = 1 350 000 mm² = 1.35 m²
+    expect(screen.getByText('1.35 m²')).toBeDefined();
+  });
+
   it('shows empty state when totalTiles is 0', () => {
     render(<ResultsPanel result={makeResult({ totalTiles: 0, roomArea: 0 })} />);
     expect(screen.getByText(/Tracez une pièce/i)).toBeDefined();
