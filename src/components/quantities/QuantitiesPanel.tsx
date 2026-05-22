@@ -143,7 +143,7 @@ const QuantityPlanView = ({ result, config, rooms }: PlanViewProps) => {
             <polygon
               key={`bg-${room.id}`}
               points={room.points.map((p) => `${p.x},${p.y}`).join(' ')}
-              fill="var(--surf3)"
+              fill="var(--tile-joint)"
             />
           ))}
 
@@ -180,8 +180,6 @@ const QuantityPlanView = ({ result, config, rooms }: PlanViewProps) => {
                       height={tile.rect.h}
                       fill={fill}
                       fillOpacity={fillOpacity}
-                      stroke="var(--tile-joint)"
-                      strokeWidth={config.joint}
                     />
                     {cut && groupInfo && (
                       <>

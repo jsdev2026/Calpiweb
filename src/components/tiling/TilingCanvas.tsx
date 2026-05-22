@@ -91,7 +91,7 @@ export const TilingCanvas = ({
           <polygon
             key={`bg-${room.id}`}
             points={insetRoomPolygon(room, wallThickness).map((p) => `${p.x},${p.y}`).join(' ')}
-            fill="var(--surf3)"
+            fill="var(--tile-joint)"
           />
         ))}
 
@@ -103,8 +103,6 @@ export const TilingCanvas = ({
                   key={tile.id}
                   points={tile.points.map((p) => `${p.x},${p.y}`).join(' ')}
                   fill={tile.type === 'WHOLE' ? config.color : 'var(--tile-cut-bg)'}
-                  stroke="var(--tile-joint)"
-                  strokeWidth={config.joint}
                 />
               ) : (
                 <rect
@@ -114,8 +112,6 @@ export const TilingCanvas = ({
                   width={tile.rect.w}
                   height={tile.rect.h}
                   fill={tile.type === 'WHOLE' ? config.color : 'var(--tile-cut-bg)'}
-                  stroke="var(--tile-joint)"
-                  strokeWidth={config.joint}
                 />
               )
             )}
