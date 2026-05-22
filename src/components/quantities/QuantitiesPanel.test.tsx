@@ -71,4 +71,9 @@ describe('QuantitiesPanel', () => {
     render(<QuantitiesPanel />);
     expect(screen.getByTestId('quantity-plan-view')).toBeDefined();
   });
+
+  it('renders "Récupérées" stat box', () => {
+    render(<QuantitiesPanel />);
+    expect(screen.getByText('Récupérées')).toBeDefined();
+  });
 });

@@ -45,31 +45,41 @@ export const QuantitiesPanel = () => {
       </div>
 
       {/* Stat strip */}
-      <div className="shrink-0 border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-8 py-4">
-        <div className="grid grid-cols-3 gap-4">
+      <div className="shrink-0 border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-8 py-3">
+        <div className="grid grid-cols-4 gap-4">
           {/* Carreaux entiers */}
-          <div className="rounded-xl border-l-[3px] border-blue-500 bg-gray-50 dark:bg-zinc-800/60 px-4 py-3">
-            <div className="text-2xl font-black tabular-nums text-gray-900 dark:text-zinc-100">{result.wholeCount}</div>
+          <div className="rounded-xl border-l-[3px] border-blue-500 bg-gray-50 dark:bg-zinc-800/60 px-4 py-2">
+            <div className="text-xl font-black tabular-nums text-gray-900 dark:text-zinc-100">{result.wholeCount}</div>
             <div className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">Carreaux entiers</div>
             <div className="mt-0.5 text-[11px] text-gray-400 dark:text-zinc-500">{formatM2(result.wholeCount * result.tileW * result.tileH)}</div>
           </div>
           {/* Carreaux à couper */}
-          <div className="rounded-xl border-l-[3px] border-orange-500 bg-gray-50 dark:bg-zinc-800/60 px-4 py-3">
-            <div className="text-2xl font-black tabular-nums text-gray-900 dark:text-zinc-100">{result.cuts.length}</div>
+          <div className="rounded-xl border-l-[3px] border-orange-500 bg-gray-50 dark:bg-zinc-800/60 px-4 py-2">
+            <div className="text-xl font-black tabular-nums text-gray-900 dark:text-zinc-100">{result.cuts.length}</div>
             <div className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">Carreaux à couper</div>
             <div className="mt-0.5 text-[11px] text-gray-400 dark:text-zinc-500">{formatM2(totalCutArea)} posés</div>
           </div>
+          {/* Récupérées */}
+          <div className="rounded-xl border-l-[3px] border-emerald-500 bg-gray-50 dark:bg-zinc-800/60 px-4 py-2">
+            <div className={`text-xl font-black tabular-nums ${result.totalReuseCount > 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-gray-400 dark:text-zinc-600'}`}>
+              {result.totalReuseCount}
+            </div>
+            <div className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">Récupérées</div>
+            <div className="mt-0.5 text-[11px] text-gray-400 dark:text-zinc-500">
+              {result.totalReuseCount > 0 ? 'dans une chute' : '—'}
+            </div>
+          </div>
           {/* Total à commander */}
-          <div className="flex items-center justify-between rounded-xl border border-orange-500/20 bg-orange-500/5 px-4 py-3">
+          <div className="flex items-center justify-between rounded-xl border border-orange-500/20 bg-orange-500/5 px-4 py-2">
             <div>
               <div className="text-[10px] font-bold uppercase tracking-wider text-orange-500/80">Total à commander</div>
               <div className="mt-0.5 text-[11px] text-gray-400 dark:text-zinc-500">
-                {result.wholeCount} + {result.tilesForCuts} = {result.totalTiles} × 1.10
+                {result.wholeCount} + ({result.cuts.length}−{result.totalReuseCount}) = {result.totalTiles} × 1.10
               </div>
               <div className="text-[11px] text-orange-400/70">{formatM2(result.toOrder * result.tileW * result.tileH)}</div>
             </div>
             <div className="shrink-0 text-right">
-              <div className="text-3xl font-black tabular-nums text-orange-400">{result.toOrder}</div>
+              <div className="text-2xl font-black tabular-nums text-orange-400">{result.toOrder}</div>
               <div className="text-[10px] font-bold text-orange-500/60">carreaux</div>
             </div>
           </div>
