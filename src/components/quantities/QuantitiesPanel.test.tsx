@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 
 vi.mock('@/store/projectStore', () => ({
@@ -75,5 +75,15 @@ describe('QuantitiesPanel', () => {
   it('renders "Récupérées" stat box', () => {
     render(<QuantitiesPanel />);
     expect(screen.getByText('Récupérées')).toBeDefined();
+  });
+
+  it('hides and shows the cut groups sidebar', () => {
+    render(<QuantitiesPanel />);
+    const closeBtn = screen.getByLabelText('Masquer le panneau');
+    fireEvent.click(closeBtn);
+    expect(screen.queryByText('Groupes de coupes')).toBeNull();
+    const openBtn = screen.getByLabelText('Afficher le panneau');
+    fireEvent.click(openBtn);
+    expect(screen.getByText('Groupes de coupes')).toBeDefined();
   });
 });

@@ -10,6 +10,7 @@ import { CutGroupCard, GROUP_COLORS } from './CutGroupCard';
 export const QuantitiesPanel = () => {
   const project = useProjectStore(selectActiveProject);
   const [highlightGroup, setHighlightGroup] = useState<number | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const result = useMemo(() => {
     if (!project) return null;
@@ -102,31 +103,50 @@ export const QuantitiesPanel = () => {
         </div>
 
         {/* Right — cut groups */}
-        <div className="flex w-[360px] shrink-0 flex-col gap-4 overflow-y-auto p-5">
-          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 dark:text-zinc-500">
-            Groupes de coupes
-          </h3>
-          <div className="flex flex-col gap-2">
-            {result.cutGroups.map((group, i) => (
-              <CutGroupCard
-                key={`${group.usedW}×${group.usedH}|${group.pieceEdges.left}|${group.pieceEdges.right}|${group.pieceEdges.top}|${group.pieceEdges.bottom}`}
-                group={group}
-                groupIndex={i}
-                groupColor={GROUP_COLORS[i % GROUP_COLORS.length]!}
-                tileW={result.tileW}
-                tileH={result.tileH}
-                tileColor={color}
-                onHighlight={setHighlightGroup}
-              />
-            ))}
+        {sidebarOpen ? (
+          <div className="flex w-[360px] shrink-0 flex-col gap-4 overflow-y-auto p-5">
+            <div className="flex items-center justify-between">
+              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 dark:text-zinc-500">
+                Groupes de coupes
+              </h3>
+              <button
+                className="flex h-5 w-5 items-center justify-center rounded text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+                onClick={() => setSidebarOpen(false)}
+                aria-label="Masquer le panneau"
+              >
+                ›
+              </button>
+            </div>
+            <div className="flex flex-col gap-2">
+              {result.cutGroups.map((group, i) => (
+                <CutGroupCard
+                  key={`${group.usedW}×${group.usedH}|${group.pieceEdges.left}|${group.pieceEdges.right}|${group.pieceEdges.top}|${group.pieceEdges.bottom}`}
+                  group={group}
+                  groupIndex={i}
+                  groupColor={GROUP_COLORS[i % GROUP_COLORS.length]!}
+                  tileW={result.tileW}
+                  tileH={result.tileH}
+                  tileColor={color}
+                  onHighlight={setHighlightGroup}
+                />
+              ))}
+            </div>
+            <div className="flex items-center justify-between border-t border-gray-200 dark:border-zinc-800 pt-3 text-xs">
+              <span className="text-gray-400 dark:text-zinc-500">Carreaux nets pour coupes</span>
+              <span className="font-mono font-black text-gray-900 dark:text-zinc-100">{result.tilesForCuts} carreaux</span>
+            </div>
           </div>
-
-          {/* Net summary row */}
-          <div className="flex items-center justify-between border-t border-gray-200 dark:border-zinc-800 pt-3 text-xs">
-            <span className="text-gray-400 dark:text-zinc-500">Carreaux nets pour coupes</span>
-            <span className="font-mono font-black text-gray-900 dark:text-zinc-100">{result.tilesForCuts} carreaux</span>
+        ) : (
+          <div className="flex w-8 shrink-0 items-center justify-center border-l border-gray-200 dark:border-zinc-800">
+            <button
+              className="flex h-5 w-5 items-center justify-center rounded text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+              onClick={() => setSidebarOpen(true)}
+              aria-label="Afficher le panneau"
+            >
+              ‹
+            </button>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
