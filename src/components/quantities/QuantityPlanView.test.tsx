@@ -55,4 +55,17 @@ describe('QuantityPlanView', () => {
     );
     expect(container.querySelector('svg')).not.toBeNull();
   });
+
+  it('does not render a legend section', () => {
+    const tile = { id: 't1', type: 'WHOLE' as const, rect: { x: 0, y: 0, w: 300, h: 300 } };
+    const { queryByText } = render(
+      <QuantityPlanView
+        result={makeResult({ tiles: [tile] })}
+        config={config}
+        rooms={[room]}
+        highlightGroup={null}
+      />,
+    );
+    expect(queryByText('Carreau entier')).toBeNull();
+  });
 });

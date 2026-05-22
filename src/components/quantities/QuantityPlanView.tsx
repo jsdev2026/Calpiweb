@@ -156,35 +156,6 @@ export const QuantityPlanView = ({ result, config, rooms, highlightGroup }: Quan
           )}
         </svg>
       </div>
-
-      {/* Legend */}
-      <div className="mt-2 flex flex-wrap items-center gap-3 print:mt-3">
-        <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-zinc-400">
-          <span className="inline-block h-3 w-5 rounded-sm" style={{ background: config.color, opacity: 0.7 }} />
-          Carreau entier
-        </div>
-        {result.cutGroups.map((g, i) => (
-          <div key={`${g.usedW}×${g.usedH}|${g.pieceEdges.left}|${g.pieceEdges.right}|${g.pieceEdges.top}|${g.pieceEdges.bottom}`} className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-zinc-400">
-            <span
-              className="inline-flex h-4 w-4 items-center justify-center rounded-sm text-[9px] font-black"
-              style={{
-                background: `${GROUP_COLORS[i % GROUP_COLORS.length]}33`,
-                color: GROUP_COLORS[i % GROUP_COLORS.length],
-                border: `1.5px solid ${GROUP_COLORS[i % GROUP_COLORS.length]}55`,
-              }}
-            >
-              {i + 1}
-            </span>
-            Coupe {i + 1}
-          </div>
-        ))}
-        {result.totalReuseCount > 0 && (
-          <div className="flex items-center gap-1 text-[11px] text-gray-500 dark:text-zinc-400">
-            <span className="font-bold text-emerald-400">↩</span>
-            Taillée dans une chute
-          </div>
-        )}
-      </div>
     </div>
   );
 };
