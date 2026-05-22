@@ -307,6 +307,7 @@ export const QuantitiesPanel = () => {
           <StatCard
             label="Carreaux entiers"
             value={result.wholeCount}
+            sub={formatM2(result.wholeCount * result.tileW * result.tileH)}
             accent="zinc"
           />
           <StatCard
@@ -324,7 +325,7 @@ export const QuantitiesPanel = () => {
           <StatCard
             label="Total à commander"
             value={result.toOrder}
-            sub={`+10% marge · ${result.totalTiles} nets`}
+            sub={`+10% marge · ${result.totalTiles} nets · ${formatM2(result.toOrder * result.tileW * result.tileH)}`}
             accent="orange"
           />
         </div>
