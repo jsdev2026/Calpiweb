@@ -1,6 +1,7 @@
 import type { Point } from './plan';
 import type { TilingConfig } from './tiling';
 import type { TilingDimension } from './tilingDimension';
+import type { MyRole, ProjectLock } from './sharing';
 
 export type { TilingDimension };
 
@@ -86,4 +87,6 @@ export interface Project {
   constraints: Constraint[];
   notes: ProjectNote[];
   tilingDimensions?: TilingDimension[];
+  myRole?: MyRole;
+  lock?: ProjectLock | null;
 }
