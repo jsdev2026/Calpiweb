@@ -76,10 +76,13 @@ describe('sharingDb.addShare', () => {
 describe('sharingDb.removeShare', () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it('deletes the share row', async () => {
+  it('deletes the share row filtered by project_id and user_id', async () => {
+    mockEq.mockReturnValueOnce(mockChain);
     mockEq.mockResolvedValueOnce({ error: null });
     await sharingDb.removeShare('proj-1', 'user-2');
     expect(mockDelete).toHaveBeenCalled();
+    expect(mockEq).toHaveBeenCalledWith('project_id', 'proj-1');
+    expect(mockEq).toHaveBeenCalledWith('user_id', 'user-2');
   });
 });
 

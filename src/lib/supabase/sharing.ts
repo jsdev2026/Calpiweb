@@ -45,13 +45,12 @@ export const sharingDb = {
 
   async removeShare(projectId: string, userId: string): Promise<void> {
     const supabase = createClient();
-    // Filter by project_id; user_id scoping is enforced by RLS policies in Supabase
     const { error } = await supabase
       .from('project_shares')
       .delete()
-      .eq('project_id', projectId);
-    if (error) throw new Error(`[${(error as { code: string; message: string }).code}] ${(error as { code: string; message: string }).message}`);
-    void userId;
+      .eq('project_id', projectId)
+      .eq('user_id', userId);
+    if (error) throw new Error(`[${error.code}] ${error.message}`);
   },
 
   async addNotification(
