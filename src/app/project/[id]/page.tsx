@@ -8,6 +8,7 @@ import { TilingEditor } from '@/components/tiling/TilingEditor';
 import { QuantitiesPanel } from '@/components/quantities/QuantitiesPanel';
 import { selectActiveProject, useProjectStore } from '@/store/projectStore';
 import { useUiStore } from '@/store/uiStore';
+import { useSharingStore } from '@/store/sharingStore';
 import type { ProjectStatus } from '@/types/project';
 
 type WorkspaceTab = 'PLAN' | 'TILING' | 'QUANTITIES';
@@ -228,6 +229,13 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
   const addNote = useProjectStore((s) => s.addNote);
   const removeNote = useProjectStore((s) => s.removeNote);
 
+  const acquireLock = useSharingStore((s) => s.acquireLock);
+  const releaseLock = useSharingStore((s) => s.releaseLock);
+  const refreshLock = useSharingStore((s) => s.refreshLock);
+
+  const [lockStatus, setLockStatus] = useState<'idle' | 'acquired' | 'locked_by_other'>('idle');
+  const [lockInfo, setLockInfo] = useState<{ lockedByDisplayName: string } | null>(null);
+
   const darkMode = useUiStore((s) => s.darkMode);
   const toggleDarkMode = useUiStore((s) => s.toggleDarkMode);
   const user = useUiStore((s) => s.user);
@@ -250,6 +258,44 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
 
   useEffect(() => { void hydrate(); }, [hydrate]);
   useEffect(() => { if (hydrated) setActive(id); }, [id, hydrated, setActive]);
+
+  useEffect(() => {
+    if (!hydrated || !activeProject) return;
+    const isEditor = activeProject.myRole === 'editor' || activeProject.myRole === 'owner';
+    if (!isEditor) return;
+
+    void acquireLock(id).then((status) => {
+      setLockStatus(status);
+      if (status === 'locked_by_other' && activeProject.lock) {
+        setLockInfo({ lockedByDisplayName: activeProject.lock.lockedByDisplayName });
+      }
+    });
+
+    return () => { void releaseLock(id); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, hydrated, activeProject?.myRole]);
+
+  useEffect(() => {
+    if (lockStatus !== 'acquired') return;
+    const interval = setInterval(() => { void refreshLock(id); }, 10 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [id, lockStatus]);
+
+  useEffect(() => {
+    const handler = () => { void releaseLock(id); };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [id]);
+
+  useEffect(() => {
+    if (lockStatus !== 'locked_by_other') return;
+    const interval = setInterval(async () => {
+      const status = await acquireLock(id);
+      setLockStatus(status);
+      if (status === 'acquired') setLockInfo(null);
+    }, 60 * 1000);
+    return () => clearInterval(interval);
+  }, [id, lockStatus]);
 
   // Close user menu on outside click
   useEffect(() => {
@@ -279,6 +325,7 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
 
   const canGoTiling = activeProject.rooms.some((r) => r.points.length >= 3);
   const roomCount = activeProject.rooms.filter(r => r.points.length >= 3).length;
+  const isReadOnly = lockStatus === 'locked_by_other' || activeProject.myRole === 'viewer';
   const initials = user?.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() ?? 'CP';
   const planLabel: Record<string, string> = { free: 'Gratuit', pro: 'Pro', team: 'Équipe' };
 
@@ -312,6 +359,8 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
             type="text"
             value={activeProject.name}
             onChange={(e) => rename(activeProject.id, e.target.value)}
+            readOnly={isReadOnly}
+            disabled={isReadOnly}
             style={{
               background: 'transparent', border: 'none', outline: 'none',
               fontFamily: 'var(--font-display)', fontSize: 13.5, fontWeight: 600,
@@ -358,7 +407,7 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
           >
             <FileDown size={13} /> PDF
           </button>
-          <button type="button" className="btn-icon" aria-label="Paramètres" onClick={() => setShowSettings(true)}>
+          <button type="button" className="btn-icon" aria-label="Paramètres" onClick={() => setShowSettings(true)} disabled={isReadOnly}>
             <Settings size={14} />
           </button>
 
@@ -402,6 +451,22 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
           </div>
         </div>
       </header>
+
+      {/* Lock banner */}
+      {lockStatus === 'locked_by_other' && (
+        <div
+          className="flex items-center gap-2 border-b px-5 py-2 text-[12px]"
+          style={{ background: 'rgba(249,115,22,0.08)', borderColor: 'var(--bdr)', color: '#f97316' }}
+        >
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+            <rect x="3" y="6" width="8" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.3"/>
+            <path d="M5 6V4.5a2 2 0 1 1 4 0V6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+          </svg>
+          Édition en cours par{' '}
+          <strong>{lockInfo?.lockedByDisplayName ?? 'un autre utilisateur'}</strong>.{' '}
+          Vous êtes en lecture seule.
+        </div>
+      )}
 
       {/* Tab bar */}
       <div className="shell-tabs px-1">
