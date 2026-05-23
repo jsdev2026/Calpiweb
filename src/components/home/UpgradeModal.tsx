@@ -29,6 +29,9 @@ export function UpgradeModal({ onClose }: UpgradeModalProps) {
       onClick={onClose}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="upgrade-modal-title"
         className="relative w-full max-w-sm rounded-2xl border p-7 shadow-2xl"
         style={{ background: 'var(--surf)', borderColor: 'var(--bdr)', margin: '0 16px' }}
         onClick={(e) => e.stopPropagation()}
@@ -43,7 +46,7 @@ export function UpgradeModal({ onClose }: UpgradeModalProps) {
           ×
         </button>
 
-        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>
+        <h2 id="upgrade-modal-title" style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>
           Passez au plan Pro
         </h2>
 
@@ -67,6 +70,7 @@ export function UpgradeModal({ onClose }: UpgradeModalProps) {
         <button
           type="button"
           onClick={handleUpgrade}
+          autoFocus
           className="btn-primary w-full py-3 text-[14px] font-semibold"
           style={{ marginBottom: 12 }}
         >
