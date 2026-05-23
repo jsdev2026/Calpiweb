@@ -96,10 +96,13 @@ export const sharingDb = {
 
   async releaseLock(projectId: string): Promise<void> {
     const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
     const { error } = await supabase
       .from('project_locks')
       .delete()
-      .eq('project_id', projectId);
+      .eq('project_id', projectId)
+      .eq('locked_by', user.id);
     if (error) console.error('[sharingDb.releaseLock]', error.message);
   },
 

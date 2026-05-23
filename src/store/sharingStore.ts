@@ -31,9 +31,8 @@ export const useSharingStore = create<SharingState>((set, get) => ({
     const user = await sharingDb.findUserByEmail(email);
     if (!user) throw new Error('USER_NOT_FOUND');
 
-    const shares = await sharingDb.getShares(projectId);
-    set((s) => ({ shares: { ...s.shares, [projectId]: shares } }));
-    if (shares.some((s) => s.userId === user.id)) throw new Error('ALREADY_SHARED');
+    const existingShares = await sharingDb.getShares(projectId);
+    if (existingShares.some((s) => s.userId === user.id)) throw new Error('ALREADY_SHARED');
 
     await sharingDb.addShare(projectId, user.id, role);
     await sharingDb.addNotification(user.id, projectId, 'share_added');
