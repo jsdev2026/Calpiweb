@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { X, UserMinus } from 'lucide-react';
 import { useSharingStore } from '@/store/sharingStore';
-import type { ShareRole } from '@/types/sharing';
+import type { ProjectShare, ShareRole } from '@/types/sharing';
 
 interface SharePanelProps {
   projectId: string;
@@ -16,7 +16,12 @@ const ERROR_MESSAGES: Record<string, string> = {
 };
 
 export const SharePanel = ({ projectId, onClose }: SharePanelProps) => {
-  const { shares, shareProject, unshareProject, loadShares } = useSharingStore((s: any) => s);
+  const { shares, shareProject, unshareProject, loadShares } = useSharingStore((s) => ({
+    shares: s.shares,
+    shareProject: s.shareProject,
+    unshareProject: s.unshareProject,
+    loadShares: s.loadShares,
+  }));
   const collaborators = shares[projectId] ?? [];
 
   const [email, setEmail] = useState('');
@@ -42,7 +47,11 @@ export const SharePanel = ({ projectId, onClose }: SharePanelProps) => {
   };
 
   const handleRevoke = async (userId: string) => {
-    await unshareProject(projectId, userId);
+    try {
+      await unshareProject(projectId, userId);
+    } catch {
+      setError('Une erreur est survenue lors de la révocation.');
+    }
   };
 
   return (
@@ -100,7 +109,7 @@ export const SharePanel = ({ projectId, onClose }: SharePanelProps) => {
             </p>
           ) : (
             <div className="flex flex-col gap-2">
-              {collaborators.map((c: any) => (
+              {collaborators.map((c: ProjectShare) => (
                 <div
                   key={c.id}
                   className="flex items-center justify-between rounded-lg px-3 py-2"
