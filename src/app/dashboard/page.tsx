@@ -799,7 +799,7 @@ export default function DashboardPage() {
         />
       )}
 
-      {sharingProjectId && (
+      {sharingProjectId !== null && (
         <SharePanel
           projectId={sharingProjectId}
           onClose={() => setSharingProjectId(null)}
