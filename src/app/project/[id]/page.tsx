@@ -271,7 +271,10 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
       }
     });
 
-    return () => { void releaseLock(id); };
+    return () => {
+      void releaseLock(id);
+      setLockInfo(null);
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, hydrated, activeProject?.myRole]);
 
@@ -282,10 +285,13 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
   }, [id, lockStatus]);
 
   useEffect(() => {
+    if (!activeProject) return;
+    const isEditor = activeProject.myRole === 'editor' || activeProject.myRole === 'owner';
+    if (!isEditor) return;
     const handler = () => { void releaseLock(id); };
     window.addEventListener('beforeunload', handler);
     return () => window.removeEventListener('beforeunload', handler);
-  }, [id]);
+  }, [id, activeProject?.myRole]);
 
   useEffect(() => {
     if (lockStatus !== 'locked_by_other') return;
@@ -360,7 +366,6 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
             value={activeProject.name}
             onChange={(e) => rename(activeProject.id, e.target.value)}
             readOnly={isReadOnly}
-            disabled={isReadOnly}
             style={{
               background: 'transparent', border: 'none', outline: 'none',
               fontFamily: 'var(--font-display)', fontSize: 13.5, fontWeight: 600,
