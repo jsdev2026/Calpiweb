@@ -23,7 +23,7 @@ export const ProjectList = ({ projects, onCreate, onOpen, onDelete, onShare }: P
   const sharedProjects = projects.filter((p) => p.myRole === 'viewer' || p.myRole === 'editor');
 
   const handleOpenShared = (project: Project) => {
-    void markNotificationsSeen();
+    if (unseenCount > 0) void markNotificationsSeen();
     onOpen(project);
   };
 
