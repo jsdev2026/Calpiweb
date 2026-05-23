@@ -1,6 +1,6 @@
 import type { Project, Room, EdgeType, ProjectStatus, ClientInfo, Constraint, ProjectNote, Partition, ExcludedZone, TilingDimension } from '@/types/project';
 import type { MyRole, ShareRole } from '@/types/sharing';
-import type { Plan, Point } from '@/types/plan';
+import type { Point } from '@/types/plan';
 import type { TilingConfig } from '@/types/tiling';
 import { createClient } from './client';
 import { generateId } from '@/utils/id';
@@ -86,7 +86,7 @@ export const supabaseDb = {
     );
     const lockMap = new Map(
       (locks ?? []).map((l) => {
-        const profile = l.profiles as { display_name: string | null; email: string } | null;
+        const profile = l.profiles as unknown as { display_name: string | null; email: string } | null;
         return [l.project_id as string, {
           projectId: l.project_id as string,
           lockedBy: l.locked_by as string,

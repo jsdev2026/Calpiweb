@@ -22,7 +22,7 @@ export const sharingDb = {
       .order('created_at', { ascending: true });
     if (error) throw new Error(`[${error.code}] ${error.message}`);
     return (data ?? []).map((row) => {
-      const profile = row.profiles as { email: string; display_name: string | null } | null;
+      const profile = row.profiles as unknown as { email: string; display_name: string | null } | null;
       return {
         id: row.id as string,
         projectId: row.project_id as string,
@@ -127,7 +127,7 @@ export const sharingDb = {
       .gt('expires_at', new Date().toISOString())
       .maybeSingle();
     if (!data) return null;
-    const profile = data.profiles as { display_name: string | null; email: string } | null;
+    const profile = data.profiles as unknown as { display_name: string | null; email: string } | null;
     return {
       projectId,
       lockedBy: data.locked_by as string,
@@ -146,7 +146,7 @@ export const sharingDb = {
     return (data ?? []).map((row) => ({
       id: row.id as string,
       projectId: row.project_id as string,
-      projectName: (row.projects as { name: string } | null)?.name ?? '',
+      projectName: (row.projects as unknown as { name: string } | null)?.name ?? '',
       type: row.type as 'share_added' | 'share_removed',
       seen: row.seen as boolean,
       createdAt: row.created_at as string,

@@ -1,59 +1,11 @@
 import { create } from 'zustand';
-import type { Project, Room, EdgeType, ProjectStatus, ClientInfo, Constraint, ProjectNote, Partition, ExcludedZone, TilingDimension } from '@/types/project';
+import type { Project, Room, EdgeType, ProjectStatus, ClientInfo, Constraint, ProjectNote, TilingDimension } from '@/types/project';
 import type { Plan, Point } from '@/types/plan';
 import type { TilingConfig } from '@/types/tiling';
 import { supabaseDb } from '@/lib/supabase/db';
 import { generateId } from '@/utils/id';
 import { DEFAULT_TILING_CONFIG } from '@/constants/tileDefaults';
 import { WALL_THICKNESS_MM } from '@/constants/businessRules';
-
-function migrateProject(raw: unknown): Project {
-  const p = raw as Record<string, unknown>;
-
-  let rooms: Room[];
-  if (Array.isArray(p.rooms)) {
-    rooms = (p.rooms as Array<Record<string, unknown>>).map((r) => ({
-      id: r.id as string,
-      name: r.name as string | undefined,
-      points: (r.points as Point[]) ?? [],
-      edges: (r.edges as EdgeType[]) ?? new Array<EdgeType>(((r.points as Point[]) ?? []).length).fill('WALL'),
-      edgeThicknesses: (r.edgeThicknesses as (number | undefined)[] | undefined) ?? [],
-      partitions: ((r.partitions as Partition[] | undefined) ?? []).map((pt) => ({ ...pt, thickness: pt.thickness ?? 100 })),
-      excludedZones: (r.excludedZones as ExcludedZone[] | undefined) ?? [],
-    }));
-  } else {
-    const legacyPoints = (p.plan as Point[] | undefined) ?? [];
-    rooms = [{ id: generateId(), points: legacyPoints, edges: new Array<EdgeType>(legacyPoints.length).fill('WALL'), partitions: [], excludedZones: [] }];
-  }
-
-  const rawConfig = (p.config as TilingConfig | undefined) ?? { ...DEFAULT_TILING_CONFIG };
-  const config: TilingConfig = {
-    ...rawConfig,
-    stagger: rawConfig.stagger < 2 ? Math.round(rawConfig.stagger * 100) : rawConfig.stagger,
-    layout: rawConfig.layout ?? 'STRAIGHT',
-  };
-
-  return {
-    id: p.id as string,
-    name: p.name as string,
-    client: (() => {
-      const raw = p.client;
-      if (!raw) return undefined;
-      if (typeof raw === 'string') return raw ? { name: raw } : undefined;
-      return raw as ClientInfo;
-    })(),
-    status: (p.status as ProjectStatus | undefined) ?? 'new',
-    createdAt: p.createdAt as number,
-    updatedAt: p.updatedAt as number,
-    rooms,
-    config,
-    wallThickness: (p.wallThickness as number | undefined) ?? WALL_THICKNESS_MM,
-    constraints: (p.constraints as Constraint[] | undefined) ?? [],
-    description: p.description as string | undefined,
-    notes: (p.notes as ProjectNote[] | undefined) ?? [],
-    tilingDimensions: p.tilingDimensions as TilingDimension[] | undefined,
-  };
-}
 
 interface ProjectState {
   projects: Project[];
