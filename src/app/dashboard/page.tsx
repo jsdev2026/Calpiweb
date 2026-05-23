@@ -8,6 +8,7 @@ import { useUiStore } from '@/store/uiStore';
 import type { Project, ProjectStatus } from '@/types/project';
 import { NewProjectModal } from '@/components/NewProjectModal';
 import { SharePanel } from '@/components/home/SharePanel';
+import { UpgradeModal } from '@/components/home/UpgradeModal';
 import type { ClientInfo } from '@/types/project';
 
 const STATUS_LABELS: Record<ProjectStatus, string> = { new: 'Nouveau', wip: 'En cours', done: 'Terminé' };
@@ -465,6 +466,7 @@ export default function DashboardPage() {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [settingsProjectId, setSettingsProjectId] = useState<string | null>(null);
   const [sharingProjectId, setSharingProjectId] = useState<string | null>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
@@ -493,6 +495,14 @@ export default function DashboardPage() {
         setCreateError(msg);
         console.error('Erreur création projet:', err);
       }
+    }
+  };
+
+  const handleNewProject = () => {
+    if (user?.plan === 'free' && projects.length >= 1) {
+      setShowUpgradeModal(true);
+    } else {
+      setShowNewModal(true);
     }
   };
 
@@ -721,7 +731,7 @@ export default function DashboardPage() {
             {/* New project card — hidden on mobile (FAB is used instead) */}
             <button
               type="button"
-              onClick={() => setShowNewModal(true)}
+              onClick={handleNewProject}
               className="group hidden md:flex flex-col items-center justify-center gap-3 rounded-[var(--r)] border-2 border-dashed transition-all"
               style={{ minHeight: 200, borderColor: 'var(--bdr2)', color: 'var(--muted)', cursor: 'pointer', background: 'transparent' }}
               onMouseEnter={(e) => { const el = e.currentTarget as HTMLButtonElement; el.style.borderColor = 'var(--accent)'; el.style.background = 'var(--accent-l)'; el.style.color = 'var(--accent)'; }}
@@ -757,7 +767,7 @@ export default function DashboardPage() {
             ))}
             <button
               type="button"
-              onClick={() => setShowNewModal(true)}
+              onClick={handleNewProject}
               className="flex items-center gap-3 rounded-[var(--rs)] border-2 border-dashed px-4 py-3 transition-all"
               style={{ borderColor: 'var(--bdr2)', color: 'var(--muted)', cursor: 'pointer', background: 'transparent' }}
               onMouseEnter={(e) => { const el = e.currentTarget as HTMLButtonElement; el.style.borderColor = 'var(--accent)'; el.style.color = 'var(--accent)'; el.style.background = 'var(--accent-l)'; }}
@@ -775,7 +785,7 @@ export default function DashboardPage() {
       {/* FAB — mobile only */}
       <button
         type="button"
-        onClick={() => setShowNewModal(true)}
+        onClick={handleNewProject}
         className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-2xl md:hidden"
         style={{ background: 'var(--accent)', color: '#fff' }}
         aria-label="Nouveau projet"
@@ -789,6 +799,10 @@ export default function DashboardPage() {
           onConfirm={(name, client) => { setShowNewModal(false); void handleCreate(name, client); }}
           onCancel={() => setShowNewModal(false)}
         />
+      )}
+
+      {showUpgradeModal && (
+        <UpgradeModal onClose={() => setShowUpgradeModal(false)} />
       )}
 
       {settingsProject && (
