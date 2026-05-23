@@ -121,7 +121,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   hydrate: async () => {
     if (get().hydrated) return;
     const all = await supabaseDb.getAll();
-    set({ projects: all.map(migrateProject).sort(sortByUpdatedDesc), hydrated: true });
+    set({ projects: all.sort(sortByUpdatedDesc), hydrated: true });
   },
 
   create: async (data) => {
