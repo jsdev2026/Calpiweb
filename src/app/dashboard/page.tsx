@@ -49,7 +49,7 @@ const PlanMiniature = ({ project, size = 140 }: { project: Project; size?: numbe
   const oy = (size - h * s) / 2 - minY * s;
 
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ display: 'block', background: 'var(--surf2)' }}>
+    <svg width="100%" height="100%" viewBox={`0 0 ${size} ${size}`} preserveAspectRatio="xMidYMid meet" style={{ display: 'block', background: 'var(--surf2)' }}>
       {project.rooms.map((room) => {
         if (room.points.length < 3) return null;
         const pts = room.points.map((p) => `${p.x * s + ox},${p.y * s + oy}`).join(' ');
@@ -302,7 +302,7 @@ const ProjectCard = ({
       onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.transform = ''; (e.currentTarget as HTMLDivElement).style.boxShadow = 'var(--sh)'; }}
     >
       {/* Miniature */}
-      <div className="relative overflow-hidden" style={{ height: 140 }}>
+      <div className="relative overflow-hidden w-full" style={{ height: 140 }}>
         <PlanMiniature project={project} size={140} />
         <button
           type="button" onClick={handleSettings}
