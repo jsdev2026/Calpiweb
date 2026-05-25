@@ -89,11 +89,13 @@ export const QuantitiesPanel = () => {
       </div>
 
       {/* Mobile tab bar */}
-      <div className="flex shrink-0 border-b border-gray-200 dark:border-zinc-800 md:hidden" style={{ background: 'var(--surf, #fff)' }}>
+      <div role="tablist" className="flex shrink-0 border-b border-gray-200 dark:border-zinc-800 md:hidden" style={{ background: 'var(--surf, #fff)' }}>
         {(['plan', 'coupes'] as const).map((tab) => (
           <button
             key={tab}
             type="button"
+            role="tab"
+            aria-selected={mobileTab === tab}
             onClick={() => setMobileTab(tab)}
             className="flex-1 py-2.5 text-[13px] font-semibold transition-colors"
             style={mobileTab === tab
@@ -113,17 +115,17 @@ export const QuantitiesPanel = () => {
           data-testid="plan-section"
           className={`flex-1 border-r border-gray-200 dark:border-zinc-800 ${mobileTab === 'coupes' ? 'hidden md:block' : 'block'}`}
         >
-        <div className="flex h-full flex-col gap-3 overflow-hidden p-5">
-          <h3 className="shrink-0 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 dark:text-zinc-500">
-            Plan de calepinage annoté
-          </h3>
-          <QuantityPlanView
-            result={result}
-            config={project.config}
-            rooms={project.rooms}
-            highlightGroup={highlightGroup}
-          />
-        </div>
+          <div className="flex h-full flex-col gap-3 overflow-hidden p-5">
+            <h3 className="shrink-0 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 dark:text-zinc-500">
+              Plan de calepinage annoté
+            </h3>
+            <QuantityPlanView
+              result={result}
+              config={project.config}
+              rooms={project.rooms}
+              highlightGroup={highlightGroup}
+            />
+          </div>
         </div>
 
         {/* Right — cut groups */}
