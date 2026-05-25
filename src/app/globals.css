@@ -215,13 +215,20 @@ body {
 /* ─── Print ──────────────────────────────────────────────────────────────────── */
 
 @media print {
-  /* Masquer toute l'application */
-  body > * {
-    display: none !important;
+  /* Masquer toute l'application via visibility (peut être annulé par les descendants) */
+  body * {
+    visibility: hidden !important;
   }
-  /* Afficher uniquement la cible d'impression */
+  /* Afficher uniquement la cible d'impression et ses descendants */
+  #quantities-print-target,
+  #quantities-print-target * {
+    visibility: visible !important;
+  }
+  /* Positionner la cible pour occuper toute la page */
   #quantities-print-target {
-    display: block !important;
+    position: fixed;
+    inset: 0;
+    overflow: visible;
   }
   /* Forcer les couleurs de fond (header orange, cartes stats colorées) */
   * {
