@@ -105,6 +105,15 @@ describe('mergeSimilarCutGroups', () => {
     expect(result[0]!.originalIndices).toEqual([2, 1, 0]);
   });
 
+  it('groupes avec pieceEdges différents non fusionnés même si dimensions dans la tolérance', () => {
+    const result = mergeSimilarCutGroups([
+      g(600, 300, { pieceEdges: PE_CUT }),   // left=cut
+      g(600, 302, { pieceEdges: PE_FACT }),  // left=factory (different)
+    ]);
+    // |302-300|/302 = 0.66% ≤ 2% — dimensions OK, but edges differ
+    expect(result).toHaveLength(2);
+  });
+
   it('reuseCount sommé correctement', () => {
     const result = mergeSimilarCutGroups([
       g(600, 300, { totalCount: 4, reuseCount: 1, netTiles: 3 }),

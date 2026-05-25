@@ -45,12 +45,12 @@ export const QuantitiesPanel = () => {
     return analyzeQuantities(project.rooms, project.config, project.wallThickness);
   }, [project]);
 
-  if (!project || !result) return null;
-
   const mergedCutGroups = useMemo(
-    () => mergeSimilarCutGroups(result.cutGroups),
-    [result.cutGroups],
+    () => (result ? mergeSimilarCutGroups(result.cutGroups) : []),
+    [result],
   );
+
+  if (!project || !result) return null;
 
   if (result.totalTiles === 0) {
     return (

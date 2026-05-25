@@ -8,12 +8,21 @@ export interface MergedCutGroup extends CutGroup {
   originalIndices: [number, ...number[]];
 }
 
+function edgesMatch(a: CutGroup, b: CutGroup): boolean {
+  return (
+    a.pieceEdges.left   === b.pieceEdges.left &&
+    a.pieceEdges.right  === b.pieceEdges.right &&
+    a.pieceEdges.top    === b.pieceEdges.top &&
+    a.pieceEdges.bottom === b.pieceEdges.bottom
+  );
+}
+
 function withinTolerance(a: CutGroup, b: CutGroup, tol: number): boolean {
   const maxW = Math.max(a.usedW, b.usedW);
   const maxH = Math.max(a.usedH, b.usedH);
   const wOk = maxW === 0 ? a.usedW === b.usedW : Math.abs(a.usedW - b.usedW) / maxW <= tol;
   const hOk = maxH === 0 ? a.usedH === b.usedH : Math.abs(a.usedH - b.usedH) / maxH <= tol;
-  return wOk && hOk;
+  return wOk && hOk && edgesMatch(a, b);
 }
 
 function median(sorted: number[]): number {
