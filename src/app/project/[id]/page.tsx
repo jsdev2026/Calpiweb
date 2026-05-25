@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FileDown, LogOut, Moon, Settings, Sun, Trash2, X } from 'lucide-react';
+import { ChevronLeft, FileDown, LogOut, Moon, Settings, Sun, Trash2, X } from 'lucide-react';
 import { PlanEditor } from '@/components/plan/PlanEditor';
 import { TilingEditor } from '@/components/tiling/TilingEditor';
 import { QuantitiesPanel } from '@/components/quantities/QuantitiesPanel';
@@ -341,7 +341,7 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
       {/* Topbar */}
       <header className="shell-topbar px-5 gap-0">
         {/* Logo */}
-        <div className="flex items-center gap-2 mr-3">
+        <div className="hidden md:flex items-center gap-2 mr-3">
           <div className="flex h-6 w-6 items-center justify-center rounded-md" style={{ background: 'var(--accent)' }}>
             <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
               <rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.2" fill="white"/>
@@ -353,14 +353,24 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
           <span style={{ fontFamily: 'var(--font-display)', fontSize: 13.5, fontWeight: 700, color: 'var(--text)' }}>CaléPlan</span>
         </div>
 
-        <div className="h-4 w-px mx-3" style={{ background: 'var(--bdr)' }} />
+        <div className="hidden md:block h-4 w-px mx-3" style={{ background: 'var(--bdr)' }} />
+
+        {/* Mobile-only back button */}
+        <button
+          type="button"
+          onClick={() => router.push('/dashboard')}
+          className="flex md:hidden btn-icon mr-1"
+          aria-label="Retour aux projets"
+        >
+          <ChevronLeft size={18} />
+        </button>
 
         {/* Breadcrumb */}
         <div className="flex items-center gap-1.5 text-[12.5px]" style={{ color: 'var(--text2)' }}>
-          <button type="button" onClick={() => router.push('/dashboard')} className="hover:underline" style={{ color: 'var(--text2)' }}>
+          <button type="button" onClick={() => router.push('/dashboard')} className="hover:underline hidden md:inline" style={{ color: 'var(--text2)' }}>
             Projets
           </button>
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ opacity: 0.4 }}><path d="M4 2l4 4-4 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="hidden md:block" style={{ opacity: 0.4 }}><path d="M4 2l4 4-4 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
           <input
             type="text"
             value={activeProject.name}
@@ -376,21 +386,21 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
           />
         </div>
 
-        <div className="mx-3 h-4 w-px" style={{ background: 'var(--bdr)' }} />
+        <div className="hidden md:block mx-3 h-4 w-px" style={{ background: 'var(--bdr)' }} />
 
         {/* Status badge */}
         <button
           type="button"
           onClick={() => setStatus(STATUS_CYCLE[activeProject.status])}
           title="Cliquer pour changer le statut"
-          className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold transition-opacity hover:opacity-75 ${STATUS_CLASS[activeProject.status]}`}
+          className={`hidden md:inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-semibold transition-opacity hover:opacity-75 ${STATUS_CLASS[activeProject.status]}`}
         >
           {STATUS_LABELS[activeProject.status]}
         </button>
 
         {/* Client */}
         {activeProject.client?.name && (
-          <div className="mx-3 flex items-center gap-1.5 text-[12px]" style={{ color: 'var(--muted)' }}>
+          <div className="hidden md:flex mx-3 items-center gap-1.5 text-[12px]" style={{ color: 'var(--muted)' }}>
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="4" r="2.5" stroke="currentColor" strokeWidth="1.2"/><path d="M1.5 10c0-2 2-3.5 4.5-3.5S10.5 8 10.5 10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
             <span>{activeProject.client.name}</span>
             <span style={{ opacity: 0.4 }}>·</span>
@@ -405,7 +415,7 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
           </button>
           <button
             type="button"
-            className="btn-secondary flex items-center gap-1.5 text-[12.5px]"
+            className="hidden md:flex btn-secondary items-center gap-1.5 text-[12.5px]"
             style={{ padding: '5px 10px' }}
             onClick={handlePrint}
             disabled={tab === 'PLAN'}
