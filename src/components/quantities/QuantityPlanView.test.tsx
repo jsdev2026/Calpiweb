@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react';
+import { render, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 
 vi.mock('@/engine/geometry/polygon', () => ({
@@ -67,5 +67,52 @@ describe('QuantityPlanView', () => {
       />,
     );
     expect(queryByText('Carreau entier')).toBeNull();
+  });
+
+  it('plan-wrapper has data-testid and cursor-grab class', () => {
+    const tile = { id: 't1', type: 'WHOLE' as const, rect: { x: 0, y: 0, w: 300, h: 300 } };
+    const { container } = render(
+      <QuantityPlanView result={makeResult({ tiles: [tile] })} config={config} rooms={[room]} highlightGroup={null} />,
+    );
+    const wrapper = container.querySelector('[data-testid="plan-wrapper"]');
+    expect(wrapper).not.toBeNull();
+    expect(wrapper!.className).toContain('cursor-grab');
+  });
+
+  it('⊙ Ajuster button is absent by default', () => {
+    const tile = { id: 't1', type: 'WHOLE' as const, rect: { x: 0, y: 0, w: 300, h: 300 } };
+    const { queryByLabelText } = render(
+      <QuantityPlanView result={makeResult({ tiles: [tile] })} config={config} rooms={[room]} highlightGroup={null} />,
+    );
+    expect(queryByLabelText('Ajuster la vue')).toBeNull();
+  });
+
+  it('⊙ Ajuster button appears after wheel event changes viewBox', () => {
+    const tile = { id: 't1', type: 'WHOLE' as const, rect: { x: 0, y: 0, w: 300, h: 300 } };
+    const { container, getByLabelText } = render(
+      <QuantityPlanView result={makeResult({ tiles: [tile] })} config={config} rooms={[room]} highlightGroup={null} />,
+    );
+    const wrapper = container.querySelector('[data-testid="plan-wrapper"]')!;
+    Object.defineProperty(wrapper, 'getBoundingClientRect', {
+      value: () => ({ left: 0, top: 0, width: 400, height: 400, right: 400, bottom: 400, x: 0, y: 0, toJSON: () => ({}) }),
+      configurable: true,
+    });
+    fireEvent.wheel(wrapper, { deltaY: 100 });
+    expect(getByLabelText('Ajuster la vue')).toBeDefined();
+  });
+
+  it('clicking ⊙ Ajuster resets viewBox (button disappears)', () => {
+    const tile = { id: 't1', type: 'WHOLE' as const, rect: { x: 0, y: 0, w: 300, h: 300 } };
+    const { container, getByLabelText, queryByLabelText } = render(
+      <QuantityPlanView result={makeResult({ tiles: [tile] })} config={config} rooms={[room]} highlightGroup={null} />,
+    );
+    const wrapper = container.querySelector('[data-testid="plan-wrapper"]')!;
+    Object.defineProperty(wrapper, 'getBoundingClientRect', {
+      value: () => ({ left: 0, top: 0, width: 400, height: 400, right: 400, bottom: 400, x: 0, y: 0, toJSON: () => ({}) }),
+      configurable: true,
+    });
+    fireEvent.wheel(wrapper, { deltaY: 100 });
+    fireEvent.click(getByLabelText('Ajuster la vue'));
+    expect(queryByLabelText('Ajuster la vue')).toBeNull();
   });
 });
