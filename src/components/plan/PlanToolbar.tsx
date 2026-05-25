@@ -197,7 +197,7 @@ export const PlanToolbar = ({
   {/* Mobile: horizontal scrollable toolbar at bottom of canvas */}
   <div
     data-testid="plan-toolbar-mobile"
-    className="absolute bottom-0 left-0 right-0 z-20 flex md:hidden items-center gap-1 overflow-x-auto border-t border-gray-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-900/95 px-2 py-2 backdrop-blur-md"
+    className="absolute bottom-20 md:bottom-0 left-0 right-0 z-20 flex md:hidden items-center gap-1 overflow-x-auto border-t border-gray-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-900/95 px-2 py-2 backdrop-blur-md"
     style={{ scrollbarWidth: 'none' }}
   >
     {/* Drawing tools */}

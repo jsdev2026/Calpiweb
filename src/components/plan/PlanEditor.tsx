@@ -1424,7 +1424,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
       </div>
 
       {/* Mobile: touch hint */}
-      <div className="pointer-events-none absolute bottom-16 right-3 z-10 md:hidden rounded-lg px-2.5 py-1.5 text-[10px] font-medium"
+      <div className="pointer-events-none absolute bottom-40 right-3 z-10 md:hidden rounded-lg px-2.5 py-1.5 text-[10px] font-medium"
         style={{ background: 'rgba(0,0,0,0.45)', color: 'rgba(255,255,255,0.85)' }}>
         2 doigts : zoom
       </div>
