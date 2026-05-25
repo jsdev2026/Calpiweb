@@ -86,4 +86,31 @@ describe('QuantitiesPanel', () => {
     fireEvent.click(openBtn);
     expect(screen.getByText('Groupes de coupes')).toBeDefined();
   });
+
+  it('renders Plan and Coupes mobile tab buttons', () => {
+    render(<QuantitiesPanel />);
+    expect(screen.getByRole('button', { name: 'Plan' })).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Coupes' })).toBeDefined();
+  });
+
+  it('plan section is visible by default (no hidden class)', () => {
+    render(<QuantitiesPanel />);
+    const planSection = screen.getByTestId('plan-section');
+    expect(planSection.className).not.toContain('hidden');
+  });
+
+  it('clicking Coupes tab adds hidden class to plan section', () => {
+    render(<QuantitiesPanel />);
+    fireEvent.click(screen.getByRole('button', { name: 'Coupes' }));
+    const planSection = screen.getByTestId('plan-section');
+    expect(planSection.className).toContain('hidden');
+  });
+
+  it('clicking Plan tab removes hidden class from plan section', () => {
+    render(<QuantitiesPanel />);
+    fireEvent.click(screen.getByRole('button', { name: 'Coupes' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Plan' }));
+    const planSection = screen.getByTestId('plan-section');
+    expect(planSection.className).not.toContain('hidden');
+  });
 });

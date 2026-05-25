@@ -11,6 +11,7 @@ export const QuantitiesPanel = () => {
   const project = useProjectStore(selectActiveProject);
   const [highlightGroup, setHighlightGroup] = useState<number | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileTab, setMobileTab] = useState<'plan' | 'coupes'>('plan');
 
   const result = useMemo(() => {
     if (!project) return null;
@@ -34,20 +35,20 @@ export const QuantitiesPanel = () => {
   return (
     <div className="flex flex-1 flex-col overflow-hidden bg-gray-50 dark:bg-zinc-950">
       {/* Header */}
-      <div className="shrink-0 border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-8 py-5">
+      <div className="shrink-0 border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-5 md:px-8 py-4 md:py-5">
         <h2 className="text-lg font-black text-gray-900 dark:text-zinc-100">Tableau des quantités</h2>
-        <p className="mt-0.5 text-xs text-gray-400 dark:text-zinc-500">
-          Format&nbsp;: <span className="font-bold text-gray-700 dark:text-zinc-300">{tileLabel}</span>
-          {' '}—{' '}
-          Joint&nbsp;: <span className="font-bold text-gray-700 dark:text-zinc-300">{result.joint}&nbsp;mm</span>
-          {' '}—{' '}
-          Surface&nbsp;: <span className="font-bold text-gray-700 dark:text-zinc-300">{formatM2(result.roomArea)}</span>
-        </p>
+        <div className="mt-0.5 flex flex-col gap-0.5 md:flex-row text-xs text-gray-400 dark:text-zinc-500">
+          <span>Format&nbsp;: <span className="font-bold text-gray-700 dark:text-zinc-300">{tileLabel}</span></span>
+          <span className="hidden md:inline mx-1">—</span>
+          <span>Joint&nbsp;: <span className="font-bold text-gray-700 dark:text-zinc-300">{result.joint}&nbsp;mm</span></span>
+          <span className="hidden md:inline mx-1">—</span>
+          <span>Surface&nbsp;: <span className="font-bold text-gray-700 dark:text-zinc-300">{formatM2(result.roomArea)}</span></span>
+        </div>
       </div>
 
       {/* Stat strip */}
-      <div className="shrink-0 border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-8 py-3">
-        <div className="grid grid-cols-4 gap-4">
+      <div className="shrink-0 border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-5 md:px-8 py-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
           {/* Carreaux entiers */}
           <div className="rounded-xl border-l-[3px] border-blue-500 bg-gray-50 dark:bg-zinc-800/60 px-4 py-2">
             <div className="text-xl font-black tabular-nums text-gray-900 dark:text-zinc-100">{result.wholeCount}</div>
@@ -87,10 +88,32 @@ export const QuantitiesPanel = () => {
         </div>
       </div>
 
+      {/* Mobile tab bar */}
+      <div className="flex shrink-0 border-b border-gray-200 dark:border-zinc-800 md:hidden" style={{ background: 'var(--surf, #fff)' }}>
+        {(['plan', 'coupes'] as const).map((tab) => (
+          <button
+            key={tab}
+            type="button"
+            onClick={() => setMobileTab(tab)}
+            className="flex-1 py-2.5 text-[13px] font-semibold transition-colors"
+            style={mobileTab === tab
+              ? { borderBottom: '2px solid var(--accent, #f97316)', color: 'var(--accent, #f97316)' }
+              : { borderBottom: '2px solid transparent', color: 'var(--text2, #6b7280)' }
+            }
+          >
+            {tab === 'plan' ? 'Plan' : 'Coupes'}
+          </button>
+        ))}
+      </div>
+
       {/* Two-column body */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left — annotated plan */}
-        <div className="flex flex-1 flex-col gap-3 overflow-hidden border-r border-gray-200 dark:border-zinc-800 p-5">
+        <div
+          data-testid="plan-section"
+          className={`flex-1 border-r border-gray-200 dark:border-zinc-800 ${mobileTab === 'coupes' ? 'hidden md:block' : 'block'}`}
+        >
+        <div className="flex h-full flex-col gap-3 overflow-hidden p-5">
           <h3 className="shrink-0 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 dark:text-zinc-500">
             Plan de calepinage annoté
           </h3>
@@ -101,16 +124,20 @@ export const QuantitiesPanel = () => {
             highlightGroup={highlightGroup}
           />
         </div>
+        </div>
 
         {/* Right — cut groups */}
         {sidebarOpen ? (
-          <div className="flex w-[360px] shrink-0 flex-col gap-4 overflow-y-auto p-5">
+          <div
+            data-testid="coupes-section"
+            className={`${mobileTab === 'plan' ? 'hidden md:flex' : 'flex'} w-full md:w-[360px] shrink-0 flex-col gap-4 overflow-y-auto p-5`}
+          >
             <div className="flex items-center justify-between">
               <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 dark:text-zinc-500">
                 Groupes de coupes
               </h3>
               <button
-                className="flex h-5 w-5 items-center justify-center rounded text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+                className="hidden md:flex h-5 w-5 items-center justify-center rounded text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
                 onClick={() => setSidebarOpen(false)}
                 aria-label="Masquer le panneau"
               >
@@ -137,7 +164,7 @@ export const QuantitiesPanel = () => {
             </div>
           </div>
         ) : (
-          <div className="flex w-8 shrink-0 items-center justify-center border-l border-gray-200 dark:border-zinc-800">
+          <div className="hidden md:flex w-8 shrink-0 items-center justify-center border-l border-gray-200 dark:border-zinc-800">
             <button
               className="flex h-5 w-5 items-center justify-center rounded text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
               onClick={() => setSidebarOpen(true)}
