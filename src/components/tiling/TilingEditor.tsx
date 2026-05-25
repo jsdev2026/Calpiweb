@@ -265,7 +265,7 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
         {/* Bottom controls: angle + offsets — 2 rows on mobile, 1 row on desktop */}
         <div className="absolute bottom-4 left-1/2 z-10 -translate-x-1/2 flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-5 rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 px-5 py-3 shadow-2xl backdrop-blur-md w-[calc(100%-2rem)] md:w-auto">
           {/* Row 1 (mobile) : Côtes + Angle */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex w-full items-center gap-2.5">
             <button
               type="button"
               onClick={() => setActiveTool((t) => t === 'dimension' ? 'pan' : 'dimension')}
@@ -302,6 +302,7 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
                 onChange={(e) => setConfig({ ...config, offsetX: parseInt(e.target.value, 10) })}
                 className="h-1.5 flex-1 cursor-pointer appearance-none rounded-lg bg-gray-200 dark:bg-zinc-700 accent-orange-500"
               />
+              <span className="w-7 font-mono text-[10px] font-bold text-orange-400">{Math.round(((config.offsetX % (config.width + config.joint)) + (config.width + config.joint)) % (config.width + config.joint))}</span>
             </div>
             <div className="flex flex-1 items-center gap-2">
               <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-500">Déc. Y</span>
@@ -311,6 +312,7 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
                 onChange={(e) => setConfig({ ...config, offsetY: parseInt(e.target.value, 10) })}
                 className="h-1.5 flex-1 cursor-pointer appearance-none rounded-lg bg-gray-200 dark:bg-zinc-700 accent-orange-500"
               />
+              <span className="w-7 font-mono text-[10px] font-bold text-orange-400">{Math.round(((config.offsetY % (config.height + config.joint)) + (config.height + config.joint)) % (config.height + config.joint))}</span>
             </div>
           </div>
         </div>
