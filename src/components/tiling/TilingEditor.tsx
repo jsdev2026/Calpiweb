@@ -262,9 +262,11 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
           onClick={handleClick}
         />
 
-        {/* Bottom controls: angle + offsets — 2 rows on mobile, 1 row on desktop */}
-        <div className="absolute bottom-4 left-1/2 z-10 -translate-x-1/2 flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-5 rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 px-5 py-3 shadow-2xl backdrop-blur-md w-[calc(100%-2rem)] md:w-auto">
-          {/* Row 1 (mobile) : Côtes + Angle */}
+        {/* Bottom controls: 3 rows on mobile, 1 row on desktop */}
+        <div
+          data-testid="controls-bar"
+          className="absolute bottom-20 md:bottom-4 left-1/2 z-10 -translate-x-1/2 flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-5 rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 px-5 py-3 shadow-2xl backdrop-blur-md w-[calc(100%-2rem)] md:w-auto">
+          {/* Row 1 : Côtes + Angle */}
           <div className="flex w-full items-center gap-2.5">
             <button
               type="button"
@@ -290,30 +292,31 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
               <span className="w-8 font-mono text-xs font-bold text-orange-400">{config.angle}°</span>
             </div>
           </div>
-          {/* Separator — desktop only */}
+          {/* Separator Angle | Déc. (desktop only) */}
           <div className="hidden md:block h-5 w-px bg-gray-200 dark:bg-zinc-700" />
-          {/* Row 2 (mobile) : Décal X + Décal Y */}
-          <div className="flex w-full items-center gap-3 md:gap-2.5">
-            <div className="flex flex-1 items-center gap-2">
-              <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-500">Déc. X</span>
-              <input
-                type="range" min="0" max={config.width + config.joint} step="1"
-                value={Math.round(((config.offsetX % (config.width + config.joint)) + (config.width + config.joint)) % (config.width + config.joint))}
-                onChange={(e) => setConfig({ ...config, offsetX: parseInt(e.target.value, 10) })}
-                className="h-1.5 flex-1 cursor-pointer appearance-none rounded-lg bg-gray-200 dark:bg-zinc-700 accent-orange-500"
-              />
-              <span className="w-7 font-mono text-[10px] font-bold text-orange-400">{Math.round(((config.offsetX % (config.width + config.joint)) + (config.width + config.joint)) % (config.width + config.joint))}</span>
-            </div>
-            <div className="flex flex-1 items-center gap-2">
-              <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-500">Déc. Y</span>
-              <input
-                type="range" min="0" max={config.height + config.joint} step="1"
-                value={Math.round(((config.offsetY % (config.height + config.joint)) + (config.height + config.joint)) % (config.height + config.joint))}
-                onChange={(e) => setConfig({ ...config, offsetY: parseInt(e.target.value, 10) })}
-                className="h-1.5 flex-1 cursor-pointer appearance-none rounded-lg bg-gray-200 dark:bg-zinc-700 accent-orange-500"
-              />
-              <span className="w-7 font-mono text-[10px] font-bold text-orange-400">{Math.round(((config.offsetY % (config.height + config.joint)) + (config.height + config.joint)) % (config.height + config.joint))}</span>
-            </div>
+          {/* Row 2 : Déc. X */}
+          <div data-testid="dec-x-row" className="flex w-full items-center gap-2">
+            <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-500">Déc. X</span>
+            <input
+              type="range" min="0" max={config.width + config.joint} step="1"
+              value={Math.round(((config.offsetX % (config.width + config.joint)) + (config.width + config.joint)) % (config.width + config.joint))}
+              onChange={(e) => setConfig({ ...config, offsetX: parseInt(e.target.value, 10) })}
+              className="h-1.5 flex-1 cursor-pointer appearance-none rounded-lg bg-gray-200 dark:bg-zinc-700 accent-orange-500"
+            />
+            <span className="w-7 font-mono text-[10px] font-bold text-orange-400">{Math.round(((config.offsetX % (config.width + config.joint)) + (config.width + config.joint)) % (config.width + config.joint))}</span>
+          </div>
+          {/* Separator X | Y (desktop only) */}
+          <div className="hidden md:block h-5 w-px bg-gray-200 dark:bg-zinc-700" />
+          {/* Row 3 : Déc. Y */}
+          <div data-testid="dec-y-row" className="flex w-full items-center gap-2">
+            <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-500">Déc. Y</span>
+            <input
+              type="range" min="0" max={config.height + config.joint} step="1"
+              value={Math.round(((config.offsetY % (config.height + config.joint)) + (config.height + config.joint)) % (config.height + config.joint))}
+              onChange={(e) => setConfig({ ...config, offsetY: parseInt(e.target.value, 10) })}
+              className="h-1.5 flex-1 cursor-pointer appearance-none rounded-lg bg-gray-200 dark:bg-zinc-700 accent-orange-500"
+            />
+            <span className="w-7 font-mono text-[10px] font-bold text-orange-400">{Math.round(((config.offsetY % (config.height + config.joint)) + (config.height + config.joint)) % (config.height + config.joint))}</span>
           </div>
         </div>
       </div>

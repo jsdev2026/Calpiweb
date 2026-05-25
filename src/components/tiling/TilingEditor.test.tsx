@@ -49,3 +49,17 @@ describe('TilingEditor mobile tabs', () => {
     expect(reglagesBtn.getAttribute('data-active')).toBe('true');
   });
 });
+
+describe('TilingEditor controls bar', () => {
+  it('renders Déc. X and Déc. Y as separate rows', () => {
+    render(<TilingEditor rooms={[]} config={config} wallThickness={0} setConfig={() => {}} />);
+    expect(screen.getByTestId('dec-x-row')).toBeDefined();
+    expect(screen.getByTestId('dec-y-row')).toBeDefined();
+  });
+
+  it('controls bar className includes bottom-20', () => {
+    render(<TilingEditor rooms={[]} config={config} wallThickness={0} setConfig={() => {}} />);
+    const bar = screen.getByTestId('controls-bar');
+    expect(bar.className).toContain('bottom-20');
+  });
+});
