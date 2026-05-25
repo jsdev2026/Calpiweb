@@ -1,6 +1,7 @@
 'use client';
 import type { Project } from '@/types/project';
 import { analyzeQuantities } from '@/engine/quantities/quantityEngine';
+import { mergeSimilarCutGroups } from '@/engine/quantities/mergeSimilarCutGroups';
 import { formatCm, formatM2 } from '@/utils/formatters';
 import { QuantityPlanSvg } from './QuantityPlanSvg';
 import { GROUP_COLORS } from './CutGroupCard';
@@ -182,10 +183,10 @@ export const QuantitiesPrintView = ({ project }: QuantitiesPrintViewProps) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {result.cutGroups.map((group, i) => {
+                  {mergeSimilarCutGroups(result.cutGroups).map((group, i) => {
                     const color = GROUP_COLORS[i % GROUP_COLORS.length]!;
                     const hasBigChute = group.chuteW > 20 && group.chuteH > 20;
-                    const rowKey = `${group.usedW}×${group.usedH}|${group.pieceEdges.left}|${group.pieceEdges.right}`;
+                    const rowKey = group.originalIndices.join(',');
                     return (
                       <tr key={rowKey} style={{ background: i % 2 === 0 ? '#fff' : '#fafafa', borderBottom: '1px solid #f1f5f9' }}>
                         <td style={{ padding: '6px 8px' }}>
