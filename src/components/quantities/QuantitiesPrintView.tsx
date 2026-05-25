@@ -107,7 +107,7 @@ export const QuantitiesPrintView = ({ project }: QuantitiesPrintViewProps) => {
 
       {/* ③→⑥ Sections par pièce */}
       {roomResults.map(({ room, result }, idx) => (
-        <div key={room.id} style={{ marginTop: idx > 0 ? 16 : 0 }}>
+        <div key={room.id} style={{ breakAfter: idx < roomResults.length - 1 ? 'page' : 'auto' }}>
 
           {/* ③ En-tête pièce */}
           <div style={{
