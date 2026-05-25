@@ -299,6 +299,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
   };
 
   const handleWrapperTouchMove = (e: React.TouchEvent) => {
+    e.preventDefault();
     if (e.touches.length !== 2 || !touchRef.current || touchRef.current.dist === 0) return;
     const t = e.touches;
     const dx = t[1]!.clientX - t[0]!.clientX;
@@ -1396,7 +1397,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
       {/* Canvas area */}
       <div
         className="relative flex flex-1 overflow-hidden"
-        style={{ background: 'var(--canvas-bg)' }}
+        style={{ background: 'var(--canvas-bg)', touchAction: 'none' }}
         onTouchStart={handleWrapperTouchStart}
         onTouchMove={handleWrapperTouchMove}
         onTouchEnd={handleWrapperTouchEnd}

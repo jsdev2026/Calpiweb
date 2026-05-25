@@ -1,10 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { PlanTool } from './PlanToolbar';
 
 // ── Tests logique pointer-events overlay ─────────────────────────────────────
 
 describe('overlay pointer-events logic', () => {
-  const tools = ['WALL', 'DOOR', 'PARTITION', 'EXCLUDE', 'APPLY_H', 'APPLY_V',
-                 'DIMENSION', 'COINCIDE', 'ANCHOR', 'THICKNESS'] as const;
+  const tools: PlanTool[] = ['WALL', 'DOOR', 'PARTITION', 'EXCLUDE', 'APPLY_H', 'APPLY_V',
+                             'DIMENSION', 'COINCIDE', 'ANCHOR', 'THICKNESS'];
 
   it('overlay a pointer-events: none pour chaque outil de dessin', () => {
     for (const tool of tools) {
