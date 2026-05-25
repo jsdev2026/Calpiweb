@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, FileDown, LogOut, Moon, Settings, Sun, Trash2, X } from 'lucide-react';
 import { PlanEditor } from '@/components/plan/PlanEditor';
@@ -244,6 +245,8 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
 
   const [tab, setTab] = useState<WorkspaceTab>('PLAN');
   const [showSettings, setShowSettings] = useState(false);
+  const [printMounted, setPrintMounted] = useState(false);
+  useEffect(() => { setPrintMounted(true); }, []);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
@@ -523,10 +526,14 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
         )}
       </main>
 
-      {/* Cible d'impression — toujours dans le DOM, invisible en navigation */}
-      <div id="quantities-print-target" className="hidden">
-        {activeProject && <QuantitiesPrintView project={activeProject} />}
-      </div>
+      {/* Cible d'impression — portal sur document.body pour que @media print
+          puisse masquer tous les autres enfants de body sans position:fixed */}
+      {printMounted && createPortal(
+        <div id="quantities-print-target">
+          {activeProject && <QuantitiesPrintView project={activeProject} />}
+        </div>,
+        document.body,
+      )}
 
       {/* Settings Modal */}
       {showSettings && (

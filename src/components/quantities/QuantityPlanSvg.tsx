@@ -136,6 +136,9 @@ export const QuantityPlanSvg = ({
                   height={tile.rect.h}
                   fill={fill}
                   fillOpacity={fillOpacity}
+                  stroke={printMode ? '#ffffff' : undefined}
+                  strokeWidth={printMode ? 1 : undefined}
+                  vectorEffect={printMode ? 'non-scaling-stroke' : undefined}
                 />
                 {cut && groupInfo && (
                   <>

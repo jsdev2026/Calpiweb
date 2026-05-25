@@ -214,23 +214,19 @@ body {
 
 /* ─── Print ──────────────────────────────────────────────────────────────────── */
 
+/* Masquer le portal en navigation normale */
+#quantities-print-target {
+  display: none;
+}
+
 @media print {
-  /* Masquer toute l'application via visibility (peut être annulé par les descendants) */
-  body * {
-    visibility: hidden !important;
+  /* Masquer tous les enfants directs de body sauf le portal d'impression */
+  body > *:not(#quantities-print-target) {
+    display: none !important;
   }
-  /* Afficher uniquement la cible d'impression et ses descendants */
-  #quantities-print-target,
-  #quantities-print-target * {
-    visibility: visible !important;
-  }
-  /* Positionner la cible pour occuper toute la page
-     display:block override le className="hidden" (display:none) de Tailwind */
+  /* Afficher le portal — il est dans le flux normal → les sauts de page fonctionnent */
   #quantities-print-target {
     display: block !important;
-    position: fixed;
-    inset: 0;
-    overflow: visible;
   }
   /* Forcer les couleurs de fond (header orange, cartes stats colorées) */
   * {
