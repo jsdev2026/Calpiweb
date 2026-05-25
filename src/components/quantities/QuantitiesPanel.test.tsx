@@ -113,4 +113,61 @@ describe('QuantitiesPanel', () => {
     const planSection = screen.getByTestId('plan-section');
     expect(planSection.className).not.toContain('hidden');
   });
+
+  it('collapsed-bar is absent by default', () => {
+    render(<QuantitiesPanel />);
+    expect(screen.queryByTestId('collapsed-bar')).toBeNull();
+  });
+
+  it('coupes scroll > 20px shows collapsed-bar', () => {
+    render(<QuantitiesPanel />);
+    const coupes = screen.getByTestId('coupes-section');
+    Object.defineProperty(coupes, 'scrollTop', { value: 50, writable: true });
+    fireEvent.scroll(coupes);
+    expect(screen.getByTestId('collapsed-bar')).toBeDefined();
+  });
+
+  it('"▲ Afficher" button restores bandeaux', () => {
+    render(<QuantitiesPanel />);
+    const coupes = screen.getByTestId('coupes-section');
+    Object.defineProperty(coupes, 'scrollTop', { value: 50, writable: true });
+    fireEvent.scroll(coupes);
+    fireEvent.click(screen.getByLabelText('Afficher les statistiques'));
+    expect(screen.queryByTestId('collapsed-bar')).toBeNull();
+  });
+
+  it('scroll back to top auto-restores when not pinned', () => {
+    render(<QuantitiesPanel />);
+    const coupes = screen.getByTestId('coupes-section');
+    Object.defineProperty(coupes, 'scrollTop', { value: 50, writable: true });
+    fireEvent.scroll(coupes);
+    Object.defineProperty(coupes, 'scrollTop', { value: 0, writable: true });
+    fireEvent.scroll(coupes);
+    expect(screen.queryByTestId('collapsed-bar')).toBeNull();
+  });
+
+  it('pin prevents auto-collapse on scroll', () => {
+    render(<QuantitiesPanel />);
+    fireEvent.click(screen.getByLabelText('Épingler les statistiques'));
+    const coupes = screen.getByTestId('coupes-section');
+    Object.defineProperty(coupes, 'scrollTop', { value: 50, writable: true });
+    fireEvent.scroll(coupes);
+    expect(screen.queryByTestId('collapsed-bar')).toBeNull();
+  });
+
+  it('unpinning re-enables auto-collapse on scroll', () => {
+    render(<QuantitiesPanel />);
+    // Pin first
+    fireEvent.click(screen.getByLabelText('Épingler les statistiques'));
+    // Scroll while pinned — should NOT collapse
+    const coupes = screen.getByTestId('coupes-section');
+    Object.defineProperty(coupes, 'scrollTop', { value: 50, writable: true });
+    fireEvent.scroll(coupes);
+    expect(screen.queryByTestId('collapsed-bar')).toBeNull();
+    // Unpin — pin button label should now be "Épingler les statistiques" again
+    fireEvent.click(screen.getByLabelText('Désépingler les statistiques'));
+    // Now scroll should trigger collapse
+    fireEvent.scroll(coupes);
+    expect(screen.getByTestId('collapsed-bar')).toBeDefined();
+  });
 });
