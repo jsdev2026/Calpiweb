@@ -1366,7 +1366,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
       {/* Mobile: room strip (non-draggable, horizontal) */}
       <div
         data-testid="mobile-room-strip"
-        className="flex md:hidden shrink-0 items-center overflow-x-auto border-b border-gray-200 dark:border-zinc-800 px-3 py-1"
+        className="flex md:hidden mouse:hidden shrink-0 items-center overflow-x-auto border-b border-gray-200 dark:border-zinc-800 px-3 py-1"
         style={{ scrollbarWidth: 'none' }}
       >
         <RoomTabs
@@ -1409,7 +1409,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
         onWallThicknessChange={setWallThickness}
       />
 
-      <div className="hidden md:block">
+      <div className="hidden md:block mouse:block">
         <RoomPanel
           rooms={rooms}
           activeRoomId={activeRoomId}
@@ -1424,12 +1424,12 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
       </div>
 
       {/* Mobile: touch hint */}
-      <div className="pointer-events-none absolute bottom-40 right-3 z-10 md:hidden rounded-lg px-2.5 py-1.5 text-[10px] font-medium"
+      <div className="pointer-events-none absolute bottom-40 right-3 z-10 md:hidden mouse:hidden rounded-lg px-2.5 py-1.5 text-[10px] font-medium"
         style={{ background: 'rgba(0,0,0,0.45)', color: 'rgba(255,255,255,0.85)' }}>
         2 doigts : zoom
       </div>
 
-      <div className="pointer-events-none absolute bottom-5 right-5 z-10 hidden md:block rounded-xl px-4 py-3 text-[11px] shadow-xl backdrop-blur-md"
+      <div className="pointer-events-none absolute bottom-5 right-5 z-10 hidden md:block mouse:block rounded-xl px-4 py-3 text-[11px] shadow-xl backdrop-blur-md"
         style={{ border: '1px solid var(--bdr)', background: 'var(--surf)', opacity: 0.9 }}>
         <p className="mb-2 text-[9px] font-black uppercase tracking-[0.2em]" style={{ color: 'var(--muted)' }}>Raccourcis</p>
         <div className="grid grid-cols-[1fr_auto] items-center gap-x-5 gap-y-1.5" style={{ color: 'var(--text2)' }}>

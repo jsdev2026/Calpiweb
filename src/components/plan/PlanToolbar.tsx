@@ -51,7 +51,7 @@ export const PlanToolbar = ({
 }: PlanToolbarProps) => (
   <>
   <div
-    className="absolute left-4 top-4 z-10 hidden md:flex flex-col gap-0.5 overflow-y-auto rounded-2xl p-1.5 shadow-2xl backdrop-blur-md"
+    className="absolute left-4 top-4 z-10 hidden md:flex mouse:flex flex-col gap-0.5 overflow-y-auto rounded-2xl p-1.5 shadow-2xl backdrop-blur-md"
     style={{ border: '1px solid var(--bdr)', background: 'var(--surf)', boxShadow: 'var(--sh-lg)', maxHeight: 'calc(100vh - 108px)', scrollbarWidth: 'none' }}>
 
     {/* ── Drawing tools ── */}
@@ -197,7 +197,7 @@ export const PlanToolbar = ({
   {/* Mobile: horizontal scrollable toolbar at bottom of canvas */}
   <div
     data-testid="plan-toolbar-mobile"
-    className="absolute bottom-20 md:bottom-0 left-0 right-0 z-20 flex md:hidden items-center gap-1 overflow-x-auto border-t border-gray-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-900/95 px-2 py-2 backdrop-blur-md"
+    className="absolute bottom-20 md:bottom-0 left-0 right-0 z-20 flex md:hidden mouse:hidden items-center gap-1 overflow-x-auto border-t border-gray-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-900/95 px-2 py-2 backdrop-blur-md"
     style={{ scrollbarWidth: 'none' }}
   >
     {/* Drawing tools */}

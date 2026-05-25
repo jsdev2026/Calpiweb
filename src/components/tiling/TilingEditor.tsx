@@ -265,7 +265,7 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
         {/* Bottom controls: 3 rows on mobile, 1 row on desktop */}
         <div
           data-testid="controls-bar"
-          className="absolute bottom-20 md:bottom-4 left-1/2 z-10 -translate-x-1/2 flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-5 rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 px-5 py-3 shadow-2xl backdrop-blur-md w-[calc(100%-2rem)] md:w-auto">
+          className="absolute bottom-20 md:bottom-4 mouse:bottom-4 left-1/2 z-10 -translate-x-1/2 flex flex-col md:flex-row mouse:flex-row items-start md:items-center mouse:items-center gap-2 md:gap-5 mouse:gap-5 rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 px-5 py-3 shadow-2xl backdrop-blur-md w-[calc(100%-2rem)] md:w-auto mouse:w-auto">
           {/* Row 1 : Côtes + Angle */}
           <div className="flex w-full items-center gap-2.5">
             <button
