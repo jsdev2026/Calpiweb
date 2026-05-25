@@ -376,6 +376,7 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
             value={activeProject.name}
             onChange={(e) => rename(activeProject.id, e.target.value)}
             readOnly={isReadOnly}
+            className="hidden md:block"
             style={{
               background: 'transparent', border: 'none', outline: 'none',
               fontFamily: 'var(--font-display)', fontSize: 13.5, fontWeight: 600,
