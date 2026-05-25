@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import type { Point } from '@/types/plan';
 import type { Constraint, EdgeType, PointRef, Room } from '@/types/project';
@@ -206,6 +206,11 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
   const removeExcludedZone = useProjectStore((s) => s.removeExcludedZone);
   const updateExcludedZonePoints = useProjectStore((s) => s.updateExcludedZonePoints);
   const clearPartitionsAndZones = useProjectStore((s) => s.clearPartitionsAndZones);
+
+  const isTouchDevice = useMemo(
+    () => typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches,
+    [],
+  );
 
   const [activeRoomId, setActiveRoomId] = useState<string | null>(() => rooms[0]?.id ?? null);
   const [scale, setScale] = useState(0.1);
@@ -1487,7 +1492,8 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
         };
         return (
           <WallEdgeEditor
-            screenX={editorScreen?.x} screenY={editorScreen?.y}
+            screenX={isTouchDevice ? undefined : editorScreen?.x}
+            screenY={isTouchDevice ? undefined : editorScreen?.y}
             above={above}
             dimValue={editValue} onDimChange={setEditValue}
             constraintType={editingEdgeConstraintType} onConstraintTypeChange={handleConstraintTypeChange}
@@ -1498,27 +1504,27 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
         );
       })()}
       {editingZoneEdge !== null && (
-        <DimensionEditor screenX={zoneEditorScreen?.x} screenY={zoneEditorScreen?.y}
+        <DimensionEditor screenX={isTouchDevice ? undefined : zoneEditorScreen?.x} screenY={isTouchDevice ? undefined : zoneEditorScreen?.y}
           value={editZoneEdgeValue} onChange={setEditZoneEdgeValue}
           onSubmit={submitZoneEdgeDimension} onCancel={() => setEditingZoneEdge(null)} />
       )}
       {editingPartition !== null && (
-        <DimensionEditor screenX={partitionEditorScreen?.x} screenY={partitionEditorScreen?.y}
+        <DimensionEditor screenX={isTouchDevice ? undefined : partitionEditorScreen?.x} screenY={isTouchDevice ? undefined : partitionEditorScreen?.y}
           value={editPartitionValue} onChange={setEditPartitionValue}
           onSubmit={submitPartitionDimension} onCancel={() => setEditingPartition(null)} />
       )}
       {editingPartitionThickness !== null && (
-        <DimensionEditor screenX={partitionThicknessEditorScreen?.x} screenY={partitionThicknessEditorScreen?.y}
+        <DimensionEditor screenX={isTouchDevice ? undefined : partitionThicknessEditorScreen?.x} screenY={isTouchDevice ? undefined : partitionThicknessEditorScreen?.y}
           value={editThicknessValue} onChange={setEditThicknessValue}
           onSubmit={submitPartitionThickness} onCancel={() => setEditingPartitionThickness(null)} />
       )}
       {editingThicknessEdge !== null && (
-        <DimensionEditor screenX={thicknessEdgeEditorScreen?.x} screenY={thicknessEdgeEditorScreen?.y}
+        <DimensionEditor screenX={isTouchDevice ? undefined : thicknessEdgeEditorScreen?.x} screenY={isTouchDevice ? undefined : thicknessEdgeEditorScreen?.y}
           value={editThicknessEdgeValue} onChange={setEditThicknessEdgeValue}
           onSubmit={submitThicknessEdge} onCancel={() => setEditingThicknessEdge(null)} />
       )}
       {editingPartitionDimension !== null && (
-        <DimensionEditor screenX={partitionDimEditorScreen?.x} screenY={partitionDimEditorScreen?.y}
+        <DimensionEditor screenX={isTouchDevice ? undefined : partitionDimEditorScreen?.x} screenY={isTouchDevice ? undefined : partitionDimEditorScreen?.y}
           value={editPartitionDimValue} onChange={setEditPartitionDimValue}
           onSubmit={submitPartitionDimensionToElement} onCancel={() => setEditingPartitionDimension(null)} />
       )}
