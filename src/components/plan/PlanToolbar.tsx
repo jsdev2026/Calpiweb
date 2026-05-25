@@ -49,6 +49,7 @@ export const PlanToolbar = ({
   wallThickness,
   onWallThicknessChange,
 }: PlanToolbarProps) => (
+  <>
   <div
     className="absolute left-4 top-4 z-10 hidden md:flex flex-col gap-0.5 overflow-y-auto rounded-2xl p-1.5 shadow-2xl backdrop-blur-md"
     style={{ border: '1px solid var(--bdr)', background: 'var(--surf)', boxShadow: 'var(--sh-lg)', maxHeight: 'calc(100vh - 108px)', scrollbarWidth: 'none' }}>
@@ -192,4 +193,151 @@ export const PlanToolbar = ({
     <WallThicknessControl wallThickness={wallThickness} onChange={onWallThicknessChange} />
 
   </div>
+
+  {/* Mobile: horizontal scrollable toolbar at bottom of canvas */}
+  <div
+    data-testid="plan-toolbar-mobile"
+    className="absolute bottom-0 left-0 right-0 z-20 flex md:hidden items-center gap-1 overflow-x-auto border-t border-gray-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-900/95 px-2 py-2 backdrop-blur-md"
+    style={{ scrollbarWidth: 'none' }}
+  >
+    {/* Drawing tools */}
+    <button
+      type="button"
+      aria-label="Sélectionner"
+      onClick={() => onChangeTool('SELECT')}
+      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${
+        tool === 'SELECT' ? 'bg-orange-500 text-white shadow-md' : `${TB_CARD}`
+      }`}
+      style={tool !== 'SELECT' ? { color: 'var(--text2)' } : {}}
+    >
+      <MousePointer2 size={18} />
+    </button>
+    <button
+      type="button"
+      aria-label="Tracer des murs"
+      onClick={() => onChangeTool('WALL')}
+      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${
+        tool === 'WALL' ? 'bg-orange-500 text-white shadow-md' : `${TB_CARD}`
+      }`}
+      style={tool !== 'WALL' ? { color: 'var(--text2)' } : {}}
+    >
+      <PenTool size={18} />
+    </button>
+    <button
+      type="button"
+      aria-label="Placer une porte"
+      onClick={() => onChangeTool('DOOR')}
+      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${
+        tool === 'DOOR' ? 'bg-orange-500 text-white shadow-md' : `${TB_CARD}`
+      }`}
+      style={tool !== 'DOOR' ? { color: 'var(--text2)' } : {}}
+    >
+      <DoorOpen size={18} />
+    </button>
+    <button
+      type="button"
+      aria-label="Cloison (pointillés)"
+      onClick={() => onChangeTool('PARTITION')}
+      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${
+        tool === 'PARTITION' ? 'bg-violet-500 text-white shadow-md shadow-violet-500/30' : `${TB_CARD}`
+      }`}
+      style={tool !== 'PARTITION' ? { color: 'var(--text2)' } : {}}
+    >
+      <SplitSquareVertical size={18} />
+    </button>
+    <button
+      type="button"
+      aria-label="Zone non carrelée"
+      onClick={() => onChangeTool('EXCLUDE')}
+      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${
+        tool === 'EXCLUDE' ? 'bg-amber-500 text-white shadow-md shadow-amber-500/30' : `${TB_CARD}`
+      }`}
+      style={tool !== 'EXCLUDE' ? { color: 'var(--text2)' } : {}}
+    >
+      <Square size={18} />
+    </button>
+
+    <div className="mx-1 h-6 w-px shrink-0 bg-gray-200 dark:bg-zinc-700" />
+
+    {/* Constraint tools */}
+    <button
+      type="button"
+      aria-label="Contrainte horizontale"
+      onClick={() => onChangeTool('APPLY_H')}
+      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[13px] font-black transition-all ${
+        tool === 'APPLY_H' ? 'bg-blue-500 text-white shadow-md shadow-blue-500/30' : `${TB_CARD}`
+      }`}
+      style={tool !== 'APPLY_H' ? { color: 'var(--text2)' } : {}}
+    >
+      H
+    </button>
+    <button
+      type="button"
+      aria-label="Contrainte verticale"
+      onClick={() => onChangeTool('APPLY_V')}
+      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[13px] font-black transition-all ${
+        tool === 'APPLY_V' ? 'bg-blue-500 text-white shadow-md shadow-blue-500/30' : `${TB_CARD}`
+      }`}
+      style={tool !== 'APPLY_V' ? { color: 'var(--text2)' } : {}}
+    >
+      V
+    </button>
+    <button
+      type="button"
+      aria-label="Cotation"
+      onClick={() => onChangeTool('DIMENSION')}
+      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${
+        tool === 'DIMENSION' ? 'bg-orange-500 text-white shadow-md shadow-orange-500/30' : `${TB_CARD}`
+      }`}
+      style={tool !== 'DIMENSION' ? { color: 'var(--text2)' } : {}}
+    >
+      <Ruler size={18} />
+    </button>
+    <button
+      type="button"
+      aria-label="Coïncidence"
+      onClick={() => onChangeTool('COINCIDE')}
+      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${
+        tool === 'COINCIDE' ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/30' : `${TB_CARD}`
+      }`}
+      style={tool !== 'COINCIDE' ? { color: 'var(--text2)' } : {}}
+    >
+      <Magnet size={18} />
+    </button>
+    <button
+      type="button"
+      aria-label="Ancrer un nœud"
+      onClick={() => onChangeTool('ANCHOR')}
+      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${
+        tool === 'ANCHOR' ? 'bg-violet-500 text-white shadow-md shadow-violet-500/30' : `${TB_CARD}`
+      }`}
+      style={tool !== 'ANCHOR' ? { color: 'var(--text2)' } : {}}
+    >
+      <Pin size={18} />
+    </button>
+    <button
+      type="button"
+      aria-label="Épaisseur"
+      onClick={() => onChangeTool('THICKNESS')}
+      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[13px] font-black transition-all ${
+        tool === 'THICKNESS' ? 'bg-slate-500 text-white shadow-md shadow-slate-500/30' : `${TB_CARD}`
+      }`}
+      style={tool !== 'THICKNESS' ? { color: 'var(--text2)' } : {}}
+    >
+      E
+    </button>
+
+    {/* Actions — pinned right */}
+    <div className="ml-auto mx-1 h-6 w-px shrink-0 bg-gray-200 dark:bg-zinc-700" />
+    <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0" onClick={onUndo} disabled={!canUndo}>
+      <Undo size={18} />
+    </Button>
+    <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0" onClick={onRedo} disabled={!canRedo}>
+      <Redo2 size={18} />
+    </Button>
+    <Button variant="danger" size="icon" className="h-10 w-10 shrink-0" onClick={onClearRoom}>
+      <Trash2 size={18} />
+    </Button>
+  </div>
+  </>
 );
