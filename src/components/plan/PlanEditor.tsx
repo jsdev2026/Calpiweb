@@ -1366,7 +1366,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
       {/* Mobile: room strip (non-draggable, horizontal) */}
       <div
         data-testid="mobile-room-strip"
-        className="flex md:hidden shrink-0 items-center overflow-x-auto border-b border-gray-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-900/95 px-3 py-1.5"
+        className="flex md:hidden shrink-0 items-center overflow-x-auto border-b border-gray-200 dark:border-zinc-800 px-3 py-1"
         style={{ scrollbarWidth: 'none' }}
       >
         <RoomTabs
