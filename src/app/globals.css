@@ -224,8 +224,10 @@ body {
   #quantities-print-target * {
     visibility: visible !important;
   }
-  /* Positionner la cible pour occuper toute la page */
+  /* Positionner la cible pour occuper toute la page
+     display:block override le className="hidden" (display:none) de Tailwind */
   #quantities-print-target {
+    display: block !important;
     position: fixed;
     inset: 0;
     overflow: visible;
