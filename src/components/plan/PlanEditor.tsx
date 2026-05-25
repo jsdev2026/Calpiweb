@@ -16,6 +16,7 @@ import { PlanToolbar, type PlanTool } from './PlanToolbar';
 import { DimensionEditor } from './DimensionEditor';
 import { WallEdgeEditor } from './WallEdgeEditor';
 import { RoomPanel } from './RoomPanel';
+import { RoomTabs } from './RoomTabs';
 import { useDraggableSnap } from './useDraggableSnap';
 import {
   DrawingCanvas,
@@ -1361,14 +1362,25 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
   }
 
   return (
-    <div className="relative flex flex-1 overflow-hidden" style={{ background: 'var(--canvas-bg)' }}>
-      {/* Mobile: info banner */}
-      <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-center px-4 py-2 md:hidden"
-        style={{ background: 'var(--surf)', borderBottom: '1px solid var(--bdr)' }}>
-        <p className="text-[12px] font-medium" style={{ color: 'var(--text2)' }}>
-          La création de plans est disponible sur ordinateur ou tablette
-        </p>
+    <div className="flex flex-1 flex-col overflow-hidden">
+      {/* Mobile: room strip (non-draggable, horizontal) */}
+      <div
+        data-testid="mobile-room-strip"
+        className="flex md:hidden shrink-0 items-center overflow-x-auto border-b border-gray-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-900/95 px-3 py-1.5"
+        style={{ scrollbarWidth: 'none' }}
+      >
+        <RoomTabs
+          rooms={rooms}
+          activeRoomId={activeRoomId}
+          onSelectRoom={setActiveRoomId}
+          onAddRoom={handleAddRoom}
+          onRemoveRoom={handleRemoveRoom}
+          onRenameRoom={renameRoom}
+          vertical={false}
+        />
       </div>
+      {/* Canvas area */}
+      <div className="relative flex flex-1 overflow-hidden" style={{ background: 'var(--canvas-bg)' }}>
 
       {/* Mobile: touch overlay for pan + pinch-to-zoom */}
       <div
@@ -1397,19 +1409,27 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
         onWallThicknessChange={setWallThickness}
       />
 
-      <RoomPanel
-        rooms={rooms}
-        activeRoomId={activeRoomId}
-        onSelectRoom={setActiveRoomId}
-        onAddRoom={handleAddRoom}
-        onRemoveRoom={handleRemoveRoom}
-        onRenameRoom={renameRoom}
-        zone={roomZone}
-        isDragging={roomDragging}
-        onPointerDown={handleRoomPointerDown}
-      />
+      <div className="hidden md:block">
+        <RoomPanel
+          rooms={rooms}
+          activeRoomId={activeRoomId}
+          onSelectRoom={setActiveRoomId}
+          onAddRoom={handleAddRoom}
+          onRemoveRoom={handleRemoveRoom}
+          onRenameRoom={renameRoom}
+          zone={roomZone}
+          isDragging={roomDragging}
+          onPointerDown={handleRoomPointerDown}
+        />
+      </div>
 
-      <div className="pointer-events-none absolute bottom-5 right-5 z-10 rounded-xl px-4 py-3 text-[11px] shadow-xl backdrop-blur-md"
+      {/* Mobile: touch hint */}
+      <div className="pointer-events-none absolute bottom-16 right-3 z-10 md:hidden rounded-lg px-2.5 py-1.5 text-[10px] font-medium"
+        style={{ background: 'rgba(0,0,0,0.45)', color: 'rgba(255,255,255,0.85)' }}>
+        2 doigts : zoom
+      </div>
+
+      <div className="pointer-events-none absolute bottom-5 right-5 z-10 hidden md:block rounded-xl px-4 py-3 text-[11px] shadow-xl backdrop-blur-md"
         style={{ border: '1px solid var(--bdr)', background: 'var(--surf)', opacity: 0.9 }}>
         <p className="mb-2 text-[9px] font-black uppercase tracking-[0.2em]" style={{ color: 'var(--muted)' }}>Raccourcis</p>
         <div className="grid grid-cols-[1fr_auto] items-center gap-x-5 gap-y-1.5" style={{ color: 'var(--text2)' }}>
@@ -1509,6 +1529,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
         onZoneVertexPointerDown={handleZoneVertexPointerDown}
         onZoneEdgePointerDown={handleZoneEdgePointerDown}
       />
+      </div>
     </div>
   );
 };
