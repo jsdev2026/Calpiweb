@@ -6,6 +6,7 @@ import { ChevronLeft, FileDown, LogOut, Moon, Settings, Sun, Trash2, X } from 'l
 import { PlanEditor } from '@/components/plan/PlanEditor';
 import { TilingEditor } from '@/components/tiling/TilingEditor';
 import { QuantitiesPanel } from '@/components/quantities/QuantitiesPanel';
+import { QuantitiesPrintView } from '@/components/quantities/QuantitiesPrintView';
 import { selectActiveProject, useProjectStore } from '@/store/projectStore';
 import { useUiStore } from '@/store/uiStore';
 import { useSharingStore } from '@/store/sharingStore';
@@ -247,14 +248,8 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   const handlePrint = useCallback(() => {
-    if (tab === 'PLAN') return;
-    const style = document.createElement('style');
-    style.id = '__cp_print__';
-    style.textContent = `@media print { body * { visibility: hidden !important; } #print-target, #print-target * { visibility: visible !important; overflow: visible !important; max-height: none !important; } #print-target { position: absolute !important; inset: 0 !important; width: 100% !important; height: auto !important; } }`;
-    document.head.appendChild(style);
-    window.addEventListener('afterprint', () => document.getElementById('__cp_print__')?.remove(), { once: true });
     window.print();
-  }, [tab]);
+  }, []);
 
   useEffect(() => { void hydrate(); }, [hydrate]);
   useEffect(() => { if (hydrated) setActive(id); }, [id, hydrated, setActive]);
@@ -419,7 +414,6 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
             className="hidden md:flex mouse:flex btn-secondary items-center gap-1.5 text-[12.5px]"
             style={{ padding: '5px 10px' }}
             onClick={handlePrint}
-            disabled={tab === 'PLAN'}
           >
             <FileDown size={13} /> PDF
           </button>
@@ -513,12 +507,12 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
       <main className="flex flex-1 overflow-hidden">
         {tab === 'PLAN' && <PlanEditor onNavigateBack={() => router.push('/')} />}
         {tab === 'QUANTITIES' && (
-          <div id="print-target" className="flex flex-1 overflow-hidden">
+          <div className="flex flex-1 overflow-hidden">
             <QuantitiesPanel />
           </div>
         )}
         {tab === 'TILING' && (
-          <div id="print-target" className="flex flex-1 overflow-hidden">
+          <div className="flex flex-1 overflow-hidden">
             <TilingEditor
               rooms={activeProject.rooms}
               config={activeProject.config}
@@ -528,6 +522,11 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
           </div>
         )}
       </main>
+
+      {/* Cible d'impression — toujours dans le DOM, invisible en navigation */}
+      <div id="quantities-print-target" className="hidden">
+        {activeProject && <QuantitiesPrintView project={activeProject} />}
+      </div>
 
       {/* Settings Modal */}
       {showSettings && (

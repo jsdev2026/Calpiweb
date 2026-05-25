@@ -211,3 +211,21 @@ body {
 [data-dark="true"] .tag-wip  { background: #3b2808; color: #fcd34d; }
 [data-dark="true"] .tag-ok   { background: #052e16; color: #6ee7b7; }
 [data-dark="true"] .tag-pro  { background: rgba(232,103,26,.15); color: var(--accent); }
+
+/* ─── Print ──────────────────────────────────────────────────────────────────── */
+
+@media print {
+  /* Masquer toute l'application */
+  body > * {
+    display: none !important;
+  }
+  /* Afficher uniquement la cible d'impression */
+  #quantities-print-target {
+    display: block !important;
+  }
+  /* Forcer les couleurs de fond (header orange, cartes stats colorées) */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
