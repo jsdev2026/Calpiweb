@@ -339,9 +339,9 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
     <div className="flex h-screen flex-col overflow-hidden" style={{ background: 'var(--bg)' }}>
 
       {/* Topbar */}
-      <header className="shell-topbar px-5 gap-0">
+      <header className="shell-topbar overflow-hidden px-5 gap-0">
         {/* Logo */}
-        <div className="hidden md:flex mouse:flex items-center gap-2 mr-3">
+        <div className="hidden md:flex mouse:flex shrink-0 items-center gap-2 mr-3">
           <div className="flex h-6 w-6 items-center justify-center rounded-md" style={{ background: 'var(--accent)' }}>
             <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
               <rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.2" fill="white"/>
@@ -366,21 +366,21 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
         </button>
 
         {/* Breadcrumb */}
-        <div className="flex items-center gap-1.5 text-[12.5px]" style={{ color: 'var(--text2)' }}>
-          <button type="button" onClick={() => router.push('/dashboard')} className="hover:underline hidden md:inline mouse:inline" style={{ color: 'var(--text2)' }}>
+        <div className="flex min-w-0 shrink items-center gap-1.5 text-[12.5px]" style={{ color: 'var(--text2)' }}>
+          <button type="button" onClick={() => router.push('/dashboard')} className="hover:underline hidden md:inline mouse:inline shrink-0" style={{ color: 'var(--text2)' }}>
             Projets
           </button>
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="hidden md:block mouse:block" style={{ opacity: 0.4 }}><path d="M4 2l4 4-4 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="hidden md:block mouse:block shrink-0" style={{ opacity: 0.4 }}><path d="M4 2l4 4-4 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
           <input
             type="text"
             value={activeProject.name}
             onChange={(e) => rename(activeProject.id, e.target.value)}
             readOnly={isReadOnly}
-            className="hidden md:block mouse:block"
+            className="hidden md:block mouse:block min-w-0 truncate"
             style={{
               background: 'transparent', border: 'none', outline: 'none',
               fontFamily: 'var(--font-display)', fontSize: 13.5, fontWeight: 600,
-              color: 'var(--text)', minWidth: 120, maxWidth: 260,
+              color: 'var(--text)', maxWidth: 260,
             }}
             onFocus={(e) => { e.target.style.background = 'var(--surf2)'; e.target.style.borderRadius = 'var(--rs)'; e.target.style.padding = '2px 6px'; }}
             onBlur={(e) => { e.target.style.background = 'transparent'; e.target.style.padding = '0'; }}
@@ -410,7 +410,7 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
         )}
 
         {/* Actions */}
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto shrink-0 flex items-center gap-2">
           <button type="button" onClick={toggleDarkMode} className="btn-icon" aria-label="Thème">
             {darkMode ? <Sun size={14} /> : <Moon size={14} />}
           </button>
