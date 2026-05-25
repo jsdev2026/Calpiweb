@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { selectActiveProject, useProjectStore } from '@/store/projectStore';
 import { analyzeQuantities } from '@/engine/quantities/quantityEngine';
+import { mergeSimilarCutGroups } from '@/engine/quantities/mergeSimilarCutGroups';
 import { formatCm, formatM2 } from '@/utils/formatters';
 import { QuantityPlanView } from './QuantityPlanView';
 import { CutGroupCard, GROUP_COLORS } from './CutGroupCard';
@@ -45,6 +46,11 @@ export const QuantitiesPanel = () => {
   }, [project]);
 
   if (!project || !result) return null;
+
+  const mergedCutGroups = useMemo(
+    () => mergeSimilarCutGroups(result.cutGroups),
+    [result.cutGroups],
+  );
 
   if (result.totalTiles === 0) {
     return (
@@ -226,16 +232,18 @@ export const QuantitiesPanel = () => {
               </button>
             </div>
             <div className="flex flex-col gap-2">
-              {result.cutGroups.map((group, i) => (
+              {mergedCutGroups.map((group, i) => (
                 <CutGroupCard
-                  key={`${group.usedW}×${group.usedH}|${group.pieceEdges.left}|${group.pieceEdges.right}|${group.pieceEdges.top}|${group.pieceEdges.bottom}`}
+                  key={group.originalIndices.join(',')}
                   group={group}
                   groupIndex={i}
                   groupColor={GROUP_COLORS[i % GROUP_COLORS.length]!}
                   tileW={result.tileW}
                   tileH={result.tileH}
                   tileColor={color}
-                  onHighlight={setHighlightGroup}
+                  onHighlight={(n) => setHighlightGroup(
+                    n === null ? null : group.originalIndices[0]! + 1,
+                  )}
                 />
               ))}
             </div>

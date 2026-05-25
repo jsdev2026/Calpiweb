@@ -5,7 +5,7 @@ export interface MergedCutGroup extends CutGroup {
    * Indices des groupes originaux (positions dans le tableau cutGroups du moteur,
    * avant toute fusion) qui composent cette entrée. Toujours ≥ 1 élément.
    */
-  originalIndices: number[];
+  originalIndices: [number, ...number[]];
 }
 
 function withinTolerance(a: CutGroup, b: CutGroup, tol: number): boolean {
@@ -75,7 +75,7 @@ export function mergeSimilarCutGroups(
       totalCount: items.reduce((s, x) => s + x.g.totalCount, 0),
       reuseCount: items.reduce((s, x) => s + x.g.reuseCount, 0),
       netTiles: items.reduce((s, x) => s + x.g.netTiles, 0),
-      originalIndices: items.map(x => x.origIdx),
+      originalIndices: items.map(x => x.origIdx) as [number, ...number[]],
     };
   });
 }
