@@ -79,10 +79,9 @@ export const QuantitiesPanel = () => {
     <div className="flex flex-1 flex-col overflow-hidden bg-gray-50 dark:bg-zinc-950">
 
       {/* ── Bandeaux repliables ── */}
-      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       <div
         data-testid="bandeaux-wrapper"
-        inert={collapsed ? ('' as any) : undefined}
+        inert={collapsed ? ('' as unknown as boolean) : undefined}
         style={{
           maxHeight: collapsed ? 0 : 400,
           opacity: collapsed ? 0 : 1,
