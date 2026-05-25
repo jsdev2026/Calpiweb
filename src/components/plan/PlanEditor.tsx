@@ -259,56 +259,70 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
   const svgRef = useRef<SVGSVGElement | null>(null);
   const touchRef = useRef<{ dist: number; midX: number; midY: number; panX: number; panY: number } | null>(null);
 
+  // ── Touch handlers ─────────────────────────────────────────────────────────
+
+  // Overlay : pan 1-doigt (SELECT uniquement)
   const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length !== 1) return;
     e.preventDefault();
     const t = e.touches;
-    if (t.length === 2) {
-      const dx = t[1]!.clientX - t[0]!.clientX;
-      const dy = t[1]!.clientY - t[0]!.clientY;
-      touchRef.current = {
-        dist: Math.hypot(dx, dy),
-        midX: (t[0]!.clientX + t[1]!.clientX) / 2,
-        midY: (t[0]!.clientY + t[1]!.clientY) / 2,
-        panX: pan.x,
-        panY: pan.y,
-      };
-    } else if (t.length === 1) {
-      touchRef.current = { dist: 0, midX: t[0]!.clientX, midY: t[0]!.clientY, panX: pan.x, panY: pan.y };
-    }
+    touchRef.current = { dist: 0, midX: t[0]!.clientX, midY: t[0]!.clientY, panX: pan.x, panY: pan.y };
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     e.preventDefault();
     const t = e.touches;
-    if (!touchRef.current) return;
-    if (t.length === 2) {
-      const dx = t[1]!.clientX - t[0]!.clientX;
-      const dy = t[1]!.clientY - t[0]!.clientY;
-      const dist = Math.hypot(dx, dy);
-      const midX = (t[0]!.clientX + t[1]!.clientX) / 2;
-      const midY = (t[0]!.clientY + t[1]!.clientY) / 2;
-      const svg = svgRef.current;
-      if (svg && touchRef.current.dist > 0) {
-        const ratio = dist / touchRef.current.dist;
-        const rect = svg.getBoundingClientRect();
-        const mx = midX - rect.left;
-        const my = midY - rect.top;
-        setScale((s) => {
-          const ns = Math.max(0.005, Math.min(s * ratio, 4));
-          setPan((p) => ({ x: mx - (mx - p.x) * (ns / s), y: my - (my - p.y) * (ns / s) }));
-          return ns;
-        });
-      }
-      touchRef.current = { dist, midX, midY, panX: pan.x, panY: pan.y };
-    } else if (t.length === 1) {
-      const dx = t[0]!.clientX - touchRef.current.midX;
-      const dy = t[0]!.clientY - touchRef.current.midY;
-      setPan({ x: touchRef.current.panX + dx, y: touchRef.current.panY + dy });
-    }
+    if (!touchRef.current || t.length !== 1 || touchRef.current.dist !== 0) return;
+    const dx = t[0]!.clientX - touchRef.current.midX;
+    const dy = t[0]!.clientY - touchRef.current.midY;
+    setPan({ x: touchRef.current.panX + dx, y: touchRef.current.panY + dy });
   };
 
   const handleTouchEnd = () => {
     touchRef.current = null;
+  };
+
+  // Wrapper : pinch-zoom 2 doigts (tous outils)
+  const handleWrapperTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length !== 2) return;
+    e.preventDefault();
+    const t = e.touches;
+    const dx = t[1]!.clientX - t[0]!.clientX;
+    const dy = t[1]!.clientY - t[0]!.clientY;
+    touchRef.current = {
+      dist: Math.hypot(dx, dy),
+      midX: (t[0]!.clientX + t[1]!.clientX) / 2,
+      midY: (t[0]!.clientY + t[1]!.clientY) / 2,
+      panX: pan.x,
+      panY: pan.y,
+    };
+  };
+
+  const handleWrapperTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length !== 2 || !touchRef.current || touchRef.current.dist === 0) return;
+    const t = e.touches;
+    const dx = t[1]!.clientX - t[0]!.clientX;
+    const dy = t[1]!.clientY - t[0]!.clientY;
+    const dist = Math.hypot(dx, dy);
+    const midX = (t[0]!.clientX + t[1]!.clientX) / 2;
+    const midY = (t[0]!.clientY + t[1]!.clientY) / 2;
+    const svg = svgRef.current;
+    if (svg) {
+      const ratio = dist / touchRef.current.dist;
+      const rect = svg.getBoundingClientRect();
+      const mx = midX - rect.left;
+      const my = midY - rect.top;
+      setScale((s) => {
+        const ns = Math.max(0.005, Math.min(s * ratio, 4));
+        setPan((p) => ({ x: mx - (mx - p.x) * (ns / s), y: my - (my - p.y) * (ns / s) }));
+        return ns;
+      });
+    }
+    touchRef.current = { dist, midX, midY, panX: pan.x, panY: pan.y };
+  };
+
+  const handleWrapperTouchEnd = () => {
+    if (touchRef.current && touchRef.current.dist > 0) touchRef.current = null;
   };
 
   const lastClickRef = useRef<{ time: number; x: number; y: number }>({ time: 0, x: 0, y: 0 });
@@ -1380,12 +1394,19 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
         />
       </div>
       {/* Canvas area */}
-      <div className="relative flex flex-1 overflow-hidden" style={{ background: 'var(--canvas-bg)' }}>
-
-      {/* Mobile: touch overlay for pan + pinch-to-zoom */}
       <div
+        className="relative flex flex-1 overflow-hidden"
+        style={{ background: 'var(--canvas-bg)' }}
+        onTouchStart={handleWrapperTouchStart}
+        onTouchMove={handleWrapperTouchMove}
+        onTouchEnd={handleWrapperTouchEnd}
+      >
+
+      {/* Mobile: touch overlay for 1-finger pan (SELECT only) */}
+      <div
+        data-testid="mobile-touch-overlay"
         className="absolute inset-0 z-10 md:hidden"
-        style={{ touchAction: 'none' }}
+        style={{ touchAction: 'none', pointerEvents: tool === 'SELECT' ? 'auto' : 'none' }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
