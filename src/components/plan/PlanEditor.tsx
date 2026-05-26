@@ -182,6 +182,40 @@ function canCloseRoom(room: Room, allRooms: Room[]): boolean {
 
 function ref(roomId: string, vertexIdx: number): PointRef { return { roomId, vertexIdx }; }
 
+/**
+ * Calcule le scale et le pan initiaux pour centrer les pièces dans le viewport.
+ * Retourne null si aucun point n'existe (canvas vide).
+ */
+export function computeInitialView(
+  rooms: Room[],
+  viewW: number,
+  viewH: number,
+): { scale: number; pan: { x: number; y: number } } | null {
+  const allPoints = rooms.flatMap((r) => r.points);
+  if (allPoints.length === 0) return null;
+
+  const xs = allPoints.map((p) => p.x);
+  const ys = allPoints.map((p) => p.y);
+  const minX = Math.min(...xs), maxX = Math.max(...xs);
+  const minY = Math.min(...ys), maxY = Math.max(...ys);
+  const bboxW = maxX - minX || 1000;
+  const bboxH = maxY - minY || 1000;
+  const cx = (minX + maxX) / 2;
+  const cy = (minY + maxY) / 2;
+
+  const PADDING = 80;
+  const newScale = Math.min(
+    (viewW - PADDING * 2) / bboxW,
+    (viewH - PADDING * 2) / bboxH,
+    0.5,
+  );
+
+  return {
+    scale: newScale,
+    pan: { x: viewW / 2 - cx * newScale, y: viewH / 2 - cy * newScale },
+  };
+}
+
 // ── Component ──────────────────────────────────────────────────────────────
 
 export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) => {
@@ -342,6 +376,20 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
   useEffect(() => { pastRef.current = past; },     [past]);
   useEffect(() => { futureRef.current = future; }, [future]);
   useEffect(() => { constraintsRef.current = constraints; }, [constraints]);
+
+  // ── Centrage initial sur les pièces existantes ────────────────────────────
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      const svg = svgRef.current;
+      if (!svg) return;
+      const { width: vw, height: vh } = svg.getBoundingClientRect();
+      const view = computeInitialView(rooms, vw, vh);
+      if (!view) return;
+      setScale(view.scale);
+      setPan(view.pan);
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ── DOF (virtual rooms = rooms + zones + partitions) ──────────────────────
 
