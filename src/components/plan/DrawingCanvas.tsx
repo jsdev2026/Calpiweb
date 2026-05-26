@@ -368,11 +368,14 @@ export const DrawingCanvas = ({
                   : hasDist ? (isActive ? '#fbbf24' : '#92400e')
                   : isActive ? '#ea580c' : 'var(--canvas-wall-inact)';
                 const edgeThick = room.edgeThicknesses?.[i] ?? wallThickness;
+                const edgeLen = distance(p, np);
                 return (
                   <line key={`wall-${room.id}-${i}`} x1={p.x} y1={p.y} x2={np.x} y2={np.y}
                     stroke={color} strokeWidth={isDoor ? edgeThick * 0.5 : edgeThick}
                     strokeLinecap="round"
-                    strokeDasharray={isDoor ? `${edgeThick * 1.2},${edgeThick * 0.8}` : undefined} />
+                    strokeDasharray={isDoor ? `${edgeThick * 1.2},${edgeThick * 0.8}` : undefined}
+                    className={tool === 'SELECT' ? 'cursor-pointer' : undefined}
+                    onPointerDown={tool === 'SELECT' ? onEdgePointerDown(room.id, i, edgeLen) : undefined} />
                 );
               })}
 
