@@ -8,7 +8,7 @@ import { TOOL_STATUS_TEXTS } from './ToolStatusBar';
 describe('Escape key → SELECT', () => {
   const nonSelectTools: PlanTool[] = [
     'WALL', 'DOOR', 'PARTITION', 'EXCLUDE',
-    'APPLY_H', 'APPLY_V', 'COINCIDE', 'DIMENSION', 'ANCHOR',
+    'APPLY_H', 'APPLY_V', 'COINCIDE', 'DIMENSION', 'ANCHOR', 'DELETE',
   ];
 
   it('chaque outil non-SELECT doit céder à SELECT après Escape', () => {
@@ -276,7 +276,7 @@ describe('DELETE tool', () => {
   });
 
   it('Escape depuis DELETE bascule vers SELECT', () => {
-    const tool: PlanTool = 'DELETE';
+    const tool = 'DELETE' as PlanTool;
     const nextTool: PlanTool = tool !== 'SELECT' ? 'SELECT' : tool;
     expect(nextTool).toBe('SELECT');
   });
