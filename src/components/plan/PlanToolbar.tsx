@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { ToolTooltip } from './ToolTooltip';
 import { WallThicknessControl } from './WallThicknessControl';
 
-export type PlanTool = 'SELECT' | 'WALL' | 'DOOR' | 'APPLY_H' | 'APPLY_V' | 'COINCIDE' | 'ANCHOR' | 'PARTITION' | 'EXCLUDE' | 'DIMENSION';
+export type PlanTool = 'SELECT' | 'WALL' | 'DOOR' | 'APPLY_H' | 'APPLY_V' | 'COINCIDE' | 'ANCHOR' | 'PARTITION' | 'EXCLUDE' | 'DIMENSION' | 'DELETE';
 
 interface PlanToolbarProps {
   tool: PlanTool;

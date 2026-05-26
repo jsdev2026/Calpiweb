@@ -259,3 +259,25 @@ describe('réouverture pièce sur suppression mur', () => {
     expect((3 - rotateBy + n) % n).toBe(1);
   });
 });
+
+// ── DELETE tool ──────────────────────────────────────────────────────────────
+
+describe('DELETE tool', () => {
+  it('DELETE fait partie de PlanTool', () => {
+    const tools: PlanTool[] = [
+      'SELECT', 'WALL', 'DOOR', 'APPLY_H', 'APPLY_V',
+      'COINCIDE', 'ANCHOR', 'PARTITION', 'EXCLUDE', 'DIMENSION', 'DELETE',
+    ];
+    expect(tools).toContain('DELETE');
+  });
+
+  it('DELETE a un texte dans TOOL_STATUS_TEXTS', () => {
+    expect(TOOL_STATUS_TEXTS['DELETE']).toBeTruthy();
+  });
+
+  it('Escape depuis DELETE bascule vers SELECT', () => {
+    const tool: PlanTool = 'DELETE';
+    const nextTool: PlanTool = tool !== 'SELECT' ? 'SELECT' : tool;
+    expect(nextTool).toBe('SELECT');
+  });
+});

@@ -11,6 +11,7 @@ export const TOOL_STATUS_TEXTS: Partial<Record<PlanTool, string>> = {
   COINCIDE:  'Cliquez sur le nœud, puis sur un mur/nœud pour les joindre',
   DIMENSION: 'Cliquez sur un premier nœud, puis sur le second',
   ANCHOR:    'Cliquez sur un nœud pour le figer en place',
+  DELETE:    'Cliquez sur un élément pour le supprimer — Échap pour quitter',
 };
 
 export const ToolStatusBar = ({ tool }: { tool: PlanTool }) => {
