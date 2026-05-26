@@ -14,9 +14,6 @@ interface PlanToolbarProps {
   onChangeTool: (tool: PlanTool) => void;
   onUndo: () => void;
   onRedo: () => void;
-  onDelete: () => void;
-  canDelete: boolean;
-  deleteTooltipLabel: string;
   wallThickness: number;
   onWallThicknessChange: (mm: number) => void;
   tutorialMode: boolean;
@@ -35,8 +32,8 @@ const TOOL_TOOLTIPS = {
   DIMENSION: { label: 'Cotation',                description: 'Mesure ou contraint la distance entre deux nœuds' },
   ANCHOR:    { label: 'Ancrer un nœud',          description: "Fige un point pour qu'il ne soit pas déplacé" },
   undo:      { label: 'Annuler',                 description: "Ctrl+Z — revenir à l'état précédent" },
-  redo:      { label: 'Rétablir',                description: 'Ctrl+Y — rétablir l\'action annulée' },
-  clear:     { label: 'Supprimer l\'élément', description: 'Supprime le mur, porte, cloison ou zone sélectionné' },
+  redo:      { label: 'Rétablir',                description: "Ctrl+Y — rétablir l'action annulée" },
+  DELETE:    { label: 'Mode suppression',        description: 'Cliquez un élément pour le supprimer — Échap pour quitter' },
 } as const;
 
 const TB_CARD = 'bg-gray-50 border border-gray-200 dark:bg-zinc-900 dark:border-zinc-800';
@@ -48,9 +45,6 @@ export const PlanToolbar = ({
   onChangeTool,
   onUndo,
   onRedo,
-  onDelete,
-  canDelete,
-  deleteTooltipLabel,
   wallThickness,
   onWallThicknessChange,
   tutorialMode,
@@ -264,8 +258,13 @@ export const PlanToolbar = ({
         <Redo2 size={16} />
       </Button>
     </ToolTooltip>
-    <ToolTooltip {...TOOL_TOOLTIPS.clear} description={deleteTooltipLabel}>
-      <Button variant="danger" size="icon" className="h-8 w-8" onClick={onDelete} disabled={!canDelete}>
+    <ToolTooltip {...TOOL_TOOLTIPS.DELETE}>
+      <Button
+        variant={tool === 'DELETE' ? 'danger' : 'ghost'}
+        size="icon"
+        className="h-8 w-8"
+        onClick={() => onChangeTool('DELETE')}
+      >
         <Trash2 size={16} />
       </Button>
     </ToolTooltip>
@@ -404,9 +403,17 @@ export const PlanToolbar = ({
     <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0" onClick={onRedo} disabled={!canRedo}>
       <Redo2 size={18} />
     </Button>
-    <Button variant="danger" size="icon" className="h-10 w-10 shrink-0" onClick={onDelete} disabled={!canDelete}>
+    <button
+      type="button"
+      aria-label="Mode suppression"
+      onClick={() => onChangeTool('DELETE')}
+      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${
+        tool === 'DELETE' ? 'bg-red-500 text-white shadow-md shadow-red-500/30' : `${TB_CARD}`
+      }`}
+      style={tool !== 'DELETE' ? { color: 'var(--text2)' } : {}}
+    >
       <Trash2 size={18} />
-    </Button>
+    </button>
   </div>
   </>
 );
