@@ -13,6 +13,7 @@ import { buildAndSolve, solveAndValidate } from '@/engine/constraints/solver';
 import { analyzeDOF, ptKey } from '@/engine/constraints/dofAnalyzer';
 import { constraintInteriorOffset } from '@/engine/constraints/interiorOffset';
 import { PlanToolbar, type PlanTool } from './PlanToolbar';
+import { ToolStatusBar } from './ToolStatusBar';
 import { DimensionEditor } from './DimensionEditor';
 import { WallEdgeEditor } from './WallEdgeEditor';
 import { RoomPanel } from './RoomPanel';
@@ -1418,6 +1419,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       />
+      <ToolStatusBar tool={tool} />
 
       {violationFlash && (
         <div className="pointer-events-none absolute left-1/2 top-4 z-30 -translate-x-1/2 rounded-lg border border-red-500/50 bg-red-950/90 px-4 py-2 text-sm font-medium text-red-300 shadow-xl backdrop-blur-sm">
