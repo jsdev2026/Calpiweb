@@ -204,10 +204,13 @@ export function computeInitialView(
   const cy = (minY + maxY) / 2;
 
   const PADDING = 80;
-  const newScale = Math.min(
-    (viewW - PADDING * 2) / bboxW,
-    (viewH - PADDING * 2) / bboxH,
-    0.5,
+  const newScale = Math.max(
+    0.005,
+    Math.min(
+      (viewW - PADDING * 2) / bboxW,
+      (viewH - PADDING * 2) / bboxH,
+      0.5,
+    ),
   );
 
   return {
@@ -379,7 +382,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
 
   // ── Centrage initial sur les pièces existantes ────────────────────────────
   useEffect(() => {
-    requestAnimationFrame(() => {
+    const rafId = requestAnimationFrame(() => {
       const svg = svgRef.current;
       if (!svg) return;
       const { width: vw, height: vh } = svg.getBoundingClientRect();
@@ -388,6 +391,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
       setScale(view.scale);
       setPan(view.pan);
     });
+    return () => cancelAnimationFrame(rafId);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
