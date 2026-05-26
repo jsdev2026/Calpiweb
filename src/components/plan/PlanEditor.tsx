@@ -449,6 +449,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
       if (e.key === '?') {
         const tag = (document.activeElement as HTMLElement)?.tagName;
         if (tag !== 'INPUT' && tag !== 'TEXTAREA') {
+          e.preventDefault();
           setTutorialMode((v) => !v);
         }
       }
