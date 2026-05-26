@@ -61,7 +61,7 @@ export const RoomTabs = ({
           ) : (
             <button
               type="button"
-              title={room.name ? `${room.name} (double-clic pour renommer)` : `Pièce ${i + 1} — double-clic pour nommer`}
+              title={room.id === activeRoomId && onClearRoom ? 'Clic droit pour effacer la pièce' : room.name ? `${room.name} (double-clic pour renommer)` : `Pièce ${i + 1} — double-clic pour nommer`}
               onClick={() => onSelectRoom(room.id)}
               onDoubleClick={() => startRename(room)}
               onContextMenu={room.id === activeRoomId && onClearRoom ? (e) => { e.preventDefault(); onClearRoom(); } : undefined}

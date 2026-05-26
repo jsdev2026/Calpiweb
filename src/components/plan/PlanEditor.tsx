@@ -1353,10 +1353,10 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
 
   const handleTrashClick = () => {
     if (!editingContext) return;
-    pushHistory();
 
     // ── Partition ──
     if (editingPartition) {
+      pushHistory();
       removePartition(editingPartition.roomId, editingPartition.partitionId);
       setEditingPartition(null);
       return;
@@ -1364,6 +1364,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
 
     // ── Zone exclue ──
     if (editingZoneEdge) {
+      pushHistory();
       removeExcludedZone(editingZoneEdge.roomId, editingZoneEdge.zoneId);
       setEditingZoneEdge(null);
       return;
@@ -1377,10 +1378,10 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
 
       if (edgeType === 'DOOR') {
         const result = removeDoorFromRoom(room, editingEdge.edgeIndex);
-        if (result) {
-          shiftConstraintIndices(room.id, editingEdge.edgeIndex, -2);
-          updateRoom(room.id, result.points, result.edges);
-        }
+        if (!result) return;
+        pushHistory();
+        shiftConstraintIndices(room.id, editingEdge.edgeIndex, -2);
+        updateRoom(room.id, result.points, result.edges);
         setEditingEdge(null);
         return;
       }
@@ -1388,6 +1389,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
       // ── Ré-ouvrir la pièce (supprimer ce mur) ──
       const n = room.points.length;
       if (n < 3) return;
+      pushHistory();
 
       const rotateBy = (editingEdge.edgeIndex + 1) % n;
       const newPoints = [...room.points.slice(rotateBy), ...room.points.slice(0, rotateBy)];
