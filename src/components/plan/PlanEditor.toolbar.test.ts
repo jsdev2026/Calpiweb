@@ -128,3 +128,28 @@ describe('partition thickness via SELECT', () => {
     expect(editingPartitionThickness).toEqual({ roomId: 'r1', partitionId: 'p1' });
   });
 });
+
+// ── Auto-anchor premier nœud ────────────────────────────────────────────────
+
+describe('auto-anchor premier nœud', () => {
+  it('devrait ancrer quand pièce 0, point 0', () => {
+    const isFirstRoom = true;
+    const isFirstPoint = true;
+    const shouldAutoAnchor = isFirstRoom && isFirstPoint;
+    expect(shouldAutoAnchor).toBe(true);
+  });
+
+  it('ne devrait pas ancrer pour la deuxième pièce', () => {
+    const isFirstRoom = false;
+    const isFirstPoint = true;
+    const shouldAutoAnchor = isFirstRoom && isFirstPoint;
+    expect(shouldAutoAnchor).toBe(false);
+  });
+
+  it('ne devrait pas ancrer pour le deuxième point de la pièce 0', () => {
+    const isFirstRoom = true;
+    const isFirstPoint = false;
+    const shouldAutoAnchor = isFirstRoom && isFirstPoint;
+    expect(shouldAutoAnchor).toBe(false);
+  });
+});

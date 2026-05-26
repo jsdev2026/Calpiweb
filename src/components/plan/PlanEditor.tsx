@@ -755,7 +755,12 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
       const { point: snapped } = snapPos(raw, refPt);
       const pts = activeRoom.points;
       if (canCloseActiveRoom && distance(snapped, pts[0]!) < CLOSING_TOLERANCE_MM) { setTool('SELECT'); return; }
-      pushHistory(); updateRoom(activeRoom.id, [...pts, snapped], [...activeRoom.edges, 'WALL']);
+      pushHistory();
+      updateRoom(activeRoom.id, [...pts, snapped], [...activeRoom.edges, 'WALL']);
+      // Auto-ancrage : premier nœud de la première pièce uniquement
+      if (rooms.indexOf(activeRoom) === 0 && pts.length === 0) {
+        addConstraint({ id: generateId(), type: 'FIX', pts: [ref(activeRoom.id, 0)], value: { x: snapped.x, y: snapped.y } });
+      }
       return;
     }
 
