@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { ToolTooltip } from './ToolTooltip';
 import { WallThicknessControl } from './WallThicknessControl';
 
-export type PlanTool = 'SELECT' | 'WALL' | 'DOOR' | 'APPLY_H' | 'APPLY_V' | 'COINCIDE' | 'ANCHOR' | 'PARTITION' | 'EXCLUDE' | 'DIMENSION' | 'THICKNESS';
+export type PlanTool = 'SELECT' | 'WALL' | 'DOOR' | 'APPLY_H' | 'APPLY_V' | 'COINCIDE' | 'ANCHOR' | 'PARTITION' | 'EXCLUDE' | 'DIMENSION';
 
 interface PlanToolbarProps {
   tool: PlanTool;
@@ -31,7 +31,6 @@ const TOOL_TOOLTIPS = {
   APPLY_V:   { label: 'Contrainte verticale',    description: "Fixe la distance verticale d'un mur" },
   COINCIDE:  { label: 'Coïncidence',             description: 'Aligne deux nœuds ou colle un nœud à un mur' },
   DIMENSION: { label: 'Cotation',                description: 'Mesure ou contraint la distance entre deux nœuds' },
-  THICKNESS: { label: 'Épaisseur',               description: "Modifie l'épaisseur d'un mur ou d'une cloison" },
   ANCHOR:    { label: 'Ancrer un nœud',          description: "Fige un point pour qu'il ne soit pas déplacé" },
   undo:      { label: 'Annuler',                 description: "Ctrl+Z — revenir à l'état précédent" },
   redo:      { label: 'Rétablir',                description: 'Ctrl+Y — rétablir l\'action annulée' },
@@ -229,17 +228,6 @@ export const PlanToolbar = ({
         </span>
       )}
     </div>
-    <ToolTooltip {...TOOL_TOOLTIPS.THICKNESS}>
-      <button type="button" onClick={() => onChangeTool('THICKNESS')}
-        className={`flex h-8 w-8 items-center justify-center rounded-xl text-[12px] font-black transition-all ${
-          tool === 'THICKNESS'
-            ? 'bg-slate-500 text-white shadow-md shadow-slate-500/30'
-            : `${TB_CARD} hover:bg-slate-100 dark:hover:bg-slate-900/30 hover:text-slate-600 dark:hover:text-slate-300`
-        }`}
-        style={tool !== 'THICKNESS' ? { color: 'var(--text2)' } : {}}>
-        E
-      </button>
-    </ToolTooltip>
     <div className="flex items-center">
       <ToolTooltip {...TOOL_TOOLTIPS.ANCHOR}>
         <button type="button" onClick={() => onChangeTool('ANCHOR')}
@@ -404,18 +392,6 @@ export const PlanToolbar = ({
     >
       <Pin size={18} />
     </button>
-    <button
-      type="button"
-      aria-label="Épaisseur"
-      onClick={() => onChangeTool('THICKNESS')}
-      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[13px] font-black transition-all ${
-        tool === 'THICKNESS' ? 'bg-slate-500 text-white shadow-md shadow-slate-500/30' : `${TB_CARD}`
-      }`}
-      style={tool !== 'THICKNESS' ? { color: 'var(--text2)' } : {}}
-    >
-      E
-    </button>
-
     {/* Actions — pinned right */}
     <div className="ml-auto mx-1 h-6 w-px shrink-0 bg-gray-200 dark:bg-zinc-700" />
     <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0" onClick={onUndo} disabled={!canUndo}>

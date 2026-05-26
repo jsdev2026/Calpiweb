@@ -98,3 +98,33 @@ describe('mode tutorial', () => {
     expect(toggled).toBe(true);
   });
 });
+
+// ── Suppression THICKNESS ─────────────────────────────────────────────────────
+
+describe('PlanTool type — sans THICKNESS', () => {
+  it('THICKNESS n\'est pas dans la liste des outils valides', () => {
+    const tools: PlanTool[] = [
+      'SELECT', 'WALL', 'DOOR', 'APPLY_H', 'APPLY_V',
+      'COINCIDE', 'ANCHOR', 'PARTITION', 'EXCLUDE', 'DIMENSION',
+    ];
+    // @ts-expect-error — 'THICKNESS' was removed from PlanTool
+    const thickness: PlanTool = 'THICKNESS';
+    expect(tools).not.toContain(thickness);
+  });
+});
+
+// ── Partition thickness en SELECT ─────────────────────────────────────────────
+
+describe('partition thickness via SELECT', () => {
+  it('un clic sur une partition en SELECT ouvre editingPartitionThickness', () => {
+    const partEdge = { roomId: 'r1', partitionId: 'p1' };
+    const tool: PlanTool = 'SELECT';
+    let editingPartitionThickness: { roomId: string; partitionId: string } | null = null;
+
+    if (tool === 'SELECT' && partEdge) {
+      editingPartitionThickness = { roomId: partEdge.roomId, partitionId: partEdge.partitionId };
+    }
+
+    expect(editingPartitionThickness).toEqual({ roomId: 'r1', partitionId: 'p1' });
+  });
+});

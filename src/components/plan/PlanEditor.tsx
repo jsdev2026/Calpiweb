@@ -237,8 +237,6 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
   const [editPartitionValue, setEditPartitionValue] = useState('');
   const [editingPartitionThickness, setEditingPartitionThickness] = useState<{ roomId: string; partitionId: string } | null>(null);
   const [editThicknessValue, setEditThicknessValue] = useState('');
-  const [editingThicknessEdge, setEditingThicknessEdge] = useState<{ roomId: string; edgeIndex: number } | null>(null);
-  const [editThicknessEdgeValue, setEditThicknessEdgeValue] = useState('');
   const [editingPartitionDimension, setEditingPartitionDimension] = useState<{ fromRef: PointRef; toRef: PointRef } | null>(null);
   const [editPartitionDimValue, setEditPartitionDimValue] = useState('');
   const [editingPartitionDimType, setEditingPartitionDimType] = useState<'H_DISTANCE' | 'V_DISTANCE'>('H_DISTANCE');
@@ -432,7 +430,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
         setTool('SELECT');
         setTutorialMode(false);
         setEditingEdge(null); setEditingZoneEdge(null); setEditingPartition(null);
-        setEditingPartitionThickness(null); setEditingThicknessEdge(null); setEditingPartitionDimension(null);
+        setEditingPartitionThickness(null); setEditingPartitionDimension(null);
         setDraggedVertex(null); setDraggedZoneVertex(null); setDraggedPartitionVertex(null);
         setCoincideSource(null); setDimensionSource(null); setPartitionOrigin(null); setExcludePoints([]);
       }
@@ -626,7 +624,6 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
     if (editingZoneEdge !== null) { setEditingZoneEdge(null); return; }
     if (editingPartition !== null) { setEditingPartition(null); return; }
     if (editingPartitionThickness !== null) { setEditingPartitionThickness(null); return; }
-    if (editingThicknessEdge !== null) { setEditingThicknessEdge(null); return; }
     if (editingPartitionDimension !== null) { setEditingPartitionDimension(null); return; }
     if (draggedVertex !== null || draggedZoneVertex !== null || draggedPartitionVertex !== null) return;
     if (!svgRef.current) return;
@@ -635,27 +632,6 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
 
     // ── DIMENSION (vertex handlers handle the actual logic) ──
     if (tool === 'DIMENSION') return;
-
-    // ── THICKNESS ──
-    if (tool === 'THICKNESS') {
-      const wallEdge = findNearestWallEdge(raw);
-      if (wallEdge) {
-        const room = rooms.find((r) => r.id === wallEdge.roomId); if (!room) return;
-        const currentThickness = room.edgeThicknesses?.[wallEdge.edgeIndex] ?? wallThickness;
-        setEditingThicknessEdge({ roomId: wallEdge.roomId, edgeIndex: wallEdge.edgeIndex });
-        setEditThicknessEdgeValue((currentThickness / 10).toFixed(0));
-        return;
-      }
-      const partEdge = findNearestPartitionEdge(raw);
-      if (partEdge) {
-        const part = rooms.find((r) => r.id === partEdge.roomId)?.partitions?.find((p) => p.id === partEdge.partitionId);
-        if (!part) return;
-        setEditingPartitionThickness({ roomId: partEdge.roomId, partitionId: partEdge.partitionId });
-        setEditThicknessValue((part.thickness / 10).toFixed(0));
-        return;
-      }
-      return;
-    }
 
     // ── PARTITION ──
     if (tool === 'PARTITION') {
@@ -754,6 +730,21 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
       return;
     }
     if (tool === 'COINCIDE') return;
+
+    // ── SELECT — clic sur une cloison → édition épaisseur ──
+    if (tool === 'SELECT' && e.button === 0) {
+      const partEdge = findNearestPartitionEdge(raw);
+      if (partEdge) {
+        const part = rooms
+          .find((r) => r.id === partEdge.roomId)
+          ?.partitions?.find((p) => p.id === partEdge.partitionId);
+        if (part) {
+          setEditingPartitionThickness({ roomId: partEdge.roomId, partitionId: partEdge.partitionId });
+          setEditThicknessValue((part.thickness / 10).toFixed(0));
+          return;
+        }
+      }
+    }
 
     if (e.button === 1 || tool === 'SELECT' || e.button === 2) { setIsPanning(true); return; }
 
@@ -887,10 +878,6 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
       setHoveredEdge(findNearestWallEdge(raw));
       setHoveredZoneEdge(findNearestZoneEdge(raw));
       setHoveredPartitionEdge(findNearestPartitionEdge(raw));
-    } else if (tool === 'THICKNESS') {
-      setHoveredEdge(findNearestWallEdge(raw));
-      setHoveredPartitionEdge(findNearestPartitionEdge(raw));
-      setHoveredZoneEdge(null);
     } else {
       setHoveredEdge(null); setHoveredZoneEdge(null); setHoveredPartitionEdge(null);
     }
@@ -948,7 +935,6 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
   };
 
   const handleVertexPointerDown = (roomId: string, index: number) => (e: ReactPointerEvent) => {
-    if (tool === 'THICKNESS') return; // let click propagate to handlePointerDown
     e.stopPropagation();
     if (tool === 'DIMENSION') {
       if (!dimensionSource) { setDimensionSource({ roomId, idx: index }); return; }
@@ -1008,7 +994,6 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
   // ── Partition vertex handler ───────────────────────────────────────────────
 
   const handlePartitionVertexPointerDown = (parentRoomId: string, partitionId: string, idx: number) => (e: ReactPointerEvent) => {
-    if (tool === 'THICKNESS') return;
     e.stopPropagation();
     if (tool === 'DIMENSION') {
       if (!dimensionSource) { setDimensionSource({ roomId: partitionId, idx }); return; }
@@ -1066,7 +1051,6 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
   // ── Zone vertex handler ────────────────────────────────────────────────────
 
   const handleZoneVertexPointerDown = (parentRoomId: string, zoneId: string, idx: number) => (e: ReactPointerEvent) => {
-    if (tool === 'THICKNESS') return;
     e.stopPropagation();
     if (tool === 'DIMENSION') {
       if (!dimensionSource) { setDimensionSource({ roomId: zoneId, idx }); return; }
@@ -1229,15 +1213,6 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
     setEditingPartitionThickness(null);
   };
 
-  const submitThicknessEdge = () => {
-    if (!editingThicknessEdge) return;
-    const valCm = parseFloat(editThicknessEdgeValue);
-    if (isNaN(valCm) || valCm <= 0) { setEditingThicknessEdge(null); return; }
-    pushHistory();
-    setEdgeThickness(editingThicknessEdge.roomId, editingThicknessEdge.edgeIndex, valCm * 10);
-    setEditingThicknessEdge(null);
-  };
-
   const submitPartitionDimensionToElement = () => {
     if (!editingPartitionDimension) return;
     const valCm = parseFloat(editPartitionDimValue);
@@ -1374,16 +1349,6 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
     }
   }
 
-  let thicknessEdgeEditorScreen: { x: number; y: number } | undefined;
-  if (editingThicknessEdge) {
-    const room = rooms.find((r) => r.id === editingThicknessEdge.roomId);
-    if (room) {
-      const p1 = room.points[editingThicknessEdge.edgeIndex];
-      const p2 = room.points[(editingThicknessEdge.edgeIndex + 1) % room.points.length];
-      if (p1 && p2) thicknessEdgeEditorScreen = { x: ((p1.x + p2.x) / 2) * scale + pan.x, y: ((p1.y + p2.y) / 2) * scale + pan.y };
-    }
-  }
-
   let partitionDimEditorScreen: { x: number; y: number } | undefined;
   if (editingPartitionDimension) {
     const { fromRef, toRef } = editingPartitionDimension;
@@ -1440,7 +1405,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
         tool={tool}
         canUndo={past.length > 0}
         canRedo={future.length > 0}
-        onChangeTool={(t) => { setTool(t); setCoincideSource(null); setDimensionSource(null); setPartitionOrigin(null); setExcludePoints([]); setEditingThicknessEdge(null); setEditingPartitionDimension(null); }}
+        onChangeTool={(t) => { setTool(t); setCoincideSource(null); setDimensionSource(null); setPartitionOrigin(null); setExcludePoints([]); setEditingPartitionDimension(null); }}
         onUndo={handleUndo}
         onRedo={handleRedo}
         onClearRoom={handleClearRoom}
@@ -1531,11 +1496,6 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
         <DimensionEditor screenX={isTouchDevice ? undefined : partitionThicknessEditorScreen?.x} screenY={isTouchDevice ? undefined : partitionThicknessEditorScreen?.y}
           value={editThicknessValue} onChange={setEditThicknessValue}
           onSubmit={submitPartitionThickness} onCancel={() => setEditingPartitionThickness(null)} />
-      )}
-      {editingThicknessEdge !== null && (
-        <DimensionEditor screenX={isTouchDevice ? undefined : thicknessEdgeEditorScreen?.x} screenY={isTouchDevice ? undefined : thicknessEdgeEditorScreen?.y}
-          value={editThicknessEdgeValue} onChange={setEditThicknessEdgeValue}
-          onSubmit={submitThicknessEdge} onCancel={() => setEditingThicknessEdge(null)} />
       )}
       {editingPartitionDimension !== null && (
         <DimensionEditor screenX={isTouchDevice ? undefined : partitionDimEditorScreen?.x} screenY={isTouchDevice ? undefined : partitionDimEditorScreen?.y}
