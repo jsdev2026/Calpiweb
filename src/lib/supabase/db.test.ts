@@ -5,6 +5,7 @@ const mockSelect = vi.fn();
 const mockEq = vi.fn();
 const mockOrder = vi.fn();
 const mockSingle = vi.fn();
+const mockMaybeSingle = vi.fn();
 const mockUpsert = vi.fn();
 const mockDelete = vi.fn();
 const mockGetUser = vi.fn();
@@ -16,6 +17,7 @@ const mockChain = {
   eq: mockEq,
   order: mockOrder,
   single: mockSingle,
+  maybeSingle: mockMaybeSingle,
   upsert: mockUpsert,
   delete: mockDelete,
   in: mockIn,
@@ -141,10 +143,30 @@ describe('supabaseDb.delete', () => {
 describe('supabaseDb.getProfile', () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it('returns profile plan', async () => {
-    mockSingle.mockResolvedValueOnce({ data: { plan: 'pro' }, error: null });
+  it('returns profile plan when profile exists', async () => {
+    mockGetUser.mockResolvedValueOnce({ data: { user: { id: 'user-1' } } });
+    mockMaybeSingle.mockResolvedValueOnce({ data: { plan: 'pro' }, error: null });
     const profile = await supabaseDb.getProfile();
     expect(profile.plan).toBe('pro');
+  });
+
+  it('returns free plan when profile row does not exist', async () => {
+    mockGetUser.mockResolvedValueOnce({ data: { user: { id: 'user-1' } } });
+    mockMaybeSingle.mockResolvedValueOnce({ data: null, error: null });
+    const profile = await supabaseDb.getProfile();
+    expect(profile.plan).toBe('free');
+  });
+
+  it('returns free plan when user is not authenticated', async () => {
+    mockGetUser.mockResolvedValueOnce({ data: { user: null } });
+    const profile = await supabaseDb.getProfile();
+    expect(profile.plan).toBe('free');
+  });
+
+  it('throws on Supabase error', async () => {
+    mockGetUser.mockResolvedValueOnce({ data: { user: { id: 'user-1' } } });
+    mockMaybeSingle.mockResolvedValueOnce({ data: null, error: { code: 'XXXXX', message: 'DB error' } });
+    await expect(supabaseDb.getProfile()).rejects.toThrow('[XXXXX] DB error');
   });
 });
 

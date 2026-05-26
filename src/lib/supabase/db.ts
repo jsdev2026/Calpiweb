@@ -140,11 +140,14 @@ export const supabaseDb = {
 
   async getProfile(): Promise<{ plan: 'free' | 'pro' }> {
     const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { plan: 'free' };
     const { data, error } = await supabase
       .from('profiles')
       .select('plan')
-      .single();
+      .eq('id', user.id)
+      .maybeSingle();
     if (error) throw new Error(`[${error.code}] ${error.message}`);
-    return data as { plan: 'free' | 'pro' };
+    return (data as { plan: 'free' | 'pro' } | null) ?? { plan: 'free' };
   },
 };
