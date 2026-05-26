@@ -759,7 +759,9 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
       updateRoom(activeRoom.id, [...pts, snapped], [...activeRoom.edges, 'WALL']);
       // Auto-ancrage : premier nœud de la première pièce uniquement
       if (rooms.indexOf(activeRoom) === 0 && pts.length === 0) {
-        addConstraint({ id: generateId(), type: 'FIX', pts: [ref(activeRoom.id, 0)], value: { x: snapped.x, y: snapped.y } });
+        if (!findConstraint('FIX', ref(activeRoom.id, 0))) {
+          addConstraint({ id: generateId(), type: 'FIX', pts: [ref(activeRoom.id, 0)], value: { x: snapped.x, y: snapped.y } });
+        }
       }
       return;
     }
