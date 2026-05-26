@@ -243,8 +243,6 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
   const addExcludedZone = useProjectStore((s) => s.addExcludedZone);
   const removeExcludedZone = useProjectStore((s) => s.removeExcludedZone);
   const updateExcludedZonePoints = useProjectStore((s) => s.updateExcludedZonePoints);
-  const clearPartitionsAndZones = useProjectStore((s) => s.clearPartitionsAndZones);
-
   const isTouchDevice = useMemo(
     () => typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches,
     [],
@@ -1350,17 +1348,72 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
     restoreSnapshot(entry!.rooms, entry!.constraints);
   };
 
-  const handleClearRoom = () => {
-    if (!activeRoom) return;
-    pushHistory();
-    constraints.filter((c) => c.pts.some((r) => r.roomId === activeRoom.id)).forEach((c) => removeConstraint(c.id));
-    updateRoom(activeRoom.id, [], []);
-    clearPartitionsAndZones(activeRoom.id);
-    setTool('WALL'); setEditingEdge(null); setEditingZoneEdge(null); setEditingPartition(null);
-    setPartitionOrigin(null); setExcludePoints([]);
-  };
-
   const handleAddRoom = () => { const id = addRoom(); setActiveRoomId(id); setTool('WALL'); };
+
+  const handleTrashClick = () => {
+    if (!editingContext) return;
+    pushHistory();
+
+    // ── Partition ──
+    if (editingPartition) {
+      removePartition(editingPartition.roomId, editingPartition.partitionId);
+      setEditingPartition(null);
+      return;
+    }
+
+    // ── Zone exclue ──
+    if (editingZoneEdge) {
+      removeExcludedZone(editingZoneEdge.roomId, editingZoneEdge.zoneId);
+      setEditingZoneEdge(null);
+      return;
+    }
+
+    // ── Mur ou porte ──
+    if (editingEdge) {
+      const room = rooms.find((r) => r.id === editingEdge.roomId);
+      if (!room) return;
+      const edgeType = room.edges[editingEdge.edgeIndex] ?? 'WALL';
+
+      if (edgeType === 'DOOR') {
+        const result = removeDoorFromRoom(room, editingEdge.edgeIndex);
+        if (result) {
+          shiftConstraintIndices(room.id, editingEdge.edgeIndex, -2);
+          updateRoom(room.id, result.points, result.edges);
+        }
+        setEditingEdge(null);
+        return;
+      }
+
+      // ── Ré-ouvrir la pièce (supprimer ce mur) ──
+      const n = room.points.length;
+      if (n < 3) return;
+
+      const rotateBy = (editingEdge.edgeIndex + 1) % n;
+      const newPoints = [...room.points.slice(rotateBy), ...room.points.slice(0, rotateBy)];
+      const reorderedEdges = [...room.edges.slice(rotateBy), ...room.edges.slice(0, rotateBy)];
+      const newEdges = reorderedEdges.slice(0, n - 1) as EdgeType[];
+
+      // Mettre à jour les indices de contraintes (rotation)
+      const roomConstraints = constraints.filter((c) =>
+        c.pts.some((r) => r.roomId === room.id),
+      );
+      roomConstraints.forEach((c) => {
+        removeConstraint(c.id);
+        addConstraint({
+          ...c,
+          pts: c.pts.map((r) =>
+            r.roomId === room.id
+              ? { ...r, vertexIdx: (r.vertexIdx - rotateBy + n) % n }
+              : r,
+          ),
+        });
+      });
+
+      updateRoom(room.id, newPoints, newEdges);
+      setEditingEdge(null);
+      setTool('WALL');
+    }
+  };
   const handleRemoveRoom = (roomId: string) => {
     removeRoom(roomId);
     if (activeRoomId === roomId) setActiveRoomId(rooms.find((r) => r.id !== roomId)?.id ?? null);
@@ -1416,6 +1469,27 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
     if (fromPt && toPt) partitionDimEditorScreen = { x: ((fromPt.x + toPt.x) / 2) * scale + pan.x, y: ((fromPt.y + toPt.y) / 2) * scale + pan.y };
   }
 
+  // ── Contexte de suppression contextuelle ─────────────────────────────────────
+  const editingContext: 'wall' | 'door' | 'partition' | 'zone' | null =
+    editingPartition ? 'partition'
+    : editingZoneEdge ? 'zone'
+    : editingEdge
+      ? (
+          (rooms.find((r) => r.id === editingEdge.roomId)?.edges[editingEdge.edgeIndex] ?? 'WALL') === 'DOOR'
+            ? 'door'
+            : 'wall'
+        )
+    : null;
+
+  const canDelete = editingContext !== null;
+
+  const deleteTooltipLabel =
+    editingContext === 'wall'        ? 'Supprimer ce mur'
+    : editingContext === 'door'      ? 'Supprimer cette porte'
+    : editingContext === 'partition' ? 'Supprimer cette cloison'
+    : editingContext === 'zone'      ? 'Supprimer cette zone'
+    : 'Sélectionnez un élément pour le supprimer';
+
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       {/* Mobile: room strip (non-draggable, horizontal) */}
@@ -1467,7 +1541,9 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
         onChangeTool={(t) => { setTool(t); setCoincideSource(null); setDimensionSource(null); setPartitionOrigin(null); setExcludePoints([]); setEditingPartitionDimension(null); }}
         onUndo={handleUndo}
         onRedo={handleRedo}
-        onClearRoom={handleClearRoom}
+        onDelete={handleTrashClick}
+        canDelete={canDelete}
+        deleteTooltipLabel={deleteTooltipLabel}
         wallThickness={wallThickness}
         onWallThicknessChange={setWallThickness}
         tutorialMode={tutorialMode}

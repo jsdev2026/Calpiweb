@@ -14,7 +14,9 @@ interface PlanToolbarProps {
   onChangeTool: (tool: PlanTool) => void;
   onUndo: () => void;
   onRedo: () => void;
-  onClearRoom: () => void;
+  onDelete: () => void;
+  canDelete: boolean;
+  deleteTooltipLabel: string;
   wallThickness: number;
   onWallThicknessChange: (mm: number) => void;
   tutorialMode: boolean;
@@ -34,7 +36,7 @@ const TOOL_TOOLTIPS = {
   ANCHOR:    { label: 'Ancrer un nœud',          description: "Fige un point pour qu'il ne soit pas déplacé" },
   undo:      { label: 'Annuler',                 description: "Ctrl+Z — revenir à l'état précédent" },
   redo:      { label: 'Rétablir',                description: 'Ctrl+Y — rétablir l\'action annulée' },
-  clear:     { label: 'Effacer la pièce',        description: 'Supprime tous les points de la pièce active' },
+  clear:     { label: 'Supprimer l\'élément', description: 'Supprime le mur, porte, cloison ou zone sélectionné' },
 } as const;
 
 const TB_CARD = 'bg-gray-50 border border-gray-200 dark:bg-zinc-900 dark:border-zinc-800';
@@ -46,7 +48,9 @@ export const PlanToolbar = ({
   onChangeTool,
   onUndo,
   onRedo,
-  onClearRoom,
+  onDelete,
+  canDelete,
+  deleteTooltipLabel,
   wallThickness,
   onWallThicknessChange,
   tutorialMode,
@@ -260,8 +264,8 @@ export const PlanToolbar = ({
         <Redo2 size={16} />
       </Button>
     </ToolTooltip>
-    <ToolTooltip {...TOOL_TOOLTIPS.clear}>
-      <Button variant="danger" size="icon" className="h-8 w-8" onClick={onClearRoom}>
+    <ToolTooltip label="Supprimer l'élément" description={deleteTooltipLabel}>
+      <Button variant="danger" size="icon" className="h-8 w-8" onClick={onDelete} disabled={!canDelete}>
         <Trash2 size={16} />
       </Button>
     </ToolTooltip>
@@ -400,7 +404,7 @@ export const PlanToolbar = ({
     <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0" onClick={onRedo} disabled={!canRedo}>
       <Redo2 size={18} />
     </Button>
-    <Button variant="danger" size="icon" className="h-10 w-10 shrink-0" onClick={onClearRoom}>
+    <Button variant="danger" size="icon" className="h-10 w-10 shrink-0" onClick={onDelete} disabled={!canDelete}>
       <Trash2 size={18} />
     </Button>
   </div>

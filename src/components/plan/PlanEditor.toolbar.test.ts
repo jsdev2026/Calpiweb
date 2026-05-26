@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { PlanTool } from './PlanToolbar';
+import type { EdgeType } from '@/types/project';
 import { TOOL_STATUS_TEXTS } from './ToolStatusBar';
 
 // ── Escape → SELECT ──────────────────────────────────────────────────────────
@@ -151,5 +152,110 @@ describe('auto-anchor premier nœud', () => {
     const isFirstPoint = false;
     const shouldAutoAnchor = isFirstRoom && isFirstPoint;
     expect(shouldAutoAnchor).toBe(false);
+  });
+});
+
+// ── canDelete ────────────────────────────────────────────────────────────────
+
+describe('canDelete', () => {
+  it('false quand aucun état d\'édition actif', () => {
+    const editingEdge = null, editingPartition = null, editingZoneEdge = null;
+    const canDelete = !!(editingEdge ?? editingPartition ?? editingZoneEdge);
+    expect(canDelete).toBe(false);
+  });
+
+  it('true quand editingEdge est défini', () => {
+    const editingEdge: { roomId: string; edgeIndex: number } | null = { roomId: 'r1', edgeIndex: 2 };
+    const editingPartition: null = null;
+    const editingZoneEdge: null = null;
+    const canDelete = !!(editingEdge ?? editingPartition ?? editingZoneEdge);
+    expect(canDelete).toBe(true);
+  });
+
+  it('true quand editingPartition est défini', () => {
+    const editingEdge = null;
+    const editingPartition = { roomId: 'r1', partitionId: 'p1' };
+    const canDelete = !!(editingEdge ?? editingPartition ?? null);
+    expect(canDelete).toBe(true);
+  });
+});
+
+// ── editingContext ────────────────────────────────────────────────────────────
+
+describe('editingContext', () => {
+  it('\'partition\' quand editingPartition est défini', () => {
+    const editingPartition = { roomId: 'r1', partitionId: 'p1' };
+    const editingZoneEdge = null;
+    const editingEdge = null;
+    const ctx =
+      editingPartition ? 'partition'
+      : editingZoneEdge ? 'zone'
+      : editingEdge
+        ? (('WALL' as EdgeType) === 'DOOR' ? 'door' : 'wall')
+        : null;
+    expect(ctx).toBe('partition');
+  });
+
+  it('\'zone\' quand editingZoneEdge est défini', () => {
+    const editingPartition = null;
+    const editingZoneEdge = { roomId: 'r1', zoneId: 'z1', edgeIndex: 0 };
+    const editingEdge = null;
+    const ctx =
+      editingPartition ? 'partition'
+      : editingZoneEdge ? 'zone'
+      : editingEdge
+        ? (('WALL' as EdgeType) === 'DOOR' ? 'door' : 'wall')
+        : null;
+    expect(ctx).toBe('zone');
+  });
+
+  it('\'wall\' quand editingEdge WALL', () => {
+    const edgeType = 'WALL' as unknown as EdgeType;
+    const ctx = edgeType === 'DOOR' ? 'door' : 'wall';
+    expect(ctx).toBe('wall');
+  });
+
+  it('\'door\' quand editingEdge DOOR', () => {
+    const edgeType = 'DOOR' as unknown as EdgeType;
+    const ctx = edgeType === 'DOOR' ? 'door' : 'wall';
+    expect(ctx).toBe('door');
+  });
+});
+
+// ── Réouverture pièce (wall delete) ──────────────────────────────────────────
+
+describe('réouverture pièce sur suppression mur', () => {
+  it('rotation correcte des points pour edge 1 sur pièce [A,B,C,D]', () => {
+    const points = [
+      { x: 0,   y: 0   },   // A=0
+      { x: 100, y: 0   },   // B=1
+      { x: 100, y: 100 },   // C=2
+      { x: 0,   y: 100 },   // D=3
+    ];
+    const edges: EdgeType[] = ['WALL', 'WALL', 'WALL', 'WALL'];
+    // Supprimer edge B→C (index 1) → rotateBy = (1+1)%4 = 2
+    const splitIdx = 1;
+    const n = points.length;
+    const rotateBy = (splitIdx + 1) % n;
+    const newPoints = [...points.slice(rotateBy), ...points.slice(0, rotateBy)];
+    const reordered = [...edges.slice(rotateBy), ...edges.slice(0, rotateBy)];
+    const newEdges = reordered.slice(0, n - 1);
+
+    // Nouvel ordre : [C, D, A, B]
+    expect(newPoints[0]).toEqual({ x: 100, y: 100 }); // C
+    expect(newPoints[1]).toEqual({ x: 0,   y: 100 }); // D
+    expect(newPoints[2]).toEqual({ x: 0,   y: 0   }); // A
+    expect(newPoints[3]).toEqual({ x: 100, y: 0   }); // B
+    expect(newEdges.length).toBe(3);
+  });
+
+  it('rotation index contrainte : ancien vertexIdx j → (j - rotateBy + n) % n', () => {
+    const n = 4, rotateBy = 2;
+    // vertexIdx 0 → (0 - 2 + 4) % 4 = 2
+    expect((0 - rotateBy + n) % n).toBe(2);
+    // vertexIdx 2 → (2 - 2 + 4) % 4 = 0
+    expect((2 - rotateBy + n) % n).toBe(0);
+    // vertexIdx 3 → (3 - 2 + 4) % 4 = 1
+    expect((3 - rotateBy + n) % n).toBe(1);
   });
 });
