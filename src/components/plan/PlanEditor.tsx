@@ -1122,6 +1122,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
       setHoveredPartitionEdge(findNearestPartitionEdge(raw));
     } else {
       setHoveredEdge(null); setHoveredZoneEdge(null); setHoveredPartitionEdge(null);
+      setDeleteHover(null);
     }
   };
 
