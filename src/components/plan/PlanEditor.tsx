@@ -1426,6 +1426,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
           zone={roomZone}
           isDragging={roomDragging}
           onPointerDown={handleRoomPointerDown}
+          tutorialMode={tutorialMode}
         />
       </div>
 
