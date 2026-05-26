@@ -14,6 +14,7 @@ interface RoomPanelProps {
   onAddRoom: () => void;
   onRemoveRoom: (id: string) => void;
   onRenameRoom: (id: string, name: string) => void;
+  onClearRoom?: () => void;
   zone: SnapZone;
   isDragging: boolean;
   onPointerDown: (e: ReactPointerEvent) => void;
@@ -53,6 +54,7 @@ export const RoomPanel = ({
   onAddRoom,
   onRemoveRoom,
   onRenameRoom,
+  onClearRoom,
   zone,
   isDragging,
   onPointerDown,
@@ -90,6 +92,7 @@ export const RoomPanel = ({
         onAddRoom={onAddRoom}
         onRemoveRoom={onRemoveRoom}
         onRenameRoom={onRenameRoom}
+        onClearRoom={onClearRoom}
         vertical={zone === 'SIDE'}
       />
     </div>

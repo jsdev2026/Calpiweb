@@ -243,6 +243,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
   const addExcludedZone = useProjectStore((s) => s.addExcludedZone);
   const removeExcludedZone = useProjectStore((s) => s.removeExcludedZone);
   const updateExcludedZonePoints = useProjectStore((s) => s.updateExcludedZonePoints);
+  const clearPartitionsAndZones = useProjectStore((s) => s.clearPartitionsAndZones);
   const isTouchDevice = useMemo(
     () => typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches,
     [],
@@ -1419,6 +1420,16 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
     if (activeRoomId === roomId) setActiveRoomId(rooms.find((r) => r.id !== roomId)?.id ?? null);
   };
 
+  const handleClearRoom = () => {
+    if (!activeRoom) return;
+    pushHistory();
+    constraints.filter((c) => c.pts.some((r) => r.roomId === activeRoom.id)).forEach((c) => removeConstraint(c.id));
+    updateRoom(activeRoom.id, [], []);
+    clearPartitionsAndZones(activeRoom.id);
+    setTool('WALL'); setEditingEdge(null); setEditingZoneEdge(null); setEditingPartition(null);
+    setPartitionOrigin(null); setExcludePoints([]);
+  };
+
   // ── DimensionEditor screen positions ──────────────────────────────────────
 
   let editorScreen: { x: number; y: number } | undefined;
@@ -1505,6 +1516,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
           onAddRoom={handleAddRoom}
           onRemoveRoom={handleRemoveRoom}
           onRenameRoom={renameRoom}
+          onClearRoom={handleClearRoom}
           vertical={false}
         />
       </div>
@@ -1558,6 +1570,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
           onAddRoom={handleAddRoom}
           onRemoveRoom={handleRemoveRoom}
           onRenameRoom={renameRoom}
+          onClearRoom={handleClearRoom}
           zone={roomZone}
           isDragging={roomDragging}
           onPointerDown={handleRoomPointerDown}

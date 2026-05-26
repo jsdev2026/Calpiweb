@@ -264,7 +264,7 @@ export const PlanToolbar = ({
         <Redo2 size={16} />
       </Button>
     </ToolTooltip>
-    <ToolTooltip label="Supprimer l'élément" description={deleteTooltipLabel}>
+    <ToolTooltip {...TOOL_TOOLTIPS.clear} description={deleteTooltipLabel}>
       <Button variant="danger" size="icon" className="h-8 w-8" onClick={onDelete} disabled={!canDelete}>
         <Trash2 size={16} />
       </Button>
