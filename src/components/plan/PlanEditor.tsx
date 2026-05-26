@@ -319,8 +319,67 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
     setPan({ x: touchRef.current.panX + dx, y: touchRef.current.panY + dy });
   };
 
-  const handleTouchEnd = () => {
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const ref = touchRef.current;
     touchRef.current = null;
+
+    // Tap detection: short tap in SELECT mode → activate nearest element
+    if (tool !== 'SELECT' || !ref || ref.dist !== 0) return;
+    const touch = e.changedTouches[0];
+    if (!touch) return;
+    const moved = Math.hypot(touch.clientX - ref.midX, touch.clientY - ref.midY);
+    if (moved > 12) return; // was a pan, not a tap
+
+    if (!svgRef.current) return;
+    const svgRect = svgRef.current.getBoundingClientRect();
+    const worldPos = toWorld(touch.clientX - svgRect.left, touch.clientY - svgRect.top);
+
+    // Nearest wall or door edge → open WallEdgeEditor (enables Trash button)
+    const wallEdge = findNearestWallEdge(worldPos) ?? findNearestEdgeOfType(worldPos, 'DOOR');
+    if (wallEdge) {
+      const tapRoom = rooms.find((r) => r.id === wallEdge.roomId);
+      const tapN = tapRoom?.points.length ?? 0;
+      const edgeDist = tapRoom && tapN > 0
+        ? distance(tapRoom.points[wallEdge.edgeIndex]!, tapRoom.points[(wallEdge.edgeIndex + 1) % tapN]!)
+        : 0;
+      // Re-use the full edge-activation logic (constraint lookup, dim value, thickness)
+      tapActivateEdge(wallEdge.roomId, wallEdge.edgeIndex, edgeDist);
+      return;
+    }
+
+    // Nearest zone edge → open zone-edge dimension editor (enables Trash button)
+    const zoneEdge = findNearestZoneEdge(worldPos);
+    if (zoneEdge) {
+      const tapZone = rooms.find((r) => r.id === zoneEdge.roomId)
+        ?.excludedZones?.find((z) => z.id === zoneEdge.zoneId);
+      if (tapZone) {
+        const zLen = distance(
+          tapZone.points[zoneEdge.edgeIndex]!,
+          tapZone.points[(zoneEdge.edgeIndex + 1) % tapZone.points.length]!,
+        );
+        setEditingZoneEdge({ roomId: zoneEdge.roomId, zoneId: zoneEdge.zoneId, edgeIndex: zoneEdge.edgeIndex });
+        setEditZoneEdgeValue((zLen / 10).toFixed(1));
+        setEditingEdge(null); setEditingPartition(null);
+      }
+      return;
+    }
+
+    // Nearest partition → open thickness editor
+    const partEdge = findNearestPartitionEdge(worldPos);
+    if (partEdge) {
+      const tapPart = rooms.find((r) => r.id === partEdge.roomId)
+        ?.partitions?.find((p) => p.id === partEdge.partitionId);
+      if (tapPart) {
+        setEditingPartitionThickness({ roomId: partEdge.roomId, partitionId: partEdge.partitionId });
+        setEditThicknessValue((tapPart.thickness / 10).toFixed(0));
+      }
+      return;
+    }
+
+    // Tap on empty canvas → close all editors
+    setEditingEdge(null);
+    setEditingZoneEdge(null);
+    setEditingPartition(null);
   };
 
   // Wrapper : pinch-zoom 2 doigts (tous outils)
@@ -952,9 +1011,8 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
 
   // ── Edge / vertex click handlers ──────────────────────────────────────────
 
-  const handleEdgePointerDown = (roomId: string, edgeIndex: number, dist: number) => (e: ReactPointerEvent) => {
-    e.stopPropagation();
-    if (tool !== 'SELECT') return;
+  // Shared core logic: activate wall/door edge editor (used by mouse click AND mobile tap)
+  const tapActivateEdge = (roomId: string, edgeIndex: number, dist: number) => {
     const room = rooms.find((r) => r.id === roomId);
     if (!room) { setEditingEdge({ roomId, edgeIndex }); setEditValue((dist / 10).toFixed(1)); return; }
     const n = room.points.length;
@@ -990,6 +1048,12 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
     setEditValue(((value - displayOffset) / 10).toFixed(1));
     const currentThickness = room.edgeThicknesses?.[edgeIndex] ?? wallThickness;
     setEditingEdgeThicknessValue((currentThickness / 10).toFixed(0));
+  };
+
+  const handleEdgePointerDown = (roomId: string, edgeIndex: number, dist: number) => (e: ReactPointerEvent) => {
+    e.stopPropagation();
+    if (tool !== 'SELECT') return;
+    tapActivateEdge(roomId, edgeIndex, dist);
   };
 
   const handleVertexPointerDown = (roomId: string, index: number) => (e: ReactPointerEvent) => {
@@ -1531,10 +1595,10 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
         onTouchEnd={handleWrapperTouchEnd}
       >
 
-      {/* Mobile: touch overlay for 1-finger pan (SELECT only) */}
+      {/* Mobile: touch overlay for 1-finger pan/tap (SELECT only) — hidden on desktop (mouse:hidden) */}
       <div
         data-testid="mobile-touch-overlay"
-        className="absolute inset-0 z-10 md:hidden"
+        className="absolute inset-0 z-10 md:hidden mouse:hidden"
         style={{ touchAction: 'none', pointerEvents: tool === 'SELECT' ? 'auto' : 'none' }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
