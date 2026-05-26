@@ -215,15 +215,38 @@ Le mode tutorial n'affecte pas la barre mobile (déjà `aria-label` sur chaque b
 
 ---
 
-## Feature 4 — Suppression de l'outil THICKNESS
+## Feature 4 — Suppression de l'outil THICKNESS + édition cloison en SELECT
 
 ### Principe
 
-L'outil THICKNESS disparaît complètement. L'édition de l'épaisseur d'un **mur** reste accessible via le `WallEdgeEditor` (clic sur la côte d'un mur en mode SELECT, comportement existant inchangé).
+L'outil THICKNESS disparaît du toolbar. L'édition de l'épaisseur reste accessible pour **tous les éléments** via un clic en mode SELECT :
+- **Mur** → `WallEdgeEditor` (existant, inchangé)
+- **Cloison** → `DimensionEditor` d'épaisseur (migré du tool THICKNESS vers SELECT)
 
-**Limitation connue :** l'édition de l'épaisseur des **cloisons** (partitions) via l'outil THICKNESS disparaît avec lui. Elle pourra être réintroduite dans le flow SELECT si nécessaire.
+L'état `editingPartitionThickness` et son `DimensionEditor` sont **conservés** mais déclenchés depuis le handler SELECT au lieu du tool THICKNESS.
 
-### Changements
+### Migration : déclenchement depuis SELECT
+
+Dans le handler `handlePointerDown`, dans le bloc `tool === 'SELECT'` (après la détection de vertex/edge existante), ajouter la détection de clic sur une partition :
+
+```tsx
+// ── Clic sur une cloison en SELECT → édition épaisseur ──
+const partEdge = findNearestPartitionEdge(raw);
+if (partEdge) {
+  const part = rooms
+    .find((r) => r.id === partEdge.roomId)
+    ?.partitions?.find((p) => p.id === partEdge.partitionId);
+  if (part) {
+    setEditingPartitionThickness({ roomId: partEdge.roomId, partitionId: partEdge.partitionId });
+    setEditThicknessValue((part.thickness / 10).toFixed(0));
+    return;
+  }
+}
+```
+
+Ce bloc est ajouté **à la fin** du bloc SELECT, après les détections de vertex et d'edge wall, pour ne pas interférer avec elles.
+
+### Changements — suppression THICKNESS pur
 
 **`src/components/plan/PlanToolbar.tsx`**
 - Retirer `'THICKNESS'` de `PlanTool` → `export type PlanTool = 'SELECT' | 'WALL' | 'DOOR' | 'APPLY_H' | 'APPLY_V' | 'COINCIDE' | 'ANCHOR' | 'PARTITION' | 'EXCLUDE' | 'DIMENSION'`
@@ -233,18 +256,22 @@ L'outil THICKNESS disparaît complètement. L'édition de l'épaisseur d'un **mu
 
 **`src/components/plan/PlanEditor.tsx`**
 
-États à supprimer :
+États à supprimer (spécifiques au tool THICKNESS, remplacés par le flow SELECT) :
 - `editingThicknessEdge` + `setEditingThicknessEdge`
 - `editThicknessEdgeValue` + `setEditThicknessEdgeValue`
 
 Blocs à supprimer :
-- Handler Escape : `setEditingThicknessEdge(null)` (ligne ~618)
-- Bloc `if (tool === 'THICKNESS')` dans `handlePointerDown` (ligne ~629–644)
-- Guards `if (tool === 'THICKNESS') return` (lignes ~879, ~940, ~1000, ~1058)
+- Handler Escape : `setEditingThicknessEdge(null)`
+- Bloc complet `if (tool === 'THICKNESS') { ... }` dans `handlePointerDown` (lignes ~629–644)
+- Guards `if (tool === 'THICKNESS') return` (4 occurrences, lignes ~879, ~940, ~1000, ~1058)
 - Calcul `thicknessEdgeEditorScreen` (lignes ~1367–1372)
 - `{editingThicknessEdge !== null && <DimensionEditor .../>}` (ligne ~1521)
 
-**Note :** `editingPartitionThickness` + `editThicknessValue` + leur DimensionEditor sont eux aussi uniquement alimentés par le tool THICKNESS → supprimer également.
+États **conservés** (désormais alimentés par SELECT) :
+- `editingPartitionThickness` + `setEditingPartitionThickness`
+- `editThicknessValue` + `setEditThicknessValue`
+- Calcul `partitionThicknessEditorScreen`
+- `{editingPartitionThickness !== null && <DimensionEditor .../>}`
 
 ---
 
@@ -254,7 +281,7 @@ Blocs à supprimer :
 |---|---|
 | `src/components/plan/ToolStatusBar.tsx` | **Créé** — composant barre de statut |
 | `src/components/plan/PlanToolbar.tsx` | Bouton `?` en tête · labels tutorial · suppression THICKNESS · type `PlanTool` mis à jour |
-| `src/components/plan/PlanEditor.tsx` | Escape → SELECT · `tutorialMode` state · `?` key handler · intégration `ToolStatusBar` · suppression THICKNESS |
+| `src/components/plan/PlanEditor.tsx` | Escape → SELECT · `tutorialMode` state · `?` key handler · intégration `ToolStatusBar` · suppression THICKNESS · épaisseur cloison en SELECT |
 
 ## Tests à couvrir
 
@@ -266,3 +293,4 @@ Blocs à supprimer :
 - Mode tutorial : touche `?` toggle l'état (hors focus input)
 - Mode tutorial : `Escape` ferme le mode tutorial
 - Type `PlanTool` ne contient plus `'THICKNESS'`
+- Clic sur une cloison en SELECT → `editingPartitionThickness` devient non-null
