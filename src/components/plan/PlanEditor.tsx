@@ -219,6 +219,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
   const [isPanning, setIsPanning] = useState(false);
   const [mousePos, setMousePos] = useState<Point>({ x: 0, y: 0 });
   const [tool, setTool] = useState<PlanTool>(() => (rooms[0]?.points.length ?? 0) >= 3 ? 'SELECT' : 'WALL');
+  const [tutorialMode, setTutorialMode] = useState(false);
   const [isShiftPressed, setIsShiftPressed] = useState(false);
   const [isCtrlPressed, setIsCtrlPressed] = useState(false);
 
@@ -429,6 +430,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
       }
       if (e.key === 'Escape') {
         setTool('SELECT');
+        setTutorialMode(false);
         setEditingEdge(null); setEditingZoneEdge(null); setEditingPartition(null);
         setEditingPartitionThickness(null); setEditingThicknessEdge(null); setEditingPartitionDimension(null);
         setDraggedVertex(null); setDraggedZoneVertex(null); setDraggedPartitionVertex(null);
@@ -443,6 +445,12 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
           (e.key === 'z' && (e.ctrlKey || e.metaKey) && e.shiftKey)) {
         e.preventDefault();
         if (futureRef.current.length > 0) handleRedo();
+      }
+      if (e.key === '?') {
+        const tag = (document.activeElement as HTMLElement)?.tagName;
+        if (tag !== 'INPUT' && tag !== 'TEXTAREA') {
+          setTutorialMode((v) => !v);
+        }
       }
     };
     const up = (e: KeyboardEvent) => {
@@ -1437,6 +1445,8 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
         onClearRoom={handleClearRoom}
         wallThickness={wallThickness}
         onWallThicknessChange={setWallThickness}
+        tutorialMode={tutorialMode}
+        onToggleTutorial={() => setTutorialMode((v) => !v)}
       />
 
       <div className="hidden md:block mouse:block">

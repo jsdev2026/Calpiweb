@@ -20,6 +20,8 @@ const defaultProps = {
   onClearRoom: vi.fn(),
   wallThickness: 100,
   onWallThicknessChange: vi.fn(),
+  tutorialMode: false,
+  onToggleTutorial: vi.fn(),
 };
 
 describe('PlanToolbar mobile', () => {

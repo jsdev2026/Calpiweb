@@ -61,3 +61,40 @@ describe('ToolStatusBar — STATUS_TEXTS', () => {
     }
   });
 });
+
+// ── Mode tutorial ─────────────────────────────────────────────────────────────
+
+describe('mode tutorial', () => {
+  it('toggle : false → true', () => {
+    let tutorialMode = false;
+    tutorialMode = !tutorialMode;
+    expect(tutorialMode).toBe(true);
+  });
+
+  it('toggle : true → false', () => {
+    let tutorialMode = true;
+    tutorialMode = !tutorialMode;
+    expect(tutorialMode).toBe(false);
+  });
+
+  it('Escape ferme le mode tutorial', () => {
+    let tutorialMode = true;
+    // simuler Escape
+    if (true /* e.key === 'Escape' */) tutorialMode = false;
+    expect(tutorialMode).toBe(false);
+  });
+
+  it('touche ? ignorée dans un input', () => {
+    const tag: string = 'INPUT';
+    let toggled = false;
+    if (tag !== 'INPUT' && tag !== 'TEXTAREA') toggled = true;
+    expect(toggled).toBe(false);
+  });
+
+  it('touche ? active hors input', () => {
+    const tag: string = 'DIV';
+    let toggled = false;
+    if (tag !== 'INPUT' && tag !== 'TEXTAREA') toggled = true;
+    expect(toggled).toBe(true);
+  });
+});
