@@ -242,12 +242,20 @@ export const DrawingCanvas = ({
                   hoveredZoneEdge?.zoneId === zone.id && hoveredZoneEdge.edgeIndex === zi;
                 return (
                   <g key={`ez-${zone.id}`}>
-                    <polygon points={zone.points.map((p) => `${p.x},${p.y}`).join(' ')}
-                      fill="rgba(251,191,36,0.12)" stroke="none"
-                      className={tool === 'EXCLUDE' ? 'cursor-pointer' : 'pointer-events-none'}
-                      onPointerDown={tool === 'EXCLUDE'
-                        ? (e) => { e.stopPropagation(); onDeleteExcludedZone(room.id, zone.id); }
-                        : undefined} />
+                    {(() => {
+                      const isZoneDeleteHovered =
+                        deleteHover?.type === 'zone' &&
+                        deleteHover.roomId === room.id &&
+                        deleteHover.zoneId === zone.id;
+                      return (
+                        <polygon points={zone.points.map((p) => `${p.x},${p.y}`).join(' ')}
+                          fill={isZoneDeleteHovered ? 'rgba(239,68,68,0.15)' : 'rgba(251,191,36,0.12)'} stroke="none"
+                          className={tool === 'EXCLUDE' ? 'cursor-pointer' : 'pointer-events-none'}
+                          onPointerDown={tool === 'EXCLUDE'
+                            ? (e) => { e.stopPropagation(); onDeleteExcludedZone(room.id, zone.id); }
+                            : undefined} />
+                      );
+                    })()}
                     <clipPath id={`ez-clip-${zone.id}`}>
                       <polygon points={zone.points.map((p) => `${p.x},${p.y}`).join(' ')} />
                     </clipPath>
@@ -283,8 +291,8 @@ export const DrawingCanvas = ({
                         : '#f59e0b';
                       return (
                         <line key={`ze-${zone.id}-${zi}`} x1={zp.x} y1={zp.y} x2={znp.x} y2={znp.y}
-                          stroke={color} strokeWidth={isHov ? 60 : 40}
-                          strokeDasharray={isHov ? undefined : '120,80'} strokeLinecap="round"
+                          stroke={color} strokeWidth={isZoneDeleteHovered || isHov ? 60 : 40}
+                          strokeDasharray={isZoneDeleteHovered || isHov ? undefined : '120,80'} strokeLinecap="round"
                           className="pointer-events-none" />
                       );
                     })}
