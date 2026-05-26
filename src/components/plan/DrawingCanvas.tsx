@@ -18,6 +18,12 @@ export interface HoveredZoneEdge { roomId: string; zoneId: string; edgeIndex: nu
 export interface EditingZoneEdge { roomId: string; zoneId: string; edgeIndex: number; }
 export interface HoveredPartitionEdge { roomId: string; partitionId: string; }
 
+export type DeleteHoverTarget =
+  | { type: 'wall';      roomId: string; edgeIndex: number }
+  | { type: 'door';      roomId: string; edgeIndex: number }
+  | { type: 'partition'; roomId: string; partitionId: string }
+  | { type: 'zone';      roomId: string; zoneId: string }
+
 export interface PartitionDimLine {
   fromRef: PointRef;
   toRef: PointRef;
@@ -69,6 +75,7 @@ interface DrawingCanvasProps {
   onPartitionVertexPointerDown: (parentRoomId: string, partitionId: string, idx: number) => (e: ReactPointerEvent) => void;
   onZoneVertexPointerDown: (parentRoomId: string, zoneId: string, idx: number) => (e: ReactPointerEvent) => void;
   onZoneEdgePointerDown: (parentRoomId: string, zoneId: string, edgeIndex: number, dist: number) => (e: ReactPointerEvent) => void;
+  deleteHover: DeleteHoverTarget | null;
 }
 
 // ── Constraint helpers ─────────────────────────────────────────────────────
@@ -162,6 +169,7 @@ export const DrawingCanvas = ({
   onEdgePointerDown, onVertexPointerDown, onConstraintRemove: _onConstraintRemove,
   onDeletePartition, onDeleteExcludedZone, onPartitionLabelPointerDown,
   onPartitionVertexPointerDown, onZoneVertexPointerDown, onZoneEdgePointerDown,
+  deleteHover,
 }: DrawingCanvasProps) => {
   const [hoveredBadge, setHoveredBadge] = useState<string | null>(null);
 
@@ -170,7 +178,7 @@ export const DrawingCanvas = ({
     : null;
 
   const cursorClass =
-    tool === 'WALL' || tool === 'COINCIDE' || tool === 'ANCHOR' || tool === 'PARTITION' || tool === 'EXCLUDE'
+    tool === 'WALL' || tool === 'COINCIDE' || tool === 'ANCHOR' || tool === 'PARTITION' || tool === 'EXCLUDE' || tool === 'DELETE'
       ? 'cursor-crosshair'
       : tool === 'DOOR'
         ? (hoveredEdgeType === 'DOOR' ? 'cursor-pointer' : hoveredEdge ? 'cursor-cell' : 'cursor-default')
@@ -264,7 +272,15 @@ export const DrawingCanvas = ({
                       const hasV = ec.some((c) => c.type === 'VERTICAL');
                       const hasDist = ec.some((c) => c.type === 'LENGTH' || c.type === 'H_DISTANCE' || c.type === 'V_DISTANCE');
                       const isHov = isHovEdge(zi);
-                      const color = isHov ? '#fb923c' : hasH || hasV ? '#60a5fa' : hasDist ? '#fbbf24' : '#f59e0b';
+                      const isZoneDeleteHovered =
+                        deleteHover?.type === 'zone' &&
+                        deleteHover.roomId === room.id &&
+                        deleteHover.zoneId === zone.id;
+                      const color = isZoneDeleteHovered ? '#ef4444'
+                        : isHov ? '#fb923c'
+                        : hasH || hasV ? '#60a5fa'
+                        : hasDist ? '#fbbf24'
+                        : '#f59e0b';
                       return (
                         <line key={`ze-${zone.id}-${zi}`} x1={zp.x} y1={zp.y} x2={znp.x} y2={znp.y}
                           stroke={color} strokeWidth={isHov ? 60 : 40}
@@ -362,7 +378,12 @@ export const DrawingCanvas = ({
                 const hasH = ec.some((c) => c.type === 'HORIZONTAL');
                 const hasV = ec.some((c) => c.type === 'VERTICAL');
                 const hasDist = ec.some((c) => c.type === 'LENGTH' || c.type === 'H_DISTANCE' || c.type === 'V_DISTANCE');
-                const color = isHov && isDoor ? '#f87171' : isHov ? '#fb923c'
+                const isDeleteHovered =
+                  deleteHover?.type === 'wall' || deleteHover?.type === 'door'
+                    ? deleteHover.roomId === room.id && deleteHover.edgeIndex === i
+                    : false;
+                const color = isDeleteHovered ? '#ef4444'
+                  : isHov && isDoor ? '#f87171' : isHov ? '#fb923c'
                   : isDoor ? '#f97316'
                   : hasH || hasV ? (isActive ? '#60a5fa' : '#1d4ed8')
                   : hasDist ? (isActive ? '#fbbf24' : '#92400e')
@@ -476,6 +497,10 @@ export const DrawingCanvas = ({
                 const perpOy = (dx / lenN) * (pt.thickness / 2 + 320);
                 const isEditingLabel = editingPartition?.roomId === room.id && editingPartition.partitionId === pt.id;
                 const isHov = hoveredPartitionEdge?.partitionId === pt.id;
+                const isPartitionDeleteHovered =
+                  deleteHover?.type === 'partition' &&
+                  deleteHover.roomId === room.id &&
+                  deleteHover.partitionId === pt.id;
 
                 const ec = partitionEdgeConstraints(pt, constraints);
                 const hasH = ec.some((c) => c.type === 'HORIZONTAL');
@@ -486,11 +511,13 @@ export const DrawingCanvas = ({
                 const hasDistCP = !!(pHDistC || pVDistC || pLenC);
 
                 // Body color follows constraint state, same logic as room walls
-                const bodyColor = isHov ? '#8b5cf6'
+                const bodyColor = isPartitionDeleteHovered ? '#ef4444'
+                  : isHov ? '#8b5cf6'
                   : hasH || hasV ? '#3b82f6'
                   : hasDistCP ? '#d97706'
                   : '#7c3aed';
-                const lineColor = isHov ? '#c4b5fd'
+                const lineColor = isPartitionDeleteHovered ? '#ef4444'
+                  : isHov ? '#c4b5fd'
                   : hasH || hasV ? '#93c5fd'
                   : hasDistCP ? '#fbbf24'
                   : '#a78bfa';
