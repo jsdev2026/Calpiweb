@@ -427,6 +427,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
         }
       }
       if (e.key === 'Escape') {
+        setTool('SELECT');
         setEditingEdge(null); setEditingZoneEdge(null); setEditingPartition(null);
         setEditingPartitionThickness(null); setEditingThicknessEdge(null); setEditingPartitionDimension(null);
         setDraggedVertex(null); setDraggedZoneVertex(null); setDraggedPartitionVertex(null);
