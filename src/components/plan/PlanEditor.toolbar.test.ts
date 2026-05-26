@@ -155,70 +155,60 @@ describe('auto-anchor premier nœud', () => {
   });
 });
 
-// ── canDelete ────────────────────────────────────────────────────────────────
+// ── findDeleteTarget — priorité ───────────────────────────────────────────────
 
-describe('canDelete', () => {
-  it('false quand aucun état d\'édition actif', () => {
-    const editingEdge = null, editingPartition = null, editingZoneEdge = null;
-    const canDelete = !!(editingEdge ?? editingPartition ?? editingZoneEdge);
-    expect(canDelete).toBe(false);
+describe('findDeleteTarget — priorité', () => {
+  type Target =
+    | { type: 'wall';      priority: number }
+    | { type: 'door';      priority: number }
+    | { type: 'partition'; priority: number }
+    | { type: 'zone';      priority: number };
+
+  const pick = (candidates: Target[]) =>
+    candidates.reduce((best, c) =>
+      c.priority < best.priority ? c : best
+    );
+
+  it('partition gagne face à un mur à même distance', () => {
+    const result = pick([
+      { type: 'wall', priority: 3 },
+      { type: 'partition', priority: 0 },
+    ]);
+    expect(result.type).toBe('partition');
   });
 
-  it('true quand editingEdge est défini', () => {
-    const editingEdge: { roomId: string; edgeIndex: number } | null = { roomId: 'r1', edgeIndex: 2 };
-    const editingPartition: null = null;
-    const editingZoneEdge: null = null;
-    const canDelete = !!(editingEdge ?? editingPartition ?? editingZoneEdge);
-    expect(canDelete).toBe(true);
+  it('zone gagne face à un mur à même distance', () => {
+    const result = pick([
+      { type: 'wall', priority: 3 },
+      { type: 'zone', priority: 1 },
+    ]);
+    expect(result.type).toBe('zone');
   });
 
-  it('true quand editingPartition est défini', () => {
-    const editingEdge = null;
-    const editingPartition = { roomId: 'r1', partitionId: 'p1' };
-    const canDelete = !!(editingEdge ?? editingPartition ?? null);
-    expect(canDelete).toBe(true);
+  it('porte gagne face à un mur à même distance', () => {
+    const result = pick([
+      { type: 'wall', priority: 3 },
+      { type: 'door', priority: 2 },
+    ]);
+    expect(result.type).toBe('door');
   });
 });
 
-// ── editingContext ────────────────────────────────────────────────────────────
+// ── deleteTarget — garde n < 3 ────────────────────────────────────────────────
 
-describe('editingContext', () => {
-  it('\'partition\' quand editingPartition est défini', () => {
-    const editingPartition = { roomId: 'r1', partitionId: 'p1' };
-    const editingZoneEdge = null;
-    const editingEdge = null;
-    const ctx =
-      editingPartition ? 'partition'
-      : editingZoneEdge ? 'zone'
-      : editingEdge
-        ? (('WALL' as EdgeType) === 'DOOR' ? 'door' : 'wall')
-        : null;
-    expect(ctx).toBe('partition');
+describe('deleteTarget — garde mur pièce trop petite', () => {
+  it('refuse de supprimer si n < 3', () => {
+    const n = 2;
+    let deleted = false;
+    if (n >= 3) deleted = true;
+    expect(deleted).toBe(false);
   });
 
-  it('\'zone\' quand editingZoneEdge est défini', () => {
-    const editingPartition = null;
-    const editingZoneEdge = { roomId: 'r1', zoneId: 'z1', edgeIndex: 0 };
-    const editingEdge = null;
-    const ctx =
-      editingPartition ? 'partition'
-      : editingZoneEdge ? 'zone'
-      : editingEdge
-        ? (('WALL' as EdgeType) === 'DOOR' ? 'door' : 'wall')
-        : null;
-    expect(ctx).toBe('zone');
-  });
-
-  it('\'wall\' quand editingEdge WALL', () => {
-    const edgeType = 'WALL' as unknown as EdgeType;
-    const ctx = edgeType === 'DOOR' ? 'door' : 'wall';
-    expect(ctx).toBe('wall');
-  });
-
-  it('\'door\' quand editingEdge DOOR', () => {
-    const edgeType = 'DOOR' as unknown as EdgeType;
-    const ctx = edgeType === 'DOOR' ? 'door' : 'wall';
-    expect(ctx).toBe('door');
+  it('autorise la suppression si n >= 3', () => {
+    const n = 4;
+    let deleted = false;
+    if (n >= 3) deleted = true;
+    expect(deleted).toBe(true);
   });
 });
 

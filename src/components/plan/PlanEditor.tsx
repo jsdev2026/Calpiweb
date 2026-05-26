@@ -24,6 +24,7 @@ import {
   type EditingEdgeState, type HoveredEdge, type SnapPreview,
   type HoveredZoneEdge, type EditingZoneEdge, type HoveredPartitionEdge,
   type PartitionDimLine,
+  type DeleteHoverTarget,   // ← nouveau
 } from './DrawingCanvas';
 
 // ── History ────────────────────────────────────────────────────────────────
@@ -284,6 +285,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
   const [hoveredEdge, setHoveredEdge] = useState<HoveredEdge | null>(null);
   const [hoveredZoneEdge, setHoveredZoneEdge] = useState<HoveredZoneEdge | null>(null);
   const [hoveredPartitionEdge, setHoveredPartitionEdge] = useState<HoveredPartitionEdge | null>(null);
+  const [deleteHover, setDeleteHover] = useState<DeleteHoverTarget | null>(null);
 
   const [snapPreview, setSnapPreview] = useState<SnapPreview | null>(null);
   const [originPoint, setOriginPoint] = useState<Point | null>(null);
@@ -323,8 +325,8 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
     const ref = touchRef.current;
     touchRef.current = null;
 
-    // Tap detection: short tap in SELECT mode → activate nearest element
-    if (tool !== 'SELECT' || !ref || ref.dist !== 0) return;
+    // Tap detection: short tap → activate nearest element
+    if (!ref || ref.dist !== 0) return;
     const touch = e.changedTouches[0];
     if (!touch) return;
     const moved = Math.hypot(touch.clientX - ref.midX, touch.clientY - ref.midY);
@@ -333,6 +335,20 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
     if (!svgRef.current) return;
     const svgRect = svgRef.current.getBoundingClientRect();
     const worldPos = toWorld(touch.clientX - svgRect.left, touch.clientY - svgRect.top);
+
+    // Mode DELETE : tap = suppression directe
+    if (tool === 'DELETE') {
+      const target = findDeleteTarget(worldPos);
+      if (target) {
+        deleteTarget(target);
+      } else {
+        setTool('SELECT');
+        setDeleteHover(null);
+      }
+      return;
+    }
+
+    if (tool !== 'SELECT') return;
 
     // Nearest wall or door edge → open WallEdgeEditor (enables Trash button)
     const wallEdge = findNearestWallEdge(worldPos) ?? findNearestEdgeOfType(worldPos, 'DOOR');
@@ -538,6 +554,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
       }
       if (e.key === 'Escape') {
         setTool('SELECT');
+        setDeleteHover(null);
         setTutorialMode(false);
         setEditingEdge(null); setEditingZoneEdge(null); setEditingPartition(null);
         setEditingPartitionThickness(null); setEditingPartitionDimension(null);
@@ -683,6 +700,99 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
     return best;
   };
 
+  // ── Détecte l'élément le plus proche pour le mode DELETE ──────────────────
+  const findDeleteTarget = (worldPos: Point): DeleteHoverTarget | null => {
+    const threshold = 80 / scale;
+    let best: { target: DeleteHoverTarget; dist: number; priority: number } | null = null;
+
+    const candidate = (target: DeleteHoverTarget, d: number, priority: number) => {
+      if (d >= threshold) return;
+      if (!best || d < best.dist || (d === best.dist && priority < best.priority)) {
+        best = { target, dist: d, priority };
+      }
+    };
+
+    for (const room of rooms) {
+      if (room.points.length < 3) continue;
+      // Murs et portes
+      for (let i = 0; i < room.points.length; i++) {
+        const p1 = room.points[i]!, p2 = room.points[(i + 1) % room.points.length]!;
+        const proj = getPointOnSegment(worldPos, p1, p2);
+        const d = distance(worldPos, proj);
+        const edgeType = room.edges[i] ?? 'WALL';
+        if (edgeType === 'DOOR') {
+          candidate({ type: 'door', roomId: room.id, edgeIndex: i }, d, 2);
+        } else {
+          candidate({ type: 'wall', roomId: room.id, edgeIndex: i }, d, 3);
+        }
+      }
+      // Cloisons
+      for (const pt of (room.partitions ?? [])) {
+        const proj = getPointOnSegment(worldPos, pt.p1, pt.p2);
+        candidate({ type: 'partition', roomId: room.id, partitionId: pt.id }, distance(worldPos, proj), 0);
+      }
+      // Zones exclues
+      for (const zone of (room.excludedZones ?? [])) {
+        if (zone.points.length < 3) continue;
+        for (let i = 0; i < zone.points.length; i++) {
+          const proj = getPointOnSegment(worldPos, zone.points[i]!, zone.points[(i + 1) % zone.points.length]!);
+          candidate({ type: 'zone', roomId: room.id, zoneId: zone.id }, distance(worldPos, proj), 1);
+        }
+      }
+    }
+
+    return best ? (best as { target: DeleteHoverTarget; dist: number; priority: number }).target : null;
+  };
+
+  // ── Supprime l'élément cible (mode DELETE) ────────────────────────────────
+  const deleteTarget = (target: DeleteHoverTarget) => {
+    if (target.type === 'partition') {
+      pushHistory();
+      removePartition(target.roomId, target.partitionId);
+      setDeleteHover(null);
+      return;
+    }
+    if (target.type === 'zone') {
+      pushHistory();
+      removeExcludedZone(target.roomId, target.zoneId);
+      setDeleteHover(null);
+      return;
+    }
+    const room = rooms.find((r) => r.id === target.roomId);
+    if (!room) return;
+    if (target.type === 'door') {
+      const result = removeDoorFromRoom(room, target.edgeIndex);
+      if (!result) return;
+      pushHistory();
+      shiftConstraintIndices(room.id, target.edgeIndex, -2);
+      updateRoom(room.id, result.points, result.edges);
+      setDeleteHover(null);
+      return;
+    }
+    // type === 'wall' : ré-ouvrir la pièce
+    const n = room.points.length;
+    if (n < 3) return;
+    pushHistory();
+    const rotateBy = (target.edgeIndex + 1) % n;
+    const newPoints = [...room.points.slice(rotateBy), ...room.points.slice(0, rotateBy)];
+    const reorderedEdges = [...room.edges.slice(rotateBy), ...room.edges.slice(0, rotateBy)];
+    const newEdges = reorderedEdges.slice(0, n - 1) as EdgeType[];
+    const roomConstraints = constraints.filter((c) => c.pts.some((r) => r.roomId === room.id));
+    roomConstraints.forEach((c) => {
+      removeConstraint(c.id);
+      addConstraint({
+        ...c,
+        pts: c.pts.map((r) =>
+          r.roomId === room.id
+            ? { ...r, vertexIdx: (r.vertexIdx - rotateBy + n) % n }
+            : r,
+        ),
+      });
+    });
+    updateRoom(room.id, newPoints, newEdges);
+    setDeleteHover(null);
+  };
+
   // ── Constraint helpers ────────────────────────────────────────────────────
 
   const findConstraint = (type: Constraint['type'], r1: PointRef, r2?: PointRef) =>
@@ -739,6 +849,18 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
     if (!svgRef.current) return;
     const rect = svgRef.current.getBoundingClientRect();
     const raw = toWorld(e.clientX - rect.left, e.clientY - rect.top);
+
+    // ── DELETE ──
+    if (tool === 'DELETE') {
+      const target = findDeleteTarget(raw);
+      if (target) {
+        deleteTarget(target);
+      } else {
+        setTool('SELECT');
+        setDeleteHover(null);
+      }
+      return;
+    }
 
     // ── DIMENSION (vertex handlers handle the actual logic) ──
     if (tool === 'DIMENSION') return;
@@ -990,8 +1112,11 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
     setMousePos(snapped);
     setSnapPreview(preview);
 
-    if (tool === 'DOOR') setHoveredEdge(findNearestEdgeOfType(raw, 'DOOR') ?? findNearestWallEdge(raw));
-    else if (tool === 'APPLY_H' || tool === 'APPLY_V') {
+    if (tool === 'DELETE') {
+      setDeleteHover(findDeleteTarget(raw));
+    } else if (tool === 'DOOR') {
+      setHoveredEdge(findNearestEdgeOfType(raw, 'DOOR') ?? findNearestWallEdge(raw));
+    } else if (tool === 'APPLY_H' || tool === 'APPLY_V') {
       setHoveredEdge(findNearestWallEdge(raw));
       setHoveredZoneEdge(findNearestZoneEdge(raw));
       setHoveredPartitionEdge(findNearestPartitionEdge(raw));
@@ -1415,72 +1540,6 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
 
   const handleAddRoom = () => { const id = addRoom(); setActiveRoomId(id); setTool('WALL'); };
 
-  const handleTrashClick = () => {
-    if (!editingContext) return;
-
-    // ── Partition ──
-    if (editingPartition) {
-      pushHistory();
-      removePartition(editingPartition.roomId, editingPartition.partitionId);
-      setEditingPartition(null);
-      return;
-    }
-
-    // ── Zone exclue ──
-    if (editingZoneEdge) {
-      pushHistory();
-      removeExcludedZone(editingZoneEdge.roomId, editingZoneEdge.zoneId);
-      setEditingZoneEdge(null);
-      return;
-    }
-
-    // ── Mur ou porte ──
-    if (editingEdge) {
-      const room = rooms.find((r) => r.id === editingEdge.roomId);
-      if (!room) return;
-      const edgeType = room.edges[editingEdge.edgeIndex] ?? 'WALL';
-
-      if (edgeType === 'DOOR') {
-        const result = removeDoorFromRoom(room, editingEdge.edgeIndex);
-        if (!result) return;
-        pushHistory();
-        shiftConstraintIndices(room.id, editingEdge.edgeIndex, -2);
-        updateRoom(room.id, result.points, result.edges);
-        setEditingEdge(null);
-        return;
-      }
-
-      // ── Ré-ouvrir la pièce (supprimer ce mur) ──
-      const n = room.points.length;
-      if (n < 3) return;
-      pushHistory();
-
-      const rotateBy = (editingEdge.edgeIndex + 1) % n;
-      const newPoints = [...room.points.slice(rotateBy), ...room.points.slice(0, rotateBy)];
-      const reorderedEdges = [...room.edges.slice(rotateBy), ...room.edges.slice(0, rotateBy)];
-      const newEdges = reorderedEdges.slice(0, n - 1) as EdgeType[];
-
-      // Mettre à jour les indices de contraintes (rotation)
-      const roomConstraints = constraints.filter((c) =>
-        c.pts.some((r) => r.roomId === room.id),
-      );
-      roomConstraints.forEach((c) => {
-        removeConstraint(c.id);
-        addConstraint({
-          ...c,
-          pts: c.pts.map((r) =>
-            r.roomId === room.id
-              ? { ...r, vertexIdx: (r.vertexIdx - rotateBy + n) % n }
-              : r,
-          ),
-        });
-      });
-
-      updateRoom(room.id, newPoints, newEdges);
-      setEditingEdge(null);
-      setTool('WALL');
-    }
-  };
   const handleRemoveRoom = (roomId: string) => {
     removeRoom(roomId);
     if (activeRoomId === roomId) setActiveRoomId(rooms.find((r) => r.id !== roomId)?.id ?? null);
@@ -1546,27 +1605,6 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
     if (fromPt && toPt) partitionDimEditorScreen = { x: ((fromPt.x + toPt.x) / 2) * scale + pan.x, y: ((fromPt.y + toPt.y) / 2) * scale + pan.y };
   }
 
-  // ── Contexte de suppression contextuelle ─────────────────────────────────────
-  const editingContext: 'wall' | 'door' | 'partition' | 'zone' | null =
-    editingPartition ? 'partition'
-    : editingZoneEdge ? 'zone'
-    : editingEdge
-      ? (
-          (rooms.find((r) => r.id === editingEdge.roomId)?.edges[editingEdge.edgeIndex] ?? 'WALL') === 'DOOR'
-            ? 'door'
-            : 'wall'
-        )
-    : null;
-
-  const canDelete = editingContext !== null;
-
-  const deleteTooltipLabel =
-    editingContext === 'wall'        ? 'Supprimer ce mur'
-    : editingContext === 'door'      ? 'Supprimer cette porte'
-    : editingContext === 'partition' ? 'Supprimer cette cloison'
-    : editingContext === 'zone'      ? 'Supprimer cette zone'
-    : 'Sélectionnez un élément pour le supprimer';
-
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       {/* Mobile: room strip (non-draggable, horizontal) */}
@@ -1599,7 +1637,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
       <div
         data-testid="mobile-touch-overlay"
         className="absolute inset-0 z-10 md:hidden mouse:hidden"
-        style={{ touchAction: 'none', pointerEvents: tool === 'SELECT' ? 'auto' : 'none' }}
+        style={{ touchAction: 'none', pointerEvents: (tool === 'SELECT' || tool === 'DELETE') ? 'auto' : 'none' }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -1616,12 +1654,14 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
         tool={tool}
         canUndo={past.length > 0}
         canRedo={future.length > 0}
-        onChangeTool={(t) => { setTool(t); setCoincideSource(null); setDimensionSource(null); setPartitionOrigin(null); setExcludePoints([]); setEditingPartitionDimension(null); }}
+        onChangeTool={(t) => {
+          setTool(t);
+          setDeleteHover(null);
+          setCoincideSource(null); setDimensionSource(null); setPartitionOrigin(null);
+          setExcludePoints([]); setEditingPartitionDimension(null);
+        }}
         onUndo={handleUndo}
         onRedo={handleRedo}
-        onDelete={handleTrashClick}
-        canDelete={canDelete}
-        deleteTooltipLabel={deleteTooltipLabel}
         wallThickness={wallThickness}
         onWallThicknessChange={setWallThickness}
         tutorialMode={tutorialMode}
@@ -1734,6 +1774,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
         partitionDimLines={partitionDimLines}
         editingPartitionDimension={editingPartitionDimension}
         dimensionSource={dimensionSource}
+        deleteHover={deleteHover}
         onPartitionDimensionPointerDown={handlePartitionDimensionPointerDown}
         onPointerDown={handlePointerDown} onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp} onEdgePointerDown={handleEdgePointerDown}
