@@ -741,8 +741,7 @@ export const DrawingCanvas = ({
                   x={midX - textW / 2} y={dimY - fontSize - padY * 1.5}
                   width={textW} height={fontSize + padY * 2}
                   rx={4 / scale} fill="var(--canvas-bg)"
-                  stroke="#22c55e" strokeWidth={0.8 / scale}
-                  className="pointer-events-none" />
+                  stroke="#22c55e" strokeWidth={0.8 / scale} />
                 <text x={midX} y={dimY - padY * 0.5}
                   textAnchor="middle" dominantBaseline="middle"
                   fontSize={fontSize} fontWeight="700" fill="#22c55e"
@@ -783,8 +782,7 @@ export const DrawingCanvas = ({
                   x={dimX + padY} y={midY - fontSize / 2 - padY}
                   width={textW} height={fontSize + padY * 2}
                   rx={4 / scale} fill="var(--canvas-bg)"
-                  stroke="#22c55e" strokeWidth={0.8 / scale}
-                  className="pointer-events-none" />
+                  stroke="#22c55e" strokeWidth={0.8 / scale} />
                 <text x={dimX + padY + textW / 2} y={midY}
                   textAnchor="middle" dominantBaseline="middle"
                   fontSize={fontSize} fontWeight="700" fill="#22c55e"
@@ -828,8 +826,7 @@ export const DrawingCanvas = ({
                   x={midX - textW / 2} y={midY - fontSize / 2 - padY}
                   width={textW} height={fontSize + padY * 2}
                   rx={4 / scale} fill="var(--canvas-bg)"
-                  stroke="#22c55e" strokeWidth={0.8 / scale}
-                  className="pointer-events-none" />
+                  stroke="#22c55e" strokeWidth={0.8 / scale} />
                 <text x={midX} y={midY}
                   textAnchor="middle" dominantBaseline="middle"
                   fontSize={fontSize} fontWeight="700" fill="#22c55e"
