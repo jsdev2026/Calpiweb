@@ -1106,6 +1106,19 @@ export const DrawingCanvas = ({
           );
         })()}
 
+        {/* ── Vertex markers permanents en mode DIMENSION ─────────────────── */}
+        {tool === 'DIMENSION' && rooms.map(room =>
+          room.points.map((pt, i) => (
+            <rect
+              key={`vm-${room.id}-${i}`}
+              x={pt.x - 2 / scale} y={pt.y - 2 / scale}
+              width={4 / scale} height={4 / scale}
+              fill="#475569" rx={0.5 / scale}
+              className="pointer-events-none"
+            />
+          ))
+        )}
+
         {/* ── Face snap dots (DIMENSION tool hover) ─────────────────────── */}
         {tool === 'DIMENSION' && faceSnapHover && (() => {
           const { worldPos, face, wallNormal } = faceSnapHover;
