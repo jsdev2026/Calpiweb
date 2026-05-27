@@ -738,11 +738,11 @@ export const DrawingCanvas = ({
                   className="pointer-events-none" />
                 {/* Label encadré */}
                 <rect
-                  x={midX - textW / 2} y={dimY - fontSize - padY * 1.5}
+                  x={midX - textW / 2} y={dimY - fontSize / 2 - padY}
                   width={textW} height={fontSize + padY * 2}
                   rx={4 / scale} fill="var(--canvas-bg)"
                   stroke="#22c55e" strokeWidth={0.8 / scale} />
-                <text x={midX} y={dimY - padY * 0.5}
+                <text x={midX} y={dimY}
                   textAnchor="middle" dominantBaseline="middle"
                   fontSize={fontSize} fontWeight="700" fill="#22c55e"
                   className="pointer-events-none select-none"
