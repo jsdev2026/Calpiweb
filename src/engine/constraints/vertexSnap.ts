@@ -1,11 +1,11 @@
 import type { Point } from '@/types/plan';
 import type { DimConstraintType, Room } from '@/types/project';
-import type { FaceSnapPoint } from '@/components/plan/DrawingCanvas';
+import type { FaceSnapPoint } from '@/types/plan';
 import { distance } from '@/engine/geometry/polygon';
 
 /**
  * Retourne la normale unitaire de l'arête (prev→vtx ou vtx→next) la plus
- * perpendiculaire à la direction curseur→vtx.
+ * alignée avec la direction vtx→curseur (produit scalaire maximal en valeur absolue).
  */
 export function bestEdgeNormal(
   cursor: Point,
@@ -40,6 +40,9 @@ export function findNearestVertexSnapImpl(
   const threshold = 80 / scale;
   let best: { snap: FaceSnapPoint; dist: number } | null = null;
 
+  // Note: partitions and excluded zones are intentionally excluded — cotation-nodes-v3
+  // design snaps only to polygon vertices (room.points), not to mid-segment projections
+  // or partition endpoints.
   for (const room of rooms) {
     const pts = room.points;
     const n = pts.length;

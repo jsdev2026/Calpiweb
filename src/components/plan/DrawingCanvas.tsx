@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import type { PointerEvent as ReactPointerEvent, RefObject } from 'react';
 import type { Room, Constraint, ExcludedZone, Partition, PointRef } from '@/types/project';
-import type { Point } from '@/types/plan';
+import type { Point, FaceSnapPoint } from '@/types/plan';
 import { angle, distance } from '@/engine/geometry/polygon';
 import { formatCm } from '@/utils/formatters';
 import type { DOFMap } from '@/engine/constraints/dofAnalyzer';
@@ -24,13 +24,7 @@ export type DeleteHoverTarget =
   | { type: 'partition'; roomId: string; partitionId: string }
   | { type: 'zone';      roomId: string; zoneId: string }
 
-export interface FaceSnapPoint {
-  roomId: string;
-  vertexIdx: number;
-  face: 'INSIDE' | 'AXIS' | 'OUTSIDE';
-  worldPos: Point;
-  wallNormal: Point; // unit vector perpendicular to wall segment, toward interior
-}
+export type { FaceSnapPoint } from '@/types/plan';
 
 export interface PartitionDimLine {
   fromRef: PointRef;
