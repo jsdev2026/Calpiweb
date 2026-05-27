@@ -563,7 +563,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
 
       const t = Math.max(0, Math.min(1, ((cursor.x - p1.x) * dx + (cursor.y - p1.y) * dy) / len2));
       const proj: Point = { x: p1.x + t * dx, y: p1.y + t * dy };
-      if (distance(cursor, proj) > threshold) return;
+      if (distance(cursor, proj) > threshold + halfThick) return;
 
       // Normal pointing inward (rotate segment 90° CCW)
       const len = Math.sqrt(len2);
@@ -1309,6 +1309,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
       setDeleteHover(findDeleteTarget(raw));
     } else if (tool === 'DIMENSION') {
       setFaceSnapHover(findNearestFaceSnap(raw));
+      setDeleteHover(null);
     } else if (tool === 'DOOR') {
       setHoveredEdge(findNearestEdgeOfType(raw, 'DOOR') ?? findNearestWallEdge(raw));
     } else if (tool === 'APPLY_H' || tool === 'APPLY_V') {
