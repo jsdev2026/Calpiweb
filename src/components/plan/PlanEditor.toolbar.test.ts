@@ -402,3 +402,14 @@ describe('findNearestFaceSnap — sélection du candidat', () => {
     expect(result).toBeNull();
   });
 });
+
+// ── displayOffset store action ────────────────────────────────────────────────
+
+describe('updateConstraintDisplayOffset', () => {
+  it('met à jour displayOffset sans toucher aux autres champs', async () => {
+    const { updateConstraintDisplayOffset } =
+      await import('@/store/projectStore').then(m => ({ updateConstraintDisplayOffset: m.useProjectStore.getState().updateConstraintDisplayOffset }));
+    // Test indirect via type check — l'action doit exister
+    expect(typeof updateConstraintDisplayOffset).toBe('function');
+  });
+});

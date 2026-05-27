@@ -38,6 +38,7 @@ interface ProjectState {
   addConstraint: (c: Constraint) => void;
   removeConstraint: (id: string) => void;
   updateConstraintValue: (id: string, value: Constraint['value']) => void;
+  updateConstraintDisplayOffset: (id: string, offset: number) => void;
   /** Shift vertex indices for a given room when vertices are inserted/removed. */
   shiftConstraintIndices: (roomId: string, afterIdx: number, delta: number) => void;
 
@@ -194,6 +195,15 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     get().updateActive((p) => ({
       ...p,
       constraints: p.constraints.map((c) => (c.id === id ? { ...c, value } : c)),
+    }));
+  },
+
+  updateConstraintDisplayOffset: (id, offset) => {
+    get().updateActive((p) => ({
+      ...p,
+      constraints: p.constraints.map((c) =>
+        c.id === id ? { ...c, displayOffset: offset } : c
+      ),
     }));
   },
 

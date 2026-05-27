@@ -61,6 +61,10 @@ export interface Constraint {
   // FIX: [p]  |  HORIZONTAL/VERTICAL/COINCIDENT/LENGTH: [p1, p2]  |  POINT_ON_LINE: [point, lineP1, lineP2]
   pts: PointRef[];
   value?: number | { x: number; y: number }; // LENGTH → mm distance; FIX → {x,y} anchor coords
+  /** Distance d'affichage en mm depuis le point de référence géométrique.
+   *  Défaut implicite = DIM_OFFSET (500 mm). Minimum = 100 mm.
+   *  Ne participe pas au solveur — affichage uniquement. */
+  displayOffset?: number;
 }
 
 // ── Project ────────────────────────────────────────────────────────────────
