@@ -24,6 +24,14 @@ export type DeleteHoverTarget =
   | { type: 'partition'; roomId: string; partitionId: string }
   | { type: 'zone';      roomId: string; zoneId: string }
 
+export interface FaceSnapPoint {
+  roomId: string;
+  vertexIdx: number;
+  face: 'INSIDE' | 'AXIS' | 'OUTSIDE';
+  worldPos: Point;
+  wallNormal: Point; // unit vector perpendicular to wall segment, toward interior
+}
+
 export interface PartitionDimLine {
   fromRef: PointRef;
   toRef: PointRef;
@@ -61,7 +69,11 @@ interface DrawingCanvasProps {
   hoveredPartitionEdge: HoveredPartitionEdge | null;
   partitionDimLines: PartitionDimLine[];
   editingPartitionDimension: { fromRef: PointRef; toRef: PointRef } | null;
-  dimensionSource: { roomId: string; idx: number } | null;
+  faceSnapHover:   FaceSnapPoint | null;
+  dimensionSource: {
+    ref:      PointRef;
+    worldPos: Point;
+  } | null;
   onPartitionDimensionPointerDown: (fromRef: PointRef, toRef: PointRef, dist: number) => (e: ReactPointerEvent) => void;
   onPointerDown: (e: ReactPointerEvent<SVGSVGElement>) => void;
   onPointerMove: (e: ReactPointerEvent<SVGSVGElement>) => void;
@@ -163,7 +175,7 @@ export const DrawingCanvas = ({
   wallThickness, constraints, coincideSource, dofMap, canCloseActiveRoom,
   partitionOrigin, excludePoints, editingPartition,
   hoveredZoneEdge, editingZoneEdge, hoveredPartitionEdge,
-  partitionDimLines, editingPartitionDimension, dimensionSource,
+  partitionDimLines, editingPartitionDimension, faceSnapHover, dimensionSource,
   onPartitionDimensionPointerDown,
   onPointerDown, onPointerMove, onPointerUp,
   onEdgePointerDown, onVertexPointerDown, onConstraintRemove: _onConstraintRemove,
@@ -748,8 +760,7 @@ export const DrawingCanvas = ({
 
         {/* ── DIMENSION ghost line — L-shape H/V preview ── */}
         {tool === 'DIMENSION' && dimensionSource && (() => {
-          const srcPt = resolvePointRef(rooms, { roomId: dimensionSource.roomId, vertexIdx: dimensionSource.idx });
-          if (!srcPt) return null;
+          const srcPt = dimensionSource.worldPos;
           const absDx = Math.abs(mousePos.x - srcPt.x), absDy = Math.abs(mousePos.y - srcPt.y);
           const isH = absDx >= absDy;
           const primaryDist = isH ? absDx : absDy;
@@ -779,6 +790,75 @@ export const DrawingCanvas = ({
                 </g>
               )}
             </>
+          );
+        })()}
+
+        {/* ── Face snap dots (DIMENSION tool hover) ─────────────────────── */}
+        {tool === 'DIMENSION' && faceSnapHover && (() => {
+          const { worldPos, face, wallNormal } = faceSnapHover;
+
+          // Find half-thickness for this element
+          const room = rooms.find(r => r.id === faceSnapHover.roomId);
+          const half = room
+            ? (room.edgeThicknesses?.[faceSnapHover.vertexIdx] ?? wallThickness) / 2
+            : wallThickness / 2;
+
+          // Reconstruct axis position from worldPos + face + normal
+          let axisPos: Point;
+          if (face === 'AXIS') {
+            axisPos = worldPos;
+          } else if (face === 'INSIDE') {
+            axisPos = { x: worldPos.x - wallNormal.x * half, y: worldPos.y - wallNormal.y * half };
+          } else {
+            // OUTSIDE
+            axisPos = { x: worldPos.x + wallNormal.x * half, y: worldPos.y + wallNormal.y * half };
+          }
+          const insidePos:  Point = { x: axisPos.x + wallNormal.x * half, y: axisPos.y + wallNormal.y * half };
+          const outsidePos: Point = { x: axisPos.x - wallNormal.x * half, y: axisPos.y - wallNormal.y * half };
+
+          const dots: Array<{ pos: Point; dotFace: 'INSIDE' | 'AXIS' | 'OUTSIDE'; color: string; baseR: number }> = [
+            { pos: outsidePos, dotFace: 'OUTSIDE', color: '#3b82f6', baseR: 120 },
+            { pos: axisPos,    dotFace: 'AXIS',    color: '#a855f7', baseR: 100 },
+            { pos: insidePos,  dotFace: 'INSIDE',  color: '#22c55e', baseR: 120 },
+          ];
+
+          return (
+            <g className="pointer-events-none">
+              {dots.map(({ pos, dotFace, color, baseR }) => {
+                const isActive = dotFace === face;
+                const r = isActive ? baseR * 1.6 : baseR;
+                const opacity = isActive ? 1 : 0.5;
+                return (
+                  <circle
+                    key={dotFace}
+                    cx={pos.x} cy={pos.y}
+                    r={r}
+                    fill={color}
+                    opacity={opacity}
+                  />
+                );
+              })}
+            </g>
+          );
+        })()}
+
+        {/* ── Confirmed dimension source point ───────────────────────────── */}
+        {tool === 'DIMENSION' && dimensionSource && (() => {
+          const FACE_LABEL = { INSIDE: 'I', AXIS: 'A', OUTSIDE: 'E' } as const;
+          const { worldPos, ref } = dimensionSource;
+          const label = FACE_LABEL[ref.face ?? 'INSIDE'];
+          return (
+            <g className="pointer-events-none">
+              <circle cx={worldPos.x} cy={worldPos.y} r={180} fill="#f97316" />
+              <text
+                x={worldPos.x} y={worldPos.y}
+                textAnchor="middle" dominantBaseline="central"
+                fontSize={160} fontWeight="800" fill="white"
+                style={{ fontFamily: 'system-ui' }}
+              >
+                {label}
+              </text>
+            </g>
           );
         })()}
 

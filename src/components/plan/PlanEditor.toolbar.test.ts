@@ -336,3 +336,13 @@ describe('constraintFaceOffset', () => {
     expect(offset).toBe(0);
   });
 });
+
+// ── FaceSnapPoint — face label ────────────────────────────────────────────────
+
+describe('FaceSnapPoint — label mapping', () => {
+  const FACE_LABEL = { INSIDE: 'I', AXIS: 'A', OUTSIDE: 'E' } as const;
+
+  it('INSIDE → "I"', () => { expect(FACE_LABEL['INSIDE']).toBe('I'); });
+  it('AXIS → "A"',   () => { expect(FACE_LABEL['AXIS']).toBe('A'); });
+  it('OUTSIDE → "E"', () => { expect(FACE_LABEL['OUTSIDE']).toBe('E'); });
+});
