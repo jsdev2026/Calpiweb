@@ -7,7 +7,7 @@ import type { Room, Constraint } from '@/types/project';
  * For H_DISTANCE the bounding walls are vertical → preferVerticalEdge = true.
  * For V_DISTANCE the bounding walls are horizontal → preferVerticalEdge = false.
  */
-function halfThicknessAt(
+export function halfThicknessAt(
   nodeIdx: number,
   room: Room,
   defaultThickness: number,
