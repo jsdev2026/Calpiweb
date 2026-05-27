@@ -648,6 +648,17 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
     });
   }, [constraints, rooms, wallThickness]);
 
+  const handleDimensionClick = useCallback((c: Constraint) => {
+    const fromRef = c.pts[0]!;
+    const toRef   = c.pts[1]!;
+    const fromRoom = rooms.find(r => r.id === fromRef.roomId);
+    const toRoom   = rooms.find(r => r.id === toRef.roomId);
+    const fromVertex = fromRoom?.points[fromRef.vertexIdx];
+    const toVertex   = toRoom?.points[toRef.vertexIdx];
+    if (!fromVertex || !toVertex) return;
+    openDimensionPopup(fromRef, toRef, fromVertex, toVertex);
+  }, [rooms, openDimensionPopup]);
+
   const submitDimensionPopup = useCallback(() => {
     if (!dimensionPopup) return;
     const { fromRef, toRef, dimType, value } = dimensionPopup;
@@ -1861,6 +1872,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
         onPartitionVertexPointerDown={handlePartitionVertexPointerDown}
         onZoneVertexPointerDown={handleZoneVertexPointerDown}
         onZoneEdgePointerDown={handleZoneEdgePointerDown}
+        onDimensionClick={handleDimensionClick}
       />
       </div>
     </div>

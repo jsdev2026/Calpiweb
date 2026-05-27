@@ -88,6 +88,7 @@ interface DrawingCanvasProps {
   onZoneVertexPointerDown: (parentRoomId: string, zoneId: string, idx: number) => (e: ReactPointerEvent) => void;
   onZoneEdgePointerDown: (parentRoomId: string, zoneId: string, edgeIndex: number, dist: number) => (e: ReactPointerEvent) => void;
   deleteHover: DeleteHoverTarget | null;
+  onDimensionClick?: (constraint: Constraint) => void;
 }
 
 // ── Constraint helpers ─────────────────────────────────────────────────────
@@ -250,6 +251,7 @@ export const DrawingCanvas = ({
   onDeletePartition, onDeleteExcludedZone, onPartitionLabelPointerDown,
   onPartitionVertexPointerDown, onZoneVertexPointerDown, onZoneEdgePointerDown,
   deleteHover,
+  onDimensionClick,
 }: DrawingCanvasProps) => {
   const [hoveredBadge, setHoveredBadge] = useState<string | null>(null);
 
@@ -741,7 +743,9 @@ export const DrawingCanvas = ({
                   x={midX - textW / 2} y={dimY - fontSize / 2 - padY}
                   width={textW} height={fontSize + padY * 2}
                   rx={4 / scale} fill="var(--canvas-bg)"
-                  stroke="#22c55e" strokeWidth={0.8 / scale} />
+                  stroke="#22c55e" strokeWidth={0.8 / scale}
+                  className={onDimensionClick ? 'cursor-pointer' : undefined}
+                  onClick={() => onDimensionClick?.(c)} />
                 <text x={midX} y={dimY}
                   textAnchor="middle" dominantBaseline="middle"
                   fontSize={fontSize} fontWeight="700" fill="#22c55e"
@@ -782,7 +786,9 @@ export const DrawingCanvas = ({
                   x={dimX + padY} y={midY - fontSize / 2 - padY}
                   width={textW} height={fontSize + padY * 2}
                   rx={4 / scale} fill="var(--canvas-bg)"
-                  stroke="#22c55e" strokeWidth={0.8 / scale} />
+                  stroke="#22c55e" strokeWidth={0.8 / scale}
+                  className={onDimensionClick ? 'cursor-pointer' : undefined}
+                  onClick={() => onDimensionClick?.(c)} />
                 <text x={dimX + padY + textW / 2} y={midY}
                   textAnchor="middle" dominantBaseline="middle"
                   fontSize={fontSize} fontWeight="700" fill="#22c55e"
@@ -826,7 +832,9 @@ export const DrawingCanvas = ({
                   x={midX - textW / 2} y={midY - fontSize / 2 - padY}
                   width={textW} height={fontSize + padY * 2}
                   rx={4 / scale} fill="var(--canvas-bg)"
-                  stroke="#22c55e" strokeWidth={0.8 / scale} />
+                  stroke="#22c55e" strokeWidth={0.8 / scale}
+                  className={onDimensionClick ? 'cursor-pointer' : undefined}
+                  onClick={() => onDimensionClick?.(c)} />
                 <text x={midX} y={midY}
                   textAnchor="middle" dominantBaseline="middle"
                   fontSize={fontSize} fontWeight="700" fill="#22c55e"
