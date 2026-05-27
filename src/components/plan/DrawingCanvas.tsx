@@ -763,9 +763,11 @@ export const DrawingCanvas = ({
                     setDimDrag(d => d ? { ...d, liveOffset: newOffset } : null);
                   }}
                   onPointerUp={() => {
-                    if (dimDrag?.id !== c.id) return;
-                    onDimOffsetChange?.(c.id, dimDrag.liveOffset);
-                    setDimDrag(null);
+                    setDimDrag(d => {
+                      if (!d || d.id !== c.id) return d;
+                      onDimOffsetChange?.(c.id, d.liveOffset);
+                      return null;
+                    });
                   }}
                   onPointerCancel={() => setDimDrag(null)}
                 />
@@ -836,9 +838,11 @@ export const DrawingCanvas = ({
                     setDimDrag(d => d ? { ...d, liveOffset: newOffset } : null);
                   }}
                   onPointerUp={() => {
-                    if (dimDrag?.id !== c.id) return;
-                    onDimOffsetChange?.(c.id, dimDrag.liveOffset);
-                    setDimDrag(null);
+                    setDimDrag(d => {
+                      if (!d || d.id !== c.id) return d;
+                      onDimOffsetChange?.(c.id, d.liveOffset);
+                      return null;
+                    });
                   }}
                   onPointerCancel={() => setDimDrag(null)}
                 />
@@ -913,9 +917,11 @@ export const DrawingCanvas = ({
                     setDimDrag(d => d ? { ...d, liveOffset: newOffset } : null);
                   }}
                   onPointerUp={() => {
-                    if (dimDrag?.id !== c.id) return;
-                    onDimOffsetChange?.(c.id, dimDrag.liveOffset);
-                    setDimDrag(null);
+                    setDimDrag(d => {
+                      if (!d || d.id !== c.id) return d;
+                      onDimOffsetChange?.(c.id, d.liveOffset);
+                      return null;
+                    });
                   }}
                   onPointerCancel={() => setDimDrag(null)}
                 />
