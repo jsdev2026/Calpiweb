@@ -1029,18 +1029,25 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
       }
       // Second click
       if (faceSnapHover) {
-        setDimTypeSelection({
-          from: dimensionSource,
-          to: {
-            ref: {
-              roomId: faceSnapHover.roomId,
-              vertexIdx: faceSnapHover.vertexIdx,
-              face: faceSnapHover.face,
+        // Guard: ignore same vertex+face as source (zero-distance dimension)
+        const samePoint =
+          faceSnapHover.roomId   === dimensionSource.ref.roomId &&
+          faceSnapHover.vertexIdx === dimensionSource.ref.vertexIdx &&
+          faceSnapHover.face      === dimensionSource.ref.face;
+        if (!samePoint) {
+          setDimTypeSelection({
+            from: dimensionSource,
+            to: {
+              ref: {
+                roomId: faceSnapHover.roomId,
+                vertexIdx: faceSnapHover.vertexIdx,
+                face: faceSnapHover.face,
+              },
+              worldPos: faceSnapHover.worldPos,
             },
-            worldPos: faceSnapHover.worldPos,
-          },
-        });
-        setDimensionSource(null);
+          });
+          setDimensionSource(null);
+        }
       } else {
         setDimensionSource(null);
       }
