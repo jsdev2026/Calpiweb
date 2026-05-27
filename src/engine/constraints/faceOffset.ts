@@ -46,8 +46,8 @@ export function halfThicknessAt(
  *   AXIS    →  0
  *   OUTSIDE → −halfThickness  (exterior face extends beyond axis)
  *
- * Formula:  displayed = stored + offsetA + offsetB
- *           stored    = displayed − offsetA − offsetB
+ * Formula:  stored    = displayed + offsetA + offsetB
+ *           displayed = stored − offsetA − offsetB
  *
  * Backward compatibility: absent `face` is treated as 'INSIDE'.
  */
