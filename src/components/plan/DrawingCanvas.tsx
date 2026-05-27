@@ -84,6 +84,11 @@ interface DrawingCanvasProps {
   deleteHover: DeleteHoverTarget | null;
   onDimensionClick?: (constraint: Constraint) => void;
   onDimOffsetChange?: (constraintId: string, newOffset: number) => void;
+  dimTypeSelection?: {
+    from: { ref: PointRef; worldPos: Point };
+    to:   { ref: PointRef; worldPos: Point };
+  } | null;
+  onDimTypeSelect?: (type: import('@/types/project').DimConstraintType) => void;
 }
 
 // ── Constraint helpers ─────────────────────────────────────────────────────
@@ -248,6 +253,8 @@ export const DrawingCanvas = ({
   deleteHover,
   onDimensionClick,
   onDimOffsetChange,
+  dimTypeSelection: _dimTypeSelection,
+  onDimTypeSelect: _onDimTypeSelect,
 }: DrawingCanvasProps) => {
   const [hoveredBadge, setHoveredBadge] = useState<string | null>(null);
   const [dimDrag, setDimDrag] = useState<{

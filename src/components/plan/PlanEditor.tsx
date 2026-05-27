@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import type { Point } from '@/types/plan';
-import type { Constraint, EdgeType, PointRef, Room } from '@/types/project';
+import type { Constraint, DimConstraintType, EdgeType, PointRef, Room } from '@/types/project';
 import { distance, getPointOnSegment } from '@/engine/geometry/polygon';
 import { SNAP_GRID_MM, CLOSING_TOLERANCE_MM, DOOR_DEFAULT_WIDTH_MM } from '@/constants/businessRules';
 import { screenToWorld } from '@/utils/units';
@@ -12,7 +12,7 @@ import { selectActiveProject, useProjectStore } from '@/store/projectStore';
 import { buildAndSolve, solveAndValidate } from '@/engine/constraints/solver';
 import { analyzeDOF, ptKey } from '@/engine/constraints/dofAnalyzer';
 import { constraintFaceOffset } from '@/engine/constraints/faceOffset';
-import { findNearestVertexSnapImpl } from '@/engine/constraints/vertexSnap';
+import { findNearestVertexSnapImpl, computeDimDisplayedValue } from '@/engine/constraints/vertexSnap';
 import { PlanToolbar, type PlanTool } from './PlanToolbar';
 import { ToolStatusBar } from './ToolStatusBar';
 import { DimensionEditor } from './DimensionEditor';
@@ -286,6 +286,10 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
     ref:      PointRef;
     worldPos: Point;
   } | null>(null);
+  const [dimTypeSelection, setDimTypeSelection] = useState<{
+    from: { ref: PointRef; worldPos: Point };
+    to:   { ref: PointRef; worldPos: Point };
+  } | null>(null);
   const [dimensionPopup, setDimensionPopup] = useState<{
     fromRef:  PointRef;
     toRef:    PointRef;
@@ -558,11 +562,12 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
     toRef: PointRef,
     fromWorld: Point,
     toWorld: Point,
+    forcedType?: DimConstraintType,
   ) => {
     const dx = Math.abs(toWorld.x - fromWorld.x);
     const dy = Math.abs(toWorld.y - fromWorld.y);
-    const dimType: 'H_DISTANCE' | 'V_DISTANCE' =
-      dx >= dy ? 'H_DISTANCE' : 'V_DISTANCE';
+    const dimType: DimConstraintType =
+      forcedType ?? (dx >= dy ? 'H_DISTANCE' : 'V_DISTANCE');
 
     // Check for existing constraint between these vertices
     const existing = constraints.find((c) =>
@@ -575,7 +580,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
     );
 
     let displayedValue: number;
-    const resolvedDimType = existing ? (existing.type as 'H_DISTANCE' | 'V_DISTANCE' | 'LENGTH') : dimType;
+    const resolvedDimType = existing ? (existing.type as DimConstraintType) : dimType;
 
     if (existing && typeof existing.value === 'number') {
       const room = rooms.find(r => r.id === fromRef.roomId);
@@ -583,8 +588,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
       const offset = room ? constraintFaceOffset(syntheticC, room, wallThickness) : 0;
       displayedValue = (existing.value - offset) / 10;
     } else {
-      const rawValue = dimType === 'H_DISTANCE' ? dx : dy;
-      displayedValue = rawValue / 10;
+      displayedValue = computeDimDisplayedValue(fromWorld, toWorld, dimType);
     }
 
     setDimensionPopup({
@@ -594,6 +598,18 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
       value: displayedValue.toFixed(1),
     });
   }, [constraints, rooms, wallThickness]);
+
+  const handleDimTypeSelect = useCallback((type: DimConstraintType) => {
+    if (!dimTypeSelection) return;
+    openDimensionPopup(
+      dimTypeSelection.from.ref,
+      dimTypeSelection.to.ref,
+      dimTypeSelection.from.worldPos,
+      dimTypeSelection.to.worldPos,
+      type,
+    );
+    setDimTypeSelection(null);
+  }, [dimTypeSelection, openDimensionPopup]);
 
   const handleDimensionClick = useCallback((c: Constraint) => {
     const fromRef = c.pts[0]!;
@@ -687,7 +703,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
         setEditingEdge(null); setEditingZoneEdge(null); setEditingPartition(null);
         setEditingPartitionThickness(null); setEditingPartitionDimension(null);
         setDraggedVertex(null); setDraggedZoneVertex(null); setDraggedPartitionVertex(null);
-        setCoincideSource(null); setDimensionSource(null); setFaceSnapHover(null); setDimensionPopup(null); setPartitionOrigin(null); setExcludePoints([]);
+        setCoincideSource(null); setDimensionSource(null); setFaceSnapHover(null); setDimensionPopup(null); setDimTypeSelection(null); setPartitionOrigin(null); setExcludePoints([]);
       }
       if (e.key === 'z' && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
         e.preventDefault();
@@ -992,6 +1008,11 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
 
     // ── DIMENSION ──
     if (tool === 'DIMENSION') {
+      // Un clic canvas annule les 3 prévisualisations (les previews SVG utilisent stopPropagation)
+      if (dimTypeSelection) {
+        setDimTypeSelection(null);
+        return;
+      }
       if (!dimensionSource) {
         if (faceSnapHover) {
           setDimensionSource({
@@ -1007,12 +1028,17 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
       }
       // Second click
       if (faceSnapHover) {
-        openDimensionPopup(
-          dimensionSource.ref,
-          { roomId: faceSnapHover.roomId, vertexIdx: faceSnapHover.vertexIdx, face: faceSnapHover.face },
-          dimensionSource.worldPos,
-          faceSnapHover.worldPos,
-        );
+        setDimTypeSelection({
+          from: dimensionSource,
+          to: {
+            ref: {
+              roomId: faceSnapHover.roomId,
+              vertexIdx: faceSnapHover.vertexIdx,
+              face: faceSnapHover.face,
+            },
+            worldPos: faceSnapHover.worldPos,
+          },
+        });
         setDimensionSource(null);
       } else {
         setDimensionSource(null);
@@ -1826,6 +1852,8 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
         onZoneEdgePointerDown={handleZoneEdgePointerDown}
         onDimensionClick={handleDimensionClick}
         onDimOffsetChange={handleDimOffsetChange}
+        dimTypeSelection={dimTypeSelection}
+        onDimTypeSelect={handleDimTypeSelect}
       />
       </div>
     </div>

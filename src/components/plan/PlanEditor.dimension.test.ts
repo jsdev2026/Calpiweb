@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { constraintFaceOffset } from '@/engine/constraints/faceOffset';
-import { bestEdgeNormal, findNearestVertexSnapImpl } from '@/engine/constraints/vertexSnap';
+import { bestEdgeNormal, findNearestVertexSnapImpl, computeDimDisplayedValue } from '@/engine/constraints/vertexSnap';
 import type { Room } from '@/types/project';
 import type { Point } from '@/types/plan';
 
@@ -97,5 +97,32 @@ describe('findNearestVertexSnapImpl', () => {
     // cursor far from all vertices
     const snap = findNearestVertexSnapImpl({ x: 500, y: 500 }, [room], 1, wallThickness);
     expect(snap).toBeNull();
+  });
+});
+
+describe('computeDimDisplayedValue — rawValue par type', () => {
+  it('H_DISTANCE : rawValue = |dx| / 10', () => {
+    const from: Point = { x: 0,    y: 0 };
+    const to:   Point = { x: 3000, y: 1000 };
+    expect(computeDimDisplayedValue(from, to, 'H_DISTANCE')).toBeCloseTo(300);
+  });
+
+  it('V_DISTANCE : rawValue = |dy| / 10', () => {
+    const from: Point = { x: 0,    y: 0 };
+    const to:   Point = { x: 3000, y: 1000 };
+    expect(computeDimDisplayedValue(from, to, 'V_DISTANCE')).toBeCloseTo(100);
+  });
+
+  it('LENGTH : rawValue = sqrt(dx²+dy²) / 10', () => {
+    const from: Point = { x: 0, y: 0 };
+    const to:   Point = { x: 3000, y: 4000 };
+    // sqrt(9000000+16000000)/10 = 5000/10 = 500
+    expect(computeDimDisplayedValue(from, to, 'LENGTH')).toBeCloseTo(500);
+  });
+
+  it('LENGTH entre deux points alignés H : rawValue = |dx| / 10', () => {
+    const from: Point = { x: 0,    y: 0 };
+    const to:   Point = { x: 2500, y: 0 };
+    expect(computeDimDisplayedValue(from, to, 'LENGTH')).toBeCloseTo(250);
   });
 });
