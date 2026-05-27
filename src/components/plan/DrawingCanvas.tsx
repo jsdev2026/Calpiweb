@@ -253,8 +253,8 @@ export const DrawingCanvas = ({
   deleteHover,
   onDimensionClick,
   onDimOffsetChange,
-  dimTypeSelection: _dimTypeSelection,
-  onDimTypeSelect: _onDimTypeSelect,
+  dimTypeSelection,
+  onDimTypeSelect,
 }: DrawingCanvasProps) => {
   const [hoveredBadge, setHoveredBadge] = useState<string | null>(null);
   const [dimDrag, setDimDrag] = useState<{
@@ -1192,6 +1192,84 @@ export const DrawingCanvas = ({
               >
                 {label}
               </text>
+            </g>
+          );
+        })()}
+
+        {/* ── 3 côtes prévisualisées H / V / L (dimTypeSelection) ─────────── */}
+        {dimTypeSelection && (() => {
+          const { from, to } = dimTypeSelection;
+          const fA = from.worldPos, fB = to.worldPos;
+          const segDx = fB.x - fA.x, segDy = fB.y - fA.y;
+          const segLen = Math.sqrt(segDx * segDx + segDy * segDy) || 1;
+          const nx = -segDy / segLen, ny = segDx / segLen; // normale perpendiculaire
+
+          // H preview : ligne horizontale au-dessus des deux points
+          const hY = Math.min(fA.y, fB.y) - DIM_OFFSET;
+          // V preview : ligne verticale à droite des deux points
+          const vX = Math.max(fA.x, fB.x) + DIM_OFFSET;
+          // L preview : parallèle au segment, décalée selon la normale
+          const lX1 = fA.x + nx * DIM_OFFSET, lY1 = fA.y + ny * DIM_OFFSET;
+          const lX2 = fB.x + nx * DIM_OFFSET, lY2 = fB.y + ny * DIM_OFFSET;
+
+          const sw       = Math.min(2 / scale, 2000);
+          const fontSize = Math.min(13 / scale, 2000);
+
+          const previews: Array<{
+            type: DimConstraintType;
+            x1: number; y1: number; x2: number; y2: number;
+            color: string; labelX: number; labelY: number; label: string;
+          }> = [
+            {
+              type: 'H_DISTANCE',
+              x1: fA.x, y1: hY, x2: fB.x, y2: hY,
+              color: '#22c55e', label: 'H',
+              labelX: (fA.x + fB.x) / 2,
+              labelY: hY - fontSize * 1.2,
+            },
+            {
+              type: 'V_DISTANCE',
+              x1: vX, y1: fA.y, x2: vX, y2: fB.y,
+              color: '#3b82f6', label: 'V',
+              labelX: vX + fontSize * 1.5,
+              labelY: (fA.y + fB.y) / 2,
+            },
+            {
+              type: 'LENGTH',
+              x1: lX1, y1: lY1, x2: lX2, y2: lY2,
+              color: '#f97316', label: 'L',
+              labelX: (lX1 + lX2) / 2 + nx * fontSize * 1.5,
+              labelY: (lY1 + lY2) / 2 + ny * fontSize * 1.5,
+            },
+          ];
+
+          return (
+            <g>
+              {previews.map(({ type, x1, y1, x2, y2, color, labelX, labelY, label }) => (
+                <g
+                  key={type}
+                  opacity={0.35}
+                  className="cursor-pointer"
+                  onClick={(e) => { e.stopPropagation(); onDimTypeSelect?.(type); }}
+                  onPointerEnter={(e) => { (e.currentTarget as SVGGElement).style.opacity = '0.85'; }}
+                  onPointerLeave={(e) => { (e.currentTarget as SVGGElement).style.opacity = '0.35'; }}
+                >
+                  <line
+                    x1={x1} y1={y1} x2={x2} y2={y2}
+                    stroke={color} strokeWidth={sw}
+                    markerStart="url(#cad-arr-l)" markerEnd="url(#cad-arr-r)"
+                  />
+                  <text
+                    x={labelX} y={labelY}
+                    textAnchor="middle" dominantBaseline="middle"
+                    fontSize={fontSize} fontWeight="700" fill={color}
+                    className="select-none pointer-events-none"
+                    style={{ fontFamily: 'system-ui' }}
+                  >
+                    {label}
+                  </text>
+                </g>
+              ))}
             </g>
           );
         })()}
