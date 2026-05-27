@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { constraintInteriorOffset } from '@/engine/constraints/interiorOffset';
+import { constraintFaceOffset } from '@/engine/constraints/faceOffset';
 import type { Room } from '@/types/project';
 
 describe('DrawingCanvas badge fallback offset', () => {
@@ -14,7 +14,7 @@ describe('DrawingCanvas badge fallback offset', () => {
     // bottom edge: vertex 0→1, dxE=3000 > dyE=0 → H_DISTANCE
     const dxE = 3000, dyE = 0;
     const fallbackType = Math.abs(dxE) >= Math.abs(dyE) ? 'H_DISTANCE' : 'V_DISTANCE';
-    const offset = constraintInteriorOffset(
+    const offset = constraintFaceOffset(
       { id: '', type: fallbackType, pts: [{ roomId: 'r1', vertexIdx: 0 }, { roomId: 'r1', vertexIdx: 1 }] },
       room, wallThickness,
     );
@@ -25,7 +25,7 @@ describe('DrawingCanvas badge fallback offset', () => {
     // right edge: vertex 1→2, dxE=0 < dyE=4000 → V_DISTANCE
     const dxE = 0, dyE = 4000;
     const fallbackType = Math.abs(dxE) >= Math.abs(dyE) ? 'H_DISTANCE' : 'V_DISTANCE';
-    const offset = constraintInteriorOffset(
+    const offset = constraintFaceOffset(
       { id: '', type: fallbackType, pts: [{ roomId: 'r1', vertexIdx: 1 }, { roomId: 'r1', vertexIdx: 2 }] },
       room, wallThickness,
     );
@@ -37,7 +37,7 @@ describe('DrawingCanvas badge fallback offset', () => {
     const edgeLen = 3000;
     const dxE = 3000, dyE = 0;
     const fallbackType = Math.abs(dxE) >= Math.abs(dyE) ? 'H_DISTANCE' : 'V_DISTANCE';
-    const fallbackOffset = constraintInteriorOffset(
+    const fallbackOffset = constraintFaceOffset(
       { id: '', type: fallbackType, pts: [{ roomId: 'r1', vertexIdx: 0 }, { roomId: 'r1', vertexIdx: 1 }] },
       room, wallThickness,
     );

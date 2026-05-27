@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { constraintInteriorOffset } from '@/engine/constraints/interiorOffset';
+import { constraintFaceOffset } from '@/engine/constraints/faceOffset';
 import type { Room } from '@/types/project';
 
 describe('DIMENSION tool interior round-trip', () => {
@@ -14,7 +14,7 @@ describe('DIMENSION tool interior round-trip', () => {
     const toRef   = { roomId: 'r1', vertexIdx: 1 };
     const absDx = Math.abs(3100 - 0);
     const syntheticC = { id: '', type: 'H_DISTANCE' as const, pts: [fromRef, toRef] };
-    const offset = constraintInteriorOffset(syntheticC, room, 100);
+    const offset = constraintFaceOffset(syntheticC, room, 100);
     expect(offset).toBe(100);
     expect((absDx - offset) / 10).toBe(300); // shown as 300cm
     expect(300 * 10 + offset).toBe(3100);    // stored as 3100mm
@@ -24,7 +24,7 @@ describe('DIMENSION tool interior round-trip', () => {
     const fromRef = { roomId: 'r1', vertexIdx: 0 };
     const toRef   = { roomId: 'partition-1', vertexIdx: 0 };
     const syntheticC = { id: '', type: 'H_DISTANCE' as const, pts: [fromRef, toRef] };
-    const offset = constraintInteriorOffset(syntheticC, room, 100);
+    const offset = constraintFaceOffset(syntheticC, room, 100);
     expect(offset).toBe(0);
   });
 });

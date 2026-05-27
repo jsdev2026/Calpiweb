@@ -8,7 +8,7 @@ import { angle, distance } from '@/engine/geometry/polygon';
 import { formatCm } from '@/utils/formatters';
 import type { DOFMap } from '@/engine/constraints/dofAnalyzer';
 import { ptKey } from '@/engine/constraints/dofAnalyzer';
-import { constraintInteriorOffset } from '@/engine/constraints/interiorOffset';
+import { constraintFaceOffset } from '@/engine/constraints/faceOffset';
 import type { PlanTool } from './PlanToolbar';
 
 export interface HoveredEdge { roomId: string; edgeIndex: number; t: number; }
@@ -448,10 +448,10 @@ export const DrawingCanvas = ({
                 const hasDirC = hasH || hasV;
                 const textColor = hasDistC ? '#22c55e' : hasDirC ? '#60a5fa' : isDoor ? '#f97316' : 'var(--canvas-label-text)';
                 const dirIcon = hasH ? 'H ' : hasV ? 'V ' : '';
-                const hOffset = hDistC ? constraintInteriorOffset(hDistC, room, wallThickness) : 0;
-                const vOffset = vDistC ? constraintInteriorOffset(vDistC, room, wallThickness) : 0;
+                const hOffset = hDistC ? constraintFaceOffset(hDistC, room, wallThickness) : 0;
+                const vOffset = vDistC ? constraintFaceOffset(vDistC, room, wallThickness) : 0;
                 const fallbackType = Math.abs(dxE) >= Math.abs(dyE) ? 'H_DISTANCE' : 'V_DISTANCE';
-                const fallbackOffset = constraintInteriorOffset(
+                const fallbackOffset = constraintFaceOffset(
                   { id: '', type: fallbackType, pts: [{ roomId: room.id, vertexIdx: i }, { roomId: room.id, vertexIdx: (i + 1) % pts.length }] },
                   room, wallThickness,
                 );

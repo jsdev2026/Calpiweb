@@ -12,7 +12,6 @@ import { selectActiveProject, useProjectStore } from '@/store/projectStore';
 import { buildAndSolve, solveAndValidate } from '@/engine/constraints/solver';
 import { analyzeDOF, ptKey } from '@/engine/constraints/dofAnalyzer';
 import { constraintFaceOffset } from '@/engine/constraints/faceOffset';
-import { constraintInteriorOffset } from '@/engine/constraints/interiorOffset';
 import { PlanToolbar, type PlanTool } from './PlanToolbar';
 import { ToolStatusBar } from './ToolStatusBar';
 import { DimensionEditor } from './DimensionEditor';
@@ -1538,7 +1537,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
     const cType = existing?.type ?? editingPartitionDimType;
     const fromRoom = rooms.find((r) => r.id === fromRef.roomId);
     const syntheticC = { id: '', type: cType as Constraint['type'], pts: [fromRef, toRef] };
-    const submitOffset = fromRoom ? constraintInteriorOffset(syntheticC, fromRoom, wallThickness) : 0;
+    const submitOffset = fromRoom ? constraintFaceOffset(syntheticC, fromRoom, wallThickness) : 0;
     const valueMm = valCm * 10 + submitOffset;
     const newId = existing?.id ?? generateId();
     const newCs = existing

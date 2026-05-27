@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { constraintInteriorOffset } from '@/engine/constraints/interiorOffset';
+import { constraintFaceOffset } from '@/engine/constraints/faceOffset';
 import type { Room, Constraint } from '@/types/project';
 
 describe('WallEdgeEditor interior round-trip', () => {
@@ -12,7 +12,7 @@ describe('WallEdgeEditor interior round-trip', () => {
 
   it('open: stored 3100mm H_DISTANCE → user sees 300cm (interior)', () => {
     const c: Constraint = { id: 'c', type: 'H_DISTANCE', pts: [{ roomId: 'r1', vertexIdx: 0 }, { roomId: 'r1', vertexIdx: 1 }], value: 3100 };
-    const offset = constraintInteriorOffset(c, room, wallThickness);
+    const offset = constraintFaceOffset(c, room, wallThickness);
     const displayedCm = (3100 - offset) / 10;
     expect(displayedCm).toBe(300);
   });
@@ -21,7 +21,7 @@ describe('WallEdgeEditor interior round-trip', () => {
     const p1Ref = { roomId: 'r1', vertexIdx: 0 };
     const p2Ref = { roomId: 'r1', vertexIdx: 1 };
     const c: Constraint = { id: '', type: 'H_DISTANCE', pts: [p1Ref, p2Ref] };
-    const offset = constraintInteriorOffset(c, room, wallThickness);
+    const offset = constraintFaceOffset(c, room, wallThickness);
     const storedMm = 300 * 10 + offset;
     expect(storedMm).toBe(3100);
   });
