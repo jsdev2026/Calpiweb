@@ -770,7 +770,7 @@ export const DrawingCanvas = ({
                     stroke="#22c55e" strokeWidth={isDragging ? sw * 1.5 : sw}
                     markerStart="url(#cad-arr-l)" markerEnd="url(#cad-arr-r)"
                   />
-                  <text x={midX} y={dimY}
+                  <text x={midX} y={dimY - fontSize * 1.2}
                     textAnchor="middle" dominantBaseline="middle"
                     fontSize={fontSize} fontWeight="700" fill="#22c55e"
                     className="select-none"
@@ -839,7 +839,7 @@ export const DrawingCanvas = ({
                     stroke="#22c55e" strokeWidth={isDragging ? sw * 1.5 : sw}
                     markerStart="url(#cad-arr-l)" markerEnd="url(#cad-arr-r)"
                   />
-                  <text x={dimX + fontSize} y={midY}
+                  <text x={dimX + fontSize * 1.5} y={midY}
                     textAnchor="start" dominantBaseline="middle"
                     fontSize={fontSize} fontWeight="700" fill="#22c55e"
                     className="select-none"
@@ -912,7 +912,7 @@ export const DrawingCanvas = ({
                     stroke="#22c55e" strokeWidth={isDragging ? sw * 1.5 : sw}
                     markerStart="url(#cad-arr-l)" markerEnd="url(#cad-arr-r)"
                   />
-                  <text x={midX} y={midY}
+                  <text x={midX + nx * fontSize * 1.5} y={midY + ny * fontSize * 1.5}
                     textAnchor="middle" dominantBaseline="middle"
                     fontSize={fontSize} fontWeight="700" fill="#22c55e"
                     className="select-none"
