@@ -529,21 +529,10 @@ export const DrawingCanvas = ({
                 const hasDistC = !!(hDistC || vDistC || lenC);
                 const hasDirC = hasH || hasV;
                 const textColor = hasDistC ? '#22c55e' : hasDirC ? '#60a5fa' : isDoor ? '#f97316' : 'var(--canvas-label-text)';
-                const dirIcon = hasH ? 'H ' : hasV ? 'V ' : '';
-                const hOffset = hDistC ? constraintFaceOffset(hDistC, room, wallThickness) : 0;
-                const vOffset = vDistC ? constraintFaceOffset(vDistC, room, wallThickness) : 0;
-                const fallbackType = Math.abs(dxE) >= Math.abs(dyE) ? 'H_DISTANCE' : 'V_DISTANCE';
-                const fallbackOffset = constraintFaceOffset(
-                  { id: '', type: fallbackType, pts: [{ roomId: room.id, vertexIdx: i }, { roomId: room.id, vertexIdx: (i + 1) % pts.length }] },
-                  room, wallThickness,
-                );
-                const dimVal = hDistC && typeof hDistC.value === 'number' ? formatCm(hDistC.value - hOffset)
-                  : vDistC && typeof vDistC.value === 'number' ? formatCm(vDistC.value - vOffset)
-                  : lenC && typeof lenC.value === 'number' ? formatCm(lenC.value)
-                  : formatCm(edgeLen - fallbackOffset);
-                const thickPart = thickOverride !== undefined ? ` E:${Math.round(thickOverride / 10)}` : '';
-                const mainLabel = `${dirIcon}${dimVal}${thickPart}`;
-                const showLabel = !hasDistC && (screenLen > 65 || isHov);
+                const dirIcon = hasH ? 'H' : hasV ? 'V' : '';
+                const thickPart = thickOverride !== undefined ? `E:${Math.round(thickOverride / 10)}` : '';
+                const mainLabel = [dirIcon, thickPart].filter(Boolean).join(' ');
+                const showLabel = !!mainLabel && (screenLen > 65 || isHov);
                 return (
                   <g key={`badge-${room.id}-${i}`}
                     transform={`translate(${midX + perpOx}, ${midY + perpOy}) rotate(${ang})`}
