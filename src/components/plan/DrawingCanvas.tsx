@@ -1251,9 +1251,16 @@ export const DrawingCanvas = ({
                   opacity={0.35}
                   className="cursor-pointer"
                   onClick={(e) => { e.stopPropagation(); onDimTypeSelect?.(type); }}
+                  onPointerDown={(e) => e.stopPropagation()}
                   onPointerEnter={(e) => { (e.currentTarget as SVGGElement).style.opacity = '0.85'; }}
                   onPointerLeave={(e) => { (e.currentTarget as SVGGElement).style.opacity = '0.35'; }}
                 >
+                  {/* Invisible wider hit area */}
+                  <line
+                    x1={x1} y1={y1} x2={x2} y2={y2}
+                    stroke="transparent" strokeWidth={Math.min(20 / scale, 2000)}
+                  />
+                  {/* TODO: arrow tip colors don't match preview line colors — markers use hardcoded green */}
                   <line
                     x1={x1} y1={y1} x2={x2} y2={y2}
                     stroke={color} strokeWidth={sw}
