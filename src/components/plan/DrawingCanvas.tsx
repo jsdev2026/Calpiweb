@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { PointerEvent as ReactPointerEvent, RefObject } from 'react';
-import type { Room, Constraint, ExcludedZone, Partition, PointRef } from '@/types/project';
+import type { DimConstraintType, Room, Constraint, ExcludedZone, Partition, PointRef } from '@/types/project';
 import type { Point, FaceSnapPoint } from '@/types/plan';
 import { angle, distance } from '@/engine/geometry/polygon';
 import { formatCm } from '@/utils/formatters';
@@ -88,7 +88,7 @@ interface DrawingCanvasProps {
     from: { ref: PointRef; worldPos: Point };
     to:   { ref: PointRef; worldPos: Point };
   } | null;
-  onDimTypeSelect?: (type: import('@/types/project').DimConstraintType) => void;
+  onDimTypeSelect?: (type: DimConstraintType) => void;
 }
 
 // ── Constraint helpers ─────────────────────────────────────────────────────

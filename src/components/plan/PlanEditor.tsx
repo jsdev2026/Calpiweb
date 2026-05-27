@@ -612,6 +612,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
   }, [dimTypeSelection, openDimensionPopup]);
 
   const handleDimensionClick = useCallback((c: Constraint) => {
+    setDimTypeSelection(null);
     const fromRef = c.pts[0]!;
     const toRef   = c.pts[1]!;
     const fromRoom = rooms.find(r => r.id === fromRef.roomId);
@@ -1713,7 +1714,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
           setDimensionSource(null);
           setDimensionPopup(null);
           setCoincideSource(null); setPartitionOrigin(null);
-          setExcludePoints([]); setEditingPartitionDimension(null);
+          setExcludePoints([]); setEditingPartitionDimension(null); setDimTypeSelection(null);
         }}
         onUndo={handleUndo}
         onRedo={handleRedo}
