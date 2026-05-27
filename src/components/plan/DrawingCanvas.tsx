@@ -8,7 +8,7 @@ import { angle, distance } from '@/engine/geometry/polygon';
 import { formatCm } from '@/utils/formatters';
 import type { DOFMap } from '@/engine/constraints/dofAnalyzer';
 import { ptKey } from '@/engine/constraints/dofAnalyzer';
-import { constraintFaceOffset } from '@/engine/constraints/faceOffset';
+import { constraintFaceOffset, halfThicknessAt } from '@/engine/constraints/faceOffset';
 import type { PlanTool } from './PlanToolbar';
 
 export interface HoveredEdge { roomId: string; edgeIndex: number; t: number; }
@@ -139,6 +139,71 @@ function resolvePointRef(rooms: Room[], ptRef: PointRef): Point | undefined {
 // ── Face label mapping (for dimension source & CAD dimension lines) ────────
 const FACE_LABEL = { INSIDE: 'I', AXIS: 'A', OUTSIDE: 'E' } as const;
 
+// ── CAD dimension line constants ───────────────────────────────────────────
+const DIM_OFFSET = 500; // world units — offset de la ligne de cote
+const EXT_GAP   = 50;  // espace entre pt de référence et début ligne d'extension
+const EXT_OVER  = 80;  // dépassement de la ligne d'extension au-delà de la cote
+
+/**
+ * Calcule la coordonnée affichée d'un PointRef le long de l'axe mesuré,
+ * en tenant compte du décalage de face (INSIDE / AXIS / OUTSIDE).
+ *
+ * Pour une contrainte H_DISTANCE, axis = 'H' → retourne la coordonnée X ajustée.
+ * Pour une contrainte V_DISTANCE, axis = 'V' → retourne la coordonnée Y ajustée.
+ *
+ * Invariant de test : pour une pièce rectangulaire I→I,
+ *   vertex à x=0 → displayX > 0
+ *   vertex à x=3000 → displayX < 3000
+ */
+function resolveDisplayCoord(
+  pt: PointRef,
+  rooms: Room[],
+  wallThickness: number,
+  axis: 'H' | 'V',
+): number | null {
+  const room = rooms.find(r => r.id === pt.roomId);
+  const vertex = room?.points[pt.vertexIdx];
+  if (!room || !vertex) return null;
+
+  const preferVertical = axis === 'H'; // murs verticaux délimitent une dist H
+  const half = halfThicknessAt(pt.vertexIdx, room, wallThickness, preferVertical);
+  const face = pt.face ?? 'INSIDE';
+  const faceSign = face === 'INSIDE' ? 1 : face === 'OUTSIDE' ? -1 : 0;
+
+  const n = room.points.length;
+  const edgeIndices = [(pt.vertexIdx - 1 + n) % n, pt.vertexIdx];
+  let bestEdge = -1, bestScore = -1;
+  for (const eIdx of edgeIndices) {
+    const p1 = room.points[eIdx]!, p2 = room.points[(eIdx + 1) % n]!;
+    const adx = Math.abs(p2.x - p1.x), ady = Math.abs(p2.y - p1.y);
+    const total = adx + ady;
+    if (total < 0.001) continue;
+    const score = preferVertical ? ady / total : adx / total;
+    if (score > bestScore) { bestScore = score; bestEdge = eIdx; }
+  }
+  if (bestEdge === -1 || bestScore < 0.5) {
+    return axis === 'H' ? vertex.x : vertex.y;
+  }
+
+  const ep1 = room.points[bestEdge]!, ep2 = room.points[(bestEdge + 1) % n]!;
+  const centroidX = room.points.reduce((s, p) => s + p.x, 0) / n;
+  const centroidY = room.points.reduce((s, p) => s + p.y, 0) / n;
+
+  if (axis === 'H') {
+    const edgeDy = ep2.y - ep1.y;
+    const rawNormalX = -edgeDy;
+    let normalSign = rawNormalX >= 0 ? 1 : -1;
+    if ((centroidX - vertex.x) * normalSign < 0) normalSign = -normalSign;
+    return vertex.x + faceSign * normalSign * half;
+  } else {
+    const edgeDx = ep2.x - ep1.x;
+    const rawNormalY = edgeDx;
+    let normalSign = rawNormalY >= 0 ? 1 : -1;
+    if ((centroidY - vertex.y) * normalSign < 0) normalSign = -normalSign;
+    return vertex.y + faceSign * normalSign * half;
+  }
+}
+
 // ── Vertex badge shared renderer ───────────────────────────────────────────
 
 interface VtxProps {
@@ -215,6 +280,18 @@ export const DrawingCanvas = ({
           patternUnits="userSpaceOnUse" patternTransform={`translate(${pan.x}, ${pan.y})`}>
           <circle cx="1" cy="1" r="1" fill="var(--canvas-dot)" />
         </pattern>
+        {/* Flèche ouverte → fin de ligne (pointe vers la droite) */}
+        <marker id="cad-arr-r" markerWidth="8" markerHeight="5"
+          refX="0" refY="2.5" orient="auto">
+          <polyline points="0,0.5 8,2.5 0,4.5" fill="none" stroke="#22c55e"
+            strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+        </marker>
+        {/* Flèche ouverte ← début de ligne (pointe vers la gauche) */}
+        <marker id="cad-arr-l" markerWidth="8" markerHeight="5"
+          refX="8" refY="2.5" orient="auto">
+          <polyline points="8,0.5 0,2.5 8,4.5" fill="none" stroke="#22c55e"
+            strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+        </marker>
       </defs>
       <rect width="100%" height="100%" fill="var(--canvas-bg)" />
       <rect width="100%" height="100%" fill="url(#grid)" />
@@ -464,7 +541,7 @@ export const DrawingCanvas = ({
                   : formatCm(edgeLen - fallbackOffset);
                 const thickPart = thickOverride !== undefined ? ` E:${Math.round(thickOverride / 10)}` : '';
                 const mainLabel = `${dirIcon}${dimVal}${thickPart}`;
-                const showLabel = screenLen > 65 || isHov;
+                const showLabel = !hasDistC && (screenLen > 65 || isHov);
                 return (
                   <g key={`badge-${room.id}-${i}`}
                     transform={`translate(${midX + perpOx}, ${midY + perpOy}) rotate(${ang})`}
@@ -610,6 +687,161 @@ export const DrawingCanvas = ({
               )}
             </g>
           );
+        })}
+
+        {/* ── Lignes de cote CAD (H_DISTANCE / V_DISTANCE / LENGTH) ─────── */}
+        {constraints.map((c) => {
+          if (c.type !== 'H_DISTANCE' && c.type !== 'V_DISTANCE' && c.type !== 'LENGTH') return null;
+          if (c.pts.length < 2 || typeof c.value !== 'number') return null;
+
+          const roomA = rooms.find(r => r.id === c.pts[0]!.roomId);
+          const roomB = rooms.find(r => r.id === c.pts[1]!.roomId);
+          if (!roomA || !roomB) return null;
+
+          const vA = roomA.points[c.pts[0]!.vertexIdx];
+          const vB = roomB.points[c.pts[1]!.vertexIdx];
+          if (!vA || !vB) return null;
+
+          const hOffset = constraintFaceOffset(c, roomA, wallThickness);
+          const displayedMm = c.value - hOffset;
+          const displayedCm = (displayedMm / 10).toFixed(1);
+          const faceLabel = `${FACE_LABEL[c.pts[0]!.face ?? 'INSIDE']}→${FACE_LABEL[c.pts[1]!.face ?? 'INSIDE']}`;
+
+          const sw = 1.2 / scale;   // épaisseur trait
+          const extSw = 0.8 / scale;
+          const fontSize = 11 / scale;
+          const padX = 28 / scale, padY = 8 / scale;
+
+          if (c.type === 'H_DISTANCE') {
+            const xA = resolveDisplayCoord(c.pts[0]!, rooms, wallThickness, 'H') ?? vA.x;
+            const xB = resolveDisplayCoord(c.pts[1]!, rooms, wallThickness, 'H') ?? vB.x;
+            const topY = Math.min(vA.y, vB.y);
+            const dimY  = topY - DIM_OFFSET;
+            const extY0 = topY - EXT_GAP;
+            const extY1 = dimY + EXT_OVER;
+            const midX = (xA + xB) / 2;
+            const labelText = `${faceLabel}  ${displayedCm} cm`;
+            const textW = labelText.length * fontSize * 0.6 + padX * 2;
+            return (
+              <g key={`cad-h-${c.id}`}>
+                {/* Lignes d'extension */}
+                <line x1={xA} y1={extY0} x2={xA} y2={extY1}
+                  stroke="#22c55e" strokeWidth={extSw} opacity={0.7}
+                  className="pointer-events-none" />
+                <line x1={xB} y1={extY0} x2={xB} y2={extY1}
+                  stroke="#22c55e" strokeWidth={extSw} opacity={0.7}
+                  className="pointer-events-none" />
+                {/* Ligne de cote avec flèches ouvertes */}
+                <line x1={xA} y1={dimY} x2={xB} y2={dimY}
+                  stroke="#22c55e" strokeWidth={sw}
+                  markerStart="url(#cad-arr-l)" markerEnd="url(#cad-arr-r)"
+                  className="pointer-events-none" />
+                {/* Label encadré */}
+                <rect
+                  x={midX - textW / 2} y={dimY - fontSize - padY * 1.5}
+                  width={textW} height={fontSize + padY * 2}
+                  rx={4 / scale} fill="var(--canvas-bg)"
+                  stroke="#22c55e" strokeWidth={0.8 / scale}
+                  className="pointer-events-none" />
+                <text x={midX} y={dimY - padY * 0.5}
+                  textAnchor="middle" dominantBaseline="middle"
+                  fontSize={fontSize} fontWeight="700" fill="#22c55e"
+                  className="pointer-events-none select-none"
+                  style={{ fontFamily: 'system-ui' }}>
+                  {labelText}
+                </text>
+              </g>
+            );
+          }
+
+          if (c.type === 'V_DISTANCE') {
+            const yA = resolveDisplayCoord(c.pts[0]!, rooms, wallThickness, 'V') ?? vA.y;
+            const yB = resolveDisplayCoord(c.pts[1]!, rooms, wallThickness, 'V') ?? vB.y;
+            const rightX = Math.max(vA.x, vB.x);
+            const dimX  = rightX + DIM_OFFSET;
+            const extX0 = rightX + EXT_GAP;
+            const extX1 = dimX - EXT_OVER;
+            const midY = (yA + yB) / 2;
+            const labelText = `${faceLabel}  ${displayedCm} cm`;
+            const textW = labelText.length * fontSize * 0.6 + padX * 2;
+            return (
+              <g key={`cad-v-${c.id}`}>
+                {/* Lignes d'extension */}
+                <line x1={extX0} y1={yA} x2={extX1} y2={yA}
+                  stroke="#22c55e" strokeWidth={extSw} opacity={0.7}
+                  className="pointer-events-none" />
+                <line x1={extX0} y1={yB} x2={extX1} y2={yB}
+                  stroke="#22c55e" strokeWidth={extSw} opacity={0.7}
+                  className="pointer-events-none" />
+                {/* Ligne de cote avec flèches ouvertes */}
+                <line x1={dimX} y1={yA} x2={dimX} y2={yB}
+                  stroke="#22c55e" strokeWidth={sw}
+                  markerStart="url(#cad-arr-l)" markerEnd="url(#cad-arr-r)"
+                  className="pointer-events-none" />
+                {/* Label encadré */}
+                <rect
+                  x={dimX + padY} y={midY - fontSize / 2 - padY}
+                  width={textW} height={fontSize + padY * 2}
+                  rx={4 / scale} fill="var(--canvas-bg)"
+                  stroke="#22c55e" strokeWidth={0.8 / scale}
+                  className="pointer-events-none" />
+                <text x={dimX + padY + textW / 2} y={midY}
+                  textAnchor="middle" dominantBaseline="middle"
+                  fontSize={fontSize} fontWeight="700" fill="#22c55e"
+                  className="pointer-events-none select-none"
+                  style={{ fontFamily: 'system-ui' }}>
+                  {labelText}
+                </text>
+              </g>
+            );
+          }
+
+          if (c.type === 'LENGTH') {
+            // Côte LENGTH : ligne parallèle à l'arête, décalée perpendiculairement
+            const dx = vB.x - vA.x, dy = vB.y - vA.y;
+            const len = Math.sqrt(dx * dx + dy * dy) || 1;
+            const nx = -dy / len, ny = dx / len; // normale perpendiculaire
+            const ox = nx * DIM_OFFSET, oy = ny * DIM_OFFSET;
+            const ax = vA.x + ox, ay = vA.y + oy;
+            const bx = vB.x + ox, by = vB.y + oy;
+            const midX = (ax + bx) / 2, midY = (ay + by) / 2;
+            const labelText = `${(c.value / 10).toFixed(1)} cm`;
+            const textW = labelText.length * fontSize * 0.6 + padX * 2;
+            return (
+              <g key={`cad-l-${c.id}`}>
+                {/* Lignes d'extension */}
+                <line x1={vA.x + nx * EXT_GAP} y1={vA.y + ny * EXT_GAP}
+                  x2={ax + nx * EXT_OVER} y2={ay + ny * EXT_OVER}
+                  stroke="#22c55e" strokeWidth={extSw} opacity={0.7}
+                  className="pointer-events-none" />
+                <line x1={vB.x + nx * EXT_GAP} y1={vB.y + ny * EXT_GAP}
+                  x2={bx + nx * EXT_OVER} y2={by + ny * EXT_OVER}
+                  stroke="#22c55e" strokeWidth={extSw} opacity={0.7}
+                  className="pointer-events-none" />
+                {/* Ligne de cote */}
+                <line x1={ax} y1={ay} x2={bx} y2={by}
+                  stroke="#22c55e" strokeWidth={sw}
+                  markerStart="url(#cad-arr-l)" markerEnd="url(#cad-arr-r)"
+                  className="pointer-events-none" />
+                {/* Label encadré */}
+                <rect
+                  x={midX - textW / 2} y={midY - fontSize / 2 - padY}
+                  width={textW} height={fontSize + padY * 2}
+                  rx={4 / scale} fill="var(--canvas-bg)"
+                  stroke="#22c55e" strokeWidth={0.8 / scale}
+                  className="pointer-events-none" />
+                <text x={midX} y={midY}
+                  textAnchor="middle" dominantBaseline="middle"
+                  fontSize={fontSize} fontWeight="700" fill="#22c55e"
+                  className="pointer-events-none select-none"
+                  style={{ fontFamily: 'system-ui' }}>
+                  {labelText}
+                </text>
+              </g>
+            );
+          }
+
+          return null;
         })}
 
         {/* ══ PARTITION DIMENSION LINES — endpoint to room vertex ══ */}
