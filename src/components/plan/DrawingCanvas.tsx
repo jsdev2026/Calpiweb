@@ -713,7 +713,6 @@ export const DrawingCanvas = ({
           const sw = 1.2 / scale;   // épaisseur trait
           const extSw = 0.8 / scale;
           const fontSize = 11 / scale;
-          const padX = 28 / scale, padY = 8 / scale;
 
           if (c.type === 'H_DISTANCE') {
             const xA = resolveDisplayCoord(c.pts[0]!, rooms, wallThickness, 'H') ?? vA.x;
@@ -727,7 +726,6 @@ export const DrawingCanvas = ({
             const extY1 = dimY + EXT_OVER;
             const midX = (xA + xB) / 2;
             const labelText = `${faceLabel}  ${displayedCm} cm`;
-            const textW = labelText.length * fontSize * 0.6 + padX * 2;
             const isDragging = dimDrag?.id === c.id;
             return (
               <g key={`cad-h-${c.id}`}>
@@ -738,14 +736,11 @@ export const DrawingCanvas = ({
                 <line x1={xB} y1={extY0} x2={xB} y2={extY1}
                   stroke="#22c55e" strokeWidth={extSw} opacity={0.7}
                   className="pointer-events-none" />
-                {/* Ligne de cote — grabable */}
-                <line x1={xA} y1={dimY} x2={xB} y2={dimY}
-                  stroke="#22c55e" strokeWidth={isDragging ? sw * 1.5 : sw}
-                  markerStart="url(#cad-arr-l)" markerEnd="url(#cad-arr-r)"
-                  className="cursor-ns-resize"
+                {/* Ligne de cote + label — grabable */}
+                <g className="cursor-ns-resize"
                   onPointerDown={(e) => {
                     e.stopPropagation();
-                    (e.currentTarget as SVGLineElement).setPointerCapture(e.pointerId);
+                    (e.currentTarget as SVGGElement).setPointerCapture(e.pointerId);
                     setDimDrag({
                       id: c.id,
                       startClientX: e.clientX,
@@ -770,22 +765,20 @@ export const DrawingCanvas = ({
                     });
                   }}
                   onPointerCancel={() => setDimDrag(null)}
-                />
-                {/* Label encadré */}
-                <rect
-                  x={midX - textW / 2} y={dimY - fontSize / 2 - padY}
-                  width={textW} height={fontSize + padY * 2}
-                  rx={4 / scale} fill="var(--canvas-bg)"
-                  stroke="#22c55e" strokeWidth={0.8 / scale}
-                  className={onDimensionClick ? 'cursor-pointer' : undefined}
-                  onClick={() => onDimensionClick?.(c)} />
-                <text x={midX} y={dimY}
-                  textAnchor="middle" dominantBaseline="middle"
-                  fontSize={fontSize} fontWeight="700" fill="#22c55e"
-                  className="pointer-events-none select-none"
-                  style={{ fontFamily: 'system-ui' }}>
-                  {labelText}
-                </text>
+                >
+                  <line x1={xA} y1={dimY} x2={xB} y2={dimY}
+                    stroke="#22c55e" strokeWidth={isDragging ? sw * 1.5 : sw}
+                    markerStart="url(#cad-arr-l)" markerEnd="url(#cad-arr-r)"
+                  />
+                  <text x={midX} y={dimY}
+                    textAnchor="middle" dominantBaseline="middle"
+                    fontSize={fontSize} fontWeight="700" fill="#22c55e"
+                    className="select-none"
+                    style={{ fontFamily: 'system-ui' }}
+                    onClick={(e) => { e.stopPropagation(); onDimensionClick?.(c); }}>
+                    {labelText}
+                  </text>
+                </g>
               </g>
             );
           }
@@ -802,7 +795,6 @@ export const DrawingCanvas = ({
             const extX1 = dimX - EXT_OVER;
             const midY = (yA + yB) / 2;
             const labelText = `${faceLabel}  ${displayedCm} cm`;
-            const textW = labelText.length * fontSize * 0.6 + padX * 2;
             const isDragging = dimDrag?.id === c.id;
             return (
               <g key={`cad-v-${c.id}`}>
@@ -813,14 +805,11 @@ export const DrawingCanvas = ({
                 <line x1={extX0} y1={yB} x2={extX1} y2={yB}
                   stroke="#22c55e" strokeWidth={extSw} opacity={0.7}
                   className="pointer-events-none" />
-                {/* Ligne de cote — grabable */}
-                <line x1={dimX} y1={yA} x2={dimX} y2={yB}
-                  stroke="#22c55e" strokeWidth={isDragging ? sw * 1.5 : sw}
-                  markerStart="url(#cad-arr-l)" markerEnd="url(#cad-arr-r)"
-                  className="cursor-ew-resize"
+                {/* Ligne de cote + label — grabable */}
+                <g className="cursor-ew-resize"
                   onPointerDown={(e) => {
                     e.stopPropagation();
-                    (e.currentTarget as SVGLineElement).setPointerCapture(e.pointerId);
+                    (e.currentTarget as SVGGElement).setPointerCapture(e.pointerId);
                     setDimDrag({
                       id: c.id,
                       startClientX: e.clientX,
@@ -845,22 +834,20 @@ export const DrawingCanvas = ({
                     });
                   }}
                   onPointerCancel={() => setDimDrag(null)}
-                />
-                {/* Label encadré */}
-                <rect
-                  x={dimX + padY} y={midY - fontSize / 2 - padY}
-                  width={textW} height={fontSize + padY * 2}
-                  rx={4 / scale} fill="var(--canvas-bg)"
-                  stroke="#22c55e" strokeWidth={0.8 / scale}
-                  className={onDimensionClick ? 'cursor-pointer' : undefined}
-                  onClick={() => onDimensionClick?.(c)} />
-                <text x={dimX + padY + textW / 2} y={midY}
-                  textAnchor="middle" dominantBaseline="middle"
-                  fontSize={fontSize} fontWeight="700" fill="#22c55e"
-                  className="pointer-events-none select-none"
-                  style={{ fontFamily: 'system-ui' }}>
-                  {labelText}
-                </text>
+                >
+                  <line x1={dimX} y1={yA} x2={dimX} y2={yB}
+                    stroke="#22c55e" strokeWidth={isDragging ? sw * 1.5 : sw}
+                    markerStart="url(#cad-arr-l)" markerEnd="url(#cad-arr-r)"
+                  />
+                  <text x={dimX + fontSize} y={midY}
+                    textAnchor="start" dominantBaseline="middle"
+                    fontSize={fontSize} fontWeight="700" fill="#22c55e"
+                    className="select-none"
+                    style={{ fontFamily: 'system-ui' }}
+                    onClick={(e) => { e.stopPropagation(); onDimensionClick?.(c); }}>
+                    {labelText}
+                  </text>
+                </g>
               </g>
             );
           }
@@ -877,7 +864,6 @@ export const DrawingCanvas = ({
             const bx = vB.x + ox, by = vB.y + oy;
             const midX = (ax + bx) / 2, midY = (ay + by) / 2;
             const labelText = `${((c.value as number) / 10).toFixed(1)} cm`;
-            const textW = labelText.length * fontSize * 0.6 + padX * 2;
             const isDragging = dimDrag?.id === c.id;
             return (
               <g key={`cad-l-${c.id}`}>
@@ -890,14 +876,11 @@ export const DrawingCanvas = ({
                   x2={bx + nx * EXT_OVER} y2={by + ny * EXT_OVER}
                   stroke="#22c55e" strokeWidth={extSw} opacity={0.7}
                   className="pointer-events-none" />
-                {/* Ligne de cote — grabable */}
-                <line x1={ax} y1={ay} x2={bx} y2={by}
-                  stroke="#22c55e" strokeWidth={isDragging ? sw * 1.5 : sw}
-                  markerStart="url(#cad-arr-l)" markerEnd="url(#cad-arr-r)"
-                  className="cursor-move"
+                {/* Ligne de cote + label — grabable */}
+                <g className="cursor-move"
                   onPointerDown={(e) => {
                     e.stopPropagation();
-                    (e.currentTarget as SVGLineElement).setPointerCapture(e.pointerId);
+                    (e.currentTarget as SVGGElement).setPointerCapture(e.pointerId);
                     setDimDrag({
                       id: c.id,
                       startClientX: e.clientX,
@@ -924,22 +907,20 @@ export const DrawingCanvas = ({
                     });
                   }}
                   onPointerCancel={() => setDimDrag(null)}
-                />
-                {/* Label encadré */}
-                <rect
-                  x={midX - textW / 2} y={midY - fontSize / 2 - padY}
-                  width={textW} height={fontSize + padY * 2}
-                  rx={4 / scale} fill="var(--canvas-bg)"
-                  stroke="#22c55e" strokeWidth={0.8 / scale}
-                  className={onDimensionClick ? 'cursor-pointer' : undefined}
-                  onClick={() => onDimensionClick?.(c)} />
-                <text x={midX} y={midY}
-                  textAnchor="middle" dominantBaseline="middle"
-                  fontSize={fontSize} fontWeight="700" fill="#22c55e"
-                  className="pointer-events-none select-none"
-                  style={{ fontFamily: 'system-ui' }}>
-                  {labelText}
-                </text>
+                >
+                  <line x1={ax} y1={ay} x2={bx} y2={by}
+                    stroke="#22c55e" strokeWidth={isDragging ? sw * 1.5 : sw}
+                    markerStart="url(#cad-arr-l)" markerEnd="url(#cad-arr-r)"
+                  />
+                  <text x={midX} y={midY}
+                    textAnchor="middle" dominantBaseline="middle"
+                    fontSize={fontSize} fontWeight="700" fill="#22c55e"
+                    className="select-none"
+                    style={{ fontFamily: 'system-ui' }}
+                    onClick={(e) => { e.stopPropagation(); onDimensionClick?.(c); }}>
+                    {labelText}
+                  </text>
+                </g>
               </g>
             );
           }
