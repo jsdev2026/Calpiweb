@@ -42,6 +42,12 @@ export type ConstraintType =
   | 'V_DISTANCE'    // fixed vertical distance |y2 - y1|
   | 'POINT_ON_LINE' // vertex projected onto a line (defined by two other vertices)
 
+/** Face reference for a PointRef — which side of a wall a constraint endpoint is anchored to. */
+export type PointFace = 'INSIDE' | 'AXIS' | 'OUTSIDE';
+
+/** Dimension constraint types (subset of ConstraintType used for user-facing cotes). */
+export type DimConstraintType = 'H_DISTANCE' | 'V_DISTANCE' | 'LENGTH';
+
 export interface PointRef {
   roomId: string;
   vertexIdx: number;

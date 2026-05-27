@@ -2,23 +2,22 @@
 
 import type { KeyboardEvent } from 'react';
 import { CheckCircle2, Unlink } from 'lucide-react';
+import type { PointFace, DimConstraintType } from '@/types/project';
 
-type Face = 'INSIDE' | 'AXIS' | 'OUTSIDE';
-type DimType = 'H_DISTANCE' | 'V_DISTANCE' | 'LENGTH';
-
-const FACE_LABEL: Record<Face, string> = { INSIDE: 'I', AXIS: 'A', OUTSIDE: 'E' };
+// I = Intérieur, A = Axe, E = Extérieur
+const FACE_LABEL: Record<PointFace, string> = { INSIDE: 'I', AXIS: 'A', OUTSIDE: 'E' };
 
 export interface DimensionPopupProps {
   screenX?: number;
   screenY?: number;
   above?: boolean;
-  fromFace: Face;
-  toFace: Face;
-  dimType: DimType;
-  onDimTypeChange: (t: DimType) => void;
+  fromFace: PointFace;
+  toFace: PointFace;
+  dimType: DimConstraintType;
+  onDimTypeChange: (t: DimConstraintType) => void;
   value: string;
   onValueChange: (v: string) => void;
-  hasExisting: boolean;
+  hasExistingConstraint: boolean;
   onRelease: () => void;
   onSubmit: () => void;
   onCancel: () => void;
@@ -34,7 +33,7 @@ export const DimensionPopup = ({
   onDimTypeChange,
   value,
   onValueChange,
-  hasExisting,
+  hasExistingConstraint,
   onRelease,
   onSubmit,
   onCancel,
@@ -44,7 +43,7 @@ export const DimensionPopup = ({
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') { e.preventDefault(); onSubmit(); }
-    if (e.key === 'Escape') onCancel();
+    if (e.key === 'Escape') { e.preventDefault(); onCancel(); }
   };
 
   return (
@@ -62,7 +61,7 @@ export const DimensionPopup = ({
           : { left: '50%', top: '1rem', transform: 'translateX(-50%)' }
       }
     >
-      {/* Header: "Cote" + reference label */}
+      {/* Header: "Cote" + reference label (I=Intérieur, A=Axe, E=Extérieur) */}
       <div className="flex items-center justify-between px-0.5">
         <p className="text-[9px] font-black uppercase tracking-[0.18em] text-zinc-500">Cote</p>
         <span className="text-[9px] font-black tracking-widest text-orange-400">{refLabel}</span>
@@ -76,6 +75,11 @@ export const DimensionPopup = ({
             <button
               key={t}
               type="button"
+              aria-label={
+                t === 'H_DISTANCE' ? 'Distance horizontale'
+                  : t === 'V_DISTANCE' ? 'Distance verticale'
+                  : 'Longueur'
+              }
               title={
                 t === 'H_DISTANCE' ? 'Distance horizontale'
                   : t === 'V_DISTANCE' ? 'Distance verticale'
@@ -97,6 +101,7 @@ export const DimensionPopup = ({
         <input
           type="number"
           step="0.1"
+          min="0.1"
           className="h-7 w-20 rounded border border-zinc-700 bg-zinc-800 px-2 text-right text-sm font-semibold text-zinc-100 focus:border-orange-500 focus:outline-none"
           value={value}
           onChange={(e) => onValueChange(e.target.value)}
@@ -108,6 +113,7 @@ export const DimensionPopup = ({
         {/* Submit */}
         <button
           type="button"
+          aria-label="Valider la cote"
           title="Valider"
           onClick={onSubmit}
           className="flex h-7 w-7 items-center justify-center rounded bg-orange-600 text-white hover:bg-orange-500"
@@ -116,9 +122,10 @@ export const DimensionPopup = ({
         </button>
 
         {/* Release existing constraint */}
-        {hasExisting && (
+        {hasExistingConstraint && (
           <button
             type="button"
+            aria-label="Libérer la contrainte"
             title="Libérer la contrainte"
             onClick={onRelease}
             className="flex h-7 w-7 items-center justify-center rounded bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200"

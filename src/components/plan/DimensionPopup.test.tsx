@@ -10,7 +10,7 @@ const defaultProps = {
   onDimTypeChange: vi.fn(),
   value: '285.0',
   onValueChange: vi.fn(),
-  hasExisting: false,
+  hasExistingConstraint: false,
   onRelease: vi.fn(),
   onSubmit: vi.fn(),
   onCancel: vi.fn(),
@@ -43,13 +43,13 @@ describe('DimensionPopup', () => {
     expect(onCancel).toHaveBeenCalled();
   });
 
-  it('bouton Libérer visible si hasExisting=true', () => {
-    render(<DimensionPopup {...defaultProps} hasExisting={true} />);
+  it('bouton Libérer visible si hasExistingConstraint=true', () => {
+    render(<DimensionPopup {...defaultProps} hasExistingConstraint={true} />);
     expect(screen.getByTitle('Libérer la contrainte')).toBeInTheDocument();
   });
 
-  it('bouton Libérer absent si hasExisting=false', () => {
-    render(<DimensionPopup {...defaultProps} hasExisting={false} />);
+  it('bouton Libérer absent si hasExistingConstraint=false', () => {
+    render(<DimensionPopup {...defaultProps} hasExistingConstraint={false} />);
     expect(screen.queryByTitle('Libérer la contrainte')).not.toBeInTheDocument();
   });
 });
