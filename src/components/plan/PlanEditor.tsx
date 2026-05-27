@@ -634,7 +634,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
       const room = rooms.find(r => r.id === fromRef.roomId);
       const syntheticC = { ...existing, pts: [fromRef, toRef] };
       const offset = room ? constraintFaceOffset(syntheticC, room, wallThickness) : 0;
-      displayedValue = (existing.value + offset) / 10;
+      displayedValue = (existing.value - offset) / 10;
     } else {
       const rawValue = dimType === 'H_DISTANCE' ? dx : dy;
       displayedValue = rawValue / 10;
@@ -657,7 +657,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
     const room = rooms.find(r => r.id === fromRef.roomId);
     const syntheticC = { id: '', type: dimType as 'H_DISTANCE' | 'V_DISTANCE' | 'LENGTH', pts: [fromRef, toRef] };
     const offset = room ? constraintFaceOffset(syntheticC as import('@/types/project').Constraint, room, wallThickness) : 0;
-    const storedMm = displayedMm - offset;
+    const storedMm = displayedMm + offset;
 
     // Find and remove existing constraint between these vertices
     const existingId = constraints.find((c) =>

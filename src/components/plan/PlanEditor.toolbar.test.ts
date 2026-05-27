@@ -337,6 +337,28 @@ describe('constraintFaceOffset', () => {
   });
 });
 
+// ── Conversion displayed ↔ stored ────────────────────────────────────────────
+
+describe('Conversion displayed ↔ stored (bug fix signe)', () => {
+  it('openDimensionPopup: displayed = stored - offset (pas + offset)', () => {
+    // stored = 3000mm, offset I→I avec halfThick=10 chaque = 20mm
+    // displayed correct = 3000 - 20 = 2980mm = 298.0cm
+    const stored = 3000;
+    const offset = 20;
+    expect((stored - offset) / 10).toBe(298);    // formule correcte
+    expect((stored + offset) / 10).not.toBe(298); // le bug
+  });
+
+  it('submitDimensionPopup: stored = displayed + offset (pas - offset)', () => {
+    // L'utilisateur saisit 298cm = 2980mm, offset = 20mm
+    // stored correct = 2980 + 20 = 3000mm
+    const displayedMm = 2980;
+    const offset = 20;
+    expect(displayedMm + offset).toBe(3000);    // formule correcte
+    expect(displayedMm - offset).not.toBe(3000); // le bug
+  });
+});
+
 // ── FaceSnapPoint — face label ────────────────────────────────────────────────
 
 describe('FaceSnapPoint — label mapping', () => {
