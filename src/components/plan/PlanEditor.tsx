@@ -12,6 +12,7 @@ import { selectActiveProject, useProjectStore } from '@/store/projectStore';
 import { buildAndSolve, solveAndValidate } from '@/engine/constraints/solver';
 import { analyzeDOF, ptKey } from '@/engine/constraints/dofAnalyzer';
 import { constraintFaceOffset } from '@/engine/constraints/faceOffset';
+import { findNearestVertexSnapImpl } from '@/engine/constraints/vertexSnap';
 import { PlanToolbar, type PlanTool } from './PlanToolbar';
 import { ToolStatusBar } from './ToolStatusBar';
 import { DimensionEditor } from './DimensionEditor';
@@ -546,65 +547,10 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
     violationTimerRef.current = setTimeout(() => setViolationFlash(false), 700);
   }, []);
 
-  // ── DIMENSION face-snap helpers ────────────────────────────────────────────
+  // ── DIMENSION vertex-snap helpers ────────────────────────────────────────
 
-  const findNearestFaceSnap = useCallback((cursor: Point): FaceSnapPoint | null => {
-    const threshold = 80 / scale;
-    let best: { snap: FaceSnapPoint; dist: number } | null = null;
-
-    const trySegment = (
-      p1: Point, p2: Point,
-      roomId: string, vertexIdx: number,
-      halfThick: number,
-    ) => {
-      const dx = p2.x - p1.x, dy = p2.y - p1.y;
-      const len2 = dx * dx + dy * dy;
-      if (len2 < 0.001) return;
-
-      const t = Math.max(0, Math.min(1, ((cursor.x - p1.x) * dx + (cursor.y - p1.y) * dy) / len2));
-      const proj: Point = { x: p1.x + t * dx, y: p1.y + t * dy };
-      if (distance(cursor, proj) > threshold + halfThick) return;
-
-      // Normal pointing inward (rotate segment 90° CCW)
-      const len = Math.sqrt(len2);
-      const wallNormal: Point = { x: -dy / len, y: dx / len };
-
-      const candidates: Array<{ face: 'INSIDE' | 'AXIS' | 'OUTSIDE'; pos: Point }> = [
-        { face: 'INSIDE',  pos: { x: proj.x + wallNormal.x * halfThick, y: proj.y + wallNormal.y * halfThick } },
-        { face: 'AXIS',    pos: proj },
-        { face: 'OUTSIDE', pos: { x: proj.x - wallNormal.x * halfThick, y: proj.y - wallNormal.y * halfThick } },
-      ];
-
-      for (const { face, pos } of candidates) {
-        const d = distance(cursor, pos);
-        if (!best || d < best.dist) {
-          best = { snap: { roomId, vertexIdx, face, worldPos: pos, wallNormal }, dist: d };
-        }
-      }
-    };
-
-    for (const room of rooms) {
-      const n = room.points.length;
-      if (n < 2) continue;
-      for (let i = 0; i < n; i++) {
-        const p1 = room.points[i]!;
-        const p2 = room.points[(i + 1) % n]!;
-        const halfThick = (room.edgeThicknesses?.[i] ?? wallThickness) / 2;
-        trySegment(p1, p2, room.id, i, halfThick);
-      }
-      for (const part of room.partitions ?? []) {
-        trySegment(part.p1, part.p2, room.id, 0, part.thickness / 2);
-      }
-      for (const zone of room.excludedZones ?? []) {
-        const zn = zone.points.length;
-        for (let i = 0; i < zn; i++) {
-          trySegment(zone.points[i]!, zone.points[(i + 1) % zn]!, zone.id, i, 0);
-        }
-      }
-    }
-
-    const result = best as { snap: FaceSnapPoint; dist: number } | null;
-    return result ? result.snap : null;
+  const findNearestVertexSnap = useCallback((cursor: Point): FaceSnapPoint | null => {
+    return findNearestVertexSnapImpl(cursor, rooms, scale, wallThickness);
   }, [rooms, scale, wallThickness]);
 
   const openDimensionPopup = useCallback((
@@ -1324,7 +1270,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
     if (tool === 'DELETE') {
       setDeleteHover(findDeleteTarget(raw));
     } else if (tool === 'DIMENSION') {
-      setFaceSnapHover(findNearestFaceSnap(raw));
+      setFaceSnapHover(findNearestVertexSnap(raw));
       setDeleteHover(null);
     } else if (tool === 'DOOR') {
       setHoveredEdge(findNearestEdgeOfType(raw, 'DOOR') ?? findNearestWallEdge(raw));

@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { constraintFaceOffset } from '@/engine/constraints/faceOffset';
+import { bestEdgeNormal, findNearestVertexSnapImpl } from '@/engine/constraints/vertexSnap';
 import type { Room } from '@/types/project';
+import type { Point } from '@/types/plan';
 
 describe('DIMENSION tool interior round-trip', () => {
   const room: Room = {
@@ -26,5 +28,74 @@ describe('DIMENSION tool interior round-trip', () => {
     const syntheticC = { id: '', type: 'H_DISTANCE' as const, pts: [fromRef, toRef] };
     const offset = constraintFaceOffset(syntheticC, room, 100);
     expect(offset).toBe(0);
+  });
+});
+
+describe('bestEdgeNormal', () => {
+  // Polygone en L : prev=(0,0) → vtx=(1000,0) → next=(1000,1000)
+  // seg prev→vtx  : dx=1000,dy=0  → normal = (0, 1)
+  // seg vtx→next  : dx=0,  dy=1000 → normal = (-1, 0)
+
+  it('picks normal of edge most aligned with cursor direction — above vtx', () => {
+    const cursor: Point = { x: 1000, y: -200 }; // au-dessus du vtx
+    const vtx: Point    = { x: 1000, y: 0 };
+    const prev: Point   = { x: 0, y: 0 };
+    const next: Point   = { x: 1000, y: 1000 };
+    // toCursor = (0,-200); dot1 with (0,1) = -200 |200|; dot2 with (-1,0) = 0 |0|
+    // → picks n1 = (0,1)
+    const n = bestEdgeNormal(cursor, vtx, prev, next);
+    expect(n.x).toBeCloseTo(0);
+    expect(n.y).toBeCloseTo(1);
+  });
+
+  it('picks normal of other edge when cursor is on that side', () => {
+    const cursor: Point = { x: 1200, y: 0 }; // à droite du vtx
+    const vtx: Point    = { x: 1000, y: 0 };
+    const prev: Point   = { x: 0, y: 0 };
+    const next: Point   = { x: 1000, y: 1000 };
+    // toCursor = (200,0); dot1 with (0,1)=0; dot2 with (-1,0)=-200 |200|
+    // → picks n2 = (-1,0)
+    const n = bestEdgeNormal(cursor, vtx, prev, next);
+    expect(n.x).toBeCloseTo(-1);
+    expect(n.y).toBeCloseTo(0);
+  });
+});
+
+describe('findNearestVertexSnapImpl', () => {
+  const room: Room = {
+    id: 'r1',
+    points: [
+      { x: 0,    y: 0    },
+      { x: 2000, y: 0    },
+      { x: 2000, y: 3000 },
+      { x: 0,    y: 3000 },
+    ],
+    edges: ['WALL', 'WALL', 'WALL', 'WALL'],
+  };
+  const wallThickness = 100;
+
+  it('snaps to vertex when cursor is within threshold', () => {
+    // threshold = 80/scale = 80 ; distance from (50,30) to (0,0) ≈ 58 < 80
+    const snap = findNearestVertexSnapImpl({ x: 50, y: 30 }, [room], 1, wallThickness);
+    expect(snap).not.toBeNull();
+    expect(snap!.vertexIdx).toBe(0);
+  });
+
+  it('does NOT snap to segment midpoint — only to vertices', () => {
+    // midpoint top edge = (1000,0); nearest vertices at dist=1000 > threshold 80
+    const snap = findNearestVertexSnapImpl({ x: 1000, y: 0 }, [room], 1, wallThickness);
+    expect(snap).toBeNull();
+  });
+
+  it('returns AXIS face when cursor is exactly on vertex axis', () => {
+    const snap = findNearestVertexSnapImpl({ x: 0, y: 0 }, [room], 1, wallThickness);
+    expect(snap).not.toBeNull();
+    expect(snap!.face).toBe('AXIS');
+  });
+
+  it('returns null when no vertex within threshold', () => {
+    // cursor far from all vertices
+    const snap = findNearestVertexSnapImpl({ x: 500, y: 500 }, [room], 1, wallThickness);
+    expect(snap).toBeNull();
   });
 });
