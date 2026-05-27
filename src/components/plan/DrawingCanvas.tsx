@@ -282,15 +282,15 @@ export const DrawingCanvas = ({
           patternUnits="userSpaceOnUse" patternTransform={`translate(${pan.x}, ${pan.y})`}>
           <circle cx="1" cy="1" r="1" fill="var(--canvas-dot)" />
         </pattern>
-        {/* Flèche ouverte → fin de ligne (pointe vers la droite) */}
+        {/* Flèche ouverte → fin de ligne — tip (x=8) ancré à xB */}
         <marker id="cad-arr-r" markerWidth="8" markerHeight="5"
-          refX="0" refY="2.5" orient="auto">
+          refX="8" refY="2.5" orient="auto">
           <polyline points="0,0.5 8,2.5 0,4.5" fill="none" stroke="#22c55e"
             strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
         </marker>
-        {/* Flèche ouverte ← début de ligne (pointe vers la gauche) */}
+        {/* Flèche ouverte ← début de ligne — tip (x=0) ancré à xA */}
         <marker id="cad-arr-l" markerWidth="8" markerHeight="5"
-          refX="8" refY="2.5" orient="auto">
+          refX="0" refY="2.5" orient="auto">
           <polyline points="8,0.5 0,2.5 8,4.5" fill="none" stroke="#22c55e"
             strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
         </marker>
