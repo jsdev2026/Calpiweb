@@ -271,3 +271,68 @@ describe('DELETE tool', () => {
     expect(nextTool).toBe('SELECT');
   });
 });
+
+// ── constraintFaceOffset ──────────────────────────────────────────────────────
+
+describe('constraintFaceOffset', () => {
+  const makeRoom = (id: string): import('@/types/project').Room => ({
+    id,
+    points: [
+      { x: 0,   y: 0   },
+      { x: 300, y: 0   },
+      { x: 300, y: 300 },
+      { x: 0,   y: 300 },
+    ],
+    edges: ['WALL', 'WALL', 'WALL', 'WALL'] as import('@/types/project').EdgeType[],
+    edgeThicknesses: [20, 20, 20, 20], // 20mm → halfThick = 10mm
+  });
+
+  const makeConstraint = (
+    fromFace: import('@/types/project').PointRef['face'],
+    toFace: import('@/types/project').PointRef['face'],
+    type: 'H_DISTANCE' | 'V_DISTANCE' | 'LENGTH' = 'H_DISTANCE',
+  ): import('@/types/project').Constraint => ({
+    id: 'c1',
+    type,
+    pts: [
+      { roomId: 'r1', vertexIdx: 0, face: fromFace },
+      { roomId: 'r1', vertexIdx: 1, face: toFace },
+    ],
+  });
+
+  it('INSIDE→INSIDE: retourne halfThickA + halfThickB', async () => {
+    const { constraintFaceOffset } = await import('@/engine/constraints/faceOffset');
+    const offset = constraintFaceOffset(makeConstraint('INSIDE', 'INSIDE'), makeRoom('r1'), 20);
+    expect(offset).toBe(10 + 10);
+  });
+
+  it('AXIS→AXIS: retourne 0', async () => {
+    const { constraintFaceOffset } = await import('@/engine/constraints/faceOffset');
+    const offset = constraintFaceOffset(makeConstraint('AXIS', 'AXIS'), makeRoom('r1'), 20);
+    expect(offset).toBe(0);
+  });
+
+  it('OUTSIDE→OUTSIDE: retourne −(halfThickA + halfThickB)', async () => {
+    const { constraintFaceOffset } = await import('@/engine/constraints/faceOffset');
+    const offset = constraintFaceOffset(makeConstraint('OUTSIDE', 'OUTSIDE'), makeRoom('r1'), 20);
+    expect(offset).toBe(-(10 + 10));
+  });
+
+  it('INSIDE→OUTSIDE: retourne halfThickA − halfThickB = 0', async () => {
+    const { constraintFaceOffset } = await import('@/engine/constraints/faceOffset');
+    const offset = constraintFaceOffset(makeConstraint('INSIDE', 'OUTSIDE'), makeRoom('r1'), 20);
+    expect(offset).toBe(0);
+  });
+
+  it('undefined → traité comme INSIDE (rétrocompatibilité)', async () => {
+    const { constraintFaceOffset } = await import('@/engine/constraints/faceOffset');
+    const offset = constraintFaceOffset(makeConstraint(undefined, undefined), makeRoom('r1'), 20);
+    expect(offset).toBe(20); // same as INSIDE→INSIDE
+  });
+
+  it('LENGTH: retourne toujours 0', async () => {
+    const { constraintFaceOffset } = await import('@/engine/constraints/faceOffset');
+    const offset = constraintFaceOffset(makeConstraint('INSIDE', 'INSIDE', 'LENGTH'), makeRoom('r1'), 20);
+    expect(offset).toBe(0);
+  });
+});

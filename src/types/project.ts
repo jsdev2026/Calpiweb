@@ -45,6 +45,8 @@ export type ConstraintType =
 export interface PointRef {
   roomId: string;
   vertexIdx: number;
+  face?: 'INSIDE' | 'AXIS' | 'OUTSIDE';
+  // absent / undefined → 'INSIDE' (backward compatible)
 }
 
 export interface Constraint {
