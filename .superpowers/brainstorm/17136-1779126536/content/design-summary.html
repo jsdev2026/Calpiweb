@@ -1,0 +1,113 @@
+<h2>Design mobile — récapitulatif des changements</h2>
+<p class="subtitle">5 pages · breakpoint mobile = écrans &lt; 768px (md:)</p>
+
+<div style="display:flex;flex-direction:column;gap:16px;margin-top:8px">
+
+  <!-- Landing -->
+  <div style="background:#0f172a;border-radius:10px;padding:16px;border:1px solid #1e293b">
+    <div style="color:#10b981;font-size:11px;font-weight:600;margin-bottom:10px">1 · LANDING PAGE <span style="color:#334155;font-weight:400">/ (effort : faible)</span></div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <div style="flex:1;min-width:200px">
+        <div style="font-size:10px;color:#ef4444;font-weight:600;margin-bottom:6px">Avant (mobile)</div>
+        <div style="background:#111827;border-radius:6px;padding:10px;font-size:10px;color:#64748b;line-height:1.8">
+          Nav : logo + liens + 2 boutons → déborde<br>
+          "Commencer gratuitement" sort de l'écran
+        </div>
+      </div>
+      <div style="flex:1;min-width:200px">
+        <div style="font-size:10px;color:#10b981;font-weight:600;margin-bottom:6px">Après (mobile)</div>
+        <div style="background:#111827;border-radius:6px;padding:10px;font-size:10px;color:#64748b;line-height:1.8">
+          Nav : logo + bouton "Connexion" seulement<br>
+          Liens "Tarifs" cachés sur mobile (anchor links)<br>
+          CTA Hero pleine largeur
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Auth -->
+  <div style="background:#0f172a;border-radius:10px;padding:16px;border:1px solid #1e293b">
+    <div style="color:#10b981;font-size:11px;font-weight:600;margin-bottom:10px">2 · AUTH <span style="color:#334155;font-weight:400">/auth (effort : faible)</span></div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <div style="flex:1;min-width:200px">
+        <div style="font-size:10px;color:#ef4444;font-weight:600;margin-bottom:6px">Avant (mobile)</div>
+        <div style="background:#111827;border-radius:6px;padding:10px;font-size:10px;color:#64748b;line-height:1.8">
+          <code>h-screen overflow-hidden</code> → formulaire coupé quand clavier s'ouvre<br>
+          Padding <code>p-9</code> trop grand sur 375px
+        </div>
+      </div>
+      <div style="flex:1;min-width:200px">
+        <div style="font-size:10px;color:#10b981;font-weight:600;margin-bottom:6px">Après (mobile)</div>
+        <div style="background:#111827;border-radius:6px;padding:10px;font-size:10px;color:#64748b;line-height:1.8">
+          <code>min-h-screen</code> → scroll possible si clavier ouvert<br>
+          Padding réduit sur mobile : <code>p-6 md:p-9</code>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div style="background:#0f172a;border-radius:10px;padding:16px;border:1px solid #1e293b">
+    <div style="color:#f59e0b;font-size:11px;font-weight:600;margin-bottom:10px">3 · DASHBOARD <span style="color:#334155;font-weight:400">/dashboard (effort : moyen)</span></div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <div style="flex:1;min-width:200px">
+        <div style="font-size:10px;color:#ef4444;font-weight:600;margin-bottom:6px">Avant (mobile)</div>
+        <div style="background:#111827;border-radius:6px;padding:10px;font-size:10px;color:#64748b;line-height:1.8">
+          Topbar : logo + barre de recherche 240px + toggle vue + lune + avatar → écrasé<br>
+          Vue liste : 5 colonnes fixes → déborde largement<br>
+          Bouton "+ Nouveau" : pas de FAB mobile
+        </div>
+      </div>
+      <div style="flex:1;min-width:200px">
+        <div style="font-size:10px;color:#10b981;font-weight:600;margin-bottom:6px">Après (mobile)</div>
+        <div style="background:#111827;border-radius:6px;padding:10px;font-size:10px;color:#64748b;line-height:1.8">
+          Topbar mobile : logo + avatar + bouton recherche (icône) → barre de recherche en 2e ligne<br>
+          Vue liste simplifiée : 3 colonnes (miniature · nom · supprimer)<br>
+          Forcer vue grille par défaut sur mobile<br>
+          Bouton "+" fixe en bas à droite (FAB)
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Account -->
+  <div style="background:#0f172a;border-radius:10px;padding:16px;border:1px solid #1e293b">
+    <div style="color:#10b981;font-size:11px;font-weight:600;margin-bottom:10px">4 · COMPTE <span style="color:#334155;font-weight:400">/account (effort : faible)</span></div>
+    <div style="background:#111827;border-radius:6px;padding:10px;font-size:10px;color:#64748b;line-height:1.8">
+      Déjà centré et étroit — fonctionne bien. Ajustements mineurs : padding horizontal réduit, bouton déconnexion pleine largeur sur mobile.
+    </div>
+  </div>
+
+  <!-- Editor -->
+  <div style="background:#0f172a;border-radius:10px;padding:16px;border:1px solid #1e293b">
+    <div style="color:#ef4444;font-size:11px;font-weight:600;margin-bottom:10px">5 · ÉDITEUR <span style="color:#334155;font-weight:400">/project/[id] (effort : élevé)</span></div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="background:#111827;border-radius:6px;padding:10px">
+        <div style="font-size:10px;color:#6366f1;font-weight:600;margin-bottom:4px">Onglet Plan 2D</div>
+        <div style="font-size:10px;color:#64748b;line-height:1.8">
+          Touch pan + pinch-to-zoom sur le canvas (lecture seule mobile)<br>
+          Bandeau info : "Dessin disponible sur ordinateur ou tablette"<br>
+          Toolbar de dessin cachée sur mobile
+        </div>
+      </div>
+      <div style="background:#111827;border-radius:6px;padding:10px">
+        <div style="font-size:10px;color:#6366f1;font-weight:600;margin-bottom:4px">Onglet Calepinage</div>
+        <div style="font-size:10px;color:#64748b;line-height:1.8">
+          Mobile : 2 onglets internes "Aperçu" / "Réglages" (option B choisie)<br>
+          Desktop : sidebar fixe 320px inchangée<br>
+          Pinch-to-zoom sur l'aperçu du calepinage
+        </div>
+      </div>
+      <div style="background:#111827;border-radius:6px;padding:10px">
+        <div style="font-size:10px;color:#6366f1;font-weight:600;margin-bottom:4px">Onglet Quantitatif</div>
+        <div style="font-size:10px;color:#64748b;line-height:1.8">
+          Tableau horizontal scrollable sur mobile<br>
+          Résumé des totaux en cartes empilées en tête de page
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<p style="margin-top:20px;font-size:11px;color:#475569">Breakpoint unique : <strong>md: (768px)</strong> — en dessous = mobile, au-dessus = desktop. Pas de breakpoint tablette intermédiaire pour simplifier.</p>

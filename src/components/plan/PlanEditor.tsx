@@ -11,10 +11,12 @@ import { generateId } from '@/utils/id';
 import { selectActiveProject, useProjectStore } from '@/store/projectStore';
 import { buildAndSolve, solveAndValidate } from '@/engine/constraints/solver';
 import { analyzeDOF, ptKey } from '@/engine/constraints/dofAnalyzer';
+import { constraintFaceOffset } from '@/engine/constraints/faceOffset';
 import { constraintInteriorOffset } from '@/engine/constraints/interiorOffset';
 import { PlanToolbar, type PlanTool } from './PlanToolbar';
 import { ToolStatusBar } from './ToolStatusBar';
 import { DimensionEditor } from './DimensionEditor';
+import { DimensionPopup } from './DimensionPopup';
 import { WallEdgeEditor } from './WallEdgeEditor';
 import { RoomPanel } from './RoomPanel';
 import { RoomTabs } from './RoomTabs';
@@ -24,7 +26,8 @@ import {
   type EditingEdgeState, type HoveredEdge, type SnapPreview,
   type HoveredZoneEdge, type EditingZoneEdge, type HoveredPartitionEdge,
   type PartitionDimLine,
-  type DeleteHoverTarget,   // ← nouveau
+  type DeleteHoverTarget,
+  type FaceSnapPoint,
 } from './DrawingCanvas';
 
 // ── History ────────────────────────────────────────────────────────────────
@@ -267,7 +270,6 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
 
   // Editing
   const [editingEdge, setEditingEdge] = useState<EditingEdgeState | null>(null);
-  const [editValue, setEditValue] = useState('');
   const [editingZoneEdge, setEditingZoneEdge] = useState<EditingZoneEdge | null>(null);
   const [editZoneEdgeValue, setEditZoneEdgeValue] = useState('');
   const [editingPartition, setEditingPartition] = useState<{ roomId: string; partitionId: string } | null>(null);
@@ -276,10 +278,19 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
   const [editThicknessValue, setEditThicknessValue] = useState('');
   const [editingPartitionDimension, setEditingPartitionDimension] = useState<{ fromRef: PointRef; toRef: PointRef } | null>(null);
   const [editPartitionDimValue, setEditPartitionDimValue] = useState('');
-  const [editingPartitionDimType, setEditingPartitionDimType] = useState<'H_DISTANCE' | 'V_DISTANCE'>('H_DISTANCE');
-  const [editingEdgeConstraintType, setEditingEdgeConstraintType] = useState<'LENGTH' | 'H_DISTANCE' | 'V_DISTANCE'>('H_DISTANCE');
+  const [editingPartitionDimType] = useState<'H_DISTANCE' | 'V_DISTANCE'>('H_DISTANCE');
   const [editingEdgeThicknessValue, setEditingEdgeThicknessValue] = useState('');
-  const [dimensionSource, setDimensionSource] = useState<{ roomId: string; idx: number } | null>(null);
+  const [faceSnapHover, setFaceSnapHover]   = useState<FaceSnapPoint | null>(null);
+  const [dimensionSource, setDimensionSource] = useState<{
+    ref:      PointRef;
+    worldPos: Point;
+  } | null>(null);
+  const [dimensionPopup, setDimensionPopup] = useState<{
+    fromRef:  PointRef;
+    toRef:    PointRef;
+    dimType:  'H_DISTANCE' | 'V_DISTANCE' | 'LENGTH';
+    value:    string;
+  } | null>(null);
 
   // Hover
   const [hoveredEdge, setHoveredEdge] = useState<HoveredEdge | null>(null);
@@ -535,6 +546,161 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
     violationTimerRef.current = setTimeout(() => setViolationFlash(false), 700);
   }, []);
 
+  // ── DIMENSION face-snap helpers ────────────────────────────────────────────
+
+  const findNearestFaceSnap = useCallback((cursor: Point): FaceSnapPoint | null => {
+    const threshold = 80 / scale;
+    let best: { snap: FaceSnapPoint; dist: number } | null = null;
+
+    const trySegment = (
+      p1: Point, p2: Point,
+      roomId: string, vertexIdx: number,
+      halfThick: number,
+    ) => {
+      const dx = p2.x - p1.x, dy = p2.y - p1.y;
+      const len2 = dx * dx + dy * dy;
+      if (len2 < 0.001) return;
+
+      const t = Math.max(0, Math.min(1, ((cursor.x - p1.x) * dx + (cursor.y - p1.y) * dy) / len2));
+      const proj: Point = { x: p1.x + t * dx, y: p1.y + t * dy };
+      if (distance(cursor, proj) > threshold) return;
+
+      // Normal pointing inward (rotate segment 90° CCW)
+      const len = Math.sqrt(len2);
+      const wallNormal: Point = { x: -dy / len, y: dx / len };
+
+      const candidates: Array<{ face: 'INSIDE' | 'AXIS' | 'OUTSIDE'; pos: Point }> = [
+        { face: 'INSIDE',  pos: { x: proj.x + wallNormal.x * halfThick, y: proj.y + wallNormal.y * halfThick } },
+        { face: 'AXIS',    pos: proj },
+        { face: 'OUTSIDE', pos: { x: proj.x - wallNormal.x * halfThick, y: proj.y - wallNormal.y * halfThick } },
+      ];
+
+      for (const { face, pos } of candidates) {
+        const d = distance(cursor, pos);
+        if (!best || d < best.dist) {
+          best = { snap: { roomId, vertexIdx, face, worldPos: pos, wallNormal }, dist: d };
+        }
+      }
+    };
+
+    for (const room of rooms) {
+      const n = room.points.length;
+      if (n < 2) continue;
+      for (let i = 0; i < n; i++) {
+        const p1 = room.points[i]!;
+        const p2 = room.points[(i + 1) % n]!;
+        const halfThick = (room.edgeThicknesses?.[i] ?? wallThickness) / 2;
+        trySegment(p1, p2, room.id, i, halfThick);
+      }
+      for (const part of room.partitions ?? []) {
+        trySegment(part.p1, part.p2, room.id, 0, part.thickness / 2);
+      }
+      for (const zone of room.excludedZones ?? []) {
+        const zn = zone.points.length;
+        for (let i = 0; i < zn; i++) {
+          trySegment(zone.points[i]!, zone.points[(i + 1) % zn]!, zone.id, i, 0);
+        }
+      }
+    }
+
+    const result = best as { snap: FaceSnapPoint; dist: number } | null;
+    return result ? result.snap : null;
+  }, [rooms, scale, wallThickness]);
+
+  const openDimensionPopup = useCallback((
+    fromRef: PointRef,
+    toRef: PointRef,
+    fromWorld: Point,
+    toWorld: Point,
+  ) => {
+    const dx = Math.abs(toWorld.x - fromWorld.x);
+    const dy = Math.abs(toWorld.y - fromWorld.y);
+    const dimType: 'H_DISTANCE' | 'V_DISTANCE' =
+      dx >= dy ? 'H_DISTANCE' : 'V_DISTANCE';
+
+    // Check for existing constraint between these vertices
+    const existing = constraints.find((c) =>
+      (c.type === 'H_DISTANCE' || c.type === 'V_DISTANCE' || c.type === 'LENGTH') &&
+      c.pts.length >= 2 &&
+      ((c.pts[0]!.roomId === fromRef.roomId && c.pts[0]!.vertexIdx === fromRef.vertexIdx &&
+        c.pts[1]!.roomId === toRef.roomId   && c.pts[1]!.vertexIdx === toRef.vertexIdx) ||
+       (c.pts[0]!.roomId === toRef.roomId   && c.pts[0]!.vertexIdx === toRef.vertexIdx &&
+        c.pts[1]!.roomId === fromRef.roomId && c.pts[1]!.vertexIdx === fromRef.vertexIdx))
+    );
+
+    let displayedValue: number;
+    const resolvedDimType = existing ? (existing.type as 'H_DISTANCE' | 'V_DISTANCE' | 'LENGTH') : dimType;
+
+    if (existing && typeof existing.value === 'number') {
+      const room = rooms.find(r => r.id === fromRef.roomId);
+      const syntheticC = { ...existing, pts: [fromRef, toRef] };
+      const offset = room ? constraintFaceOffset(syntheticC, room, wallThickness) : 0;
+      displayedValue = (existing.value + offset) / 10;
+    } else {
+      const rawValue = dimType === 'H_DISTANCE' ? dx : dy;
+      displayedValue = rawValue / 10;
+    }
+
+    setDimensionPopup({
+      fromRef,
+      toRef,
+      dimType: resolvedDimType,
+      value: displayedValue.toFixed(1),
+    });
+  }, [constraints, rooms, wallThickness]);
+
+  const submitDimensionPopup = useCallback(() => {
+    if (!dimensionPopup) return;
+    const { fromRef, toRef, dimType, value } = dimensionPopup;
+    const displayedMm = parseFloat(value) * 10;
+    if (isNaN(displayedMm) || displayedMm <= 0) { setDimensionPopup(null); return; }
+
+    const room = rooms.find(r => r.id === fromRef.roomId);
+    const syntheticC = { id: '', type: dimType as 'H_DISTANCE' | 'V_DISTANCE' | 'LENGTH', pts: [fromRef, toRef] };
+    const offset = room ? constraintFaceOffset(syntheticC as import('@/types/project').Constraint, room, wallThickness) : 0;
+    const storedMm = displayedMm - offset;
+
+    // Find and remove existing constraint between these vertices
+    const existingId = constraints.find((c) =>
+      (c.type === 'H_DISTANCE' || c.type === 'V_DISTANCE' || c.type === 'LENGTH') &&
+      c.pts.length >= 2 &&
+      ((c.pts[0]!.roomId === fromRef.roomId && c.pts[0]!.vertexIdx === fromRef.vertexIdx &&
+        c.pts[1]!.roomId === toRef.roomId   && c.pts[1]!.vertexIdx === toRef.vertexIdx) ||
+       (c.pts[0]!.roomId === toRef.roomId   && c.pts[0]!.vertexIdx === toRef.vertexIdx &&
+        c.pts[1]!.roomId === fromRef.roomId && c.pts[1]!.vertexIdx === fromRef.vertexIdx))
+    )?.id;
+
+    const newId = generateId();
+    const newCs = (existingId ? constraints.filter(c => c.id !== existingId) : [...constraints]);
+    newCs.push({ id: newId, type: dimType as 'H_DISTANCE' | 'V_DISTANCE' | 'LENGTH', pts: [fromRef, toRef], value: storedMm });
+
+    if (!validateAndSolve(newCs)) { flashViolation(); setDimensionPopup(null); return; }
+
+    pushHistory();
+    if (existingId) removeConstraint(existingId);
+    addConstraint({ id: newId, type: dimType as 'H_DISTANCE' | 'V_DISTANCE' | 'LENGTH', pts: [fromRef, toRef], value: storedMm });
+    setDimensionPopup(null);
+  }, [dimensionPopup, constraints, rooms, wallThickness, validateAndSolve, flashViolation, pushHistory, addConstraint, removeConstraint]);
+
+  const releaseDimensionPopup = useCallback(() => {
+    if (!dimensionPopup) return;
+    const { fromRef, toRef } = dimensionPopup;
+    const existingId = constraints.find((c) =>
+      (c.type === 'H_DISTANCE' || c.type === 'V_DISTANCE' || c.type === 'LENGTH') &&
+      c.pts.length >= 2 &&
+      ((c.pts[0]!.roomId === fromRef.roomId && c.pts[0]!.vertexIdx === fromRef.vertexIdx &&
+        c.pts[1]!.roomId === toRef.roomId   && c.pts[1]!.vertexIdx === toRef.vertexIdx) ||
+       (c.pts[0]!.roomId === toRef.roomId   && c.pts[0]!.vertexIdx === toRef.vertexIdx &&
+        c.pts[1]!.roomId === fromRef.roomId && c.pts[1]!.vertexIdx === fromRef.vertexIdx))
+    )?.id;
+    if (existingId) {
+      pushHistory();
+      removeConstraint(existingId);
+      runSolver();
+    }
+    setDimensionPopup(null);
+  }, [dimensionPopup, constraints, pushHistory, removeConstraint, runSolver]);
+
   // ── Effects ───────────────────────────────────────────────────────────────
 
   useEffect(() => {
@@ -559,7 +725,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
         setEditingEdge(null); setEditingZoneEdge(null); setEditingPartition(null);
         setEditingPartitionThickness(null); setEditingPartitionDimension(null);
         setDraggedVertex(null); setDraggedZoneVertex(null); setDraggedPartitionVertex(null);
-        setCoincideSource(null); setDimensionSource(null); setPartitionOrigin(null); setExcludePoints([]);
+        setCoincideSource(null); setDimensionSource(null); setFaceSnapHover(null); setDimensionPopup(null); setPartitionOrigin(null); setExcludePoints([]);
       }
       if (e.key === 'z' && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
         e.preventDefault();
@@ -862,8 +1028,35 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
       return;
     }
 
-    // ── DIMENSION (vertex handlers handle the actual logic) ──
-    if (tool === 'DIMENSION') return;
+    // ── DIMENSION ──
+    if (tool === 'DIMENSION') {
+      if (!dimensionSource) {
+        if (faceSnapHover) {
+          setDimensionSource({
+            ref: {
+              roomId: faceSnapHover.roomId,
+              vertexIdx: faceSnapHover.vertexIdx,
+              face: faceSnapHover.face,
+            },
+            worldPos: faceSnapHover.worldPos,
+          });
+        }
+        return;
+      }
+      // Second click
+      if (faceSnapHover) {
+        openDimensionPopup(
+          dimensionSource.ref,
+          { roomId: faceSnapHover.roomId, vertexIdx: faceSnapHover.vertexIdx, face: faceSnapHover.face },
+          dimensionSource.worldPos,
+          faceSnapHover.worldPos,
+        );
+        setDimensionSource(null);
+      } else {
+        setDimensionSource(null);
+      }
+      return;
+    }
 
     // ── PARTITION ──
     if (tool === 'PARTITION') {
@@ -1114,6 +1307,8 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
 
     if (tool === 'DELETE') {
       setDeleteHover(findDeleteTarget(raw));
+    } else if (tool === 'DIMENSION') {
+      setFaceSnapHover(findNearestFaceSnap(raw));
     } else if (tool === 'DOOR') {
       setHoveredEdge(findNearestEdgeOfType(raw, 'DOOR') ?? findNearestWallEdge(raw));
     } else if (tool === 'APPLY_H' || tool === 'APPLY_V') {
@@ -1123,6 +1318,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
     } else {
       setHoveredEdge(null); setHoveredZoneEdge(null); setHoveredPartitionEdge(null);
       setDeleteHover(null);
+      setFaceSnapHover(null);
     }
   };
 
@@ -1138,41 +1334,10 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
   // ── Edge / vertex click handlers ──────────────────────────────────────────
 
   // Shared core logic: activate wall/door edge editor (used by mouse click AND mobile tap)
-  const tapActivateEdge = (roomId: string, edgeIndex: number, dist: number) => {
+  const tapActivateEdge = (roomId: string, edgeIndex: number, _dist: number) => {
     const room = rooms.find((r) => r.id === roomId);
-    if (!room) { setEditingEdge({ roomId, edgeIndex }); setEditValue((dist / 10).toFixed(1)); return; }
-    const n = room.points.length;
-    const a = edgeIndex, b = (edgeIndex + 1) % n;
-    const ec = constraints.filter((c) => {
-      if (c.pts.length < 2) return false;
-      const [p0, p1] = [c.pts[0]!, c.pts[1]!];
-      if (p0.roomId !== roomId || p1.roomId !== roomId) return false;
-      return (p0.vertexIdx === a && p1.vertexIdx === b) || (p0.vertexIdx === b && p1.vertexIdx === a);
-    });
-    const hDist = ec.find((c) => c.type === 'H_DISTANCE');
-    const vDist = ec.find((c) => c.type === 'V_DISTANCE');
-    const lenC = ec.find((c) => c.type === 'LENGTH');
-    let cType: 'LENGTH' | 'H_DISTANCE' | 'V_DISTANCE' = 'H_DISTANCE';
-    let value = dist;
-    if (hDist && typeof hDist.value === 'number') { cType = 'H_DISTANCE'; value = hDist.value; }
-    else if (vDist && typeof vDist.value === 'number') { cType = 'V_DISTANCE'; value = vDist.value; }
-    else if (lenC && typeof lenC.value === 'number') { cType = 'LENGTH'; value = lenC.value; }
-    else {
-      const p1 = room.points[edgeIndex], p2 = room.points[(edgeIndex + 1) % n];
-      if (p1 && p2) {
-        cType = Math.abs(p2.x - p1.x) >= Math.abs(p2.y - p1.y) ? 'H_DISTANCE' : 'V_DISTANCE';
-        value = cType === 'H_DISTANCE' ? Math.abs(p2.x - p1.x) : Math.abs(p2.y - p1.y);
-      }
-    }
-    setEditingEdgeConstraintType(cType);
     setEditingEdge({ roomId, edgeIndex });
-    const displayOffset = constraintInteriorOffset(
-      { id: '', type: cType, pts: [{ roomId, vertexIdx: a }, { roomId, vertexIdx: b }] },
-      room,
-      wallThickness,
-    );
-    setEditValue(((value - displayOffset) / 10).toFixed(1));
-    const currentThickness = room.edgeThicknesses?.[edgeIndex] ?? wallThickness;
+    const currentThickness = room?.edgeThicknesses?.[edgeIndex] ?? wallThickness;
     setEditingEdgeThicknessValue((currentThickness / 10).toFixed(0));
   };
 
@@ -1184,25 +1349,6 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
 
   const handleVertexPointerDown = (roomId: string, index: number) => (e: ReactPointerEvent) => {
     e.stopPropagation();
-    if (tool === 'DIMENSION') {
-      if (!dimensionSource) { setDimensionSource({ roomId, idx: index }); return; }
-      if (dimensionSource.roomId === roomId && dimensionSource.idx === index) { setDimensionSource(null); return; }
-      const fromRef = ref(dimensionSource.roomId, dimensionSource.idx);
-      const toRef = ref(roomId, index);
-      const fromPt = resolveRef(rooms, fromRef);
-      const toPt = rooms.find((r) => r.id === roomId)?.points[index];
-      if (!fromPt || !toPt) { setDimensionSource(null); return; }
-      const absDx = Math.abs(toPt.x - fromPt.x), absDy = Math.abs(toPt.y - fromPt.y);
-      const dimType: 'H_DISTANCE' | 'V_DISTANCE' = absDx >= absDy ? 'H_DISTANCE' : 'V_DISTANCE';
-      setEditingPartitionDimType(dimType);
-      setEditingPartitionDimension({ fromRef, toRef });
-      const rawVal = dimType === 'H_DISTANCE' ? absDx : absDy;
-      const fromRoom = rooms.find((r) => r.id === fromRef.roomId);
-      const syntheticC = { id: '', type: dimType as 'H_DISTANCE' | 'V_DISTANCE', pts: [fromRef, toRef] };
-      const dimOpenOffset = fromRoom ? constraintInteriorOffset(syntheticC, fromRoom, wallThickness) : 0;
-      setEditPartitionDimValue(((rawVal - dimOpenOffset) / 10).toFixed(1));
-      setDimensionSource(null); return;
-    }
     if (tool === 'ANCHOR') {
       const room = rooms.find((r) => r.id === roomId); if (!room) return;
       const p = room.points[index]!, existing = findConstraint('FIX', ref(roomId, index));
@@ -1243,26 +1389,6 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
 
   const handlePartitionVertexPointerDown = (parentRoomId: string, partitionId: string, idx: number) => (e: ReactPointerEvent) => {
     e.stopPropagation();
-    if (tool === 'DIMENSION') {
-      if (!dimensionSource) { setDimensionSource({ roomId: partitionId, idx }); return; }
-      if (dimensionSource.roomId === partitionId && dimensionSource.idx === idx) { setDimensionSource(null); return; }
-      const fromRef = ref(dimensionSource.roomId, dimensionSource.idx);
-      const toRef = ref(partitionId, idx);
-      const fromPt = resolveRef(rooms, fromRef);
-      const part = rooms.find((r) => r.id === parentRoomId)?.partitions?.find((p) => p.id === partitionId);
-      const toPt = part ? (idx === 0 ? part.p1 : part.p2) : undefined;
-      if (!fromPt || !toPt) { setDimensionSource(null); return; }
-      const absDx = Math.abs(toPt.x - fromPt.x), absDy = Math.abs(toPt.y - fromPt.y);
-      const dimType: 'H_DISTANCE' | 'V_DISTANCE' = absDx >= absDy ? 'H_DISTANCE' : 'V_DISTANCE';
-      setEditingPartitionDimType(dimType);
-      setEditingPartitionDimension({ fromRef, toRef });
-      const rawVal = dimType === 'H_DISTANCE' ? absDx : absDy;
-      const fromRoom = rooms.find((r) => r.id === fromRef.roomId);
-      const syntheticC = { id: '', type: dimType as 'H_DISTANCE' | 'V_DISTANCE', pts: [fromRef, toRef] };
-      const dimOpenOffset = fromRoom ? constraintInteriorOffset(syntheticC, fromRoom, wallThickness) : 0;
-      setEditPartitionDimValue(((rawVal - dimOpenOffset) / 10).toFixed(1));
-      setDimensionSource(null); return;
-    }
     if (tool === 'ANCHOR') {
       const part = rooms.find((r) => r.id === parentRoomId)?.partitions?.find((p) => p.id === partitionId); if (!part) return;
       const p = idx === 0 ? part.p1 : part.p2, existing = findConstraint('FIX', ref(partitionId, idx));
@@ -1300,26 +1426,6 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
 
   const handleZoneVertexPointerDown = (parentRoomId: string, zoneId: string, idx: number) => (e: ReactPointerEvent) => {
     e.stopPropagation();
-    if (tool === 'DIMENSION') {
-      if (!dimensionSource) { setDimensionSource({ roomId: zoneId, idx }); return; }
-      if (dimensionSource.roomId === zoneId && dimensionSource.idx === idx) { setDimensionSource(null); return; }
-      const fromRef = ref(dimensionSource.roomId, dimensionSource.idx);
-      const toRef = ref(zoneId, idx);
-      const fromPt = resolveRef(rooms, fromRef);
-      const zone = rooms.find((r) => r.id === parentRoomId)?.excludedZones?.find((z) => z.id === zoneId);
-      const toPt = zone?.points[idx];
-      if (!fromPt || !toPt) { setDimensionSource(null); return; }
-      const absDx = Math.abs(toPt.x - fromPt.x), absDy = Math.abs(toPt.y - fromPt.y);
-      const dimType: 'H_DISTANCE' | 'V_DISTANCE' = absDx >= absDy ? 'H_DISTANCE' : 'V_DISTANCE';
-      setEditingPartitionDimType(dimType);
-      setEditingPartitionDimension({ fromRef, toRef });
-      const rawVal = dimType === 'H_DISTANCE' ? absDx : absDy;
-      const fromRoom = rooms.find((r) => r.id === fromRef.roomId);
-      const syntheticC = { id: '', type: dimType as 'H_DISTANCE' | 'V_DISTANCE', pts: [fromRef, toRef] };
-      const dimOpenOffset = fromRoom ? constraintInteriorOffset(syntheticC, fromRoom, wallThickness) : 0;
-      setEditPartitionDimValue(((rawVal - dimOpenOffset) / 10).toFixed(1));
-      setDimensionSource(null); return;
-    }
     if (tool === 'ANCHOR') {
       const zone = rooms.find((r) => r.id === parentRoomId)?.excludedZones?.find((z) => z.id === zoneId); if (!zone) return;
       const p = zone.points[idx]!, existing = findConstraint('FIX', ref(zoneId, idx));
@@ -1354,64 +1460,20 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
 
   // ── Dimension submit handlers ─────────────────────────────────────────────
 
-  /** Remove all dimension constraints (LENGTH/H_DISTANCE/V_DISTANCE) on a given edge. */
-  const edgeDimConstraintIds = (roomId: string, eIdx: number, n: number): string[] => {
-    const a = eIdx, b = (eIdx + 1) % n;
-    return constraints
-      .filter((c) => {
-        if (c.type !== 'LENGTH' && c.type !== 'H_DISTANCE' && c.type !== 'V_DISTANCE') return false;
-        if (c.pts.length < 2) return false;
-        const [p0, p1] = [c.pts[0]!, c.pts[1]!];
-        if (p0.roomId !== roomId || p1.roomId !== roomId) return false;
-        return (p0.vertexIdx === a && p1.vertexIdx === b) || (p0.vertexIdx === b && p1.vertexIdx === a);
-      })
-      .map((c) => c.id);
-  };
-
-  const releaseEdgeDimension = () => {
+  const submitThickness = useCallback(() => {
     if (!editingEdge) return;
-    const room = rooms.find((r) => r.id === editingEdge.roomId); if (!room) return;
-    const ids = edgeDimConstraintIds(editingEdge.roomId, editingEdge.edgeIndex, room.points.length);
-    if (ids.length === 0) { setEditingEdge(null); return; }
-    const newCs = constraints.filter((c) => !ids.includes(c.id));
-    pushHistory();
-    ids.forEach((id) => removeConstraint(id));
-    runSolver(null, undefined, newCs);
-    setEditingEdge(null);
-  };
-
-  const submitDimension = () => {
-    if (!editingEdge) return;
-    const valCm = parseFloat(editValue);
-    if (isNaN(valCm) || valCm <= 0) { setEditingEdge(null); return; }
-    const room = rooms.find((r) => r.id === editingEdge.roomId); if (!room) { setEditingEdge(null); return; }
-    const n = room.points.length, eIdx = editingEdge.edgeIndex;
-    const p1Ref = ref(room.id, eIdx), p2Ref = ref(room.id, (eIdx + 1) % n);
-    const cType = editingEdgeConstraintType;
-    const offset = constraintInteriorOffset(
-      { id: '', type: cType as Constraint['type'], pts: [p1Ref, p2Ref] },
-      room,
-      wallThickness,
-    );
-    const valueMm = valCm * 10 + offset;
-    // Remove all existing dimension constraints on this edge (any type) before adding the new one.
-    const oldIds = edgeDimConstraintIds(editingEdge.roomId, eIdx, n);
-    const csWithoutOld = constraints.filter((c) => !oldIds.includes(c.id));
-    const newId = generateId();
-    const newCs = [...csWithoutOld, { id: newId, type: cType as Constraint['type'], pts: [p1Ref, p2Ref], value: valueMm }];
-    if (!validateAndSolve(newCs)) { flashViolation(); setEditingEdge(null); return; }
-    pushHistory();
-    oldIds.forEach((id) => removeConstraint(id));
-    addConstraint({ id: newId, type: cType as Constraint['type'], pts: [p1Ref, p2Ref], value: valueMm });
-    // Update edge thickness if changed
     const thickCm = parseFloat(editingEdgeThicknessValue);
-    if (!isNaN(thickCm) && thickCm > 0) {
-      const thickMm = thickCm * 10;
-      const currentThick = room.edgeThicknesses?.[eIdx] ?? wallThickness;
-      if (Math.abs(thickMm - currentThick) > 0.5) setEdgeThickness(editingEdge.roomId, eIdx, thickMm);
+    if (isNaN(thickCm) || thickCm <= 0) { setEditingEdge(null); return; }
+    const thickMm = thickCm * 10;
+    const room = rooms.find((r) => r.id === editingEdge.roomId);
+    if (!room) { setEditingEdge(null); return; }
+    const currentThick = room.edgeThicknesses?.[editingEdge.edgeIndex] ?? wallThickness;
+    if (Math.abs(thickMm - currentThick) > 0.5) {
+      pushHistory();
+      setEdgeThickness(editingEdge.roomId, editingEdge.edgeIndex, thickMm);
     }
     setEditingEdge(null);
-  };
+  }, [editingEdge, editingEdgeThicknessValue, rooms, wallThickness, pushHistory]);
 
   const submitZoneEdgeDimension = () => {
     if (!editingZoneEdge) return;
@@ -1658,7 +1720,10 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
         onChangeTool={(t) => {
           setTool(t);
           setDeleteHover(null);
-          setCoincideSource(null); setDimensionSource(null); setPartitionOrigin(null);
+          setFaceSnapHover(null);
+          setDimensionSource(null);
+          setDimensionPopup(null);
+          setCoincideSource(null); setPartitionOrigin(null);
           setExcludePoints([]); setEditingPartitionDimension(null);
         }}
         onUndo={handleUndo}
@@ -1707,35 +1772,18 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
       </div>
 
       {editingEdge !== null && (() => {
-        const room = rooms.find((r) => r.id === editingEdge.roomId);
-        const n = room?.points.length ?? 0;
-        const hasExisting = n > 0 && edgeDimConstraintIds(editingEdge.roomId, editingEdge.edgeIndex, n).length > 0;
-        // Show popup above unless too close to top (popup ~170px tall + 48px header)
         const above = editorScreen === undefined || editorScreen.y > 220;
-        const handleConstraintTypeChange = (t: 'H_DISTANCE' | 'V_DISTANCE' | 'LENGTH') => {
-          setEditingEdgeConstraintType(t);
-          if (room) {
-            const p1 = room.points[editingEdge.edgeIndex];
-            const p2 = room.points[(editingEdge.edgeIndex + 1) % n];
-            if (p1 && p2) {
-              const newVal = t === 'H_DISTANCE' ? Math.abs(p2.x - p1.x)
-                : t === 'V_DISTANCE' ? Math.abs(p2.y - p1.y)
-                : distance(p1, p2);
-              setEditValue((newVal / 10).toFixed(1));
-            }
-          }
-        };
         return (
           <WallEdgeEditor
             screenX={isTouchDevice ? undefined : editorScreen?.x}
             screenY={isTouchDevice ? undefined : editorScreen?.y}
             above={above}
-            dimValue={editValue} onDimChange={setEditValue}
-            constraintType={editingEdgeConstraintType} onConstraintTypeChange={handleConstraintTypeChange}
-            thicknessValue={editingEdgeThicknessValue} onThicknessChange={setEditingEdgeThicknessValue}
-            hasExistingConstraint={hasExisting}
-            onRelease={releaseEdgeDimension}
-            onSubmit={submitDimension} onCancel={() => setEditingEdge(null)} />
+            thicknessValue={editingEdgeThicknessValue}
+            onThicknessChange={setEditingEdgeThicknessValue}
+            hasExistingConstraint={false}
+            onRelease={() => setEditingEdge(null)}
+            onSubmit={submitThickness}
+            onCancel={() => setEditingEdge(null)} />
         );
       })()}
       {editingZoneEdge !== null && (
@@ -1758,6 +1806,31 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
           value={editPartitionDimValue} onChange={setEditPartitionDimValue}
           onSubmit={submitPartitionDimensionToElement} onCancel={() => setEditingPartitionDimension(null)} />
       )}
+      {dimensionPopup && (
+        <DimensionPopup
+          fromFace={dimensionPopup.fromRef.face ?? 'INSIDE'}
+          toFace={dimensionPopup.toRef.face ?? 'INSIDE'}
+          dimType={dimensionPopup.dimType}
+          onDimTypeChange={(t) => setDimensionPopup(prev => prev ? { ...prev, dimType: t } : null)}
+          value={dimensionPopup.value}
+          onValueChange={(v) => setDimensionPopup(prev => prev ? { ...prev, value: v } : null)}
+          hasExistingConstraint={constraints.some((c) =>
+            (c.type === 'H_DISTANCE' || c.type === 'V_DISTANCE' || c.type === 'LENGTH') &&
+            c.pts.length >= 2 &&
+            ((c.pts[0]!.roomId === dimensionPopup.fromRef.roomId &&
+              c.pts[0]!.vertexIdx === dimensionPopup.fromRef.vertexIdx &&
+              c.pts[1]!.roomId === dimensionPopup.toRef.roomId &&
+              c.pts[1]!.vertexIdx === dimensionPopup.toRef.vertexIdx) ||
+             (c.pts[0]!.roomId === dimensionPopup.toRef.roomId &&
+              c.pts[0]!.vertexIdx === dimensionPopup.toRef.vertexIdx &&
+              c.pts[1]!.roomId === dimensionPopup.fromRef.roomId &&
+              c.pts[1]!.vertexIdx === dimensionPopup.fromRef.vertexIdx))
+          )}
+          onRelease={releaseDimensionPopup}
+          onSubmit={submitDimensionPopup}
+          onCancel={() => setDimensionPopup(null)}
+        />
+      )}
 
       <DrawingCanvas
         svgRef={svgRef} rooms={rooms} activeRoomId={activeRoomId}
@@ -1774,6 +1847,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
         hoveredPartitionEdge={hoveredPartitionEdge}
         partitionDimLines={partitionDimLines}
         editingPartitionDimension={editingPartitionDimension}
+        faceSnapHover={faceSnapHover}
         dimensionSource={dimensionSource}
         deleteHover={deleteHover}
         onPartitionDimensionPointerDown={handlePartitionDimensionPointerDown}

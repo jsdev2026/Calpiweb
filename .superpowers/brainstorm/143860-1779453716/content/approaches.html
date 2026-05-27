@@ -1,0 +1,308 @@
+<h2>3 directions pour la page Quantitatif</h2>
+<p class="subtitle">Quel angle vous parle le plus ? Cliquez pour sélectionner.</p>
+
+<div class="cards">
+
+  <!-- Approach A -->
+  <div class="card" data-choice="A" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0f172a; padding:16px; font-family:system-ui;">
+      <div style="display:grid; grid-template-columns:1fr 280px; gap:12px; height:260px;">
+        <!-- Plan zone -->
+        <div style="background:#1e293b; border-radius:10px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:12px;">
+          <div style="font-size:10px; color:#64748b; text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">Plan annoté</div>
+          <!-- Mini plan mockup -->
+          <div style="position:relative; width:160px; height:140px; background:#334155; border-radius:6px; overflow:hidden;">
+            <!-- whole tiles grid -->
+            <div style="position:absolute; inset:0; display:grid; grid-template-columns:repeat(6,1fr); grid-template-rows:repeat(5,1fr); gap:1px; padding:4px;">
+              <!-- row 1 -->
+              <div style="background:#93c5fd; opacity:.75; border-radius:1px;"></div>
+              <div style="background:#93c5fd; opacity:.75; border-radius:1px;"></div>
+              <div style="background:#93c5fd; opacity:.75; border-radius:1px;"></div>
+              <div style="background:#93c5fd; opacity:.75; border-radius:1px;"></div>
+              <div style="background:#f97316; opacity:.6; border-radius:1px; display:flex; align-items:center; justify-content:center; font-size:7px; font-weight:700; color:white;">1</div>
+              <div style="background:#f97316; opacity:.6; border-radius:1px; display:flex; align-items:center; justify-content:center; font-size:7px; font-weight:700; color:white;">2</div>
+              <!-- row 2 -->
+              <div style="background:#93c5fd; opacity:.75; border-radius:1px;"></div>
+              <div style="background:#93c5fd; opacity:.75; border-radius:1px;"></div>
+              <div style="background:#93c5fd; opacity:.75; border-radius:1px;"></div>
+              <div style="background:#93c5fd; opacity:.75; border-radius:1px;"></div>
+              <div style="background:#f97316; opacity:.6; border-radius:1px; display:flex; align-items:center; justify-content:center; font-size:7px; font-weight:700; color:white;">1</div>
+              <div style="background:#22c55e; opacity:.55; border-radius:1px; display:flex; align-items:center; justify-content:center; font-size:7px; font-weight:700; color:white;">↩2</div>
+              <!-- row 3 -->
+              <div style="background:#93c5fd; opacity:.75; border-radius:1px;"></div>
+              <div style="background:#93c5fd; opacity:.75; border-radius:1px;"></div>
+              <div style="background:#93c5fd; opacity:.75; border-radius:1px;"></div>
+              <div style="background:#f97316; opacity:.6; border-radius:1px; display:flex; align-items:center; justify-content:center; font-size:7px; font-weight:700; color:white;">3</div>
+              <div style="background:#f97316; opacity:.6; border-radius:1px; display:flex; align-items:center; justify-content:center; font-size:7px; font-weight:700; color:white;">1</div>
+              <div style="background:#22c55e; opacity:.55; border-radius:1px; display:flex; align-items:center; justify-content:center; font-size:7px; font-weight:700; color:white;">↩3</div>
+              <!-- rows 4-5 -->
+              <div style="background:#93c5fd; opacity:.75; border-radius:1px;"></div>
+              <div style="background:#93c5fd; opacity:.75; border-radius:1px;"></div>
+              <div style="background:#93c5fd; opacity:.75; border-radius:1px;"></div>
+              <div style="background:#f97316; opacity:.6; border-radius:1px; display:flex; align-items:center; justify-content:center; font-size:7px; font-weight:700; color:white;">3</div>
+              <div style="background:#f97316; opacity:.6; border-radius:1px; display:flex; align-items:center; justify-content:center; font-size:7px; font-weight:700; color:white;">2</div>
+              <div style="background:#f97316; opacity:.6; border-radius:1px; display:flex; align-items:center; justify-content:center; font-size:7px; font-weight:700; color:white;">2</div>
+              <div style="background:#93c5fd; opacity:.75; border-radius:1px;"></div>
+              <div style="background:#93c5fd; opacity:.75; border-radius:1px;"></div>
+              <div style="background:#93c5fd; opacity:.75; border-radius:1px;"></div>
+              <div style="background:#93c5fd; opacity:.75; border-radius:1px;"></div>
+              <div style="background:#f97316; opacity:.6; border-radius:1px; display:flex; align-items:center; justify-content:center; font-size:7px; font-weight:700; color:white;">3</div>
+              <div style="background:#f97316; opacity:.6; border-radius:1px; display:flex; align-items:center; justify-content:center; font-size:7px; font-weight:700; color:white;">2</div>
+            </div>
+          </div>
+          <!-- Legend -->
+          <div style="display:flex; gap:8px; margin-top:8px;">
+            <span style="display:flex; align-items:center; gap:3px; font-size:8px; color:#94a3b8;"><span style="width:8px;height:8px;background:#93c5fd;opacity:.75;border-radius:1px;display:inline-block;"></span>Entier</span>
+            <span style="display:flex; align-items:center; gap:3px; font-size:8px; color:#94a3b8;"><span style="width:8px;height:8px;background:#f97316;opacity:.6;border-radius:1px;display:inline-block;"></span>Coupe</span>
+            <span style="display:flex; align-items:center; gap:3px; font-size:8px; color:#94a3b8;"><span style="width:8px;height:8px;background:#22c55e;opacity:.55;border-radius:1px;display:inline-block;"></span>Réutilisé</span>
+          </div>
+        </div>
+        <!-- Right column: stats + cut cards + total -->
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <!-- Stats row -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+            <div style="background:#1e293b; border-radius:8px; padding:8px; text-align:center;">
+              <div style="font-size:18px; font-weight:900; color:#f1f5f9;">24</div>
+              <div style="font-size:8px; color:#64748b;">entiers</div>
+              <div style="font-size:8px; color:#475569;">1.44 m²</div>
+            </div>
+            <div style="background:#1e293b; border-radius:8px; padding:8px; text-align:center;">
+              <div style="font-size:18px; font-weight:900; color:#f1f5f9;">12</div>
+              <div style="font-size:8px; color:#64748b;">coupes</div>
+              <div style="font-size:8px; color:#475569;">0.38 m²</div>
+            </div>
+          </div>
+          <!-- Cut cards -->
+          <div style="font-size:8px; color:#64748b; text-transform:uppercase; letter-spacing:1px;">Groupes de coupes</div>
+          <div style="background:#1e293b; border-radius:8px; padding:8px; display:flex; align-items:center; gap:8px;">
+            <div style="width:28px; height:28px; background:#f97316; opacity:.6; border-radius:4px; display:flex; align-items:center; justify-content:center; font-weight:900; color:white; font-size:11px;">1</div>
+            <div style="flex:1;">
+              <div style="font-size:9px; font-weight:700; color:#f1f5f9;">20 × 30 cm</div>
+              <div style="font-size:8px; color:#64748b;">×5 — chute 10×30</div>
+            </div>
+          </div>
+          <div style="background:#1e293b; border-radius:8px; padding:8px; display:flex; align-items:center; gap:8px;">
+            <div style="width:28px; height:28px; background:#f97316; opacity:.6; border-radius:4px; display:flex; align-items:center; justify-content:center; font-weight:900; color:white; font-size:11px;">2</div>
+            <div style="flex:1;">
+              <div style="font-size:9px; font-weight:700; color:#f1f5f9;">15 × 30 cm</div>
+              <div style="font-size:8px; color:#64748b;">×4 — 2 réutilisés ↩</div>
+            </div>
+          </div>
+          <div style="background:#1e293b; border-radius:8px; padding:8px; display:flex; align-items:center; gap:8px;">
+            <div style="width:28px; height:28px; background:#f97316; opacity:.6; border-radius:4px; display:flex; align-items:center; justify-content:center; font-weight:900; color:white; font-size:11px;">3</div>
+            <div style="flex:1;">
+              <div style="font-size:9px; font-weight:700; color:#f1f5f9;">10 × 30 cm</div>
+              <div style="font-size:8px; color:#64748b;">×3 — 1 réutilisé ↩</div>
+            </div>
+          </div>
+          <!-- Total -->
+          <div style="background:#431407; border:1px solid #f97316; border-radius:8px; padding:8px; text-align:center; margin-top:auto;">
+            <div style="font-size:22px; font-weight:900; color:#fb923c;">35</div>
+            <div style="font-size:8px; color:#c2410c; font-weight:700;">carreaux à commander</div>
+            <div style="font-size:8px; color:#9a3412;">2.10 m²</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Plan central + panneau latéral</h3>
+      <p>Le plan occupe 60% de la largeur. À droite : stats compactes, cartes de groupes de coupes, total. Idéal pour impression en mode paysage. La connexion visuelle plan ↔ groupes est immédiate.</p>
+    </div>
+  </div>
+
+  <!-- Approach B -->
+  <div class="card" data-choice="B" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0f172a; padding:16px; font-family:system-ui;">
+      <div style="display:flex; flex-direction:column; gap:8px; height:260px; overflow:hidden;">
+
+        <!-- Step 1 -->
+        <div style="background:#1e293b; border-radius:8px; padding:10px; display:flex; align-items:center; gap:12px;">
+          <div style="width:32px; height:32px; background:#3b82f6; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; color:white; font-size:14px; flex-shrink:0;">1</div>
+          <div>
+            <div style="font-size:10px; font-weight:700; color:#f1f5f9;">Surface à carreler</div>
+            <div style="font-size:9px; color:#64748b;">7.20 m² — 24 cm × 24 cm</div>
+          </div>
+          <div style="margin-left:auto; font-size:18px; font-weight:900; color:#60a5fa;">7.20 m²</div>
+        </div>
+
+        <!-- Step 2 -->
+        <div style="background:#1e293b; border-radius:8px; padding:10px; display:flex; align-items:center; gap:12px;">
+          <div style="width:32px; height:32px; background:#8b5cf6; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; color:white; font-size:14px; flex-shrink:0;">2</div>
+          <div>
+            <div style="font-size:10px; font-weight:700; color:#f1f5f9;">Carreaux entiers posés</div>
+            <div style="font-size:9px; color:#64748b;">Zones sans découpe</div>
+          </div>
+          <div style="margin-left:auto; text-align:right;">
+            <div style="font-size:18px; font-weight:900; color:#a78bfa;">24</div>
+            <div style="font-size:8px; color:#6d28d9;">1.44 m²</div>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div style="background:#1e293b; border-radius:8px; padding:10px; display:flex; align-items:center; gap:12px;">
+          <div style="width:32px; height:32px; background:#f97316; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; color:white; font-size:14px; flex-shrink:0;">3</div>
+          <div style="flex:1;">
+            <div style="font-size:10px; font-weight:700; color:#f1f5f9;">Carreaux à découper</div>
+            <div style="font-size:9px; color:#64748b;">3 formats · 12 pièces</div>
+          </div>
+          <div style="margin-left:auto; text-align:right;">
+            <div style="font-size:18px; font-weight:900; color:#fb923c;">12</div>
+            <div style="font-size:8px; color:#c2410c;">0.38 m²</div>
+          </div>
+        </div>
+
+        <!-- Step 4 — reuse highlight -->
+        <div style="background:#052e16; border:1px solid #22c55e; border-radius:8px; padding:10px; display:flex; align-items:center; gap:12px;">
+          <div style="width:32px; height:32px; background:#22c55e; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; color:white; font-size:14px; flex-shrink:0;">↩</div>
+          <div style="flex:1;">
+            <div style="font-size:10px; font-weight:700; color:#4ade80;">Chutes réutilisées</div>
+            <div style="font-size:9px; color:#166534;">3 coupes faites dans les chutes — économie de 3 carreaux</div>
+          </div>
+          <div style="margin-left:auto; text-align:right;">
+            <div style="font-size:18px; font-weight:900; color:#4ade80;">−3</div>
+            <div style="font-size:8px; color:#166534;">−0.10 m²</div>
+          </div>
+        </div>
+
+        <!-- Step 5 -->
+        <div style="background:#431407; border:1px solid #f97316; border-radius:8px; padding:10px; display:flex; align-items:center; gap:12px;">
+          <div style="width:32px; height:32px; background:#ea580c; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; color:white; font-size:14px; flex-shrink:0;">✓</div>
+          <div style="flex:1;">
+            <div style="font-size:10px; font-weight:700; color:#fb923c;">Total à commander (+10% marge)</div>
+            <div style="font-size:9px; color:#9a3412;">24 + 9 nets × 1.10 = 36</div>
+          </div>
+          <div style="margin-left:auto; text-align:right;">
+            <div style="font-size:24px; font-weight:900; color:#fb923c;">36</div>
+            <div style="font-size:8px; color:#c2410c;">2.16 m²</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Flux narratif étape par étape</h3>
+      <p>La page raconte une histoire logique : surface → entiers → coupes → économies → total. Le raisonnement est transparent et vérifiable ligne par ligne. Très lisible pour un client. Le plan est placé séparément, en dessous.</p>
+    </div>
+  </div>
+
+  <!-- Approach C -->
+  <div class="card" data-choice="C" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0f172a; padding:16px; font-family:system-ui;">
+      <div style="display:flex; flex-direction:column; gap:8px; height:260px;">
+
+        <!-- Header stats bar -->
+        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:6px;">
+          <div style="background:#1e293b; border-radius:8px; padding:8px; text-align:center; border-top:2px solid #3b82f6;">
+            <div style="font-size:16px; font-weight:900; color:#93c5fd;">24</div>
+            <div style="font-size:7px; color:#64748b; text-transform:uppercase;">Entiers</div>
+            <div style="font-size:7px; color:#475569;">1.44 m²</div>
+          </div>
+          <div style="background:#1e293b; border-radius:8px; padding:8px; text-align:center; border-top:2px solid #f97316;">
+            <div style="font-size:16px; font-weight:900; color:#fb923c;">12</div>
+            <div style="font-size:7px; color:#64748b; text-transform:uppercase;">Coupes</div>
+            <div style="font-size:7px; color:#475569;">0.38 m²</div>
+          </div>
+          <div style="background:#1e293b; border-radius:8px; padding:8px; text-align:center; border-top:2px solid #22c55e;">
+            <div style="font-size:16px; font-weight:900; color:#4ade80;">−3</div>
+            <div style="font-size:7px; color:#64748b; text-transform:uppercase;">Réutilisées</div>
+            <div style="font-size:7px; color:#475569;">−0.10 m²</div>
+          </div>
+          <div style="background:#431407; border-radius:8px; padding:8px; text-align:center; border-top:2px solid #ea580c;">
+            <div style="font-size:16px; font-weight:900; color:#fb923c;">36</div>
+            <div style="font-size:7px; color:#c2410c; text-transform:uppercase;">À commander</div>
+            <div style="font-size:7px; color:#9a3412;">2.16 m²</div>
+          </div>
+        </div>
+
+        <!-- 2-col: plan + cut list -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; flex:1;">
+          <!-- Plan -->
+          <div style="background:#1e293b; border-radius:10px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:10px;">
+            <div style="font-size:8px; color:#64748b; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Plan</div>
+            <div style="position:relative; width:130px; height:110px; background:#334155; border-radius:4px; overflow:hidden;">
+              <div style="position:absolute; inset:0; display:grid; grid-template-columns:repeat(6,1fr); grid-template-rows:repeat(5,1fr); gap:1px; padding:3px;">
+                <div style="background:#93c5fd; opacity:.75; border-radius:1px;"></div>
+                <div style="background:#93c5fd; opacity:.75; border-radius:1px;"></div>
+                <div style="background:#93c5fd; opacity:.75; border-radius:1px;"></div>
+                <div style="background:#93c5fd; opacity:.75; border-radius:1px;"></div>
+                <div style="background:#f97316; opacity:.7; border-radius:1px; display:flex; align-items:center; justify-content:center; font-size:6px; font-weight:700; color:white;">1</div>
+                <div style="background:#f97316; opacity:.7; border-radius:1px; display:flex; align-items:center; justify-content:center; font-size:6px; font-weight:700; color:white;">2</div>
+                <div style="background:#93c5fd; opacity:.75; border-radius:1px;"></div>
+                <div style="background:#93c5fd; opacity:.75; border-radius:1px;"></div>
+                <div style="background:#93c5fd; opacity:.75; border-radius:1px;"></div>
+                <div style="background:#93c5fd; opacity:.75; border-radius:1px;"></div>
+                <div style="background:#f97316; opacity:.7; border-radius:1px; display:flex; align-items:center; justify-content:center; font-size:6px; font-weight:700; color:white;">1</div>
+                <div style="background:#22c55e; opacity:.65; border-radius:1px; display:flex; align-items:center; justify-content:center; font-size:6px; font-weight:700; color:white;">↩</div>
+                <div style="background:#93c5fd; opacity:.75; border-radius:1px;"></div>
+                <div style="background:#93c5fd; opacity:.75; border-radius:1px;"></div>
+                <div style="background:#93c5fd; opacity:.75; border-radius:1px;"></div>
+                <div style="background:#f97316; opacity:.7; border-radius:1px; display:flex; align-items:center; justify-content:center; font-size:6px; font-weight:700; color:white;">3</div>
+                <div style="background:#f97316; opacity:.7; border-radius:1px; display:flex; align-items:center; justify-content:center; font-size:6px; font-weight:700; color:white;">1</div>
+                <div style="background:#22c55e; opacity:.65; border-radius:1px; display:flex; align-items:center; justify-content:center; font-size:6px; font-weight:700; color:white;">↩</div>
+                <div style="background:#93c5fd; opacity:.75; border-radius:1px;"></div>
+                <div style="background:#93c5fd; opacity:.75; border-radius:1px;"></div>
+                <div style="background:#93c5fd; opacity:.75; border-radius:1px;"></div>
+                <div style="background:#f97316; opacity:.7; border-radius:1px; display:flex; align-items:center; justify-content:center; font-size:6px; font-weight:700; color:white;">3</div>
+                <div style="background:#f97316; opacity:.7; border-radius:1px; display:flex; align-items:center; justify-content:center; font-size:6px; font-weight:700; color:white;">2</div>
+                <div style="background:#f97316; opacity:.7; border-radius:1px; display:flex; align-items:center; justify-content:center; font-size:6px; font-weight:700; color:white;">2</div>
+                <div style="background:#93c5fd; opacity:.75; border-radius:1px;"></div>
+                <div style="background:#93c5fd; opacity:.75; border-radius:1px;"></div>
+                <div style="background:#93c5fd; opacity:.75; border-radius:1px;"></div>
+                <div style="background:#93c5fd; opacity:.75; border-radius:1px;"></div>
+                <div style="background:#f97316; opacity:.7; border-radius:1px; display:flex; align-items:center; justify-content:center; font-size:6px; font-weight:700; color:white;">3</div>
+                <div style="background:#f97316; opacity:.7; border-radius:1px; display:flex; align-items:center; justify-content:center; font-size:6px; font-weight:700; color:white;">2</div>
+              </div>
+            </div>
+          </div>
+          <!-- Cut list as compact table -->
+          <div style="background:#1e293b; border-radius:10px; padding:10px; overflow:hidden;">
+            <div style="font-size:8px; color:#64748b; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Détail coupes</div>
+            <table style="width:100%; border-collapse:collapse;">
+              <thead>
+                <tr style="font-size:7px; color:#475569; text-transform:uppercase;">
+                  <th style="text-align:left; padding:2px 4px;">#</th>
+                  <th style="text-align:left; padding:2px 4px;">Dim.</th>
+                  <th style="text-align:right; padding:2px 4px;">Qté</th>
+                  <th style="text-align:right; padding:2px 4px;">Nets</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="border-top:1px solid #334155;">
+                  <td style="padding:4px; font-size:8px;"><span style="background:#f97316; color:white; border-radius:3px; padding:1px 4px; font-weight:700;">1</span></td>
+                  <td style="padding:4px; font-size:9px; font-weight:600; color:#f1f5f9; font-family:monospace;">20×30</td>
+                  <td style="padding:4px; font-size:9px; color:#94a3b8; text-align:right;">5</td>
+                  <td style="padding:4px; font-size:9px; font-weight:700; color:#f1f5f9; text-align:right;">5</td>
+                </tr>
+                <tr style="border-top:1px solid #334155;">
+                  <td style="padding:4px; font-size:8px;"><span style="background:#f97316; color:white; border-radius:3px; padding:1px 4px; font-weight:700;">2</span></td>
+                  <td style="padding:4px; font-size:9px; font-weight:600; color:#f1f5f9; font-family:monospace;">15×30</td>
+                  <td style="padding:4px; font-size:9px; color:#94a3b8; text-align:right;">4</td>
+                  <td style="padding:4px; font-size:9px; font-weight:700; color:#4ade80; text-align:right;">2 ↩</td>
+                </tr>
+                <tr style="border-top:1px solid #334155;">
+                  <td style="padding:4px; font-size:8px;"><span style="background:#f97316; color:white; border-radius:3px; padding:1px 4px; font-weight:700;">3</span></td>
+                  <td style="padding:4px; font-size:9px; font-weight:600; color:#f1f5f9; font-family:monospace;">10×30</td>
+                  <td style="padding:4px; font-size:9px; color:#94a3b8; text-align:right;">3</td>
+                  <td style="padding:4px; font-size:9px; font-weight:700; color:#4ade80; text-align:right;">1 ↩</td>
+                </tr>
+                <tr style="border-top:2px solid #475569;">
+                  <td colspan="2" style="padding:4px; font-size:8px; color:#64748b; font-weight:700;">Total nets</td>
+                  <td style="padding:4px; font-size:9px; color:#94a3b8; text-align:right;">12</td>
+                  <td style="padding:4px; font-size:10px; font-weight:900; color:#fb923c; text-align:right;">9</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Dashboard de vérification</h3>
+      <p>4 indicateurs clés en haut. Dessous : plan + tableau simplifié côte à côte. La colonne "Nets" permet de vérifier immédiatement le calcul final. Dense mais structuré, pensé pour les professionnels qui scannent l'information.</p>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top:16px;">Tu peux sélectionner plusieurs options si tu vois des éléments intéressants dans chacune.</p>

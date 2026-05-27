@@ -1,0 +1,119 @@
+<h2>Panneau de contrôles — éditeur mobile</h2>
+<p class="subtitle">Comment accéder aux réglages du calepinage sur smartphone ?</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="A" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0f172a;padding:12px;height:260px;display:flex;flex-direction:column;gap:6px">
+      <!-- Phone mockup A: bottom sheet -->
+      <div style="font-size:9px;color:#475569;text-align:center;margin-bottom:2px">OPTION A — Tiroir bas de page</div>
+      <div style="flex:1;background:#1e293b;border-radius:8px;position:relative;overflow:hidden">
+        <!-- Canvas preview -->
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
+          <svg width="80" height="80" viewBox="0 0 80 80">
+            <rect x="5" y="5" width="70" height="70" fill="none" stroke="#334155" stroke-width="1"/>
+            <rect x="5" y="5" width="22" height="22" fill="#93c5fd" opacity=".4"/>
+            <rect x="29" y="5" width="22" height="22" fill="#93c5fd" opacity=".4"/>
+            <rect x="53" y="5" width="22" height="22" fill="#93c5fd" opacity=".4"/>
+            <rect x="5" y="29" width="22" height="22" fill="#93c5fd" opacity=".4"/>
+            <rect x="29" y="29" width="22" height="22" fill="#93c5fd" opacity=".4"/>
+            <rect x="53" y="29" width="22" height="22" fill="#93c5fd" opacity=".4"/>
+            <rect x="5" y="53" width="22" height="22" fill="#93c5fd" opacity=".4"/>
+            <rect x="29" y="53" width="22" height="22" fill="#93c5fd" opacity=".4"/>
+            <rect x="53" y="53" width="22" height="22" fill="#93c5fd" opacity=".4"/>
+          </svg>
+        </div>
+        <!-- Bottom sheet handle -->
+        <div style="position:absolute;bottom:0;left:0;right:0;background:#1a2332;border-radius:8px 8px 0 0;padding:8px 12px">
+          <div style="width:28px;height:3px;background:#334155;border-radius:2px;margin:0 auto 8px"></div>
+          <div style="font-size:9px;color:#64748b;margin-bottom:6px">RÉGLAGES ↑ glisser pour ouvrir</div>
+          <div style="display:flex;gap:6px">
+            <div style="flex:1;background:#0f172a;border-radius:4px;padding:4px 6px;font-size:8px;color:#94a3b8">Droit</div>
+            <div style="flex:1;background:#E8671A;border-radius:4px;padding:4px 6px;font-size:8px;color:#fff">Bâton rompu</div>
+            <div style="flex:1;background:#0f172a;border-radius:4px;padding:4px 6px;font-size:8px;color:#94a3b8">Hongrie</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Tiroir (bottom sheet)</h3>
+      <p>Un panneau glisse depuis le bas. Le canvas reste visible en haut. Glisse vers le haut pour accéder aux réglages, vers le bas pour voir le canvas en plein écran.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="B" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0f172a;padding:12px;height:260px;display:flex;flex-direction:column;gap:6px">
+      <!-- Phone mockup B: tabs -->
+      <div style="font-size:9px;color:#475569;text-align:center;margin-bottom:2px">OPTION B — Onglets Canvas / Réglages</div>
+      <div style="flex:1;background:#1e293b;border-radius:8px;overflow:hidden;display:flex;flex-direction:column">
+        <!-- Tab bar -->
+        <div style="display:flex;background:#0f172a;border-bottom:1px solid #1e293b">
+          <div style="flex:1;padding:6px;text-align:center;font-size:9px;color:#E8671A;border-bottom:2px solid #E8671A">Aperçu</div>
+          <div style="flex:1;padding:6px;text-align:center;font-size:9px;color:#475569">Réglages</div>
+        </div>
+        <!-- Canvas tab content -->
+        <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:8px">
+          <svg width="80" height="80" viewBox="0 0 80 80">
+            <rect x="5" y="5" width="70" height="70" fill="none" stroke="#334155" stroke-width="1"/>
+            <rect x="5" y="5" width="22" height="22" fill="#93c5fd" opacity=".4"/>
+            <rect x="29" y="5" width="22" height="22" fill="#93c5fd" opacity=".4"/>
+            <rect x="53" y="5" width="22" height="22" fill="#93c5fd" opacity=".4"/>
+            <rect x="5" y="29" width="22" height="22" fill="#93c5fd" opacity=".4"/>
+            <rect x="29" y="29" width="22" height="22" fill="#93c5fd" opacity=".4"/>
+            <rect x="53" y="29" width="22" height="22" fill="#93c5fd" opacity=".4"/>
+            <rect x="5" y="53" width="22" height="22" fill="#93c5fd" opacity=".4"/>
+            <rect x="29" y="53" width="22" height="22" fill="#93c5fd" opacity=".4"/>
+            <rect x="53" y="53" width="22" height="22" fill="#93c5fd" opacity=".4"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Onglets Aperçu / Réglages</h3>
+      <p>Deux onglets en haut du panneau calepinage : "Aperçu" montre le canvas, "Réglages" montre les contrôles. Simple et prévisible.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="C" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0f172a;padding:12px;height:260px;display:flex;flex-direction:column;gap:6px">
+      <!-- Phone mockup C: button toggle -->
+      <div style="font-size:9px;color:#475569;text-align:center;margin-bottom:2px">OPTION C — Bouton flottant</div>
+      <div style="flex:1;background:#1e293b;border-radius:8px;position:relative;overflow:hidden">
+        <!-- Canvas -->
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
+          <svg width="80" height="80" viewBox="0 0 80 80">
+            <rect x="5" y="5" width="70" height="70" fill="none" stroke="#334155" stroke-width="1"/>
+            <rect x="5" y="5" width="22" height="22" fill="#93c5fd" opacity=".4"/>
+            <rect x="29" y="5" width="22" height="22" fill="#93c5fd" opacity=".4"/>
+            <rect x="53" y="5" width="22" height="22" fill="#93c5fd" opacity=".4"/>
+            <rect x="5" y="29" width="22" height="22" fill="#93c5fd" opacity=".4"/>
+            <rect x="29" y="29" width="22" height="22" fill="#93c5fd" opacity=".4"/>
+            <rect x="53" y="29" width="22" height="22" fill="#93c5fd" opacity=".4"/>
+            <rect x="5" y="53" width="22" height="22" fill="#93c5fd" opacity=".4"/>
+            <rect x="29" y="53" width="22" height="22" fill="#93c5fd" opacity=".4"/>
+            <rect x="53" y="53" width="22" height="22" fill="#93c5fd" opacity=".4"/>
+          </svg>
+        </div>
+        <!-- FAB button -->
+        <div style="position:absolute;bottom:12px;right:12px;background:#E8671A;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 4px 12px rgba(232,103,26,.4)">⚙️</div>
+        <!-- Overlay panel (half shown) -->
+        <div style="position:absolute;top:0;right:0;bottom:0;width:55%;background:#1a2332;border-left:1px solid #334155;padding:8px;display:flex;flex-direction:column;gap:6px">
+          <div style="font-size:8px;color:#64748b;font-weight:600">RÉGLAGES</div>
+          <div style="font-size:8px;color:#94a3b8">Type de pose</div>
+          <div style="background:#0f172a;border-radius:4px;padding:4px 6px;font-size:7px;color:#E8671A">Bâton rompu ✓</div>
+          <div style="font-size:8px;color:#94a3b8">Larg. carreau</div>
+          <div style="background:#0f172a;border-radius:4px;padding:4px 6px;font-size:7px;color:#94a3b8">300 mm</div>
+          <div style="font-size:8px;color:#94a3b8">Joint</div>
+          <div style="background:#0f172a;border-radius:4px;padding:4px 6px;font-size:7px;color:#94a3b8">3 mm</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Panneau latéral + bouton ⚙️</h3>
+      <p>Un bouton flottant ouvre/ferme le panneau de réglages par-dessus le canvas. Le canvas reste toujours visible à gauche.</p>
+    </div>
+  </div>
+
+</div>
+
+<p style="margin-top:16px;font-size:12px;color:#475569">Ma recommandation : <strong>Option B</strong> — la plus simple à implémenter et la plus prévisible pour l'utilisateur.</p>

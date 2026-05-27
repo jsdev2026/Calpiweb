@@ -1,0 +1,102 @@
+<h2>Quelles pages doivent fonctionner sur mobile ?</h2>
+<p class="subtitle">L'application a 5 écrans. Sélectionne les priorités.</p>
+
+<div class="options" data-multiselect>
+
+  <div class="option" data-choice="landing" onclick="toggleSelect(this)">
+    <div class="letter">1</div>
+    <div class="content">
+      <h3>Landing page <span style="font-size:11px;opacity:.6;font-weight:400">/ (page d'accueil publique)</span></h3>
+      <div style="display:flex;gap:16px;margin-top:10px">
+        <div style="flex:1;background:#0f172a;border-radius:8px;padding:10px;font-size:10px;color:#94a3b8;line-height:1.8">
+          <div style="color:#e2e8f0;font-weight:600;margin-bottom:6px">📱 État actuel</div>
+          Nav déborde sur petits écrans<br>
+          Hero OK<br>
+          Grille tarifs OK (sm:flex-row)
+        </div>
+        <div style="flex:1;background:#0f172a;border-radius:8px;padding:10px;font-size:10px;color:#94a3b8;line-height:1.8">
+          <div style="color:#10b981;font-weight:600;margin-bottom:6px">✅ Effort</div>
+          Faible — corrections CSS mineures
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="auth" onclick="toggleSelect(this)">
+    <div class="letter">2</div>
+    <div class="content">
+      <h3>Authentification <span style="font-size:11px;opacity:.6;font-weight:400">/auth (connexion / inscription)</span></h3>
+      <div style="display:flex;gap:16px;margin-top:10px">
+        <div style="flex:1;background:#0f172a;border-radius:8px;padding:10px;font-size:10px;color:#94a3b8;line-height:1.8">
+          <div style="color:#e2e8f0;font-weight:600;margin-bottom:6px">📱 État actuel</div>
+          Panneau gauche caché sur mobile ✓<br>
+          Formulaire centré ✓<br>
+          Padding <code>p-9</code> trop grand sur petits écrans
+        </div>
+        <div style="flex:1;background:#0f172a;border-radius:8px;padding:10px;font-size:10px;color:#94a3b8;line-height:1.8">
+          <div style="color:#10b981;font-weight:600;margin-bottom:6px">✅ Effort</div>
+          Faible — déjà bien structuré
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="dashboard" onclick="toggleSelect(this)">
+    <div class="letter">3</div>
+    <div class="content">
+      <h3>Dashboard <span style="font-size:11px;opacity:.6;font-weight:400">/dashboard (liste des projets)</span></h3>
+      <div style="display:flex;gap:16px;margin-top:10px">
+        <div style="flex:1;background:#0f172a;border-radius:8px;padding:10px;font-size:10px;color:#94a3b8;line-height:1.8">
+          <div style="color:#e2e8f0;font-weight:600;margin-bottom:6px">📱 État actuel</div>
+          Topbar déborde (search + icônes)<br>
+          Vue liste : colonnes fixes débordent<br>
+          Vue grille : cartes OK sur mobile
+        </div>
+        <div style="flex:1;background:#0f172a;border-radius:8px;padding:10px;font-size:10px;color:#94a3b8;line-height:1.8">
+          <div style="color:#f59e0b;font-weight:600;margin-bottom:6px">⚡ Effort</div>
+          Moyen — topbar à revoir, vue liste à adapter
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="account" onclick="toggleSelect(this)">
+    <div class="letter">4</div>
+    <div class="content">
+      <h3>Mon compte <span style="font-size:11px;opacity:.6;font-weight:400">/account (plan + déconnexion)</span></h3>
+      <div style="display:flex;gap:16px;margin-top:10px">
+        <div style="flex:1;background:#0f172a;border-radius:8px;padding:10px;font-size:10px;color:#94a3b8;line-height:1.8">
+          <div style="color:#e2e8f0;font-weight:600;margin-bottom:6px">📱 État actuel</div>
+          Page déjà centrée et étroite<br>
+          Fonctionne bien nativement
+        </div>
+        <div style="flex:1;background:#0f172a;border-radius:8px;padding:10px;font-size:10px;color:#94a3b8;line-height:1.8">
+          <div style="color:#10b981;font-weight:600;margin-bottom:6px">✅ Effort</div>
+          Faible — retouches mineures
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="editor" onclick="toggleSelect(this)">
+    <div class="letter">5</div>
+    <div class="content">
+      <h3>Éditeur de projet <span style="font-size:11px;opacity:.6;font-weight:400">/project/[id] (plan + calepinage + quantitatif)</span></h3>
+      <div style="display:flex;gap:16px;margin-top:10px">
+        <div style="flex:1;background:#0f172a;border-radius:8px;padding:10px;font-size:10px;color:#94a3b8;line-height:1.8">
+          <div style="color:#e2e8f0;font-weight:600;margin-bottom:6px">📱 État actuel</div>
+          Panneau calepinage : sidebar fixe 320px → illisible<br>
+          Dessin plan : aucun support tactile<br>
+          Quantitatif : tableaux larges débordent
+        </div>
+        <div style="flex:1;background:#0f172a;border-radius:8px;padding:10px;font-size:10px;color:#94a3b8;line-height:1.8">
+          <div style="color:#ef4444;font-weight:600;margin-bottom:6px">🔴 Effort</div>
+          Élevé — refonte layout + gestes tactiles
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<p style="margin-top:20px;font-size:12px;color:#475569">Tu peux sélectionner plusieurs options. L'éditeur est optionnel — certains professionnels préfèrent l'utiliser sur tablette ou PC.</p>

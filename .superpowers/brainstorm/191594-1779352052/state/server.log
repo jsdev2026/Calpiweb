@@ -1,0 +1,7 @@
+{"type":"server-started","port":64599,"host":"0.0.0.0","url_host":"localhost","url":"http://localhost:64599","screen_dir":"/workspaces/Calpiweb/.superpowers/brainstorm/191594-1779352052/content","state_dir":"/workspaces/Calpiweb/.superpowers/brainstorm/191594-1779352052/state"}
+{"type":"screen-added","file":"/workspaces/Calpiweb/.superpowers/brainstorm/191594-1779352052/content/dimline-style.html"}
+{"type":"screen-added","file":"/workspaces/Calpiweb/.superpowers/brainstorm/191594-1779352052/content/dimline-label-style.html"}
+{"type":"screen-added","file":"/workspaces/Calpiweb/.superpowers/brainstorm/191594-1779352052/content/dimline-label-position.html"}
+{"type":"screen-added","file":"/workspaces/Calpiweb/.superpowers/brainstorm/191594-1779352052/content/dimline-drag-model.html"}
+{"type":"screen-added","file":"/workspaces/Calpiweb/.superpowers/brainstorm/191594-1779352052/content/waiting.html"}
+{"type":"server-stopped","reason":"idle timeout"}

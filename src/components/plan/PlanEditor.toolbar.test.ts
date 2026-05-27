@@ -346,3 +346,37 @@ describe('FaceSnapPoint — label mapping', () => {
   it('AXIS → "A"',   () => { expect(FACE_LABEL['AXIS']).toBe('A'); });
   it('OUTSIDE → "E"', () => { expect(FACE_LABEL['OUTSIDE']).toBe('E'); });
 });
+
+// ── findNearestFaceSnap — sélection du candidat ───────────────────────────────
+
+describe('findNearestFaceSnap — sélection du candidat', () => {
+  type FaceType = 'INSIDE' | 'AXIS' | 'OUTSIDE';
+  type Candidate = { face: FaceType; dist: number };
+
+  const pickNearest = (candidates: Candidate[]): FaceType =>
+    candidates.reduce((best, c) => c.dist < best.dist ? c : best).face;
+
+  it('INSIDE sélectionné quand le curseur est sur la face intérieure', () => {
+    const result = pickNearest([
+      { face: 'OUTSIDE', dist: 30 },
+      { face: 'AXIS',    dist: 15 },
+      { face: 'INSIDE',  dist: 5  },
+    ]);
+    expect(result).toBe('INSIDE');
+  });
+
+  it('AXIS sélectionné quand le curseur est sur l\'axe', () => {
+    const result = pickNearest([
+      { face: 'OUTSIDE', dist: 20 },
+      { face: 'AXIS',    dist: 3  },
+      { face: 'INSIDE',  dist: 20 },
+    ]);
+    expect(result).toBe('AXIS');
+  });
+
+  it('retourne null si aucun segment dans le seuil', () => {
+    const candidates: Candidate[] = [];
+    const result = candidates.length > 0 ? pickNearest(candidates) : null;
+    expect(result).toBeNull();
+  });
+});

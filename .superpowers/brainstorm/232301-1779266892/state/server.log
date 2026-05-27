@@ -1,0 +1,4 @@
+{"type":"server-started","port":52073,"host":"0.0.0.0","url_host":"localhost","url":"http://localhost:52073","screen_dir":"/workspaces/Calpiweb/.superpowers/brainstorm/232301-1779266892/content","state_dir":"/workspaces/Calpiweb/.superpowers/brainstorm/232301-1779266892/state"}
+{"type":"screen-added","file":"/workspaces/Calpiweb/.superpowers/brainstorm/232301-1779266892/content/toolbar-approaches.html"}
+{"type":"screen-added","file":"/workspaces/Calpiweb/.superpowers/brainstorm/232301-1779266892/content/waiting.html"}
+{"type":"server-stopped","reason":"idle timeout"}

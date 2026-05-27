@@ -1,0 +1,309 @@
+<h2>Mise en page du document PDF</h2>
+<p class="subtitle">Chaque option est une maquette d'une page A4. Cliquez pour sélectionner.</p>
+
+<div class="cards">
+
+  <!-- Option A : Portrait classique en bandes horizontales -->
+  <div class="card" data-choice="A" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f8fafc;border-radius:8px;padding:10px;height:320px;display:flex;align-items:center;justify-content:center">
+      <!-- A4 page mockup -->
+      <div style="width:160px;height:226px;background:#fff;border:1px solid #d1d5db;border-radius:3px;box-shadow:0 4px 16px rgba(0,0,0,0.12);display:flex;flex-direction:column;overflow:hidden;font-family:system-ui;position:relative">
+
+        <!-- Header orange bande -->
+        <div style="background:#f97316;padding:6px 8px;display:flex;align-items:center;gap:5px;flex-shrink:0">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+            <rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.2" fill="white"/>
+            <rect x="9" y="1.5" width="5.5" height="5.5" rx="1.2" fill="white" fill-opacity=".7"/>
+            <rect x="1.5" y="9" width="5.5" height="5.5" rx="1.2" fill="white" fill-opacity=".7"/>
+            <rect x="9" y="9" width="5.5" height="5.5" rx="1.2" fill="white"/>
+          </svg>
+          <span style="color:#fff;font-weight:700;font-size:7px;letter-spacing:.5px">CaléPlan</span>
+          <span style="color:rgba(255,255,255,0.6);font-size:6px;margin-left:auto">25/05/2026</span>
+        </div>
+
+        <!-- Infos projet + client -->
+        <div style="padding:5px 7px;border-bottom:1px solid #f1f5f9;flex-shrink:0;display:flex;justify-content:space-between">
+          <div>
+            <div style="font-size:7px;font-weight:700;color:#111">Salle de bain — Dupont</div>
+            <div style="font-size:5.5px;color:#9ca3af">60×60 · Joint 2mm · Pose droite</div>
+          </div>
+          <div style="font-size:5.5px;color:#6b7280;text-align:right">
+            <div>Pierre Dupont</div>
+            <div>12 rue de la Paix, Paris</div>
+          </div>
+        </div>
+
+        <!-- Plan SVG (grande zone) -->
+        <div style="flex:1;background:#f8fafc;margin:5px;border-radius:3px;border:1px solid #e5e7eb;display:flex;align-items:center;justify-content:center;min-height:0">
+          <svg width="90" height="70" viewBox="0 0 90 70">
+            <rect x="5" y="5" width="80" height="60" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1"/>
+            <!-- tiles grid -->
+            <g stroke="#cbd5e1" stroke-width="0.3" fill="#dbeafe" fill-opacity=".6">
+              <rect x="8" y="8" width="10" height="10"/><rect x="19" y="8" width="10" height="10"/><rect x="30" y="8" width="10" height="10"/><rect x="41" y="8" width="10" height="10"/><rect x="52" y="8" width="10" height="10"/><rect x="63" y="8" width="10" height="10"/>
+              <rect x="8" y="19" width="10" height="10"/><rect x="19" y="19" width="10" height="10"/><rect x="30" y="19" width="10" height="10"/><rect x="41" y="19" width="10" height="10"/><rect x="52" y="19" width="10" height="10"/><rect x="63" y="19" width="10" height="10"/>
+              <rect x="8" y="30" width="10" height="10"/><rect x="19" y="30" width="10" height="10"/><rect x="30" y="30" width="10" height="10"/><rect x="41" y="30" width="10" height="10"/><rect x="52" y="30" width="10" height="10"/><rect x="63" y="30" width="10" height="10"/>
+              <rect x="8" y="41" width="10" height="10"/><rect x="19" y="41" width="10" height="10"/><rect x="30" y="41" width="10" height="10"/><rect x="41" y="41" width="10" height="10"/>
+            </g>
+            <!-- coupes orange -->
+            <g stroke="#f97316" stroke-width="0.3" fill="#fed7aa" fill-opacity=".8">
+              <rect x="74" y="8" width="9" height="10"/><rect x="74" y="19" width="9" height="10"/><rect x="74" y="30" width="9" height="10"/>
+              <rect x="52" y="42" width="10" height="9"/><rect x="63" y="42" width="10" height="9"/><rect x="74" y="42" width="9" height="9"/>
+            </g>
+            <!-- outline room -->
+            <rect x="5" y="5" width="80" height="60" fill="none" stroke="#f97316" stroke-width="1.5"/>
+          </svg>
+        </div>
+
+        <!-- Stats strip -->
+        <div style="padding:3px 7px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;border-top:1px solid #f1f5f9;flex-shrink:0">
+          <div style="text-align:center">
+            <div style="font-size:8px;font-weight:900;color:#111">94</div>
+            <div style="font-size:4.5px;color:#9ca3af;text-transform:uppercase">Total</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:8px;font-weight:900;color:#3b82f6">78</div>
+            <div style="font-size:4.5px;color:#9ca3af;text-transform:uppercase">Entiers</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:8px;font-weight:900;color:#f97316">16</div>
+            <div style="font-size:4.5px;color:#9ca3af;text-transform:uppercase">Coupes</div>
+          </div>
+        </div>
+
+        <!-- Tableau coupes -->
+        <div style="padding:3px 7px 4px;flex-shrink:0">
+          <div style="font-size:5px;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:2px">Détail des coupes</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:1px">
+            <div style="background:#fef3c7;border-radius:2px;padding:2px;font-size:4.5px;color:#92400e;text-align:center;font-weight:600">60×32<br/><span style="font-size:3.5px">×8</span></div>
+            <div style="background:#dbeafe;border-radius:2px;padding:2px;font-size:4.5px;color:#1e40af;text-align:center;font-weight:600">60×18<br/><span style="font-size:3.5px">×4</span></div>
+            <div style="background:#dcfce7;border-radius:2px;padding:2px;font-size:4.5px;color:#166534;text-align:center;font-weight:600">42×60<br/><span style="font-size:3.5px">×4</span></div>
+            <div style="background:#fce7f3;border-radius:2px;padding:2px;font-size:4.5px;color:#9d174d;text-align:center;font-weight:600">12×60<br/><span style="font-size:3.5px">×4</span></div>
+          </div>
+        </div>
+
+        <!-- Footer filigrane -->
+        <div style="background:#fafafa;border-top:1px solid #f1f5f9;padding:3px 7px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <span style="font-size:4.5px;color:#d1d5db;letter-spacing:.5px">Document généré par CaléPlan · Outil professionnel de calepinage</span>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Portrait bandes</h3>
+      <p>Header orange CaléPlan · Infos projet + client en bandeau · Grand plan centré · Stats condensées · Tableau coupes compact · Footer filigrane</p>
+    </div>
+  </div>
+
+  <!-- Option B : Deux colonnes (plan gauche / infos droite) -->
+  <div class="card" data-choice="B" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f8fafc;border-radius:8px;padding:10px;height:320px;display:flex;align-items:center;justify-content:center">
+      <div style="width:200px;height:226px;background:#fff;border:1px solid #d1d5db;border-radius:3px;box-shadow:0 4px 16px rgba(0,0,0,0.12);display:flex;flex-direction:column;overflow:hidden;font-family:system-ui">
+
+        <!-- Header ligne -->
+        <div style="padding:6px 8px;border-bottom:2px solid #f97316;display:flex;align-items:center;gap:6px;flex-shrink:0">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+            <rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.2" fill="#f97316"/>
+            <rect x="9" y="1.5" width="5.5" height="5.5" rx="1.2" fill="#f97316" fill-opacity=".7"/>
+            <rect x="1.5" y="9" width="5.5" height="5.5" rx="1.2" fill="#f97316" fill-opacity=".7"/>
+            <rect x="9" y="9" width="5.5" height="5.5" rx="1.2" fill="#f97316"/>
+          </svg>
+          <div>
+            <div style="font-size:8px;font-weight:800;color:#111">Salle de bain — Dupont</div>
+            <div style="font-size:5.5px;color:#9ca3af">Pierre Dupont · 12 rue de la Paix, Paris</div>
+          </div>
+          <div style="margin-left:auto;text-align:right">
+            <div style="font-size:6px;font-weight:700;color:#f97316">CaléPlan</div>
+            <div style="font-size:5px;color:#9ca3af">25/05/2026</div>
+          </div>
+        </div>
+
+        <!-- 2 colonnes -->
+        <div style="display:flex;flex:1;min-height:0">
+          <!-- Colonne gauche : plan -->
+          <div style="flex:1.4;padding:5px;border-right:1px solid #f1f5f9;display:flex;flex-direction:column;gap:3px">
+            <div style="font-size:5px;font-weight:700;color:#64748b;text-transform:uppercase">Plan de calepinage</div>
+            <div style="flex:1;background:#f8fafc;border-radius:3px;border:1px solid #e5e7eb;display:flex;align-items:center;justify-content:center">
+              <svg width="100" height="90" viewBox="0 0 90 80">
+                <rect x="5" y="5" width="80" height="70" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1"/>
+                <g stroke="#cbd5e1" stroke-width="0.3" fill="#dbeafe" fill-opacity=".6">
+                  <rect x="8" y="8" width="10" height="10"/><rect x="19" y="8" width="10" height="10"/><rect x="30" y="8" width="10" height="10"/><rect x="41" y="8" width="10" height="10"/><rect x="52" y="8" width="10" height="10"/><rect x="63" y="8" width="10" height="10"/>
+                  <rect x="8" y="19" width="10" height="10"/><rect x="19" y="19" width="10" height="10"/><rect x="30" y="19" width="10" height="10"/><rect x="41" y="19" width="10" height="10"/><rect x="52" y="19" width="10" height="10"/><rect x="63" y="19" width="10" height="10"/>
+                  <rect x="8" y="30" width="10" height="10"/><rect x="19" y="30" width="10" height="10"/><rect x="30" y="30" width="10" height="10"/><rect x="41" y="30" width="10" height="10"/><rect x="52" y="30" width="10" height="10"/><rect x="63" y="30" width="10" height="10"/>
+                  <rect x="8" y="41" width="10" height="10"/><rect x="19" y="41" width="10" height="10"/><rect x="30" y="41" width="10" height="10"/><rect x="41" y="41" width="10" height="10"/><rect x="52" y="41" width="10" height="10"/><rect x="63" y="41" width="10" height="10"/>
+                  <rect x="8" y="52" width="10" height="10"/><rect x="19" y="52" width="10" height="10"/><rect x="30" y="52" width="10" height="10"/>
+                </g>
+                <g stroke="#f97316" stroke-width="0.3" fill="#fed7aa" fill-opacity=".8">
+                  <rect x="74" y="8" width="9" height="10"/><rect x="74" y="19" width="9" height="10"/><rect x="74" y="30" width="9" height="10"/><rect x="74" y="41" width="9" height="10"/>
+                  <rect x="41" y="52" width="10" height="9"/><rect x="52" y="52" width="10" height="9"/><rect x="63" y="52" width="10" height="9"/><rect x="74" y="52" width="9" height="9"/>
+                </g>
+                <rect x="5" y="5" width="80" height="70" fill="none" stroke="#f97316" stroke-width="1.5"/>
+              </svg>
+            </div>
+            <!-- Légende -->
+            <div style="display:flex;gap:6px">
+              <div style="display:flex;align-items:center;gap:2px"><div style="width:7px;height:7px;background:#dbeafe;border:0.5px solid #93c5fd;border-radius:1px"></div><span style="font-size:4px;color:#6b7280">Entier</span></div>
+              <div style="display:flex;align-items:center;gap:2px"><div style="width:7px;height:7px;background:#fed7aa;border:0.5px solid #f97316;border-radius:1px"></div><span style="font-size:4px;color:#6b7280">Coupe</span></div>
+            </div>
+          </div>
+
+          <!-- Colonne droite : stats + params + coupes -->
+          <div style="flex:1;padding:5px;display:flex;flex-direction:column;gap:4px;overflow:hidden">
+            <!-- Paramètres techniques -->
+            <div style="background:#f8fafc;border-radius:3px;padding:4px 5px;border:1px solid #e5e7eb">
+              <div style="font-size:5px;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:3px">Paramètres</div>
+              <div style="font-size:5.5px;color:#374151;display:flex;flex-direction:column;gap:1.5px">
+                <div style="display:flex;justify-content:space-between"><span style="color:#9ca3af">Format</span><span style="font-weight:600">60 × 60 cm</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="color:#9ca3af">Joint</span><span style="font-weight:600">2 mm</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="color:#9ca3af">Pose</span><span style="font-weight:600">Droite</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="color:#9ca3af">Marge</span><span style="font-weight:600">7 %</span></div>
+              </div>
+            </div>
+            <!-- Stats -->
+            <div style="background:#f8fafc;border-radius:3px;padding:4px 5px;border:1px solid #e5e7eb">
+              <div style="font-size:5px;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:3px">Quantités</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px">
+                <div style="background:#fff;border-radius:2px;padding:3px;text-align:center;border:1px solid #e5e7eb">
+                  <div style="font-size:10px;font-weight:900;color:#111">8.5<span style="font-size:6px">m²</span></div>
+                  <div style="font-size:4px;color:#9ca3af;text-transform:uppercase">Surface</div>
+                </div>
+                <div style="background:#fff;border-radius:2px;padding:3px;text-align:center;border:1px solid #e5e7eb">
+                  <div style="font-size:10px;font-weight:900;color:#f97316">101</div>
+                  <div style="font-size:4px;color:#9ca3af;text-transform:uppercase">À commander</div>
+                </div>
+                <div style="background:#fff;border-radius:2px;padding:3px;text-align:center;border:1px solid #e5e7eb">
+                  <div style="font-size:9px;font-weight:900;color:#3b82f6">78</div>
+                  <div style="font-size:4px;color:#9ca3af;text-transform:uppercase">Entiers</div>
+                </div>
+                <div style="background:#fff;border-radius:2px;padding:3px;text-align:center;border:1px solid #e5e7eb">
+                  <div style="font-size:9px;font-weight:900;color:#f59e0b">16</div>
+                  <div style="font-size:4px;color:#9ca3af;text-transform:uppercase">Coupes</div>
+                </div>
+              </div>
+            </div>
+            <!-- Coupes détail -->
+            <div style="background:#f8fafc;border-radius:3px;padding:4px 5px;border:1px solid #e5e7eb;flex:1">
+              <div style="font-size:5px;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:3px">Détail coupes</div>
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <div style="display:flex;align-items:center;gap:2px"><div style="width:5px;height:5px;border-radius:1px;background:#fbbf24"></div><span style="font-size:5px;flex:1;color:#374151">60 × 32 cm</span><span style="font-size:5px;font-weight:700;color:#111">×8</span></div>
+                <div style="display:flex;align-items:center;gap:2px"><div style="width:5px;height:5px;border-radius:1px;background:#60a5fa"></div><span style="font-size:5px;flex:1;color:#374151">60 × 18 cm</span><span style="font-size:5px;font-weight:700;color:#111">×4</span></div>
+                <div style="display:flex;align-items:center;gap:2px"><div style="width:5px;height:5px;border-radius:1px;background:#4ade80"></div><span style="font-size:5px;flex:1;color:#374151">42 × 60 cm</span><span style="font-size:5px;font-weight:700;color:#111">×4</span></div>
+                <div style="display:flex;align-items:center;gap:2px"><div style="width:5px;height:5px;border-radius:1px;background:#f472b6"></div><span style="font-size:5px;flex:1;color:#374151">12 × 60 cm</span><span style="font-size:5px;font-weight:700;color:#111">×4</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="background:#fafafa;border-top:1px solid #f1f5f9;padding:3px 8px;display:flex;justify-content:center;flex-shrink:0">
+          <span style="font-size:4.5px;color:#d1d5db">Document généré par CaléPlan · Outil professionnel de calepinage</span>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — 2 colonnes (plan + données)</h3>
+      <p>Plan large à gauche · Paramètres + stats + coupes à droite · Toutes les infos visibles sans scroller · Format paysage-friendly</p>
+    </div>
+  </div>
+
+  <!-- Option C : Premium minimaliste avec accents forts -->
+  <div class="card" data-choice="C" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f8fafc;border-radius:8px;padding:10px;height:320px;display:flex;align-items:center;justify-content:center">
+      <div style="width:160px;height:226px;background:#fff;border:1px solid #d1d5db;border-radius:3px;box-shadow:0 4px 16px rgba(0,0,0,0.12);display:flex;flex-direction:column;overflow:hidden;font-family:system-ui">
+
+        <!-- Header premium -->
+        <div style="padding:8px 8px 6px;border-bottom:1px solid #f1f5f9;display:flex;align-items:flex-start;justify-content:space-between;flex-shrink:0">
+          <div>
+            <div style="display:flex;align-items:center;gap:4px;margin-bottom:2px">
+              <svg width="10" height="10" viewBox="0 0 16 16" fill="none">
+                <rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.2" fill="#f97316"/>
+                <rect x="9" y="1.5" width="5.5" height="5.5" rx="1.2" fill="#f97316" fill-opacity=".7"/>
+                <rect x="1.5" y="9" width="5.5" height="5.5" rx="1.2" fill="#f97316" fill-opacity=".7"/>
+                <rect x="9" y="9" width="5.5" height="5.5" rx="1.2" fill="#f97316"/>
+              </svg>
+              <span style="font-size:7px;font-weight:800;color:#111;letter-spacing:-.2px">CaléPlan</span>
+            </div>
+            <div style="font-size:9px;font-weight:800;color:#111;line-height:1.2">Salle de bain</div>
+            <div style="font-size:5.5px;color:#9ca3af;margin-top:1px">Dupont · Réf. 2026-05-25</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:5.5px;color:#374151;font-weight:600">Pierre Dupont</div>
+            <div style="font-size:5px;color:#9ca3af">12 rue de la Paix</div>
+            <div style="font-size:5px;color:#9ca3af">75001 Paris</div>
+          </div>
+        </div>
+
+        <!-- Paramètres techniques — ligne horizontale -->
+        <div style="padding:4px 8px;background:#fafafa;border-bottom:1px solid #f1f5f9;display:flex;gap:0;flex-shrink:0">
+          <div style="flex:1;text-align:center;padding:0 4px;border-right:1px solid #e5e7eb">
+            <div style="font-size:4px;color:#9ca3af;text-transform:uppercase;letter-spacing:.4px">Format</div>
+            <div style="font-size:6px;font-weight:700;color:#111">60×60 cm</div>
+          </div>
+          <div style="flex:1;text-align:center;padding:0 4px;border-right:1px solid #e5e7eb">
+            <div style="font-size:4px;color:#9ca3af;text-transform:uppercase;letter-spacing:.4px">Joint</div>
+            <div style="font-size:6px;font-weight:700;color:#111">2 mm</div>
+          </div>
+          <div style="flex:1;text-align:center;padding:0 4px;border-right:1px solid #e5e7eb">
+            <div style="font-size:4px;color:#9ca3af;text-transform:uppercase;letter-spacing:.4px">Pose</div>
+            <div style="font-size:6px;font-weight:700;color:#111">Droite</div>
+          </div>
+          <div style="flex:1;text-align:center;padding:0 4px">
+            <div style="font-size:4px;color:#9ca3af;text-transform:uppercase;letter-spacing:.4px">Surface</div>
+            <div style="font-size:6px;font-weight:700;color:#111">8.5 m²</div>
+          </div>
+        </div>
+
+        <!-- Plan -->
+        <div style="flex:1.2;background:#f8fafc;margin:5px 5px 3px;border-radius:3px;border:1px solid #e5e7eb;display:flex;align-items:center;justify-content:center;min-height:0">
+          <svg width="100" height="72" viewBox="0 0 90 70">
+            <rect x="5" y="5" width="80" height="60" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1"/>
+            <g stroke="#cbd5e1" stroke-width="0.3" fill="#dbeafe" fill-opacity=".6">
+              <rect x="8" y="8" width="10" height="10"/><rect x="19" y="8" width="10" height="10"/><rect x="30" y="8" width="10" height="10"/><rect x="41" y="8" width="10" height="10"/><rect x="52" y="8" width="10" height="10"/><rect x="63" y="8" width="10" height="10"/>
+              <rect x="8" y="19" width="10" height="10"/><rect x="19" y="19" width="10" height="10"/><rect x="30" y="19" width="10" height="10"/><rect x="41" y="19" width="10" height="10"/><rect x="52" y="19" width="10" height="10"/><rect x="63" y="19" width="10" height="10"/>
+              <rect x="8" y="30" width="10" height="10"/><rect x="19" y="30" width="10" height="10"/><rect x="30" y="30" width="10" height="10"/><rect x="41" y="30" width="10" height="10"/><rect x="52" y="30" width="10" height="10"/><rect x="63" y="30" width="10" height="10"/>
+              <rect x="8" y="41" width="10" height="10"/><rect x="19" y="41" width="10" height="10"/><rect x="30" y="41" width="10" height="10"/><rect x="41" y="41" width="10" height="10"/>
+            </g>
+            <g stroke="#f97316" stroke-width="0.3" fill="#fed7aa" fill-opacity=".8">
+              <rect x="74" y="8" width="9" height="10"/><rect x="74" y="19" width="9" height="10"/><rect x="74" y="30" width="9" height="10"/>
+              <rect x="52" y="42" width="10" height="9"/><rect x="63" y="42" width="10" height="9"/><rect x="74" y="42" width="9" height="9"/>
+            </g>
+            <rect x="5" y="5" width="80" height="60" fill="none" stroke="#f97316" stroke-width="1.5"/>
+          </svg>
+        </div>
+
+        <!-- Stats + coupes côte à côte -->
+        <div style="padding:0 5px 3px;display:grid;grid-template-columns:1fr 1fr;gap:3px;flex-shrink:0">
+          <!-- Stats -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5px">
+            <div style="background:#fff7ed;border-left:2px solid #f97316;border-radius:2px;padding:2px 3px">
+              <div style="font-size:9px;font-weight:900;color:#f97316">101</div>
+              <div style="font-size:3.5px;color:#9ca3af;text-transform:uppercase">Commander</div>
+            </div>
+            <div style="background:#eff6ff;border-left:2px solid #3b82f6;border-radius:2px;padding:2px 3px">
+              <div style="font-size:9px;font-weight:900;color:#3b82f6">78</div>
+              <div style="font-size:3.5px;color:#9ca3af;text-transform:uppercase">Entiers</div>
+            </div>
+          </div>
+          <!-- Coupes -->
+          <div style="display:flex;flex-direction:column;gap:1.5px">
+            <div style="font-size:4px;font-weight:700;color:#64748b;text-transform:uppercase">Coupes</div>
+            <div style="display:flex;flex-direction:column;gap:1px">
+              <div style="display:flex;justify-content:space-between;font-size:4.5px"><span style="color:#6b7280">60×32</span><span style="font-weight:700;color:#111">×8</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:4.5px"><span style="color:#6b7280">60×18</span><span style="font-weight:700;color:#111">×4</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:4.5px"><span style="color:#6b7280">42×60</span><span style="font-weight:700;color:#111">×4</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer premium bande colorée -->
+        <div style="background:linear-gradient(90deg,#f97316,#fb923c);padding:3px 8px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+          <span style="font-size:4.5px;color:rgba(255,255,255,0.8)">CaléPlan · Quantitatif professionnel</span>
+          <span style="font-size:4.5px;color:rgba(255,255,255,0.8)">25/05/2026</span>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Premium épuré</h3>
+      <p>Header sobre logo + nom + client · Bandeau paramètres techniques en ligne · Grand plan · Stats + coupes compactes · Footer gradient orange</p>
+    </div>
+  </div>
+
+</div>

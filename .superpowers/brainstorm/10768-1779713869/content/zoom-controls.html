@@ -1,0 +1,87 @@
+<h2>Contrôles zoom / déplacement du plan</h2>
+<p class="subtitle">La molette (ou pinch mobile) zoome, le drag déplace. La question porte sur les boutons de contrôle visibles.</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="A" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f1f5f9;border-radius:8px;padding:0;font-family:system-ui;height:180px;position:relative;overflow:hidden;border:1.5px solid #e2e8f0">
+      <!-- Plan background -->
+      <div style="width:100%;height:100%;background:linear-gradient(135deg,#f8fafc 0%,#e2e8f0 100%);display:flex;align-items:center;justify-content:center">
+        <svg width="120" height="100" viewBox="0 0 120 100">
+          <rect x="10" y="10" width="100" height="80" fill="#cbd5e1" stroke="#94a3b8" stroke-width="1"/>
+          <rect x="15" y="15" width="30" height="30" fill="#93c5fd" opacity="0.7"/>
+          <rect x="50" y="15" width="30" height="30" fill="#93c5fd" opacity="0.7"/>
+          <rect x="15" y="50" width="30" height="35" fill="#fdba74" opacity="0.7"/>
+          <rect x="50" y="50" width="55" height="35" fill="#93c5fd" opacity="0.7"/>
+        </svg>
+      </div>
+      <!-- Minimal reset button only -->
+      <div style="position:absolute;bottom:8px;right:8px;background:rgba(255,255,255,0.95);border:1px solid #e2e8f0;border-radius:6px;padding:4px 8px;font-size:10px;color:#64748b;display:flex;align-items:center;gap:4px;box-shadow:0 1px 3px rgba(0,0,0,0.1)">
+        <span>⊙</span> Ajuster
+      </div>
+      <!-- Zoom hint -->
+      <div style="position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.45);border-radius:4px;padding:3px 6px;font-size:9px;color:#fff">
+        Molette · drag
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Minimal</h3>
+      <p>Seul un bouton "⊙ Ajuster" (fit-to-view) est visible. Zoom = molette / pinch, déplacement = drag. Une info-bulle apparaît la première fois pour guider l'utilisateur.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="B" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f1f5f9;border-radius:8px;padding:0;font-family:system-ui;height:180px;position:relative;overflow:hidden;border:1.5px solid #e2e8f0">
+      <div style="width:100%;height:100%;background:linear-gradient(135deg,#f8fafc 0%,#e2e8f0 100%);display:flex;align-items:center;justify-content:center">
+        <svg width="120" height="100" viewBox="0 0 120 100">
+          <rect x="10" y="10" width="100" height="80" fill="#cbd5e1" stroke="#94a3b8" stroke-width="1"/>
+          <rect x="15" y="15" width="30" height="30" fill="#93c5fd" opacity="0.7"/>
+          <rect x="50" y="15" width="30" height="30" fill="#93c5fd" opacity="0.7"/>
+          <rect x="15" y="50" width="30" height="35" fill="#fdba74" opacity="0.7"/>
+          <rect x="50" y="50" width="55" height="35" fill="#93c5fd" opacity="0.7"/>
+        </svg>
+      </div>
+      <!-- Floating toolbar bottom-right -->
+      <div style="position:absolute;bottom:8px;right:8px;background:rgba(255,255,255,0.97);border:1px solid #e2e8f0;border-radius:8px;display:flex;flex-direction:column;box-shadow:0 2px 6px rgba(0,0,0,0.12);overflow:hidden">
+        <button style="padding:6px 10px;border:none;background:none;font-size:13px;color:#374151;cursor:pointer;border-bottom:1px solid #f1f5f9">＋</button>
+        <div style="padding:3px 8px;font-size:9px;color:#94a3b8;text-align:center;border-bottom:1px solid #f1f5f9;font-weight:700">75%</div>
+        <button style="padding:6px 10px;border:none;background:none;font-size:13px;color:#374151;cursor:pointer;border-bottom:1px solid #f1f5f9">－</button>
+        <button style="padding:5px 8px;border:none;background:none;font-size:10px;color:#94a3b8;cursor:pointer">⊙</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Mini-toolbar flottante</h3>
+      <p>Une mini-toolbar verticale + / niveau% / − / ⊙ en bas à droite du plan. Tous les contrôles accessibles au clic, niveau de zoom affiché en permanence.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="C" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f1f5f9;border-radius:8px;padding:0;font-family:system-ui;height:180px;position:relative;overflow:hidden;border:1.5px solid #e2e8f0">
+      <div style="width:100%;height:100%;background:linear-gradient(135deg,#f8fafc 0%,#e2e8f0 100%);display:flex;align-items:center;justify-content:center">
+        <svg width="120" height="100" viewBox="0 0 120 100">
+          <rect x="10" y="10" width="100" height="80" fill="#cbd5e1" stroke="#94a3b8" stroke-width="1"/>
+          <rect x="15" y="15" width="30" height="30" fill="#93c5fd" opacity="0.7"/>
+          <rect x="50" y="15" width="30" height="30" fill="#93c5fd" opacity="0.7"/>
+          <rect x="15" y="50" width="30" height="35" fill="#fdba74" opacity="0.7"/>
+          <rect x="50" y="50" width="55" height="35" fill="#93c5fd" opacity="0.7"/>
+        </svg>
+      </div>
+      <!-- Bottom bar -->
+      <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(255,255,255,0.97);border-top:1px solid #e2e8f0;padding:5px 10px;display:flex;align-items:center;gap:8px">
+        <button style="border:1px solid #e2e8f0;border-radius:4px;background:#f8fafc;width:22px;height:22px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#374151">−</button>
+        <div style="flex:1;height:4px;background:#e2e8f0;border-radius:2px;position:relative">
+          <div style="position:absolute;left:30%;top:0;width:4px;height:4px;background:#f97316;border-radius:50%;transform:translateY(0)"></div>
+          <div style="position:absolute;left:0;right:70%;top:0;height:4px;background:#f97316;border-radius:2px"></div>
+        </div>
+        <button style="border:1px solid #e2e8f0;border-radius:4px;background:#f8fafc;width:22px;height:22px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#374151">＋</button>
+        <span style="font-size:9px;color:#94a3b8;font-weight:700;min-width:26px;text-align:right">75%</span>
+        <button style="border:1px solid #e2e8f0;border-radius:4px;background:#f8fafc;padding:0 6px;height:22px;font-size:9px;cursor:pointer;color:#64748b">⊙</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Barre de zoom en bas</h3>
+      <p>Une barre horizontale avec curseur + boutons +/− et un pourcentage, intégrée sous le plan. Inspirée des outils de présentation (Figma, Google Slides).</p>
+    </div>
+  </div>
+
+</div>

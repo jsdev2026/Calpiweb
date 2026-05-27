@@ -1,0 +1,8 @@
+{"type":"server-started","port":50188,"host":"0.0.0.0","url_host":"localhost","url":"http://localhost:50188","screen_dir":"/workspaces/Calpiweb/.superpowers/brainstorm/447774-1779462037/content","state_dir":"/workspaces/Calpiweb/.superpowers/brainstorm/447774-1779462037/state"}
+{"type":"screen-added","file":"/workspaces/Calpiweb/.superpowers/brainstorm/447774-1779462037/content/grouping-approach.html"}
+{"type":"screen-added","file":"/workspaces/Calpiweb/.superpowers/brainstorm/447774-1779462037/content/waiting-1.html"}
+{"type":"screen-added","file":"/workspaces/Calpiweb/.superpowers/brainstorm/447774-1779462037/content/card-height.html"}
+{"type":"screen-added","file":"/workspaces/Calpiweb/.superpowers/brainstorm/447774-1779462037/content/card-dense.html"}
+{"type":"screen-added","file":"/workspaces/Calpiweb/.superpowers/brainstorm/447774-1779462037/content/reuse-options.html"}
+{"type":"screen-added","file":"/workspaces/Calpiweb/.superpowers/brainstorm/447774-1779462037/content/waiting-2.html"}
+{"type":"server-stopped","reason":"idle timeout"}

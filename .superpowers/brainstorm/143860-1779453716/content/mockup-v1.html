@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quantitatif — Maquette</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #09090b;
+    color: #f1f5f9;
+    font-family: system-ui, -apple-system, sans-serif;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ── Header ── */
+  .page-header {
+    flex-shrink: 0;
+    background: #18181b;
+    border-bottom: 1px solid #27272a;
+    padding: 14px 24px;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+  .page-header h1 {
+    font-size: 15px;
+    font-weight: 900;
+    color: #f1f5f9;
+    letter-spacing: -.3px;
+  }
+  .header-meta {
+    display: flex;
+    gap: 16px;
+    margin-left: 16px;
+  }
+  .meta-chip {
+    font-size: 11px;
+    color: #71717a;
+  }
+  .meta-chip b { color: #a1a1aa; }
+
+  /* ── Body: plan + panel ── */
+  .body {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    overflow: hidden;
+  }
+
+  /* ── Plan ── */
+  .plan-zone {
+    display: flex;
+    flex-direction: column;
+    background: #09090b;
+    border-right: 1px solid #27272a;
+    padding: 20px;
+    gap: 12px;
+    overflow: hidden;
+  }
+  .zone-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .15em;
+    color: #52525b;
+  }
+  .plan-wrap {
+    flex: 1;
+    background: #18181b;
+    border-radius: 14px;
+    border: 1px solid #27272a;
+    overflow: hidden;
+    position: relative;
+    min-height: 0;
+  }
+  .plan-wrap svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .plan-legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #71717a;
+  }
+  .legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  /* ── Side panel ── */
+  .side-panel {
+    display: flex;
+    flex-direction: column;
+    background: #09090b;
+    overflow-y: auto;
+    padding: 20px 16px;
+    gap: 20px;
+  }
+
+  /* Stats row */
+  .stats-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .stat-box {
+    background: #18181b;
+    border: 1px solid #27272a;
+    border-radius: 10px;
+    padding: 12px;
+  }
+  .stat-value {
+    font-size: 28px;
+    font-weight: 900;
+    line-height: 1;
+    color: #f1f5f9;
+  }
+  .stat-label {
+    font-size: 11px;
+    color: #52525b;
+    margin-top: 2px;
+  }
+  .stat-m2 {
+    font-size: 11px;
+    color: #3f3f46;
+    margin-top: 3px;
+  }
+
+  /* Cut group cards */
+  .section-title {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .15em;
+    color: #52525b;
+    margin-bottom: -8px;
+  }
+  .cut-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .cut-card {
+    background: #18181b;
+    border: 1px solid #27272a;
+    border-radius: 10px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .cut-badge {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 900;
+    flex-shrink: 0;
+  }
+  /* thumbnail SVG container */
+  .cut-thumb {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    background: #27272a;
+    border-radius: 6px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .cut-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .cut-dim {
+    font-size: 13px;
+    font-weight: 700;
+    color: #f1f5f9;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -.3px;
+  }
+  .cut-sub {
+    font-size: 11px;
+    color: #52525b;
+    margin-top: 1px;
+  }
+  .cut-qty {
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .cut-qty-total {
+    font-size: 13px;
+    font-weight: 700;
+    color: #71717a;
+  }
+  .cut-qty-net {
+    font-size: 12px;
+    font-weight: 900;
+    color: #f1f5f9;
+    margin-top: 1px;
+  }
+  .reuse-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: #052e16;
+    color: #4ade80;
+    border: 1px solid #166534;
+    border-radius: 5px;
+    padding: 2px 6px;
+    font-size: 10px;
+    font-weight: 700;
+    margin-top: 3px;
+  }
+
+  /* Net tiles summary */
+  .net-summary {
+    background: #18181b;
+    border: 1px solid #27272a;
+    border-radius: 10px;
+    padding: 10px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .net-summary-label {
+    font-size: 11px;
+    color: #52525b;
+  }
+  .net-summary-value {
+    font-size: 13px;
+    font-weight: 700;
+    color: #a1a1aa;
+  }
+
+  /* Total commander */
+  .total-block {
+    background: #1c0a00;
+    border: 1px solid #7c2d12;
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: auto;
+  }
+  .total-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .15em;
+    color: #9a3412;
+    margin-bottom: 8px;
+  }
+  .total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  .total-breakdown {
+    font-size: 11px;
+    color: #78350f;
+    line-height: 1.7;
+  }
+  .total-breakdown b { color: #c2410c; }
+  .total-number {
+    text-align: right;
+  }
+  .total-big {
+    font-size: 52px;
+    font-weight: 900;
+    color: #fb923c;
+    line-height: 1;
+    letter-spacing: -2px;
+  }
+  .total-unit {
+    font-size: 11px;
+    color: #c2410c;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    margin-top: 2px;
+  }
+  .total-m2 {
+    font-size: 13px;
+    font-weight: 700;
+    color: #ea580c;
+    opacity: .8;
+    margin-top: 4px;
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="page-header">
+  <h1>Tableau des quantités</h1>
+  <div class="header-meta">
+    <span class="meta-chip">Format&nbsp;<b>30 × 30 cm</b></span>
+    <span class="meta-chip">Joint&nbsp;<b>2 mm</b></span>
+    <span class="meta-chip">Surface&nbsp;<b>7.20 m²</b></span>
+  </div>
+</div>
+
+<!-- Body -->
+<div class="body">
+
+  <!-- ── Plan ── -->
+  <div class="plan-zone">
+    <div class="zone-label">Plan de calepinage annoté</div>
+
+    <div class="plan-wrap">
+      <svg viewBox="0 0 780 480" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <pattern id="grid" x="0" y="0" width="90" height="90" patternUnits="userSpaceOnUse">
+            <rect width="90" height="90" fill="#1e293b"/>
+            <rect width="88" height="88" x="1" y="1" fill="#1e293b"/>
+          </pattern>
+        </defs>
+
+        <!-- Room background -->
+        <rect x="40" y="30" width="700" height="420" rx="4" fill="#22272e"/>
+
+        <!-- Tile grid — whole tiles (blue) -->
+        <!-- Row 1 -->
+        <rect x="42" y="32" width="88" height="88" fill="#93c5fd" opacity=".7"/>
+        <rect x="132" y="32" width="88" height="88" fill="#93c5fd" opacity=".7"/>
+        <rect x="222" y="32" width="88" height="88" fill="#93c5fd" opacity=".7"/>
+        <rect x="312" y="32" width="88" height="88" fill="#93c5fd" opacity=".7"/>
+        <rect x="402" y="32" width="88" height="88" fill="#93c5fd" opacity=".7"/>
+        <rect x="492" y="32" width="88" height="88" fill="#93c5fd" opacity=".7"/>
+        <rect x="582" y="32" width="88" height="88" fill="#93c5fd" opacity=".7"/>
+        <!-- Cut col right -->
+        <rect x="672" y="32" width="66" height="88" fill="#1e293b" opacity="1"/>
+        <circle cx="705" cy="76" r="14" fill="rgba(0,0,0,.55)"/>
+        <text x="705" y="81" text-anchor="middle" fill="#f97316" font-size="14" font-weight="700" font-family="system-ui">1</text>
+
+        <!-- Row 2 -->
+        <rect x="42" y="122" width="88" height="88" fill="#93c5fd" opacity=".7"/>
+        <rect x="132" y="122" width="88" height="88" fill="#93c5fd" opacity=".7"/>
+        <rect x="222" y="122" width="88" height="88" fill="#93c5fd" opacity=".7"/>
+        <rect x="312" y="122" width="88" height="88" fill="#93c5fd" opacity=".7"/>
+        <rect x="402" y="122" width="88" height="88" fill="#93c5fd" opacity=".7"/>
+        <rect x="492" y="122" width="88" height="88" fill="#93c5fd" opacity=".7"/>
+        <rect x="582" y="122" width="88" height="88" fill="#93c5fd" opacity=".7"/>
+        <rect x="672" y="122" width="66" height="88" fill="#1e293b"/>
+        <circle cx="705" cy="166" r="14" fill="rgba(0,0,0,.55)"/>
+        <text x="705" y="171" text-anchor="middle" fill="#f97316" font-size="14" font-weight="700" font-family="system-ui">1</text>
+
+        <!-- Row 3 -->
+        <rect x="42" y="212" width="88" height="88" fill="#93c5fd" opacity=".7"/>
+        <rect x="132" y="212" width="88" height="88" fill="#93c5fd" opacity=".7"/>
+        <rect x="222" y="212" width="88" height="88" fill="#93c5fd" opacity=".7"/>
+        <rect x="312" y="212" width="88" height="88" fill="#93c5fd" opacity=".7"/>
+        <rect x="402" y="212" width="88" height="88" fill="#93c5fd" opacity=".7"/>
+        <rect x="492" y="212" width="88" height="88" fill="#93c5fd" opacity=".7"/>
+        <rect x="582" y="212" width="88" height="88" fill="#93c5fd" opacity=".7"/>
+        <rect x="672" y="212" width="66" height="88" fill="#1e293b"/>
+        <circle cx="705" cy="256" r="14" fill="rgba(0,0,0,.55)"/>
+        <text x="705" y="261" text-anchor="middle" fill="#f97316" font-size="14" font-weight="700" font-family="system-ui">1</text>
+
+        <!-- Row 4 -->
+        <rect x="42" y="302" width="88" height="88" fill="#93c5fd" opacity=".7"/>
+        <rect x="132" y="302" width="88" height="88" fill="#93c5fd" opacity=".7"/>
+        <rect x="222" y="302" width="88" height="88" fill="#93c5fd" opacity=".7"/>
+        <rect x="312" y="302" width="88" height="88" fill="#93c5fd" opacity=".7"/>
+        <rect x="402" y="302" width="88" height="88" fill="#93c5fd" opacity=".7"/>
+        <rect x="492" y="302" width="88" height="88" fill="#93c5fd" opacity=".7"/>
+        <rect x="582" y="302" width="88" height="88" fill="#93c5fd" opacity=".7"/>
+        <rect x="672" y="302" width="66" height="88" fill="#1e293b"/>
+        <circle cx="705" cy="346" r="14" fill="rgba(0,0,0,.55)"/>
+        <text x="705" y="351" text-anchor="middle" fill="#f97316" font-size="14" font-weight="700" font-family="system-ui">1</text>
+
+        <!-- Row 5 — bottom cuts -->
+        <rect x="42" y="392" width="88" height="56" fill="#93c5fd" opacity=".7"/>
+        <rect x="132" y="392" width="88" height="56" fill="#93c5fd" opacity=".7"/>
+        <rect x="222" y="392" width="88" height="56" fill="#93c5fd" opacity=".7"/>
+        <rect x="312" y="392" width="88" height="56" fill="#93c5fd" opacity=".7"/>
+        <rect x="402" y="392" width="88" height="56" fill="#93c5fd" opacity=".7"/>
+        <!-- cut group 2 — bottom -->
+        <rect x="492" y="392" width="88" height="56" fill="#1e293b"/>
+        <circle cx="536" cy="420" r="14" fill="rgba(0,0,0,.55)"/>
+        <text x="536" y="425" text-anchor="middle" fill="#a78bfa" font-size="14" font-weight="700" font-family="system-ui">2</text>
+        <rect x="582" y="392" width="88" height="56" fill="#1e293b"/>
+        <circle cx="626" cy="420" r="14" fill="rgba(0,0,0,.55)"/>
+        <text x="626" y="425" text-anchor="middle" fill="#a78bfa" font-size="14" font-weight="700" font-family="system-ui">2</text>
+        <!-- cut group 2 reused — bottom right -->
+        <rect x="672" y="392" width="66" height="56" fill="#052e16"/>
+        <circle cx="705" cy="420" r="14" fill="rgba(0,0,0,.55)"/>
+        <text x="705" y="418" text-anchor="middle" fill="#4ade80" font-size="11" font-weight="700" font-family="system-ui">↩</text>
+        <text x="705" y="430" text-anchor="middle" fill="#4ade80" font-size="10" font-weight="700" font-family="system-ui">2</text>
+
+        <!-- Room border -->
+        <rect x="40" y="30" width="700" height="420" rx="4" fill="none" stroke="#ea580c" stroke-width="3"/>
+      </svg>
+    </div>
+
+    <!-- Legend -->
+    <div class="plan-legend">
+      <div class="legend-item">
+        <div class="legend-dot" style="background:#93c5fd;opacity:.7;"></div>
+        Carreau entier
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:#1e293b;border:1.5px solid #f97316;"></div>
+        Coupe — groupe <b style="color:#f97316;margin-left:2px;">1</b>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:#1e293b;border:1.5px solid #a78bfa;"></div>
+        Coupe — groupe <b style="color:#a78bfa;margin-left:2px;">2</b>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:#052e16;border:1.5px solid #4ade80;"></div>
+        <span style="color:#4ade80;">↩</span>&nbsp;Taillée dans une chute
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Side panel ── -->
+  <div class="side-panel">
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-box" style="border-top: 2px solid #3b82f6;">
+        <div class="stat-value" style="color:#93c5fd;">35</div>
+        <div class="stat-label">Carreaux entiers</div>
+        <div class="stat-m2">2.10 m²</div>
+      </div>
+      <div class="stat-box" style="border-top: 2px solid #f97316;">
+        <div class="stat-value" style="color:#fb923c;">10</div>
+        <div class="stat-label">Carreaux à couper</div>
+        <div class="stat-m2">0.52 m² posés</div>
+      </div>
+    </div>
+
+    <!-- Cut cards -->
+    <div class="section-title">Groupes de coupes</div>
+
+    <div class="cut-cards">
+
+      <!-- Group 1 -->
+      <div class="cut-card">
+        <div class="cut-badge" style="background:#f97316;color:white;">1</div>
+        <!-- Thumbnail: tall vertical cut, right side used -->
+        <div class="cut-thumb">
+          <svg viewBox="0 0 44 44" width="44" height="44">
+            <rect x="2" y="2" width="40" height="40" rx="3" fill="#27272a" stroke="#3f3f46" stroke-width="1"/>
+            <rect x="2" y="2" width="26" height="40" rx="3" fill="#f97316" opacity=".65"/>
+            <line x1="28" y1="2" x2="28" y2="42" stroke="#f97316" stroke-width="1.5" stroke-dasharray="3,2"/>
+          </svg>
+        </div>
+        <div class="cut-info">
+          <div class="cut-dim">20 × 30 cm</div>
+          <div class="cut-sub">Chute&nbsp;: 10 × 30 cm</div>
+          <div class="cut-sub" style="color:#3f3f46;">0.18 m² posés</div>
+        </div>
+        <div class="cut-qty">
+          <div class="cut-qty-total" style="font-size:11px;color:#52525b;">×5 total</div>
+          <div class="cut-qty-net">5 nets</div>
+        </div>
+      </div>
+
+      <!-- Group 2 — with reuse -->
+      <div class="cut-card" style="border-color:#166534;">
+        <div class="cut-badge" style="background:#a78bfa;color:white;">2</div>
+        <div class="cut-thumb">
+          <svg viewBox="0 0 44 44" width="44" height="44">
+            <rect x="2" y="2" width="40" height="40" rx="3" fill="#27272a" stroke="#3f3f46" stroke-width="1"/>
+            <rect x="2" y="2" width="40" height="26" rx="3" fill="#a78bfa" opacity=".55"/>
+            <line x1="2" y1="28" x2="42" y2="28" stroke="#a78bfa" stroke-width="1.5" stroke-dasharray="3,2"/>
+          </svg>
+        </div>
+        <div class="cut-info">
+          <div class="cut-dim">30 × 20 cm</div>
+          <div class="cut-sub">Chute&nbsp;: 30 × 10 cm</div>
+          <div class="reuse-badge">
+            <span>↩</span> 1 taillée dans une chute
+          </div>
+        </div>
+        <div class="cut-qty">
+          <div class="cut-qty-total" style="font-size:11px;color:#52525b;">×5 total</div>
+          <div class="cut-qty-net" style="color:#4ade80;">4 nets</div>
+        </div>
+      </div>
+
+      <!-- Net summary -->
+      <div class="net-summary">
+        <span class="net-summary-label">Carreaux nets pour coupes</span>
+        <span class="net-summary-value">9 carreaux</span>
+      </div>
+
+    </div>
+
+    <!-- Total à commander -->
+    <div class="total-block">
+      <div class="total-label">Total à commander</div>
+      <div class="total-row">
+        <div class="total-breakdown">
+          <div>35 entiers</div>
+          <div>+ 9 pour coupes</div>
+          <div style="color:#78350f;">= 44 nets</div>
+          <div>× 1.10 <span style="color:#78350f; font-size:10px;">(marge +10%)</span></div>
+        </div>
+        <div class="total-number">
+          <div class="total-big">49</div>
+          <div class="total-unit">carreaux</div>
+          <div class="total-m2">2.94 m²</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
