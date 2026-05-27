@@ -89,6 +89,7 @@ interface DrawingCanvasProps {
   onZoneEdgePointerDown: (parentRoomId: string, zoneId: string, edgeIndex: number, dist: number) => (e: ReactPointerEvent) => void;
   deleteHover: DeleteHoverTarget | null;
   onDimensionClick?: (constraint: Constraint) => void;
+  onDimOffsetChange?: (constraintId: string, newOffset: number) => void;
 }
 
 // ── Constraint helpers ─────────────────────────────────────────────────────
@@ -252,8 +253,19 @@ export const DrawingCanvas = ({
   onPartitionVertexPointerDown, onZoneVertexPointerDown, onZoneEdgePointerDown,
   deleteHover,
   onDimensionClick,
+  onDimOffsetChange,
 }: DrawingCanvasProps) => {
   const [hoveredBadge, setHoveredBadge] = useState<string | null>(null);
+  const [dimDrag, setDimDrag] = useState<{
+    id: string;
+    startClientX: number;
+    startClientY: number;
+    startOffset: number;
+    liveOffset: number;
+    axis: 'H' | 'V' | 'L';
+    nx: number;
+    ny: number;
+  } | null>(null);
 
   const hoveredEdgeType = hoveredEdge
     ? (rooms.find((r) => r.id === hoveredEdge.roomId)?.edges[hoveredEdge.edgeIndex] ?? 'WALL')
@@ -707,12 +719,16 @@ export const DrawingCanvas = ({
             const xA = resolveDisplayCoord(c.pts[0]!, rooms, wallThickness, 'H') ?? vA.x;
             const xB = resolveDisplayCoord(c.pts[1]!, rooms, wallThickness, 'H') ?? vB.x;
             const topY = Math.min(vA.y, vB.y);
-            const dimY  = topY - DIM_OFFSET;
+            const dimOffset = (dimDrag?.id === c.id)
+              ? dimDrag.liveOffset
+              : (c.displayOffset ?? DIM_OFFSET);
+            const dimY  = topY - dimOffset;
             const extY0 = topY - EXT_GAP;
             const extY1 = dimY + EXT_OVER;
             const midX = (xA + xB) / 2;
             const labelText = `${faceLabel}  ${displayedCm} cm`;
             const textW = labelText.length * fontSize * 0.6 + padX * 2;
+            const isDragging = dimDrag?.id === c.id;
             return (
               <g key={`cad-h-${c.id}`}>
                 {/* Lignes d'extension */}
@@ -722,11 +738,37 @@ export const DrawingCanvas = ({
                 <line x1={xB} y1={extY0} x2={xB} y2={extY1}
                   stroke="#22c55e" strokeWidth={extSw} opacity={0.7}
                   className="pointer-events-none" />
-                {/* Ligne de cote avec flèches ouvertes */}
+                {/* Ligne de cote — grabable */}
                 <line x1={xA} y1={dimY} x2={xB} y2={dimY}
-                  stroke="#22c55e" strokeWidth={sw}
+                  stroke="#22c55e" strokeWidth={isDragging ? sw * 1.5 : sw}
                   markerStart="url(#cad-arr-l)" markerEnd="url(#cad-arr-r)"
-                  className="pointer-events-none" />
+                  className="cursor-ns-resize"
+                  onPointerDown={(e) => {
+                    e.stopPropagation();
+                    (e.currentTarget as SVGLineElement).setPointerCapture(e.pointerId);
+                    setDimDrag({
+                      id: c.id,
+                      startClientX: e.clientX,
+                      startClientY: e.clientY,
+                      startOffset: c.displayOffset ?? DIM_OFFSET,
+                      liveOffset: c.displayOffset ?? DIM_OFFSET,
+                      axis: 'H',
+                      nx: 0, ny: -1,
+                    });
+                  }}
+                  onPointerMove={(e) => {
+                    if (dimDrag?.id !== c.id) return;
+                    const delta = (dimDrag.startClientY - e.clientY) / scale;
+                    const newOffset = Math.max(100, dimDrag.startOffset + delta);
+                    setDimDrag(d => d ? { ...d, liveOffset: newOffset } : null);
+                  }}
+                  onPointerUp={() => {
+                    if (dimDrag?.id !== c.id) return;
+                    onDimOffsetChange?.(c.id, dimDrag.liveOffset);
+                    setDimDrag(null);
+                  }}
+                  onPointerCancel={() => setDimDrag(null)}
+                />
                 {/* Label encadré */}
                 <rect
                   x={midX - textW / 2} y={dimY - fontSize / 2 - padY}
@@ -750,12 +792,16 @@ export const DrawingCanvas = ({
             const yA = resolveDisplayCoord(c.pts[0]!, rooms, wallThickness, 'V') ?? vA.y;
             const yB = resolveDisplayCoord(c.pts[1]!, rooms, wallThickness, 'V') ?? vB.y;
             const rightX = Math.max(vA.x, vB.x);
-            const dimX  = rightX + DIM_OFFSET;
+            const dimOffset = (dimDrag?.id === c.id)
+              ? dimDrag.liveOffset
+              : (c.displayOffset ?? DIM_OFFSET);
+            const dimX  = rightX + dimOffset;
             const extX0 = rightX + EXT_GAP;
             const extX1 = dimX - EXT_OVER;
             const midY = (yA + yB) / 2;
             const labelText = `${faceLabel}  ${displayedCm} cm`;
             const textW = labelText.length * fontSize * 0.6 + padX * 2;
+            const isDragging = dimDrag?.id === c.id;
             return (
               <g key={`cad-v-${c.id}`}>
                 {/* Lignes d'extension */}
@@ -765,11 +811,37 @@ export const DrawingCanvas = ({
                 <line x1={extX0} y1={yB} x2={extX1} y2={yB}
                   stroke="#22c55e" strokeWidth={extSw} opacity={0.7}
                   className="pointer-events-none" />
-                {/* Ligne de cote avec flèches ouvertes */}
+                {/* Ligne de cote — grabable */}
                 <line x1={dimX} y1={yA} x2={dimX} y2={yB}
-                  stroke="#22c55e" strokeWidth={sw}
+                  stroke="#22c55e" strokeWidth={isDragging ? sw * 1.5 : sw}
                   markerStart="url(#cad-arr-l)" markerEnd="url(#cad-arr-r)"
-                  className="pointer-events-none" />
+                  className="cursor-ew-resize"
+                  onPointerDown={(e) => {
+                    e.stopPropagation();
+                    (e.currentTarget as SVGLineElement).setPointerCapture(e.pointerId);
+                    setDimDrag({
+                      id: c.id,
+                      startClientX: e.clientX,
+                      startClientY: e.clientY,
+                      startOffset: c.displayOffset ?? DIM_OFFSET,
+                      liveOffset: c.displayOffset ?? DIM_OFFSET,
+                      axis: 'V',
+                      nx: 1, ny: 0,
+                    });
+                  }}
+                  onPointerMove={(e) => {
+                    if (dimDrag?.id !== c.id) return;
+                    const delta = (e.clientX - dimDrag.startClientX) / scale;
+                    const newOffset = Math.max(100, dimDrag.startOffset + delta);
+                    setDimDrag(d => d ? { ...d, liveOffset: newOffset } : null);
+                  }}
+                  onPointerUp={() => {
+                    if (dimDrag?.id !== c.id) return;
+                    onDimOffsetChange?.(c.id, dimDrag.liveOffset);
+                    setDimDrag(null);
+                  }}
+                  onPointerCancel={() => setDimDrag(null)}
+                />
                 {/* Label encadré */}
                 <rect
                   x={dimX + padY} y={midY - fontSize / 2 - padY}
@@ -790,16 +862,19 @@ export const DrawingCanvas = ({
           }
 
           if (c.type === 'LENGTH') {
-            // Côte LENGTH : ligne parallèle à l'arête, décalée perpendiculairement
             const dx = vB.x - vA.x, dy = vB.y - vA.y;
             const len = Math.sqrt(dx * dx + dy * dy) || 1;
-            const nx = -dy / len, ny = dx / len; // normale perpendiculaire
-            const ox = nx * DIM_OFFSET, oy = ny * DIM_OFFSET;
+            const nx = -dy / len, ny = dx / len;
+            const dimOffset = (dimDrag?.id === c.id)
+              ? dimDrag.liveOffset
+              : (c.displayOffset ?? DIM_OFFSET);
+            const ox = nx * dimOffset, oy = ny * dimOffset;
             const ax = vA.x + ox, ay = vA.y + oy;
             const bx = vB.x + ox, by = vB.y + oy;
             const midX = (ax + bx) / 2, midY = (ay + by) / 2;
-            const labelText = `${(c.value / 10).toFixed(1)} cm`;
+            const labelText = `${((c.value as number) / 10).toFixed(1)} cm`;
             const textW = labelText.length * fontSize * 0.6 + padX * 2;
+            const isDragging = dimDrag?.id === c.id;
             return (
               <g key={`cad-l-${c.id}`}>
                 {/* Lignes d'extension */}
@@ -811,11 +886,39 @@ export const DrawingCanvas = ({
                   x2={bx + nx * EXT_OVER} y2={by + ny * EXT_OVER}
                   stroke="#22c55e" strokeWidth={extSw} opacity={0.7}
                   className="pointer-events-none" />
-                {/* Ligne de cote */}
+                {/* Ligne de cote — grabable */}
                 <line x1={ax} y1={ay} x2={bx} y2={by}
-                  stroke="#22c55e" strokeWidth={sw}
+                  stroke="#22c55e" strokeWidth={isDragging ? sw * 1.5 : sw}
                   markerStart="url(#cad-arr-l)" markerEnd="url(#cad-arr-r)"
-                  className="pointer-events-none" />
+                  className="cursor-move"
+                  onPointerDown={(e) => {
+                    e.stopPropagation();
+                    (e.currentTarget as SVGLineElement).setPointerCapture(e.pointerId);
+                    setDimDrag({
+                      id: c.id,
+                      startClientX: e.clientX,
+                      startClientY: e.clientY,
+                      startOffset: c.displayOffset ?? DIM_OFFSET,
+                      liveOffset: c.displayOffset ?? DIM_OFFSET,
+                      axis: 'L',
+                      nx, ny,
+                    });
+                  }}
+                  onPointerMove={(e) => {
+                    if (dimDrag?.id !== c.id) return;
+                    const dcx = e.clientX - dimDrag.startClientX;
+                    const dcy = e.clientY - dimDrag.startClientY;
+                    const delta = (dcx * dimDrag.nx + dcy * dimDrag.ny) / scale;
+                    const newOffset = Math.max(100, dimDrag.startOffset + delta);
+                    setDimDrag(d => d ? { ...d, liveOffset: newOffset } : null);
+                  }}
+                  onPointerUp={() => {
+                    if (dimDrag?.id !== c.id) return;
+                    onDimOffsetChange?.(c.id, dimDrag.liveOffset);
+                    setDimDrag(null);
+                  }}
+                  onPointerCancel={() => setDimDrag(null)}
+                />
                 {/* Label encadré */}
                 <rect
                   x={midX - textW / 2} y={midY - fontSize / 2 - padY}

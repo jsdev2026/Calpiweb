@@ -236,6 +236,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
   const addConstraint = useProjectStore((s) => s.addConstraint);
   const removeConstraint = useProjectStore((s) => s.removeConstraint);
   const updateConstraintValue = useProjectStore((s) => s.updateConstraintValue);
+  const updateConstraintDisplayOffset = useProjectStore((s) => s.updateConstraintDisplayOffset);
   const shiftConstraintIndices = useProjectStore((s) => s.shiftConstraintIndices);
   const restoreSnapshot = useProjectStore((s) => s.restoreSnapshot);
   const addPartition = useProjectStore((s) => s.addPartition);
@@ -658,6 +659,11 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
     if (!fromVertex || !toVertex) return;
     openDimensionPopup(fromRef, toRef, fromVertex, toVertex);
   }, [rooms, openDimensionPopup]);
+
+  const handleDimOffsetChange = useCallback((id: string, offset: number) => {
+    pushHistory();
+    updateConstraintDisplayOffset(id, offset);
+  }, [pushHistory, updateConstraintDisplayOffset]);
 
   const submitDimensionPopup = useCallback(() => {
     if (!dimensionPopup) return;
@@ -1873,6 +1879,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
         onZoneVertexPointerDown={handleZoneVertexPointerDown}
         onZoneEdgePointerDown={handleZoneEdgePointerDown}
         onDimensionClick={handleDimensionClick}
+        onDimOffsetChange={handleDimOffsetChange}
       />
       </div>
     </div>
