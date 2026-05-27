@@ -136,6 +136,9 @@ function resolvePointRef(rooms: Room[], ptRef: PointRef): Point | undefined {
   return undefined;
 }
 
+// ── Face label mapping (for dimension source & CAD dimension lines) ────────
+const FACE_LABEL = { INSIDE: 'I', AXIS: 'A', OUTSIDE: 'E' } as const;
+
 // ── Vertex badge shared renderer ───────────────────────────────────────────
 
 interface VtxProps {
@@ -816,25 +819,27 @@ export const DrawingCanvas = ({
           const insidePos:  Point = { x: axisPos.x + wallNormal.x * half, y: axisPos.y + wallNormal.y * half };
           const outsidePos: Point = { x: axisPos.x - wallNormal.x * half, y: axisPos.y - wallNormal.y * half };
 
-          const dots: Array<{ pos: Point; dotFace: 'INSIDE' | 'AXIS' | 'OUTSIDE'; color: string; baseR: number }> = [
-            { pos: outsidePos, dotFace: 'OUTSIDE', color: '#3b82f6', baseR: 120 },
-            { pos: axisPos,    dotFace: 'AXIS',    color: '#a855f7', baseR: 100 },
-            { pos: insidePos,  dotFace: 'INSIDE',  color: '#22c55e', baseR: 120 },
+          const dots: Array<{ pos: Point; dotFace: 'INSIDE' | 'AXIS' | 'OUTSIDE'; color: string }> = [
+            { pos: outsidePos, dotFace: 'OUTSIDE', color: '#3b82f6' },
+            { pos: axisPos,    dotFace: 'AXIS',    color: '#a855f7' },
+            { pos: insidePos,  dotFace: 'INSIDE',  color: '#22c55e' },
           ];
 
           return (
             <g className="pointer-events-none">
-              {dots.map(({ pos, dotFace, color, baseR }) => {
+              {dots.map(({ pos, dotFace, color }) => {
                 const isActive = dotFace === face;
-                const r = isActive ? baseR * 1.6 : baseR;
-                const opacity = isActive ? 1 : 0.5;
+                const r  = Math.min(isActive ? 6 / scale : 3.5 / scale, 2000);
+                const sw = isActive ? 1 / scale : 0.8 / scale;
                 return (
                   <circle
                     key={dotFace}
                     cx={pos.x} cy={pos.y}
                     r={r}
                     fill={color}
-                    opacity={opacity}
+                    opacity={isActive ? 1 : 0.4}
+                    stroke="white"
+                    strokeWidth={sw}
                   />
                 );
               })}
@@ -844,16 +849,15 @@ export const DrawingCanvas = ({
 
         {/* ── Confirmed dimension source point ───────────────────────────── */}
         {tool === 'DIMENSION' && dimensionSource && (() => {
-          const FACE_LABEL = { INSIDE: 'I', AXIS: 'A', OUTSIDE: 'E' } as const;
           const { worldPos, ref } = dimensionSource;
           const label = FACE_LABEL[ref.face ?? 'INSIDE'];
           return (
             <g className="pointer-events-none">
-              <circle cx={worldPos.x} cy={worldPos.y} r={180} fill="#f97316" />
+              <circle cx={worldPos.x} cy={worldPos.y} r={Math.min(8 / scale, 2000)} fill="#f97316" />
               <text
                 x={worldPos.x} y={worldPos.y}
                 textAnchor="middle" dominantBaseline="central"
-                fontSize={160} fontWeight="800" fill="white"
+                fontSize={14 / scale} fontWeight="800" fill="white"
                 style={{ fontFamily: 'system-ui' }}
               >
                 {label}
