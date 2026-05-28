@@ -1345,6 +1345,8 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
   };
 
   const handleVertexPointerDown = (roomId: string, index: number) => (e: ReactPointerEvent) => {
+    // In DIMENSION mode, let the event bubble to the SVG root handler (vertex snap click)
+    if (tool === 'DIMENSION') return;
     e.stopPropagation();
     if (tool === 'ANCHOR') {
       const room = rooms.find((r) => r.id === roomId); if (!room) return;
