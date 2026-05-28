@@ -247,7 +247,7 @@ export const DrawingCanvas = ({
   partitionDimLines, editingPartitionDimension, faceSnapHover, dimensionSource,
   onPartitionDimensionPointerDown,
   onPointerDown, onPointerMove, onPointerUp,
-  onEdgePointerDown, onVertexPointerDown, onConstraintRemove,
+  onEdgePointerDown, onVertexPointerDown, onConstraintRemove: _onConstraintRemove,
   onDeletePartition, onDeleteExcludedZone, onPartitionLabelPointerDown,
   onPartitionVertexPointerDown, onZoneVertexPointerDown, onZoneEdgePointerDown,
   deleteHover,
@@ -741,8 +741,8 @@ export const DrawingCanvas = ({
                 {/* Ligne de cote + label — grabable */}
                 <g className="cursor-ns-resize"
                   onPointerDown={(e) => {
+                    if (tool === 'DELETE') return;
                     e.stopPropagation();
-                    if (tool === 'DELETE') { onConstraintRemove(c.id); return; }
                     dimDragMovedRef.current = false;
                     (e.currentTarget as SVGGElement).setPointerCapture(e.pointerId);
                     setDimDrag({
@@ -816,8 +816,8 @@ export const DrawingCanvas = ({
                 {/* Ligne de cote + label — grabable */}
                 <g className="cursor-ew-resize"
                   onPointerDown={(e) => {
+                    if (tool === 'DELETE') return;
                     e.stopPropagation();
-                    if (tool === 'DELETE') { onConstraintRemove(c.id); return; }
                     dimDragMovedRef.current = false;
                     (e.currentTarget as SVGGElement).setPointerCapture(e.pointerId);
                     setDimDrag({
@@ -893,8 +893,8 @@ export const DrawingCanvas = ({
                 {/* Ligne de cote + label — grabable */}
                 <g className="cursor-move"
                   onPointerDown={(e) => {
+                    if (tool === 'DELETE') return;
                     e.stopPropagation();
-                    if (tool === 'DELETE') { onConstraintRemove(c.id); return; }
                     dimDragMovedRef.current = false;
                     (e.currentTarget as SVGGElement).setPointerCapture(e.pointerId);
                     setDimDrag({
