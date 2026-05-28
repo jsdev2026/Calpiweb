@@ -1724,6 +1724,8 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
           setDimensionPopup(null);
           setCoincideSource(null); setPartitionOrigin(null);
           setExcludePoints([]); setEditingPartitionDimension(null); setDimTypeSelection(null);
+          setEditingEdge(null); setEditingZoneEdge(null);
+          setEditingPartition(null); setEditingPartitionThickness(null);
         }}
         onUndo={handleUndo}
         onRedo={handleRedo}

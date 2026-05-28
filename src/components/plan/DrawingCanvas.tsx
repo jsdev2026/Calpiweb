@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import type { PointerEvent as ReactPointerEvent, RefObject } from 'react';
 import type { DimConstraintType, Room, Constraint, ExcludedZone, Partition, PointRef } from '@/types/project';
 import type { Point, FaceSnapPoint } from '@/types/plan';
@@ -247,7 +247,7 @@ export const DrawingCanvas = ({
   partitionDimLines, editingPartitionDimension, faceSnapHover, dimensionSource,
   onPartitionDimensionPointerDown,
   onPointerDown, onPointerMove, onPointerUp,
-  onEdgePointerDown, onVertexPointerDown, onConstraintRemove: _onConstraintRemove,
+  onEdgePointerDown, onVertexPointerDown, onConstraintRemove,
   onDeletePartition, onDeleteExcludedZone, onPartitionLabelPointerDown,
   onPartitionVertexPointerDown, onZoneVertexPointerDown, onZoneEdgePointerDown,
   deleteHover,
@@ -267,6 +267,7 @@ export const DrawingCanvas = ({
     nx: number;
     ny: number;
   } | null>(null);
+  const dimDragMovedRef = useRef(false);
 
   const hoveredEdgeType = hoveredEdge
     ? (rooms.find((r) => r.id === hoveredEdge.roomId)?.edges[hoveredEdge.edgeIndex] ?? 'WALL')
@@ -741,6 +742,8 @@ export const DrawingCanvas = ({
                 <g className="cursor-ns-resize"
                   onPointerDown={(e) => {
                     e.stopPropagation();
+                    if (tool === 'DELETE') { onConstraintRemove(c.id); return; }
+                    dimDragMovedRef.current = false;
                     (e.currentTarget as SVGGElement).setPointerCapture(e.pointerId);
                     setDimDrag({
                       id: c.id,
@@ -755,13 +758,18 @@ export const DrawingCanvas = ({
                   onPointerMove={(e) => {
                     if (dimDrag?.id !== c.id) return;
                     const delta = (dimDrag.startClientY - e.clientY) / scale;
+                    if (Math.abs(delta) > 3) dimDragMovedRef.current = true;
                     const newOffset = Math.max(100, dimDrag.startOffset + delta);
                     setDimDrag(d => d ? { ...d, liveOffset: newOffset } : null);
                   }}
                   onPointerUp={() => {
                     setDimDrag(d => {
                       if (!d || d.id !== c.id) return d;
-                      onDimOffsetChange?.(c.id, d.liveOffset);
+                      if (dimDragMovedRef.current) {
+                        onDimOffsetChange?.(c.id, d.liveOffset);
+                      } else {
+                        onDimensionClick?.(c);
+                      }
                       return null;
                     });
                   }}
@@ -775,8 +783,7 @@ export const DrawingCanvas = ({
                     textAnchor="middle" dominantBaseline="middle"
                     fontSize={fontSize} fontWeight="700" fill="#22c55e"
                     className="select-none"
-                    style={{ fontFamily: 'system-ui' }}
-                    onClick={(e) => { e.stopPropagation(); onDimensionClick?.(c); }}>
+                    style={{ fontFamily: 'system-ui' }}>
                     {labelText}
                   </text>
                 </g>
@@ -810,6 +817,8 @@ export const DrawingCanvas = ({
                 <g className="cursor-ew-resize"
                   onPointerDown={(e) => {
                     e.stopPropagation();
+                    if (tool === 'DELETE') { onConstraintRemove(c.id); return; }
+                    dimDragMovedRef.current = false;
                     (e.currentTarget as SVGGElement).setPointerCapture(e.pointerId);
                     setDimDrag({
                       id: c.id,
@@ -824,13 +833,18 @@ export const DrawingCanvas = ({
                   onPointerMove={(e) => {
                     if (dimDrag?.id !== c.id) return;
                     const delta = (e.clientX - dimDrag.startClientX) / scale;
+                    if (Math.abs(delta) > 3) dimDragMovedRef.current = true;
                     const newOffset = Math.max(100, dimDrag.startOffset + delta);
                     setDimDrag(d => d ? { ...d, liveOffset: newOffset } : null);
                   }}
                   onPointerUp={() => {
                     setDimDrag(d => {
                       if (!d || d.id !== c.id) return d;
-                      onDimOffsetChange?.(c.id, d.liveOffset);
+                      if (dimDragMovedRef.current) {
+                        onDimOffsetChange?.(c.id, d.liveOffset);
+                      } else {
+                        onDimensionClick?.(c);
+                      }
                       return null;
                     });
                   }}
@@ -844,8 +858,7 @@ export const DrawingCanvas = ({
                     textAnchor="start" dominantBaseline="middle"
                     fontSize={fontSize} fontWeight="700" fill="#22c55e"
                     className="select-none"
-                    style={{ fontFamily: 'system-ui' }}
-                    onClick={(e) => { e.stopPropagation(); onDimensionClick?.(c); }}>
+                    style={{ fontFamily: 'system-ui' }}>
                     {labelText}
                   </text>
                 </g>
@@ -881,6 +894,8 @@ export const DrawingCanvas = ({
                 <g className="cursor-move"
                   onPointerDown={(e) => {
                     e.stopPropagation();
+                    if (tool === 'DELETE') { onConstraintRemove(c.id); return; }
+                    dimDragMovedRef.current = false;
                     (e.currentTarget as SVGGElement).setPointerCapture(e.pointerId);
                     setDimDrag({
                       id: c.id,
@@ -897,13 +912,18 @@ export const DrawingCanvas = ({
                     const dcx = e.clientX - dimDrag.startClientX;
                     const dcy = e.clientY - dimDrag.startClientY;
                     const delta = (dcx * dimDrag.nx + dcy * dimDrag.ny) / scale;
+                    if (Math.abs(delta) > 3) dimDragMovedRef.current = true;
                     const newOffset = Math.max(100, dimDrag.startOffset + delta);
                     setDimDrag(d => d ? { ...d, liveOffset: newOffset } : null);
                   }}
                   onPointerUp={() => {
                     setDimDrag(d => {
                       if (!d || d.id !== c.id) return d;
-                      onDimOffsetChange?.(c.id, d.liveOffset);
+                      if (dimDragMovedRef.current) {
+                        onDimOffsetChange?.(c.id, d.liveOffset);
+                      } else {
+                        onDimensionClick?.(c);
+                      }
                       return null;
                     });
                   }}
@@ -917,8 +937,7 @@ export const DrawingCanvas = ({
                     textAnchor="middle" dominantBaseline="middle"
                     fontSize={fontSize} fontWeight="700" fill="#22c55e"
                     className="select-none"
-                    style={{ fontFamily: 'system-ui' }}
-                    onClick={(e) => { e.stopPropagation(); onDimensionClick?.(c); }}>
+                    style={{ fontFamily: 'system-ui' }}>
                     {labelText}
                   </text>
                 </g>
