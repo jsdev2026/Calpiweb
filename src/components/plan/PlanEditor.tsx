@@ -29,10 +29,12 @@ import {
   type DeleteHoverTarget,
   type FaceSnapPoint,
 } from './DrawingCanvas';
+import { WallDrawingCanvas } from './WallDrawingCanvas';
+import type { Wall } from '@/types/wall';
 
 // ── History ────────────────────────────────────────────────────────────────
 
-interface HistoryEntry { rooms: Room[]; constraints: Constraint[]; }
+interface HistoryEntry { rooms: Room[]; constraints: Constraint[]; walls: Wall[]; }
 
 // ── Pure geometry helpers ──────────────────────────────────────────────────
 
@@ -229,6 +231,11 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
   const rooms = useProjectStore((s) => selectActiveProject(s)?.rooms ?? []);
   const constraints = useProjectStore((s) => selectActiveProject(s)?.constraints ?? []);
   const wallThickness = useProjectStore((s) => selectActiveProject(s)?.wallThickness ?? 100);
+  const walls          = useProjectStore((s) => selectActiveProject(s)?.walls);
+  const addWall        = useProjectStore((s) => s.addWall);
+  const removeWall     = useProjectStore((s) => s.removeWall);
+  const updateWall     = useProjectStore((s) => s.updateWall);
+  const initWallEngine = useProjectStore((s) => s.initWallEngine);
   const setWallThickness = useProjectStore((s) => s.setWallThickness);
   const updateRoom = useProjectStore((s) => s.updateRoom);
   const addRoom = useProjectStore((s) => s.addRoom);
@@ -463,12 +470,14 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
   const futureRef = useRef(future);
   const roomsRef = useRef(rooms);
   const constraintsRef = useRef(constraints);
+  const wallsRef = useRef(walls);
   const violationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wasViolatingDragRef = useRef(false);
   useEffect(() => { roomsRef.current = rooms; }, [rooms]);
   useEffect(() => { pastRef.current = past; },     [past]);
   useEffect(() => { futureRef.current = future; }, [future]);
   useEffect(() => { constraintsRef.current = constraints; }, [constraints]);
+  useEffect(() => { wallsRef.current = walls; }, [walls]);
 
   // ── Centrage initial sur les pièces existantes ────────────────────────────
   useEffect(() => {
@@ -515,6 +524,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
     setPast((prev) => [{
       rooms: deepCloneRooms(roomsRef.current),
       constraints: [...constraintsRef.current],
+      walls: wallsRef.current ? [...wallsRef.current] : [],
     }, ...prev.slice(0, 49)]);
     setFuture([]);
   }, []);
@@ -1581,10 +1591,11 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
     const current: HistoryEntry = {
       rooms: deepCloneRooms(roomsRef.current),
       constraints: [...constraintsRef.current],
+      walls: wallsRef.current ? [...wallsRef.current] : [],
     };
     setFuture((f) => [current, ...f.slice(0, 49)]);
     setPast(rest);
-    restoreSnapshot(entry!.rooms, entry!.constraints);
+    restoreSnapshot(entry!.rooms, entry!.constraints, entry!.walls);
   };
 
   const handleRedo = () => {
@@ -1594,10 +1605,11 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
     const current: HistoryEntry = {
       rooms: deepCloneRooms(roomsRef.current),
       constraints: [...constraintsRef.current],
+      walls: wallsRef.current ? [...wallsRef.current] : [],
     };
     setPast((p) => [current, ...p.slice(0, 49)]);
     setFuture(rest);
-    restoreSnapshot(entry!.rooms, entry!.constraints);
+    restoreSnapshot(entry!.rooms, entry!.constraints, entry!.walls);
   };
 
   const handleAddRoom = () => { const id = addRoom(); setActiveRoomId(id); setTool('WALL'); };
@@ -1735,6 +1747,17 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
         onToggleTutorial={() => setTutorialMode((v) => !v)}
       />
 
+      {walls === undefined && (
+        <button
+          type="button"
+          title="Basculer vers le nouveau moteur de dessin (murs épais)"
+          onClick={() => initWallEngine()}
+          className="absolute bottom-4 right-4 z-30 rounded border border-orange-600/40 bg-orange-600/10 px-2 py-1 text-[10px] font-semibold text-orange-400 hover:bg-orange-600/20"
+        >
+          Nouveau moteur ✦
+        </button>
+      )}
+
       <div className="hidden md:block mouse:block">
         <RoomPanel
           rooms={rooms}
@@ -1833,40 +1856,51 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
         />
       )}
 
-      <DrawingCanvas
-        svgRef={svgRef} rooms={rooms} activeRoomId={activeRoomId}
-        scale={scale} pan={pan} snapGrid={SNAP_GRID_MM}
-        tool={tool} isPanning={isPanning} mousePos={mousePos}
-        editingEdge={editingEdge} hoveredEdge={hoveredEdge}
-        snapPreview={snapPreview} originPoint={originPoint}
-        wallThickness={wallThickness}
-        constraints={constraints} coincideSource={coincideSource}
-        dofMap={dofMap} canCloseActiveRoom={canCloseActiveRoom}
-        partitionOrigin={partitionOrigin} excludePoints={excludePoints}
-        editingPartition={editingPartition}
-        hoveredZoneEdge={hoveredZoneEdge} editingZoneEdge={editingZoneEdge}
-        hoveredPartitionEdge={hoveredPartitionEdge}
-        partitionDimLines={partitionDimLines}
-        editingPartitionDimension={editingPartitionDimension}
-        faceSnapHover={faceSnapHover}
-        dimensionSource={dimensionSource}
-        deleteHover={deleteHover}
-        onPartitionDimensionPointerDown={handlePartitionDimensionPointerDown}
-        onPointerDown={handlePointerDown} onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp} onEdgePointerDown={handleEdgePointerDown}
-        onVertexPointerDown={handleVertexPointerDown}
-        onConstraintRemove={(id) => { pushHistory(); removeConstraint(id); runSolver(); }}
-        onDeletePartition={(roomId, partitionId) => { pushHistory(); removePartition(roomId, partitionId); }}
-        onDeleteExcludedZone={(roomId, zoneId) => { pushHistory(); removeExcludedZone(roomId, zoneId); }}
-        onPartitionLabelPointerDown={handlePartitionLabelPointerDown}
-        onPartitionVertexPointerDown={handlePartitionVertexPointerDown}
-        onZoneVertexPointerDown={handleZoneVertexPointerDown}
-        onZoneEdgePointerDown={handleZoneEdgePointerDown}
-        onDimensionClick={handleDimensionClick}
-        onDimOffsetChange={handleDimOffsetChange}
-        dimTypeSelection={dimTypeSelection}
-        onDimTypeSelect={handleDimTypeSelect}
-      />
+      {walls !== undefined ? (
+        <WallDrawingCanvas
+          walls={walls}
+          tool={tool as 'WALL' | 'SELECT' | 'DELETE'}
+          onAddWall={addWall}
+          onRemoveWall={removeWall}
+          onUpdateWall={updateWall}
+          onPushHistory={pushHistory}
+        />
+      ) : (
+        <DrawingCanvas
+          svgRef={svgRef} rooms={rooms} activeRoomId={activeRoomId}
+          scale={scale} pan={pan} snapGrid={SNAP_GRID_MM}
+          tool={tool} isPanning={isPanning} mousePos={mousePos}
+          editingEdge={editingEdge} hoveredEdge={hoveredEdge}
+          snapPreview={snapPreview} originPoint={originPoint}
+          wallThickness={wallThickness}
+          constraints={constraints} coincideSource={coincideSource}
+          dofMap={dofMap} canCloseActiveRoom={canCloseActiveRoom}
+          partitionOrigin={partitionOrigin} excludePoints={excludePoints}
+          editingPartition={editingPartition}
+          hoveredZoneEdge={hoveredZoneEdge} editingZoneEdge={editingZoneEdge}
+          hoveredPartitionEdge={hoveredPartitionEdge}
+          partitionDimLines={partitionDimLines}
+          editingPartitionDimension={editingPartitionDimension}
+          faceSnapHover={faceSnapHover}
+          dimensionSource={dimensionSource}
+          deleteHover={deleteHover}
+          onPartitionDimensionPointerDown={handlePartitionDimensionPointerDown}
+          onPointerDown={handlePointerDown} onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp} onEdgePointerDown={handleEdgePointerDown}
+          onVertexPointerDown={handleVertexPointerDown}
+          onConstraintRemove={(id) => { pushHistory(); removeConstraint(id); runSolver(); }}
+          onDeletePartition={(roomId, partitionId) => { pushHistory(); removePartition(roomId, partitionId); }}
+          onDeleteExcludedZone={(roomId, zoneId) => { pushHistory(); removeExcludedZone(roomId, zoneId); }}
+          onPartitionLabelPointerDown={handlePartitionLabelPointerDown}
+          onPartitionVertexPointerDown={handlePartitionVertexPointerDown}
+          onZoneVertexPointerDown={handleZoneVertexPointerDown}
+          onZoneEdgePointerDown={handleZoneEdgePointerDown}
+          onDimensionClick={handleDimensionClick}
+          onDimOffsetChange={handleDimOffsetChange}
+          dimTypeSelection={dimTypeSelection}
+          onDimTypeSelect={handleDimTypeSelect}
+        />
+      )}
       </div>
     </div>
   );
