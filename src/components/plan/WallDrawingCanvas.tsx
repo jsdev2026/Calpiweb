@@ -5,7 +5,7 @@ import type { PointerEvent as ReactPointerEvent } from 'react';
 import type { Wall, DrawingChain, SnapResult } from '@/types/wall';
 import type { Point } from '@/types/plan';
 import { snapToWalls } from '@/engine/geometry/wallSnap';
-import { computeCornerGeometry } from '@/engine/geometry/wallGeometry';
+import { computeCornerGeometry, computeJointLines } from '@/engine/geometry/wallGeometry';
 import { generateId } from '@/utils/id';
 import { WallEdgeEditor } from './WallEdgeEditor';
 
@@ -198,6 +198,7 @@ export const WallDrawingCanvas = ({
   });
 
   const wallPolygons = useMemo(() => computeCornerGeometry(walls), [walls]);
+  const jointLines   = useMemo(() => computeJointLines(walls), [walls]);
 
   const editingWall = editingWallId ? walls.find((w) => w.id === editingWallId) : null;
   const editingScreen = editingWall ? worldToScreen({
@@ -239,6 +240,21 @@ export const WallDrawingCanvas = ({
               key={poly.wallId}
               points={screenPts}
               fill={color}
+            />
+          );
+        })}
+
+        {/* Joint lines — drawn on top of wall polygons */}
+        {jointLines.map((line, i) => {
+          const sp1 = worldToScreen(line.p1);
+          const sp2 = worldToScreen(line.p2);
+          return (
+            <line
+              key={`joint-${i}`}
+              x1={sp1.x} y1={sp1.y}
+              x2={sp2.x} y2={sp2.y}
+              stroke="#3d3830"
+              strokeWidth={1.5}
             />
           );
         })}
