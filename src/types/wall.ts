@@ -9,7 +9,7 @@ export interface Wall {
 
 export interface SnapResult {
   point: Point;
-  type: 'endpoint' | 'face' | 'free';
+  type: 'endpoint' | 'face';
   wallId?: string;
 }
 
