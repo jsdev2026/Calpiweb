@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect, type KeyboardEvent } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo, type KeyboardEvent } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import type { Wall, DrawingChain, SnapResult } from '@/types/wall';
 import type { Point } from '@/types/plan';
 import { snapToWalls } from '@/engine/geometry/wallSnap';
+import { computeCornerGeometry } from '@/engine/geometry/wallGeometry';
 import { generateId } from '@/utils/id';
 import { WallEdgeEditor } from './WallEdgeEditor';
 
@@ -29,11 +30,6 @@ interface WallDrawingCanvasProps {
 /** Convert SVG/screen coordinate to world coordinate given pan + scale. */
 function screenToWorld(pt: Point, pan: Point, scale: number): Point {
   return { x: (pt.x - pan.x) / scale, y: (pt.y - pan.y) / scale };
-}
-
-/** World half-thickness in px. */
-function halfThickPx(wall: Wall, scale: number): number {
-  return (wall.thickness / 2) * scale;
 }
 
 export const WallDrawingCanvas = ({
@@ -201,17 +197,7 @@ export const WallDrawingCanvas = ({
     y: pt.y * scale + pan.y,
   });
 
-  const wallToRect = (wall: Wall) => {
-    const sp1 = worldToScreen(wall.p1);
-    const sp2 = worldToScreen(wall.p2);
-    const dx = sp2.x - sp1.x;
-    const dy = sp2.y - sp1.y;
-    const len = Math.sqrt(dx * dx + dy * dy);
-    if (len < 0.5) return null;
-    const angle = Math.atan2(dy, dx) * (180 / Math.PI);
-    const halfT = halfThickPx(wall, scale);
-    return { sp1, sp2, len, angle, halfT };
-  };
+  const wallPolygons = useMemo(() => computeCornerGeometry(walls), [walls]);
 
   const editingWall = editingWallId ? walls.find((w) => w.id === editingWallId) : null;
   const editingScreen = editingWall ? worldToScreen({
@@ -240,20 +226,20 @@ export const WallDrawingCanvas = ({
         <rect width="100%" height="100%" fill="url(#wdc-grid)" />
 
         {/* Rendered walls */}
-        {walls.map((wall) => {
-          const r = wallToRect(wall);
-          if (!r) return null;
-          const isSelected = wall.id === selectedWallId;
+        {wallPolygons.map((poly) => {
+          if (!poly.points.length) return null;
+          const isSelected = poly.wallId === selectedWallId;
           const color = isSelected ? WALL_SELECTED_COLOR : WALL_COLOR;
+          const screenPts = poly.points
+            .map((p) => worldToScreen(p))
+            .map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`)
+            .join(' ');
           return (
-            <g key={wall.id} transform={`translate(${r.sp1.x},${r.sp1.y}) rotate(${r.angle})`}>
-              <rect
-                x={0} y={-r.halfT}
-                width={r.len} height={r.halfT * 2}
-                fill={color}
-                rx={1}
-              />
-            </g>
+            <polygon
+              key={poly.wallId}
+              points={screenPts}
+              fill={color}
+            />
           );
         })}
 
