@@ -32,6 +32,9 @@ function perp(v: Point): Point {
 /** Endpoints within this world-unit distance are considered coincident. */
 const ENDPOINT_TOL = 2;
 
+/** Maximum miter extension expressed as a multiple of half-thickness (mirrors SVG stroke-miterlimit). */
+const MITER_LIMIT = 4;
+
 /**
  * Compute a miter corner vertex.
  *
@@ -62,6 +65,10 @@ function miterCorner(
     return { x: corner.x + wallNormal.x * half * side, y: corner.y + wallNormal.y * half * side };
   }
   const t = (half * side) / denom;
+  // Clamp: very shallow angles produce extreme spikes — fall back to flat cap beyond miter limit
+  if (Math.abs(t) > MITER_LIMIT * half) {
+    return { x: corner.x + wallNormal.x * half * side, y: corner.y + wallNormal.y * half * side };
+  }
   return { x: corner.x + t * cut.x, y: corner.y + t * cut.y };
 }
 
