@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import type { Project, Room, EdgeType, ProjectStatus, ClientInfo, Constraint, ProjectNote, TilingDimension } from '@/types/project';
 import type { Plan, Point } from '@/types/plan';
 import type { TilingConfig } from '@/types/tiling';
-import type { Wall } from '@/types/wall';
+import type { Wall, WallNode } from '@/types/wall';
 import { supabaseDb } from '@/lib/supabase/db';
 import { generateId } from '@/utils/id';
 import { DEFAULT_TILING_CONFIG } from '@/constants/tileDefaults';
@@ -43,7 +43,7 @@ interface ProjectState {
   /** Shift vertex indices for a given room when vertices are inserted/removed. */
   shiftConstraintIndices: (roomId: string, afterIdx: number, delta: number) => void;
 
-  restoreSnapshot: (rooms: Room[], constraints: Constraint[], walls?: Wall[]) => void;
+  restoreSnapshot: (rooms: Room[], constraints: Constraint[], wallEngine?: { nodes: WallNode[]; walls: Wall[] }) => void;
 
   // Partition actions
   addPartition: (roomId: string, p1: Point, p2: Point, thickness: number) => void;
@@ -59,7 +59,13 @@ interface ProjectState {
 
   clearPartitionsAndZones: (roomId: string) => void;
 
-  // Wall engine actions
+  // Wall engine — node actions
+  addNode: (node: WallNode) => void;
+  updateNode: (id: string, patch: Partial<Pick<WallNode, 'x' | 'y'>>) => void;
+  removeNode: (id: string) => void;
+  setNodes: (nodes: WallNode[]) => void;
+  mergeNodes: (keepId: string, dropId: string) => void;
+  // Wall engine — wall actions
   addWall: (wall: Wall) => void;
   removeWall: (id: string) => void;
   updateWall: (id: string, patch: Partial<Wall>) => void;
@@ -229,12 +235,12 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     }));
   },
 
-  restoreSnapshot: (rooms, constraints, walls) => {
+  restoreSnapshot: (rooms, constraints, wallEngine) => {
     get().updateActive((p) => ({
       ...p,
       rooms,
       constraints,
-      ...(walls !== undefined ? { walls } : {}),
+      ...(wallEngine !== undefined ? { wallEngine } : {}),
     }));
   },
 
@@ -331,27 +337,94 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     });
   },
 
+  addNode: (node) => {
+    get().updateActive((p) => {
+      if (!p.wallEngine) return p;
+      return { ...p, wallEngine: { ...p.wallEngine, nodes: [...p.wallEngine.nodes, node] } };
+    });
+  },
+
+  updateNode: (id, patch) => {
+    get().updateActive((p) => {
+      if (!p.wallEngine) return p;
+      return {
+        ...p,
+        wallEngine: {
+          ...p.wallEngine,
+          nodes: p.wallEngine.nodes.map((n) => n.id === id ? { ...n, ...patch } : n),
+        },
+      };
+    });
+  },
+
+  removeNode: (id) => {
+    get().updateActive((p) => {
+      if (!p.wallEngine) return p;
+      return { ...p, wallEngine: { ...p.wallEngine, nodes: p.wallEngine.nodes.filter((n) => n.id !== id) } };
+    });
+  },
+
+  setNodes: (nodes) => {
+    get().updateActive((p) => {
+      if (!p.wallEngine) return p;
+      return { ...p, wallEngine: { ...p.wallEngine, nodes } };
+    });
+  },
+
+  mergeNodes: (keepId, dropId) => {
+    get().updateActive((p) => {
+      if (!p.wallEngine) return p;
+      const walls = p.wallEngine.walls
+        .map((w) => ({
+          ...w,
+          node1Id: w.node1Id === dropId ? keepId : w.node1Id,
+          node2Id: w.node2Id === dropId ? keepId : w.node2Id,
+        }))
+        .filter((w) => w.node1Id !== w.node2Id);
+      const nodes = p.wallEngine.nodes.filter((n) => n.id !== dropId);
+      return { ...p, wallEngine: { nodes, walls } };
+    });
+  },
+
   addWall: (wall) => {
-    get().updateActive((p) => ({ ...p, walls: [...(p.walls ?? []), wall] }));
+    get().updateActive((p) => {
+      if (!p.wallEngine) return p;
+      return { ...p, wallEngine: { ...p.wallEngine, walls: [...p.wallEngine.walls, wall] } };
+    });
   },
 
   removeWall: (id) => {
-    get().updateActive((p) => ({ ...p, walls: (p.walls ?? []).filter((w) => w.id !== id) }));
+    get().updateActive((p) => {
+      if (!p.wallEngine) return p;
+      const walls = p.wallEngine.walls.filter((w) => w.id !== id);
+      const referencedIds = new Set(walls.flatMap((w) => [w.node1Id, w.node2Id]));
+      const nodes = p.wallEngine.nodes.filter((n) => referencedIds.has(n.id));
+      return { ...p, wallEngine: { nodes, walls } };
+    });
   },
 
   updateWall: (id, patch) => {
-    get().updateActive((p) => ({
-      ...p,
-      walls: (p.walls ?? []).map((w) => (w.id === id ? { ...w, ...patch } : w)),
-    }));
+    get().updateActive((p) => {
+      if (!p.wallEngine) return p;
+      return {
+        ...p,
+        wallEngine: {
+          ...p.wallEngine,
+          walls: p.wallEngine.walls.map((w) => w.id === id ? { ...w, ...patch } : w),
+        },
+      };
+    });
   },
 
   setWalls: (walls) => {
-    get().updateActive((p) => ({ ...p, walls }));
+    get().updateActive((p) => {
+      if (!p.wallEngine) return p;
+      return { ...p, wallEngine: { ...p.wallEngine, walls } };
+    });
   },
 
   initWallEngine: () => {
-    get().updateActive((p) => ({ ...p, walls: p.walls ?? [] }));
+    get().updateActive((p) => ({ ...p, wallEngine: p.wallEngine ?? { nodes: [], walls: [] } }));
   },
 
   addTilingDimension: (dim) => get().updateActive((p) => ({
