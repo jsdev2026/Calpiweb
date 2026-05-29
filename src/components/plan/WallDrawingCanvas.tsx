@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useRef, useCallback, type KeyboardEvent } from 'react';
-import type { PointerEvent as ReactPointerEvent, WheelEvent } from 'react';
+import { useState, useRef, useCallback, useEffect, type KeyboardEvent } from 'react';
+import type { PointerEvent as ReactPointerEvent } from 'react';
 import type { Wall, DrawingChain, SnapResult } from '@/types/wall';
 import type { Point } from '@/types/plan';
 import { snapToWalls } from '@/engine/geometry/wallSnap';
@@ -57,6 +57,14 @@ export const WallDrawingCanvas = ({
   const [editingWallId, setEditingWallId] = useState<string | null>(null);
   const [editThickness, setEditThickness] = useState('');
 
+  // ── Clear selection / chain when tool changes ────────────────────────────
+
+  useEffect(() => {
+    setSelectedWallId(null);
+    setEditingWallId(null);
+    setChain(null);
+  }, [tool]);
+
   // ── World coordinate from SVG pointer event ──────────────────────────────
 
   const getWorldPos = useCallback((e: ReactPointerEvent<SVGSVGElement>): Point => {
@@ -76,20 +84,24 @@ export const WallDrawingCanvas = ({
 
   // ── Pan / Zoom ────────────────────────────────────────────────────────────
 
-  const handleWheel = (e: WheelEvent<SVGSVGElement>) => {
-    e.preventDefault();
-    const factor = e.deltaY < 0 ? 1.1 : 0.9;
+  useEffect(() => {
     const svg = svgRef.current;
     if (!svg) return;
-    const rect = svg.getBoundingClientRect();
-    const ox = e.clientX - rect.left;
-    const oy = e.clientY - rect.top;
-    setScale((s) => {
-      const ns = Math.max(0.05, Math.min(5, s * factor));
-      setPan((p) => ({ x: ox - (ox - p.x) * (ns / s), y: oy - (oy - p.y) * (ns / s) }));
-      return ns;
-    });
-  };
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const factor = e.deltaY < 0 ? 1.1 : 0.9;
+      const rect = svg.getBoundingClientRect();
+      const ox = e.clientX - rect.left;
+      const oy = e.clientY - rect.top;
+      setScale((s) => {
+        const ns = Math.max(0.05, Math.min(5, s * factor));
+        setPan((p) => ({ x: ox - (ox - p.x) * (ns / s), y: oy - (oy - p.y) * (ns / s) }));
+        return ns;
+      });
+    };
+    svg.addEventListener('wheel', onWheel, { passive: false });
+    return () => svg.removeEventListener('wheel', onWheel);
+  }, []);
 
   // ── Pointer handlers ──────────────────────────────────────────────────────
 
@@ -215,7 +227,6 @@ export const WallDrawingCanvas = ({
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
-        onWheel={handleWheel}
         onKeyDown={handleKeyDown}
         tabIndex={0}
       >
@@ -265,7 +276,7 @@ export const WallDrawingCanvas = ({
         })()}
 
         {/* Snap indicator */}
-        {cursor && (() => {
+        {tool === 'WALL' && cursor && (() => {
           const sc = worldToScreen(cursor);
           if (snapResult?.type === 'endpoint') {
             return <circle cx={sc.x} cy={sc.y} r={SNAP_INDICATOR_R}
@@ -280,7 +291,7 @@ export const WallDrawingCanvas = ({
         })()}
 
         {/* Chain start snap ring (close indicator) */}
-        {chain && chain.points.length > 0 && (() => {
+        {tool === 'WALL' && chain && chain.points.length > 0 && (() => {
           const start = chain.points[0]!;
           const ss = worldToScreen(start);
           return <circle cx={ss.x} cy={ss.y} r={ENDPOINT_RADIUS_PX + 4}
