@@ -10,7 +10,8 @@ vi.mock('@/lib/supabase/db', () => ({
 }));
 
 import { supabaseDb } from '@/lib/supabase/db';
-import { useProjectStore } from './projectStore';
+import { useProjectStore, selectActiveProject } from './projectStore';
+import type { Wall } from '@/types/wall';
 
 const mockSupabaseDb = vi.mocked(supabaseDb);
 
@@ -54,5 +55,77 @@ describe('projectStore — free plan limit', () => {
 
     const project = await useProjectStore.getState().create();
     expect(project.id).toBeDefined();
+  });
+});
+
+describe('projectStore — wall actions', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    useProjectStore.setState({ projects: [], activeProjectId: null, hydrated: false });
+  });
+
+  it('addWall appends a wall to the active project', async () => {
+    mockSupabaseDb.getProfile.mockResolvedValue({ plan: 'free' });
+    mockSupabaseDb.save.mockResolvedValue(undefined);
+    await useProjectStore.getState().create();
+
+    const wall: Wall = { id: 'w1', p1: { x: 0, y: 0 }, p2: { x: 100, y: 0 }, thickness: 20 };
+    useProjectStore.getState().addWall(wall);
+
+    const active = selectActiveProject(useProjectStore.getState());
+    expect(active?.walls).toHaveLength(1);
+    expect(active?.walls?.[0]).toEqual(wall);
+  });
+
+  it('removeWall removes a wall by id', async () => {
+    mockSupabaseDb.getProfile.mockResolvedValue({ plan: 'free' });
+    mockSupabaseDb.save.mockResolvedValue(undefined);
+    await useProjectStore.getState().create();
+
+    const wall: Wall = { id: 'w1', p1: { x: 0, y: 0 }, p2: { x: 100, y: 0 }, thickness: 20 };
+    useProjectStore.getState().addWall(wall);
+    useProjectStore.getState().removeWall('w1');
+
+    const active = selectActiveProject(useProjectStore.getState());
+    expect(active?.walls ?? []).toHaveLength(0);
+  });
+
+  it('updateWall patches a wall by id', async () => {
+    mockSupabaseDb.getProfile.mockResolvedValue({ plan: 'free' });
+    mockSupabaseDb.save.mockResolvedValue(undefined);
+    await useProjectStore.getState().create();
+
+    const wall: Wall = { id: 'w1', p1: { x: 0, y: 0 }, p2: { x: 100, y: 0 }, thickness: 20 };
+    useProjectStore.getState().addWall(wall);
+    useProjectStore.getState().updateWall('w1', { thickness: 30 });
+
+    const active = selectActiveProject(useProjectStore.getState());
+    expect(active?.walls?.[0].thickness).toBe(30);
+  });
+
+  it('setWalls replaces the full walls list', async () => {
+    mockSupabaseDb.getProfile.mockResolvedValue({ plan: 'free' });
+    mockSupabaseDb.save.mockResolvedValue(undefined);
+    await useProjectStore.getState().create();
+
+    const w1: Wall = { id: 'w1', p1: { x: 0, y: 0 }, p2: { x: 100, y: 0 }, thickness: 20 };
+    const w2: Wall = { id: 'w2', p1: { x: 100, y: 0 }, p2: { x: 100, y: 100 }, thickness: 20 };
+    useProjectStore.getState().addWall(w1);
+    useProjectStore.getState().setWalls([w2]);
+
+    const active = selectActiveProject(useProjectStore.getState());
+    expect(active?.walls).toHaveLength(1);
+    expect(active?.walls?.[0].id).toBe('w2');
+  });
+
+  it('initWallEngine sets walls to empty array', async () => {
+    mockSupabaseDb.getProfile.mockResolvedValue({ plan: 'free' });
+    mockSupabaseDb.save.mockResolvedValue(undefined);
+    await useProjectStore.getState().create();
+
+    useProjectStore.getState().initWallEngine();
+
+    const active = selectActiveProject(useProjectStore.getState());
+    expect(active?.walls).toEqual([]);
   });
 });

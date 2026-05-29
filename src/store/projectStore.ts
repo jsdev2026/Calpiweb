@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { Project, Room, EdgeType, ProjectStatus, ClientInfo, Constraint, ProjectNote, TilingDimension } from '@/types/project';
 import type { Plan, Point } from '@/types/plan';
 import type { TilingConfig } from '@/types/tiling';
+import type { Wall } from '@/types/wall';
 import { supabaseDb } from '@/lib/supabase/db';
 import { generateId } from '@/utils/id';
 import { DEFAULT_TILING_CONFIG } from '@/constants/tileDefaults';
@@ -42,7 +43,7 @@ interface ProjectState {
   /** Shift vertex indices for a given room when vertices are inserted/removed. */
   shiftConstraintIndices: (roomId: string, afterIdx: number, delta: number) => void;
 
-  restoreSnapshot: (rooms: Room[], constraints: Constraint[]) => void;
+  restoreSnapshot: (rooms: Room[], constraints: Constraint[], walls?: Wall[]) => void;
 
   // Partition actions
   addPartition: (roomId: string, p1: Point, p2: Point, thickness: number) => void;
@@ -57,6 +58,13 @@ interface ProjectState {
   updateExcludedZonePoints: (roomId: string, zoneId: string, points: Point[]) => void;
 
   clearPartitionsAndZones: (roomId: string) => void;
+
+  // Wall engine actions
+  addWall: (wall: Wall) => void;
+  removeWall: (id: string) => void;
+  updateWall: (id: string, patch: Partial<Wall>) => void;
+  setWalls: (walls: Wall[]) => void;
+  initWallEngine: () => void;
 
   // Tiling dimension actions
   addTilingDimension: (dim: TilingDimension) => void;
@@ -221,8 +229,13 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     }));
   },
 
-  restoreSnapshot: (rooms, constraints) => {
-    get().updateActive((p) => ({ ...p, rooms, constraints }));
+  restoreSnapshot: (rooms, constraints, walls) => {
+    get().updateActive((p) => ({
+      ...p,
+      rooms,
+      constraints,
+      ...(walls !== undefined ? { walls } : {}),
+    }));
   },
 
   addPartition: (roomId, p1, p2, thickness) => {
@@ -316,6 +329,29 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         constraints: p.constraints.filter((c) => !c.pts.some((pt) => zoneIds.has(pt.roomId))),
       };
     });
+  },
+
+  addWall: (wall) => {
+    get().updateActive((p) => ({ ...p, walls: [...(p.walls ?? []), wall] }));
+  },
+
+  removeWall: (id) => {
+    get().updateActive((p) => ({ ...p, walls: (p.walls ?? []).filter((w) => w.id !== id) }));
+  },
+
+  updateWall: (id, patch) => {
+    get().updateActive((p) => ({
+      ...p,
+      walls: (p.walls ?? []).map((w) => (w.id === id ? { ...w, ...patch } : w)),
+    }));
+  },
+
+  setWalls: (walls) => {
+    get().updateActive((p) => ({ ...p, walls }));
+  },
+
+  initWallEngine: () => {
+    get().updateActive((p) => ({ ...p, walls: p.walls ?? [] }));
   },
 
   addTilingDimension: (dim) => get().updateActive((p) => ({
