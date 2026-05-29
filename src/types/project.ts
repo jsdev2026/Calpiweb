@@ -2,6 +2,7 @@ import type { Point } from './plan';
 import type { TilingConfig } from './tiling';
 import type { TilingDimension } from './tilingDimension';
 import type { MyRole, ProjectLock } from './sharing';
+import type { Wall } from './wall';
 
 export type { TilingDimension };
 
@@ -94,6 +95,7 @@ export interface Project {
   createdAt: number;
   updatedAt: number;
   rooms: Room[];
+  walls?: Wall[];     // wall-segment engine (Phase 1+)
   config: TilingConfig;
   wallThickness: number;
   constraints: Constraint[];
