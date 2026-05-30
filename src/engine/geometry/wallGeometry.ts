@@ -1,119 +1,138 @@
 // src/engine/geometry/wallGeometry.ts
-import type { Wall } from '@/types/wall';
+import type { Wall, WallNode } from '@/types/wall';
 import type { Point } from '@/types/plan';
 
 export interface WallPolygon {
   wallId: string;
-  /** 4 world-coord points: [normal-p1, normal-p2, anti-normal-p2, anti-normal-p1] */
+  /** 4 world-coord points: [+n-node1, +n-node2, -n-node2, -n-node1] */
   points: Point[];
 }
 
 export interface JointLine {
-  /** World-coord endpoints of the joint line (interior corner → exterior corner). */
   p1: Point;
   p2: Point;
 }
 
-/** Euclidean distance. */
-function dist(a: Point, b: Point): number {
-  return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
+function cross(a: Point, b: Point): number {
+  return a.x * b.y - a.y * b.x;
 }
 
-/** Endpoints within this world-unit distance are considered coincident. */
-const ENDPOINT_TOL = 2;
+function nodePos(id: string, nodes: WallNode[]): Point {
+  const n = nodes.find((n) => n.id === id);
+  return n ? { x: n.x, y: n.y } : { x: 0, y: 0 };
+}
 
-/** Return the unit direction vector of a wall (p1→p2). */
-function wallDir(wall: Wall): Point {
-  const dx = wall.p2.x - wall.p1.x;
-  const dy = wall.p2.y - wall.p1.y;
+function wallDir(wall: Wall, nodes: WallNode[]): Point {
+  const p1 = nodePos(wall.node1Id, nodes);
+  const p2 = nodePos(wall.node2Id, nodes);
+  const dx = p2.x - p1.x, dy = p2.y - p1.y;
   const len = Math.sqrt(dx * dx + dy * dy);
   return len < 1e-10 ? { x: 1, y: 0 } : { x: dx / len, y: dy / len };
 }
 
-/** Return the first wall (other than wallId) sharing an endpoint within ENDPOINT_TOL. */
-function findNeighbor(wallId: string, pt: Point, walls: Wall[]): Wall | null {
-  for (const w of walls) {
-    if (w.id === wallId) continue;
-    if (dist(w.p1, pt) < ENDPOINT_TOL || dist(w.p2, pt) < ENDPOINT_TOL) return w;
-  }
-  return null;
+function findNeighborsByNode(wallId: string, nodeId: string, walls: Wall[]): Wall[] {
+  return walls.filter(
+    (w) => w.id !== wallId && (w.node1Id === nodeId || w.node2Id === nodeId),
+  );
+}
+
+/**
+ * Compute t such that:
+ *   vertex_interior = P + nA*hA + t*dA
+ *   vertex_exterior = P - nA*hA - t*dA
+ * Returns null if walls are nearly parallel.
+ */
+function jointParam(
+  nA: Point, hA: number, dA: Point,
+  nB: Point, hB: number, dB: Point,
+): number | null {
+  const denom = cross(dA, dB);
+  if (Math.abs(denom) < 1e-6) return null;
+  const diff: Point = { x: nB.x * hB - nA.x * hA, y: nB.y * hB - nA.y * hA };
+  return cross(diff, dB) / denom;
 }
 
 /**
  * Compute SVG polygon points for each wall.
- *
- * Each wall is rendered as a simple rectangle (no polygon cutting at corners).
- * At joined endpoints the rectangle is extended by the neighbor's half-thickness
- * so that adjacent walls overlap and fill the corner region completely.
- *
- * Polygon order: [normal-p1, normal-p2, anti-normal-p2, anti-normal-p1].
- * Zero-length walls return an empty points array.
+ * Each wall is a rectangle extended at connected endpoints using line-line intersection.
+ * Zero-length walls return empty points.
  */
-export function computeCornerGeometry(walls: Wall[]): WallPolygon[] {
+export function computeCornerGeometry(walls: Wall[], nodes: WallNode[]): WallPolygon[] {
   return walls.map((wall) => {
-    const dx = wall.p2.x - wall.p1.x;
-    const dy = wall.p2.y - wall.p1.y;
+    const p1 = nodePos(wall.node1Id, nodes);
+    const p2 = nodePos(wall.node2Id, nodes);
+    const dx = p2.x - p1.x, dy = p2.y - p1.y;
     const len = Math.sqrt(dx * dx + dy * dy);
     if (len < 0.1) return { wallId: wall.id, points: [] };
 
     const dir: Point = { x: dx / len, y: dy / len };
     const n: Point = { x: -dir.y, y: dir.x };
-    const half = wall.thickness / 2;
+    const h = wall.thickness / 2;
 
-    const nbP1 = findNeighbor(wall.id, wall.p1, walls);
-    const nbP2 = findNeighbor(wall.id, wall.p2, walls);
+    const nbsN1 = findNeighborsByNode(wall.id, wall.node1Id, walls);
+    let extN1 = 0;
+    if (nbsN1.length > 0) {
+      const nb = nbsN1[0]!;
+      const nbDir = wallDir(nb, nodes);
+      const nbN: Point = { x: -nbDir.y, y: nbDir.x };
+      const t = jointParam(n, h, dir, nbN, nb.thickness / 2, nbDir);
+      if (t !== null) extN1 = t;
+    }
 
-    // How far to extend past each endpoint to fill the corner overlap region
-    const extP1 = nbP1 ? nbP1.thickness / 2 : 0;
-    const extP2 = nbP2 ? nbP2.thickness / 2 : 0;
+    const nbsN2 = findNeighborsByNode(wall.id, wall.node2Id, walls);
+    let extN2 = 0;
+    if (nbsN2.length > 0) {
+      const nb = nbsN2[0]!;
+      const nbDir = wallDir(nb, nodes);
+      const nbN: Point = { x: -nbDir.y, y: nbDir.x };
+      const t = jointParam(n, h, dir, nbN, nb.thickness / 2, nbDir);
+      if (t !== null) extN2 = -t;
+    }
 
     return {
       wallId: wall.id,
       points: [
-        { x: wall.p1.x - dir.x * extP1 + n.x * half, y: wall.p1.y - dir.y * extP1 + n.y * half },
-        { x: wall.p2.x + dir.x * extP2 + n.x * half, y: wall.p2.y + dir.y * extP2 + n.y * half },
-        { x: wall.p2.x + dir.x * extP2 - n.x * half, y: wall.p2.y + dir.y * extP2 - n.y * half },
-        { x: wall.p1.x - dir.x * extP1 - n.x * half, y: wall.p1.y - dir.y * extP1 - n.y * half },
+        { x: p1.x - dir.x * extN1 + n.x * h, y: p1.y - dir.y * extN1 + n.y * h },
+        { x: p2.x + dir.x * extN2 + n.x * h, y: p2.y + dir.y * extN2 + n.y * h },
+        { x: p2.x + dir.x * extN2 - n.x * h, y: p2.y + dir.y * extN2 - n.y * h },
+        { x: p1.x - dir.x * extN1 - n.x * h, y: p1.y - dir.y * extN1 - n.y * h },
       ],
     };
   });
 }
 
 /**
- * Compute the joint lines to draw on top of the wall rectangles at each corner.
- *
- * Each joint line runs from the interior corner (p + n1×h1 + n2×h2) to the
- * exterior corner (p − n1×h1 − n2×h2), crossing the full width of the overlap
- * region diagonally.
- *
- * For perpendicular walls of equal thickness: 45°.
- * For different thicknesses: arctan(h1/h2).
+ * Compute joint lines at each shared node between connected walls.
+ * Joint endpoints computed by line-line intersection. Deduplication: one line per shared node.
  */
-export function computeJointLines(walls: Wall[]): JointLine[] {
+export function computeJointLines(walls: Wall[], nodes: WallNode[]): JointLine[] {
   const lines: JointLine[] = [];
   const seen = new Set<string>();
 
   for (const wall of walls) {
-    const dir = wallDir(wall);
+    const dir = wallDir(wall, nodes);
     const n: Point = { x: -dir.y, y: dir.x };
     const h = wall.thickness / 2;
 
-    for (const pt of [wall.p1, wall.p2]) {
-      const nb = findNeighbor(wall.id, pt, walls);
-      if (!nb) continue;
+    for (const nodeId of [wall.node1Id, wall.node2Id]) {
+      const nbs = findNeighborsByNode(wall.id, nodeId, walls);
+      if (nbs.length === 0) continue;
 
-      // Deduplicate: each corner produces one line, not two
-      const key = [wall.id, nb.id].sort().join('~') + `~${Math.round(pt.x)}~${Math.round(pt.y)}`;
+      const nb = nbs[0]!;
+      const key = [wall.id, nb.id].sort().join('~') + '~' + nodeId;
       if (seen.has(key)) continue;
       seen.add(key);
 
-      const nbDir = wallDir(nb);
+      const nbDir = wallDir(nb, nodes);
       const nbN: Point = { x: -nbDir.y, y: nbDir.x };
-      const nbH = nb.thickness / 2;
 
+      const t = jointParam(n, h, dir, nbN, nb.thickness / 2, nbDir);
+      if (t === null) continue;
+
+      const P = nodePos(nodeId, nodes);
       lines.push({
-        p1: { x: pt.x + n.x * h + nbN.x * nbH, y: pt.y + n.y * h + nbN.y * nbH },
-        p2: { x: pt.x - n.x * h - nbN.x * nbH, y: pt.y - n.y * h - nbN.y * nbH },
+        p1: { x: P.x + n.x * h + t * dir.x, y: P.y + n.y * h + t * dir.y },
+        p2: { x: P.x - n.x * h - t * dir.x, y: P.y - n.y * h - t * dir.y },
       });
     }
   }
