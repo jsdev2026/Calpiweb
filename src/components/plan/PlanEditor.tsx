@@ -30,11 +30,15 @@ import {
   type FaceSnapPoint,
 } from './DrawingCanvas';
 import { WallDrawingCanvas } from './WallDrawingCanvas';
-import type { Wall } from '@/types/wall';
+import type { Wall, WallNode } from '@/types/wall';
 
 // ── History ────────────────────────────────────────────────────────────────
 
-interface HistoryEntry { rooms: Room[]; constraints: Constraint[]; walls: Wall[]; }
+interface HistoryEntry {
+  rooms: Room[];
+  constraints: Constraint[];
+  wallEngine?: { nodes: WallNode[]; walls: Wall[] };
+}
 
 // ── Pure geometry helpers ──────────────────────────────────────────────────
 
@@ -231,7 +235,10 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
   const rooms = useProjectStore((s) => selectActiveProject(s)?.rooms ?? []);
   const constraints = useProjectStore((s) => selectActiveProject(s)?.constraints ?? []);
   const wallThickness = useProjectStore((s) => selectActiveProject(s)?.wallThickness ?? 100);
-  const walls          = useProjectStore((s) => selectActiveProject(s)?.walls);
+  const wallEngine     = useProjectStore((s) => selectActiveProject(s)?.wallEngine);
+  const addNode        = useProjectStore((s) => s.addNode);
+  const updateNode     = useProjectStore((s) => s.updateNode);
+  const mergeNodes     = useProjectStore((s) => s.mergeNodes);
   const addWall        = useProjectStore((s) => s.addWall);
   const removeWall     = useProjectStore((s) => s.removeWall);
   const updateWall     = useProjectStore((s) => s.updateWall);
@@ -470,14 +477,14 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
   const futureRef = useRef(future);
   const roomsRef = useRef(rooms);
   const constraintsRef = useRef(constraints);
-  const wallsRef = useRef(walls);
+  const wallEngineRef = useRef(wallEngine);
   const violationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wasViolatingDragRef = useRef(false);
   useEffect(() => { roomsRef.current = rooms; }, [rooms]);
   useEffect(() => { pastRef.current = past; },     [past]);
   useEffect(() => { futureRef.current = future; }, [future]);
   useEffect(() => { constraintsRef.current = constraints; }, [constraints]);
-  useEffect(() => { wallsRef.current = walls; }, [walls]);
+  useEffect(() => { wallEngineRef.current = wallEngine; }, [wallEngine]);
 
   // ── Centrage initial sur les pièces existantes ────────────────────────────
   useEffect(() => {
@@ -524,7 +531,9 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
     setPast((prev) => [{
       rooms: deepCloneRooms(roomsRef.current),
       constraints: [...constraintsRef.current],
-      walls: wallsRef.current ? [...wallsRef.current] : [],
+      wallEngine: wallEngineRef.current
+        ? { nodes: [...wallEngineRef.current.nodes], walls: [...wallEngineRef.current.walls] }
+        : undefined,
     }, ...prev.slice(0, 49)]);
     setFuture([]);
   }, []);
@@ -1591,11 +1600,13 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
     const current: HistoryEntry = {
       rooms: deepCloneRooms(roomsRef.current),
       constraints: [...constraintsRef.current],
-      walls: wallsRef.current ? [...wallsRef.current] : [],
+      wallEngine: wallEngineRef.current
+        ? { nodes: [...wallEngineRef.current.nodes], walls: [...wallEngineRef.current.walls] }
+        : undefined,
     };
     setFuture((f) => [current, ...f.slice(0, 49)]);
     setPast(rest);
-    restoreSnapshot(entry!.rooms, entry!.constraints, entry!.walls);
+    restoreSnapshot(entry!.rooms, entry!.constraints, entry!.wallEngine);
   };
 
   const handleRedo = () => {
@@ -1605,11 +1616,13 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
     const current: HistoryEntry = {
       rooms: deepCloneRooms(roomsRef.current),
       constraints: [...constraintsRef.current],
-      walls: wallsRef.current ? [...wallsRef.current] : [],
+      wallEngine: wallEngineRef.current
+        ? { nodes: [...wallEngineRef.current.nodes], walls: [...wallEngineRef.current.walls] }
+        : undefined,
     };
     setPast((p) => [current, ...p.slice(0, 49)]);
     setFuture(rest);
-    restoreSnapshot(entry!.rooms, entry!.constraints, entry!.walls);
+    restoreSnapshot(entry!.rooms, entry!.constraints, entry!.wallEngine);
   };
 
   const handleAddRoom = () => { const id = addRoom(); setActiveRoomId(id); setTool('WALL'); };
@@ -1747,7 +1760,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
         onToggleTutorial={() => setTutorialMode((v) => !v)}
       />
 
-      {walls === undefined && (
+      {wallEngine === undefined && (
         <button
           type="button"
           title="Basculer vers le nouveau moteur de dessin (murs épais)"
@@ -1856,13 +1869,17 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
         />
       )}
 
-      {walls !== undefined ? (
+      {wallEngine !== undefined ? (
         <WallDrawingCanvas
-          walls={walls}
+          walls={wallEngine.walls}
+          nodes={wallEngine.nodes}
           tool={tool as 'WALL' | 'SELECT' | 'DELETE'}
           onAddWall={addWall}
           onRemoveWall={removeWall}
           onUpdateWall={updateWall}
+          onAddNode={addNode}
+          onUpdateNode={updateNode}
+          onMergeNodes={mergeNodes}
           onPushHistory={pushHistory}
         />
       ) : (
