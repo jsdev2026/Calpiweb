@@ -1,70 +1,87 @@
+// src/engine/geometry/wallSnap.test.ts
 import { describe, it, expect } from 'vitest';
 import { snapToWalls } from './wallSnap';
-import type { Wall } from '@/types/wall';
+import type { Wall, WallNode } from '@/types/wall';
 
 const SCALE = 1;
-const EP_R = 12;  // endpoint radius px
-const FA_R = 8;   // face radius px
+const EP_R = 12;
+const FA_R = 8;
+const HV_R = 8;
 
-const horizontal: Wall = { id: 'h', p1: { x: 0, y: 0 }, p2: { x: 200, y: 0 }, thickness: 20 };
-const vertical: Wall   = { id: 'v', p1: { x: 100, y: 0 }, p2: { x: 100, y: 200 }, thickness: 20 };
+function nd(id: string, x: number, y: number): WallNode { return { id, x, y }; }
+
+// Two walls sharing node 'n2' at (100,0)
+const nodes: WallNode[] = [nd('n1',0,0), nd('n2',100,0), nd('n3',100,200)];
+const horizontal: Wall = { id:'h', node1Id:'n1', node2Id:'n2', thickness:20 };
+const vertical:   Wall = { id:'v', node1Id:'n2', node2Id:'n3', thickness:20 };
 
 describe('snapToWalls — endpoint', () => {
-  it('snaps to p1 within radius', () => {
-    const r = snapToWalls({ x: 5, y: 3 }, [horizontal], SCALE, EP_R, FA_R);
+  it('snaps to node1 position within radius', () => {
+    const r = snapToWalls({ x:5, y:3 }, [horizontal], nodes, SCALE, EP_R, FA_R, HV_R);
     expect(r?.type).toBe('endpoint');
-    expect(r?.point).toEqual({ x: 0, y: 0 });
-    expect(r?.wallId).toBe('h');
+    expect(r?.point).toEqual({ x:0, y:0 });
+    expect(r?.nodeId).toBe('n1');
   });
 
-  it('snaps to p2 within radius', () => {
-    const r = snapToWalls({ x: 197, y: -2 }, [horizontal], SCALE, EP_R, FA_R);
+  it('snaps to node2 position within radius', () => {
+    const r = snapToWalls({ x:97, y:-2 }, [horizontal], nodes, SCALE, EP_R, FA_R, HV_R);
     expect(r?.type).toBe('endpoint');
-    expect(r?.point).toEqual({ x: 200, y: 0 });
+    expect(r?.point).toEqual({ x:100, y:0 });
+    expect(r?.nodeId).toBe('n2');
   });
 
   it('returns null far from all walls', () => {
-    const r = snapToWalls({ x: 500, y: 500 }, [horizontal], SCALE, EP_R, FA_R);
+    const r = snapToWalls({ x:500, y:500 }, [horizontal], nodes, SCALE, EP_R, FA_R, HV_R);
     expect(r).toBeNull();
   });
 
   it('endpoint snap takes priority over face snap', () => {
-    // cursor near p2 of horizontal AND near the face — should be endpoint
-    const r = snapToWalls({ x: 200, y: 5 }, [horizontal], SCALE, EP_R, FA_R);
+    const r = snapToWalls({ x:100, y:5 }, [horizontal], nodes, SCALE, EP_R, FA_R, HV_R);
     expect(r?.type).toBe('endpoint');
   });
 });
 
-describe('snapToWalls — face (T-junction)', () => {
+describe('snapToWalls — face', () => {
   it('snaps to projected point on centerline within face radius', () => {
-    // cursor at (100, 5) — near centerline of horizontal wall at (100, 0)
-    const r = snapToWalls({ x: 100, y: 5 }, [horizontal], SCALE, EP_R, FA_R);
+    const r = snapToWalls({ x:50, y:5 }, [horizontal], nodes, SCALE, EP_R, FA_R, HV_R);
     expect(r?.type).toBe('face');
-    expect(r?.point.x).toBeCloseTo(100);
+    expect(r?.point.x).toBeCloseTo(50);
     expect(r?.point.y).toBeCloseTo(0);
-    expect(r?.wallId).toBe('h');
   });
 
-  it('does not snap to face when projection is outside wall bounds', () => {
-    // cursor at (300, 2) — projection at (300, 0) is beyond p2=(200, 0)
-    const r = snapToWalls({ x: 300, y: 2 }, [horizontal], SCALE, EP_R, FA_R);
-    expect(r).toBeNull();
-  });
-
-  it('does not snap to face when distance exceeds face radius', () => {
-    // cursor at (100, 50) — far from wall
-    const r = snapToWalls({ x: 100, y: 50 }, [horizontal], SCALE, EP_R, FA_R);
+  it('does not snap to face beyond wall bounds', () => {
+    const r = snapToWalls({ x:300, y:20 }, [horizontal], nodes, SCALE, EP_R, FA_R, HV_R);
     expect(r).toBeNull();
   });
 });
 
-describe('snapToWalls — multiple walls', () => {
-  it('picks the closest endpoint when two walls have nearby endpoints', () => {
-    const r = snapToWalls({ x: 100, y: 3 }, [horizontal, vertical], SCALE, EP_R, FA_R);
-    // (100, 0) is p2 of horizontal AND p1 of vertical — both equidistant
-    // either is acceptable, but must be type 'endpoint'
-    expect(r?.type).toBe('endpoint');
-    expect(r?.point.x).toBeCloseTo(100);
+describe('snapToWalls — H/V snap', () => {
+  it('snaps horizontally when cursor is near same Y as a node', () => {
+    // cursor at (150, 3) — near y=0 of n1/n2 but far from endpoint and face
+    const r = snapToWalls({ x:150, y:3 }, [horizontal], nodes, SCALE, EP_R, FA_R, HV_R);
+    expect(r?.type).toBe('hv');
+    expect(r?.axis).toBe('h');
     expect(r?.point.y).toBeCloseTo(0);
+    expect(r?.point.x).toBeCloseTo(150);
+  });
+
+  it('snaps vertically when cursor is near same X as a node', () => {
+    // cursor at (3, 150) — near x=0 of n1
+    const r = snapToWalls({ x:3, y:150 }, [horizontal], nodes, SCALE, EP_R, FA_R, HV_R);
+    expect(r?.type).toBe('hv');
+    expect(r?.axis).toBe('v');
+    expect(r?.point.x).toBeCloseTo(0);
+    expect(r?.point.y).toBeCloseTo(150);
+  });
+
+  it('H/V snap does not activate when cursor is beyond snap radius', () => {
+    const r = snapToWalls({ x:150, y:20 }, [horizontal], nodes, SCALE, EP_R, FA_R, HV_R);
+    expect(r).toBeNull();
+  });
+
+  it('endpoint snap takes priority over H/V snap', () => {
+    // near n2=(100,0) but also near y=0 axis
+    const r = snapToWalls({ x:100, y:3 }, [horizontal, vertical], nodes, SCALE, EP_R, FA_R, HV_R);
+    expect(r?.type).toBe('endpoint');
   });
 });

@@ -1,78 +1,92 @@
-import type { Wall, SnapResult } from '@/types/wall';
+// src/engine/geometry/wallSnap.ts
+import type { Wall, WallNode, SnapResult } from '@/types/wall';
 import type { Point } from '@/types/plan';
 
-/** Euclidean distance in world units. */
 function dist(a: Point, b: Point): number {
   return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
 }
 
-/**
- * Project `cursor` onto the segment [p1, p2].
- * Returns { t, projected } where t ∈ [0,1] is the parameter along the segment
- * and `projected` is the closest point on the infinite line.
- * Returns null if the segment has zero length.
- */
-function projectOntoSegment(
-  cursor: Point,
-  p1: Point,
-  p2: Point,
-): { t: number; projected: Point } | null {
-  const dx = p2.x - p1.x;
-  const dy = p2.y - p1.y;
+function projectOntoSegment(cursor: Point, p1: Point, p2: Point) {
+  const dx = p2.x - p1.x, dy = p2.y - p1.y;
   const lenSq = dx * dx + dy * dy;
   if (lenSq === 0) return null;
   const t = ((cursor.x - p1.x) * dx + (cursor.y - p1.y) * dy) / lenSq;
-  const projected: Point = { x: p1.x + t * dx, y: p1.y + t * dy };
-  return { t, projected };
+  return { t, projected: { x: p1.x + t * dx, y: p1.y + t * dy } };
 }
 
 /**
- * Find the best snap target for `cursor` among `walls`.
+ * Find the best snap target for `cursor` among `walls` and `nodes`.
  *
  * Priority:
- *  1. Endpoint snap (radius = endpointRadiusPx / scale)
+ *  1. Endpoint snap — cursor within endpointRadiusPx of a node used by any wall
  *  2. Face snap — cursor projected onto wall centerline within segment bounds
- *     (radius = faceRadiusPx / scale)
- *  3. null (free placement)
+ *  3. H/V snap — cursor within hvSnapPx on the H or V axis of any node
+ *  4. null
  */
 export function snapToWalls(
   cursor: Point,
   walls: Wall[],
+  nodes: WallNode[],
   scale: number,
   endpointRadiusPx: number,
   faceRadiusPx: number,
+  hvSnapPx: number,
 ): SnapResult | null {
-  const epRadius = endpointRadiusPx / scale;
-  const faceRadius = faceRadiusPx / scale;
+  const epR  = endpointRadiusPx / scale;
+  const faR  = faceRadiusPx / scale;
+  const hvR  = hvSnapPx / scale;
+
+  // Collect node IDs actually used by walls
+  const usedNodeIds = new Set(walls.flatMap((w) => [w.node1Id, w.node2Id]));
+  const activeNodes = nodes.filter((n) => usedNodeIds.has(n.id));
 
   // 1. Endpoint snap
-  let bestEpDist = epRadius;
+  let bestEpDist = epR;
   let bestEp: SnapResult | null = null;
-  for (const wall of walls) {
-    for (const pt of [wall.p1, wall.p2]) {
-      const d = dist(cursor, pt);
-      if (d < bestEpDist) {
-        bestEpDist = d;
-        bestEp = { point: pt, type: 'endpoint', wallId: wall.id };
-      }
+  for (const n of activeNodes) {
+    const d = dist(cursor, { x: n.x, y: n.y });
+    if (d < bestEpDist) {
+      bestEpDist = d;
+      bestEp = { point: { x: n.x, y: n.y }, type: 'endpoint', nodeId: n.id };
     }
   }
   if (bestEp) return bestEp;
 
-  // 2. Face snap (project onto centerline)
-  let bestFaceDist = faceRadius;
-  let bestFace: SnapResult | null = null;
+  // 2. Face snap
+  let bestFaDist = faR;
+  let bestFa: SnapResult | null = null;
   for (const wall of walls) {
-    const proj = projectOntoSegment(cursor, wall.p1, wall.p2);
-    if (!proj) continue;
-    if (proj.t < 0 || proj.t > 1) continue;  // outside segment bounds
+    const p1n = nodes.find((n) => n.id === wall.node1Id);
+    const p2n = nodes.find((n) => n.id === wall.node2Id);
+    if (!p1n || !p2n) continue;
+    const p1: Point = { x: p1n.x, y: p1n.y };
+    const p2: Point = { x: p2n.x, y: p2n.y };
+    const proj = projectOntoSegment(cursor, p1, p2);
+    if (!proj || proj.t < 0 || proj.t > 1) continue;
     const d = dist(cursor, proj.projected);
-    if (d < bestFaceDist) {
-      bestFaceDist = d;
-      bestFace = { point: proj.projected, type: 'face', wallId: wall.id };
+    if (d < bestFaDist) {
+      bestFaDist = d;
+      bestFa = { point: proj.projected, type: 'face', wallId: wall.id };
     }
   }
-  if (bestFace) return bestFace;
+  if (bestFa) return bestFa;
+
+  // 3. H/V snap — check alignment with any active node
+  let bestHvDist = hvR;
+  let bestHv: SnapResult | null = null;
+  for (const n of activeNodes) {
+    const dy = Math.abs(cursor.y - n.y);
+    if (dy < bestHvDist) {
+      bestHvDist = dy;
+      bestHv = { point: { x: cursor.x, y: n.y }, type: 'hv', axis: 'h' };
+    }
+    const dx = Math.abs(cursor.x - n.x);
+    if (dx < bestHvDist) {
+      bestHvDist = dx;
+      bestHv = { point: { x: n.x, y: cursor.y }, type: 'hv', axis: 'v' };
+    }
+  }
+  if (bestHv) return bestHv;
 
   return null;
 }
