@@ -55,6 +55,25 @@ describe('snapToWalls — face', () => {
   });
 });
 
+describe('snapToWalls — H/V snap without walls (first chain node)', () => {
+  it('snaps horizontally to a node even when no walls exist', () => {
+    // First node placed at (0,0), cursor at (150, 3) — should snap to y=0
+    const startNode = nd('start', 0, 0);
+    const r = snapToWalls({ x: 150, y: 3 }, [], [startNode], SCALE, EP_R, FA_R, HV_R);
+    expect(r?.type).toBe('hv');
+    expect(r?.axis).toBe('h');
+    expect(r?.point.y).toBeCloseTo(0);
+  });
+
+  it('snaps vertically to a node even when no walls exist', () => {
+    const startNode = nd('start', 0, 0);
+    const r = snapToWalls({ x: 3, y: 150 }, [], [startNode], SCALE, EP_R, FA_R, HV_R);
+    expect(r?.type).toBe('hv');
+    expect(r?.axis).toBe('v');
+    expect(r?.point.x).toBeCloseTo(0);
+  });
+});
+
 describe('snapToWalls — H/V snap', () => {
   it('snaps horizontally when cursor is near same Y as a node', () => {
     // cursor at (150, 3) — near y=0 of n1/n2 but far from endpoint and face

@@ -71,10 +71,10 @@ export function snapToWalls(
   }
   if (bestFa) return bestFa;
 
-  // 3. H/V snap — check alignment with any active node
+  // 3. H/V snap — check alignment with ANY node (including chain-start nodes not yet connected to walls)
   let bestHvDist = hvR;
   let bestHv: SnapResult | null = null;
-  for (const n of activeNodes) {
+  for (const n of nodes) {
     const dy = Math.abs(cursor.y - n.y);
     if (dy < bestHvDist) {
       bestHvDist = dy;
