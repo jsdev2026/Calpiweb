@@ -26,3 +26,13 @@ export type DrawingChain = {
   nodeIds: string[];   // IDs of nodes already placed in the chain
   thickness: number;
 } | null;
+
+export interface AutoCotation {
+  wallId: string;
+  side: 'exterior' | 'interior' | 'isolated';
+  anchor1: Point;
+  anchor2: Point;
+  normal: Point;
+  offset: number;
+  label: string;
+}
