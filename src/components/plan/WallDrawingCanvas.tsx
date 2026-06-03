@@ -56,7 +56,7 @@ export const WallDrawingCanvas = ({
   onAddWall, onRemoveWall, onUpdateWall,
   onAddNode, onUpdateNode, onMergeNodes, onPushHistory,
   scale, pan, onScaleChange, onPanChange,
-  excludedZones: _excludedZones, onAddExcludedZone: _onAddExcludedZone, onRemoveExcludedZone: _onRemoveExcludedZone,
+  excludedZones, onAddExcludedZone, onRemoveExcludedZone: _onRemoveExcludedZone,
 }: WallDrawingCanvasProps) => {
   const svgRef = useRef<SVGSVGElement | null>(null);
   // Refs mutable pour wheel/touch — évitent les stale closures
@@ -86,6 +86,11 @@ export const WallDrawingCanvas = ({
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
   const dragSnapRef = useRef<SnapResult | null>(null);
 
+  const [excludePoints, setExcludePoints] = useState<Point[]>([]);
+  const excludePointsRef = useRef<Point[]>([]);
+  excludePointsRef.current = excludePoints;
+  const lastClickRef = useRef<{ time: number; x: number; y: number }>({ time: 0, x: 0, y: 0 });
+
   const [isShiftPressed, setIsShiftPressed] = useState(false);
   const [isCtrlPressed,  setIsCtrlPressed]  = useState(false);
 
@@ -93,6 +98,7 @@ export const WallDrawingCanvas = ({
     setSelectedWallId(null);
     setEditingWallId(null);
     setChain(null);
+    setExcludePoints([]);
   }, [tool]);
 
   const tryCloseChain = useCallback(() => {
@@ -113,8 +119,16 @@ export const WallDrawingCanvas = ({
         setChain(null);
         setSelectedWallId(null);
         setEditingWallId(null);
+        setExcludePoints([]);
       }
-      if (e.key === 'Enter') tryCloseChain();
+      if (e.key === 'Enter') {
+        tryCloseChain();
+        if (excludePointsRef.current.length >= 3) {
+          onPushHistory();
+          onAddExcludedZone([...excludePointsRef.current]);
+          setExcludePoints([]);
+        }
+      }
     };
     const up = (e: globalThis.KeyboardEvent) => {
       if (e.key === 'Shift')   setIsShiftPressed(false);
@@ -260,6 +274,25 @@ export const WallDrawingCanvas = ({
           setChain({ ...chain, nodeIds: [...chain.nodeIds, targetNodeId] });
         }
       }
+      return;
+    }
+
+    if (tool === 'EXCLUDE') {
+      const now = Date.now();
+      const last = lastClickRef.current;
+      const isDouble = now - last.time < 350 && dist(world, { x: last.x, y: last.y }) < 30 / scale;
+      lastClickRef.current = { time: now, x: world.x, y: world.y };
+
+      if (isDouble) {
+        if (excludePoints.length >= 3) {
+          onPushHistory();
+          onAddExcludedZone([...excludePoints]);
+          setExcludePoints([]);
+        }
+        return;
+      }
+
+      setExcludePoints((prev) => [...prev, world]);
       return;
     }
 
@@ -552,6 +585,31 @@ export const WallDrawingCanvas = ({
             />
           );
         })}
+
+        {/* Zones exclues existantes */}
+        {excludedZones.map(zone => {
+          if (zone.points.length < 3) return null;
+          const pts = zone.points.map(p => worldToScreen(p));
+          const d = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ') + ' Z';
+          return (
+            <path key={zone.id} d={d}
+              fill="#f59e0b" fillOpacity={0.25}
+              stroke="#f59e0b" strokeWidth={1.5} strokeDasharray="5,3"
+            />
+          );
+        })}
+
+        {/* Zone en cours de tracé */}
+        {tool === 'EXCLUDE' && excludePoints.length >= 1 && cursor && (() => {
+          const pts = [...excludePoints, cursor].map(p => worldToScreen(p));
+          const d = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+          return (
+            <path d={d}
+              fill="none"
+              stroke="#f59e0b" strokeWidth={1.5} strokeDasharray="5,3"
+            />
+          );
+        })()}
 
         {/* Joint lines */}
         {jointLines.map((line, i) => {
