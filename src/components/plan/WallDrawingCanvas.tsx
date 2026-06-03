@@ -6,6 +6,7 @@ import type { Wall, WallNode, DrawingChain, SnapResult } from '@/types/wall';
 import type { Point } from '@/types/plan';
 import { snapToWalls } from '@/engine/geometry/wallSnap';
 import { computeCornerGeometry, computeJointLines } from '@/engine/geometry/wallGeometry';
+import { computeAutoCotations } from '@/engine/geometry/wallCotation';
 import { generateId } from '@/utils/id';
 import { WallEdgeEditor } from './WallEdgeEditor';
 
@@ -275,7 +276,8 @@ export const WallDrawingCanvas = ({
   // ── Geometry ───────────────────────────────────────────────────────────────
 
   const wallPolygons = useMemo(() => computeCornerGeometry(walls, nodes), [walls, nodes]);
-  const jointLines   = useMemo(() => computeJointLines(walls, nodes),     [walls, nodes]);
+  const jointLines    = useMemo(() => computeJointLines(walls, nodes),     [walls, nodes]);
+  const autoCotations = useMemo(() => computeAutoCotations(walls, nodes), [walls, nodes]);
 
   const editingWall = editingWallId ? walls.find((w) => w.id === editingWallId) : null;
   const editingWallN1 = editingWall ? nodes.find((n) => n.id === editingWall.node1Id) : null;
@@ -342,6 +344,52 @@ export const WallDrawingCanvas = ({
             <line key={`joint-${i}`}
               x1={sp1.x} y1={sp1.y} x2={sp2.x} y2={sp2.y}
               stroke="#3d3830" strokeWidth={1.5} />
+          );
+        })}
+
+        {/* Auto-cotations */}
+        {autoCotations.map((c, i) => {
+          const sa1 = worldToScreen(c.anchor1);
+          const sa2 = worldToScreen(c.anchor2);
+          // Offset en coordonnées écran
+          const ox = c.normal.x * c.offset * scale;
+          const oy = c.normal.y * c.offset * scale;
+          const sl1 = { x: sa1.x + ox, y: sa1.y + oy };
+          const sl2 = { x: sa2.x + ox, y: sa2.y + oy };
+          const smid = { x: (sl1.x + sl2.x) / 2, y: (sl1.y + sl2.y) / 2 };
+          const color =
+            c.side === 'exterior' ? '#22c55e' :
+            c.side === 'interior' ? '#3b82f6' : '#f97316';
+          const tick = 5; // px
+          return (
+            <g key={`cot-${i}`} className="pointer-events-none">
+              {/* Lignes témoins pointillées */}
+              <line x1={sa1.x} y1={sa1.y} x2={sl1.x} y2={sl1.y}
+                stroke={color} strokeWidth={0.7} strokeDasharray="3,3" />
+              <line x1={sa2.x} y1={sa2.y} x2={sl2.x} y2={sl2.y}
+                stroke={color} strokeWidth={0.7} strokeDasharray="3,3" />
+              {/* Ligne de cote */}
+              <line x1={sl1.x} y1={sl1.y} x2={sl2.x} y2={sl2.y}
+                stroke={color} strokeWidth={1} />
+              {/* Ticks perpendiculaires (le long de la normale) */}
+              <line
+                x1={sl1.x - c.normal.x * tick} y1={sl1.y - c.normal.y * tick}
+                x2={sl1.x + c.normal.x * tick} y2={sl1.y + c.normal.y * tick}
+                stroke={color} strokeWidth={1.5} />
+              <line
+                x1={sl2.x - c.normal.x * tick} y1={sl2.y - c.normal.y * tick}
+                x2={sl2.x + c.normal.x * tick} y2={sl2.y + c.normal.y * tick}
+                stroke={color} strokeWidth={1.5} />
+              {/* Label */}
+              <text
+                x={smid.x + c.normal.x * 12} y={smid.y + c.normal.y * 12}
+                textAnchor="middle" dominantBaseline="middle"
+                fontSize={11} fill={color}
+                style={{ fontFamily: 'monospace', userSelect: 'none' }}
+              >
+                {c.label}
+              </text>
+            </g>
           );
         })}
 
