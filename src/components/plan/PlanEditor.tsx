@@ -263,6 +263,8 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
   const removeExcludedZone = useProjectStore((s) => s.removeExcludedZone);
   const updateExcludedZonePoints = useProjectStore((s) => s.updateExcludedZonePoints);
   const clearPartitionsAndZones = useProjectStore((s) => s.clearPartitionsAndZones);
+  const addWallExcludedZone    = useProjectStore((s) => s.addWallExcludedZone);
+  const removeWallExcludedZone = useProjectStore((s) => s.removeWallExcludedZone);
   const isTouchDevice = useMemo(
     () => typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches,
     [],
@@ -1873,7 +1875,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
         <WallDrawingCanvas
           walls={wallEngine.walls}
           nodes={wallEngine.nodes}
-          tool={tool as 'WALL' | 'SELECT' | 'DELETE'}
+          tool={tool as 'WALL' | 'SELECT' | 'DELETE' | 'DOOR' | 'EXCLUDE'}
           scale={scale}
           pan={pan}
           onScaleChange={setScale}
@@ -1885,6 +1887,9 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
           onUpdateNode={updateNode}
           onMergeNodes={mergeNodes}
           onPushHistory={pushHistory}
+          excludedZones={wallEngine.excludedZones ?? []}
+          onAddExcludedZone={addWallExcludedZone}
+          onRemoveExcludedZone={removeWallExcludedZone}
         />
       ) : (
         <DrawingCanvas
