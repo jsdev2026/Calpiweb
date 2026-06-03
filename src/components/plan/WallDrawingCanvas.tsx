@@ -393,6 +393,7 @@ export const WallDrawingCanvas = ({
         : snapToWalls(world, snapWalls, otherNodes, scale, ENDPOINT_RADIUS_PX, FACE_RADIUS_PX, HV_SNAP_DRAG_PX);
       const pt = snap?.point ?? world;
       dragSnapRef.current = snap;
+      setSnapResult(snap); // afficher la ligne guide H/V pendant le drag
       onUpdateNode(draggingNodeId, { x: pt.x, y: pt.y });
       setCursor(pt);
       return;
@@ -715,7 +716,7 @@ export const WallDrawingCanvas = ({
         )}
 
         {/* H/V snap guide lines */}
-        {tool === 'WALL' && snapResult?.type === 'hv' && cursor && (() => {
+        {snapResult?.type === 'hv' && cursor && (() => {
           const sc = worldToScreen(cursor);
           if (snapResult.axis === 'h') {
             return <line x1={0} y1={sc.y} x2="100%" y2={sc.y}
