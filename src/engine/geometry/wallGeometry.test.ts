@@ -56,9 +56,9 @@ describe('computeCornerGeometry', () => {
     const p2 = polys.find(p => p.wallId==='w2')!;
     expect(near(p1.points[0]!, { x:0,   y:5  })).toBe(true);
     expect(near(p1.points[3]!, { x:0,   y:-5 })).toBe(true);
-    expect(near(p1.points[1]!, { x:105, y:5  })).toBe(true);
+    expect(near(p1.points[1]!, { x:95,  y:5  })).toBe(true);   // ← 105→95
     expect(near(p1.points[2]!, { x:105, y:-5 })).toBe(true);
-    expect(near(p2.points[0]!, { x:95,  y:-5 })).toBe(true);
+    expect(near(p2.points[0]!, { x:95,  y:5  })).toBe(true);   // ← -5→5
     expect(near(p2.points[3]!, { x:105, y:-5 })).toBe(true);
   });
 
@@ -71,8 +71,8 @@ describe('computeCornerGeometry', () => {
     const polys = computeCornerGeometry(walls, nodes);
     const p1 = polys.find(p => p.wallId==='w1')!;
     const extX = p1.points[1]!.x - 100;
-    expect(extX).toBeGreaterThan(0);
-    expect(extX).toBeLessThan(5); // must be less than T/2=5
+    expect(extX).toBeLessThan(0);        // coin intérieur se rétracte avant P
+    expect(extX).toBeGreaterThan(-5);    // mais de moins d'un demi-épaisseur
   });
 
   it('120° corner — extension greater than T/2', () => {
@@ -89,7 +89,7 @@ describe('computeCornerGeometry', () => {
     const polys = computeCornerGeometry(walls, nodes);
     const p1 = polys.find(p => p.wallId==='w1')!;
     const extX = p1.points[1]!.x - 100;
-    expect(extX).toBeGreaterThan(5); // must be greater than T/2=5
+    expect(extX).toBeLessThan(-5);       // rétraction > T/2 = 5
   });
 
 });
