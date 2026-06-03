@@ -531,7 +531,7 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
           puisse masquer tous les autres enfants de body sans position:fixed */}
       {printMounted && createPortal(
         <div id="quantities-print-target">
-          {activeProject && <QuantitiesPrintView project={activeProject} />}
+          {activeProject && <QuantitiesPrintView project={activeProject} rooms={rooms} />}
         </div>,
         document.body,
       )}

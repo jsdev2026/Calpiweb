@@ -1,5 +1,5 @@
 'use client';
-import type { Project } from '@/types/project';
+import type { Project, Room } from '@/types/project';
 import { analyzeQuantities } from '@/engine/quantities/quantityEngine';
 import { mergeSimilarCutGroups } from '@/engine/quantities/mergeSimilarCutGroups';
 import { formatCm, formatM2 } from '@/utils/formatters';
@@ -40,10 +40,12 @@ const LAYOUT_LABELS: Record<string, string> = {
 
 export interface QuantitiesPrintViewProps {
   project: Project;
+  rooms?: Room[]; // override project.rooms (e.g. wall-engine derived rooms)
 }
 
-export const QuantitiesPrintView = ({ project }: QuantitiesPrintViewProps) => {
-  const { config, wallThickness, rooms, client, name, description } = project;
+export const QuantitiesPrintView = ({ project, rooms: roomsProp }: QuantitiesPrintViewProps) => {
+  const { config, wallThickness, client, name, description } = project;
+  const rooms = roomsProp ?? project.rooms;
 
   const generatedDate = new Date().toLocaleDateString('fr-FR', {
     day: 'numeric',
