@@ -4,8 +4,7 @@ import type { PlanTool } from './PlanToolbar';
 // ── Tests logique pointer-events overlay ─────────────────────────────────────
 
 describe('overlay pointer-events logic', () => {
-  const tools: PlanTool[] = ['WALL', 'DOOR', 'PARTITION', 'EXCLUDE', 'APPLY_H', 'APPLY_V',
-                             'DIMENSION', 'COINCIDE', 'ANCHOR'];
+  const tools: PlanTool[] = ['WALL', 'DOOR', 'EXCLUDE', 'DELETE'];
 
   it('overlay a pointer-events: none pour chaque outil de dessin', () => {
     for (const tool of tools) {

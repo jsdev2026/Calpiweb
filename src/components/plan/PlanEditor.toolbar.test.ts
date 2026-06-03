@@ -6,10 +6,7 @@ import { TOOL_STATUS_TEXTS } from './ToolStatusBar';
 // ── Escape → SELECT ──────────────────────────────────────────────────────────
 
 describe('Escape key → SELECT', () => {
-  const nonSelectTools: PlanTool[] = [
-    'WALL', 'DOOR', 'PARTITION', 'EXCLUDE',
-    'APPLY_H', 'APPLY_V', 'COINCIDE', 'DIMENSION', 'ANCHOR', 'DELETE',
-  ];
+  const nonSelectTools: PlanTool[] = ['WALL', 'DOOR', 'EXCLUDE', 'DELETE'];
 
   it('chaque outil non-SELECT doit céder à SELECT après Escape', () => {
     for (const tool of nonSelectTools) {
@@ -47,14 +44,7 @@ describe('ToolStatusBar — STATUS_TEXTS', () => {
     expect(TOOL_STATUS_TEXTS['DOOR']).toBe('Cliquez sur un mur pour placer une porte');
   });
 
-  it('COINCIDE a un texte', () => {
-    expect(TOOL_STATUS_TEXTS['COINCIDE']).toBe('Cliquez sur le nœud, puis sur un mur/nœud pour les joindre');
-  });
-
-  const drawingTools: Array<keyof typeof TOOL_STATUS_TEXTS> = [
-    'WALL', 'DOOR', 'PARTITION', 'EXCLUDE',
-    'APPLY_H', 'APPLY_V', 'COINCIDE', 'DIMENSION', 'ANCHOR',
-  ];
+  const drawingTools: Array<keyof typeof TOOL_STATUS_TEXTS> = ['WALL', 'DOOR', 'EXCLUDE', 'DELETE'];
 
   it('tous les outils de dessin ont un texte non vide', () => {
     for (const tool of drawingTools) {
@@ -104,10 +94,7 @@ describe('mode tutorial', () => {
 
 describe('PlanTool type — sans THICKNESS', () => {
   it('THICKNESS n\'est pas dans la liste des outils valides', () => {
-    const tools: PlanTool[] = [
-      'SELECT', 'WALL', 'DOOR', 'APPLY_H', 'APPLY_V',
-      'COINCIDE', 'ANCHOR', 'PARTITION', 'EXCLUDE', 'DIMENSION',
-    ];
+    const tools: PlanTool[] = ['SELECT', 'WALL', 'DOOR', 'EXCLUDE', 'DELETE'];
     // @ts-expect-error — 'THICKNESS' was removed from PlanTool
     const thickness: PlanTool = 'THICKNESS';
     expect(tools).not.toContain(thickness);
@@ -254,10 +241,7 @@ describe('réouverture pièce sur suppression mur', () => {
 
 describe('DELETE tool', () => {
   it('DELETE fait partie de PlanTool', () => {
-    const tools: PlanTool[] = [
-      'SELECT', 'WALL', 'DOOR', 'APPLY_H', 'APPLY_V',
-      'COINCIDE', 'ANCHOR', 'PARTITION', 'EXCLUDE', 'DIMENSION', 'DELETE',
-    ];
+    const tools: PlanTool[] = ['SELECT', 'WALL', 'DOOR', 'EXCLUDE', 'DELETE'];
     expect(tools).toContain('DELETE');
   });
 
