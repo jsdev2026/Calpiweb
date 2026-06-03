@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
-import type { Wall, WallNode, DrawingChain, SnapResult } from '@/types/wall';
+import type { Wall, WallNode, DrawingChain, SnapResult, WallExcludedZone } from '@/types/wall';
 import type { Point } from '@/types/plan';
 import { snapToWalls } from '@/engine/geometry/wallSnap';
 import { computeCornerGeometry, computeJointLines } from '@/engine/geometry/wallGeometry';
@@ -10,7 +10,7 @@ import { computeAutoCotations } from '@/engine/geometry/wallCotation';
 import { generateId } from '@/utils/id';
 import { WallEdgeEditor } from './WallEdgeEditor';
 
-type PlanTool = 'WALL' | 'SELECT' | 'DELETE';
+type PlanTool = 'WALL' | 'SELECT' | 'DELETE' | 'DOOR' | 'EXCLUDE';
 
 const DEFAULT_THICKNESS   = 20;
 const ENDPOINT_RADIUS_PX  = 12;
@@ -20,6 +20,8 @@ const NODE_HANDLE_RADIUS_PX = 10;
 const WALL_COLOR          = '#6b6056';
 const WALL_SELECTED_COLOR = '#e67e22';
 const SNAP_INDICATOR_R    = 8;
+const DOOR_DEFAULT_WIDTH_MM = 900;
+const DOOR_MIN_WALL_MM      = 600;
 
 interface WallDrawingCanvasProps {
   walls: Wall[];
@@ -36,6 +38,9 @@ interface WallDrawingCanvasProps {
   pan: Point;
   onScaleChange: (s: number) => void;
   onPanChange: (p: Point) => void;
+  excludedZones: WallExcludedZone[];
+  onAddExcludedZone: (points: Point[]) => void;
+  onRemoveExcludedZone: (id: string) => void;
 }
 
 function screenToWorld(pt: Point, pan: Point, scale: number): Point {
@@ -51,6 +56,7 @@ export const WallDrawingCanvas = ({
   onAddWall, onRemoveWall, onUpdateWall,
   onAddNode, onUpdateNode, onMergeNodes, onPushHistory,
   scale, pan, onScaleChange, onPanChange,
+  excludedZones: _excludedZones, onAddExcludedZone: _onAddExcludedZone, onRemoveExcludedZone: _onRemoveExcludedZone,
 }: WallDrawingCanvasProps) => {
   const svgRef = useRef<SVGSVGElement | null>(null);
   // Refs mutable pour wheel/touch — évitent les stale closures
@@ -257,6 +263,50 @@ export const WallDrawingCanvas = ({
       return;
     }
 
+    if (tool === 'DOOR') {
+      const hit = hitTestWall(world);
+      if (!hit) return;
+      const n1 = nodes.find((n) => n.id === hit.node1Id);
+      const n2 = nodes.find((n) => n.id === hit.node2Id);
+      if (!n1 || !n2) return;
+
+      if (hit.isDoor) {
+        onPushHistory();
+        onRemoveWall(hit.id);
+        return;
+      }
+
+      const dx = n2.x - n1.x, dy = n2.y - n1.y;
+      const len = Math.hypot(dx, dy);
+      if (len < DOOR_MIN_WALL_MM) return;
+
+      const halfW = Math.min(DOOR_DEFAULT_WIDTH_MM / 2, len * 0.4);
+      const t = Math.max(0, Math.min(1,
+        ((world.x - n1.x) * dx + (world.y - n1.y) * dy) / (len * len),
+      ));
+      const tCenter = Math.max(halfW / len, Math.min(1 - halfW / len, t));
+
+      const d1: Point = {
+        x: n1.x + (dx / len) * (tCenter * len - halfW),
+        y: n1.y + (dy / len) * (tCenter * len - halfW),
+      };
+      const d2: Point = {
+        x: n1.x + (dx / len) * (tCenter * len + halfW),
+        y: n1.y + (dy / len) * (tCenter * len + halfW),
+      };
+
+      const id1 = generateId(), id2 = generateId();
+      // Add new nodes + walls BEFORE removing the original (prevents node pruning)
+      onPushHistory();
+      onAddNode({ id: id1, x: d1.x, y: d1.y });
+      onAddNode({ id: id2, x: d2.x, y: d2.y });
+      onAddWall({ id: generateId(), node1Id: hit.node1Id, node2Id: id1,         thickness: hit.thickness });
+      onAddWall({ id: generateId(), node1Id: id1,          node2Id: id2,         thickness: hit.thickness, isDoor: true });
+      onAddWall({ id: generateId(), node1Id: id2,          node2Id: hit.node2Id, thickness: hit.thickness });
+      onRemoveWall(hit.id);
+      return;
+    }
+
     if (tool === 'SELECT') {
       const hitNode = hitTestNode(world);
       if (hitNode) {
@@ -419,8 +469,9 @@ export const WallDrawingCanvas = ({
 
   // ── Geometry ───────────────────────────────────────────────────────────────
 
-  const wallPolygons = useMemo(() => computeCornerGeometry(walls, nodes), [walls, nodes]);
-  const jointLines    = useMemo(() => computeJointLines(walls, nodes),     [walls, nodes]);
+  const nonDoorWalls = useMemo(() => walls.filter(w => !w.isDoor), [walls]);
+  const wallPolygons  = useMemo(() => computeCornerGeometry(nonDoorWalls, nodes), [nonDoorWalls, nodes]);
+  const jointLines    = useMemo(() => computeJointLines(nonDoorWalls, nodes),     [nonDoorWalls, nodes]);
   const autoCotations = useMemo(() => computeAutoCotations(walls, nodes), [walls, nodes]);
 
   const editingWall = editingWallId ? walls.find((w) => w.id === editingWallId) : null;
@@ -485,6 +536,21 @@ export const WallDrawingCanvas = ({
             .map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`)
             .join(' ');
           return <polygon key={poly.wallId} points={screenPts} fill={color} />;
+        })}
+
+        {/* Ouvertures (murs isDoor) — ligne dashed orange */}
+        {walls.filter(w => w.isDoor).map(w => {
+          const n1 = nodes.find((n) => n.id === w.node1Id);
+          const n2 = nodes.find((n) => n.id === w.node2Id);
+          if (!n1 || !n2) return null;
+          const s1 = worldToScreen({ x: n1.x, y: n1.y });
+          const s2 = worldToScreen({ x: n2.x, y: n2.y });
+          return (
+            <line key={`door-${w.id}`}
+              x1={s1.x} y1={s1.y} x2={s2.x} y2={s2.y}
+              stroke="#e67e22" strokeWidth={2} strokeDasharray="8,4"
+            />
+          );
         })}
 
         {/* Joint lines */}
