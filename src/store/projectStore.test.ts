@@ -10,8 +10,10 @@ vi.mock('@/lib/supabase/db', () => ({
 }));
 
 import { supabaseDb } from '@/lib/supabase/db';
-import { useProjectStore, selectActiveProject } from './projectStore';
+import { useProjectStore, selectActiveProject, selectRooms } from './projectStore';
 import type { Wall, WallNode } from '@/types/wall';
+
+function nd(id: string, x: number, y: number): WallNode { return { id, x, y }; }
 
 const mockSupabaseDb = vi.mocked(supabaseDb);
 
@@ -204,5 +206,67 @@ describe('projectStore — wall engine actions', () => {
     const active = selectActiveProject(useProjectStore.getState());
     expect(active?.wallEngine?.walls).toHaveLength(0);
     expect(active?.wallEngine?.nodes.find((n) => n.id === 'n2')).toBeUndefined();
+  });
+});
+
+describe('selectRooms', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    useProjectStore.setState({ projects: [], hydrated: false, activeProjectId: null });
+  });
+
+  it('returns [] when no active project', () => {
+    expect(selectRooms(useProjectStore.getState())).toEqual([]);
+  });
+
+  it('returns project.rooms when wallEngine is undefined', () => {
+    const rooms = [{ id: 'r1', name: 'R1', points: [{ x: 0, y: 0 }], edges: [] as never, partitions: [], excludedZones: [] }];
+    useProjectStore.setState({
+      projects: [{
+        id: 'p1', name: 'test', status: 'new' as const,
+        createdAt: 0, updatedAt: 0,
+        rooms, wallEngine: undefined,
+        config: {} as never, wallThickness: 100, constraints: [], notes: [],
+      }],
+      activeProjectId: 'p1',
+    });
+    expect(selectRooms(useProjectStore.getState())).toBe(rooms);
+  });
+
+  it('returns [] from wallsToRooms when wallEngine has no walls', () => {
+    useProjectStore.setState({
+      projects: [{
+        id: 'p1', name: 'test', status: 'new' as const,
+        createdAt: 0, updatedAt: 0,
+        rooms: [{ id: 'legacy', name: 'L', points: [], edges: [] as never, partitions: [], excludedZones: [] }],
+        wallEngine: { walls: [], nodes: [] },
+        config: {} as never, wallThickness: 100, constraints: [], notes: [],
+      }],
+      activeProjectId: 'p1',
+    });
+    expect(selectRooms(useProjectStore.getState())).toEqual([]);
+  });
+
+  it('returns 1 room from wallsToRooms when wallEngine has a closed rectangle', () => {
+    const nodes = [nd('a', 0, 0), nd('b', 100, 0), nd('c', 100, 100), nd('d', 0, 100)];
+    const walls: Wall[] = [
+      { id: 'w1', node1Id: 'a', node2Id: 'b', thickness: 20 },
+      { id: 'w2', node1Id: 'b', node2Id: 'c', thickness: 20 },
+      { id: 'w3', node1Id: 'c', node2Id: 'd', thickness: 20 },
+      { id: 'w4', node1Id: 'd', node2Id: 'a', thickness: 20 },
+    ];
+    useProjectStore.setState({
+      projects: [{
+        id: 'p1', name: 'test', status: 'new' as const,
+        createdAt: 0, updatedAt: 0,
+        rooms: [],
+        wallEngine: { walls, nodes },
+        config: {} as never, wallThickness: 100, constraints: [], notes: [],
+      }],
+      activeProjectId: 'p1',
+    });
+    const result = selectRooms(useProjectStore.getState());
+    expect(result).toHaveLength(1);
+    expect(result[0]!.points).toHaveLength(4);
   });
 });

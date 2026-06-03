@@ -4,6 +4,7 @@ import type { Plan, Point } from '@/types/plan';
 import type { TilingConfig } from '@/types/tiling';
 import type { Wall, WallNode } from '@/types/wall';
 import { supabaseDb } from '@/lib/supabase/db';
+import { wallsToRooms } from '@/engine/geometry/wallFaces';
 import { generateId } from '@/utils/id';
 import { DEFAULT_TILING_CONFIG } from '@/constants/tileDefaults';
 import { WALL_THICKNESS_MM } from '@/constants/businessRules';
@@ -447,3 +448,11 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
 
 export const selectActiveProject = (state: ProjectState): Project | null =>
   state.projects.find((p) => p.id === state.activeProjectId) ?? null;
+
+export function selectRooms(s: ProjectState): Room[] {
+  const project = selectActiveProject(s);
+  if (!project) return [];
+  const we = project.wallEngine;
+  if (we !== undefined) return wallsToRooms(we.walls, we.nodes);
+  return project.rooms;
+}
