@@ -15,7 +15,7 @@ type PlanTool = 'WALL' | 'SELECT' | 'DELETE' | 'DOOR' | 'EXCLUDE';
 
 const ENDPOINT_RADIUS_PX  = 12;
 const FACE_RADIUS_PX      = 8;
-const HV_SNAP_PX          = 8;
+const HV_SNAP_PX          = 20;
 const NODE_HANDLE_RADIUS_PX = 10;
 const WALL_COLOR          = 'var(--canvas-wall)';
 const WALL_SELECTED_COLOR = '#e67e22';
