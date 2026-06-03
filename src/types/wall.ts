@@ -23,7 +23,7 @@ export interface WallExcludedZone {
 
 export interface SnapResult {
   point: Point;
-  type: 'endpoint' | 'face' | 'hv';
+  type: 'endpoint' | 'face' | 'hv' | 'perpendicular';
   wallId?: string;
   nodeId?: string;
   axis?: 'h' | 'v';

@@ -4,7 +4,7 @@ import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import type { Wall, WallNode, DrawingChain, SnapResult, WallExcludedZone } from '@/types/wall';
 import type { Point } from '@/types/plan';
-import { snapToWalls } from '@/engine/geometry/wallSnap';
+import { snapToWalls, perpendicularSnapForNode } from '@/engine/geometry/wallSnap';
 import { computeCornerGeometry, computeJointLines } from '@/engine/geometry/wallGeometry';
 import { computeAutoCotations } from '@/engine/geometry/wallCotation';
 import { wallsToRooms } from '@/engine/geometry/wallFaces';
@@ -17,6 +17,7 @@ const ENDPOINT_RADIUS_PX  = 12;
 const FACE_RADIUS_PX      = 8;
 const HV_SNAP_PX          = 20;
 const HV_SNAP_DRAG_PX     = 40; // snap H/V amplifié en mode drag nœud
+const PERP_SNAP_PX        = 30; // snap perpendicularité (cercle de Thales) en mode drag
 const NODE_HANDLE_RADIUS_PX = 10;
 const WALL_COLOR          = 'var(--canvas-wall)';
 const WALL_SELECTED_COLOR = '#e67e22';
@@ -388,12 +389,34 @@ export const WallDrawingCanvas = ({
     if (draggingNodeId) {
       const otherNodes = nodes.filter((n) => n.id !== draggingNodeId);
       const snapWalls  = walls.filter((w) => w.node1Id !== draggingNodeId && w.node2Id !== draggingNodeId);
-      const snap = isCtrlPressed
-        ? null
-        : snapToWalls(world, snapWalls, otherNodes, scale, ENDPOINT_RADIUS_PX, FACE_RADIUS_PX, HV_SNAP_DRAG_PX);
+
+      // Nœuds adjacents (autres extrémités des murs connectés au nœud dragué)
+      const adjacentNodes = walls
+        .filter((w) => w.node1Id === draggingNodeId || w.node2Id === draggingNodeId)
+        .map((w) => {
+          const otherId = w.node1Id === draggingNodeId ? w.node2Id : w.node1Id;
+          return nodes.find((n) => n.id === otherId);
+        })
+        .filter((n): n is WallNode => n !== undefined);
+
+      let snap = null;
+      if (!isCtrlPressed) {
+        // 1. Endpoint snap (priorité max)
+        const wallSnap = snapToWalls(world, snapWalls, otherNodes, scale, ENDPOINT_RADIUS_PX, FACE_RADIUS_PX, HV_SNAP_DRAG_PX);
+        if (wallSnap?.type === 'endpoint') {
+          snap = wallSnap;
+        } else {
+          // 2. Perpendicularité (Thales) — priorité sur H/V
+          const perpSnap = adjacentNodes.length >= 2
+            ? perpendicularSnapForNode(world, adjacentNodes, scale, PERP_SNAP_PX)
+            : null;
+          snap = perpSnap ?? wallSnap;
+        }
+      }
+
       const pt = snap?.point ?? world;
       dragSnapRef.current = snap;
-      setSnapResult(snap); // afficher la ligne guide H/V pendant le drag
+      setSnapResult(snap); // afficher indicateur pendant le drag
       onUpdateNode(draggingNodeId, { x: pt.x, y: pt.y });
       setCursor(pt);
       return;
@@ -727,7 +750,7 @@ export const WallDrawingCanvas = ({
         })()}
 
         {/* Snap indicator */}
-        {tool === 'WALL' && cursor && (() => {
+        {cursor && (() => {
           const sc = worldToScreen(cursor);
           if (snapResult?.type === 'endpoint') {
             return <circle cx={sc.x} cy={sc.y} r={SNAP_INDICATOR_R}
@@ -741,6 +764,12 @@ export const WallDrawingCanvas = ({
           if (snapResult?.type === 'hv') {
             return <circle cx={sc.x} cy={sc.y} r={SNAP_INDICATOR_R}
               fill="none" stroke="#27ae60" strokeWidth={1.5} strokeDasharray="3,2" />;
+          }
+          if (snapResult?.type === 'perpendicular') {
+            // Petit carré vert = symbole d'angle droit
+            const s = SNAP_INDICATOR_R;
+            return <rect x={sc.x - s / 2} y={sc.y - s / 2} width={s} height={s}
+              fill="rgba(39,174,96,0.2)" stroke="#27ae60" strokeWidth={2} />;
           }
           return null;
         })()}

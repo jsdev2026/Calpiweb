@@ -1,6 +1,6 @@
 // src/engine/geometry/wallSnap.test.ts
 import { describe, it, expect } from 'vitest';
-import { snapToWalls } from './wallSnap';
+import { snapToWalls, perpendicularSnapForNode } from './wallSnap';
 import type { Wall, WallNode } from '@/types/wall';
 
 const SCALE = 1;
@@ -51,6 +51,46 @@ describe('snapToWalls — face', () => {
 
   it('does not snap to face beyond wall bounds', () => {
     const r = snapToWalls({ x:300, y:20 }, [horizontal], nodes, SCALE, EP_R, FA_R, HV_R);
+    expect(r).toBeNull();
+  });
+});
+
+describe('perpendicularSnapForNode — Thales circle', () => {
+  // A at (0,0), B at (200,0) → Thales circle center=(100,0) radius=100
+  // Any point on the circle makes a 90° angle between OA and OB
+  const A = nd('a', 0, 0);
+  const B = nd('b', 200, 0);
+  const PERP_R = 20; // px
+
+  it('snaps to Thales circle when cursor is near the 90° position above', () => {
+    // Perfect 90° point: (100,100) — on the circle, above the diameter
+    // Move cursor slightly off: (100, 95) — within perpR/scale of circle
+    const r = perpendicularSnapForNode({ x: 100, y: 95 }, [A, B], 1, PERP_R);
+    expect(r?.type).toBe('perpendicular');
+    expect(r?.point.x).toBeCloseTo(100, 0);
+    expect(r?.point.y).toBeCloseTo(100, 0);
+  });
+
+  it('snaps to Thales circle when cursor is near the 90° position below', () => {
+    const r = perpendicularSnapForNode({ x: 100, y: -95 }, [A, B], 1, PERP_R);
+    expect(r?.type).toBe('perpendicular');
+    expect(r?.point.y).toBeCloseTo(-100, 0);
+  });
+
+  it('returns null when cursor is far from the Thales circle', () => {
+    // (100, 50) — on center, far inside circle (dist to circle = 50, perpR = 20)
+    const r = perpendicularSnapForNode({ x: 100, y: 50 }, [A, B], 1, PERP_R);
+    expect(r).toBeNull();
+  });
+
+  it('returns null when only one adjacent node (no pair)', () => {
+    const r = perpendicularSnapForNode({ x: 100, y: 95 }, [A], 1, PERP_R);
+    expect(r).toBeNull();
+  });
+
+  it('returns null near A (degenerate — snap would be at endpoint, not 90°)', () => {
+    // (5, 5) is near A — snap point would be near A → excluded
+    const r = perpendicularSnapForNode({ x: 5, y: 5 }, [A, B], 1, PERP_R);
     expect(r).toBeNull();
   });
 });

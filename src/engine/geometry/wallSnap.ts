@@ -90,3 +90,63 @@ export function snapToWalls(
 
   return null;
 }
+
+/**
+ * Perpendicular snap for a node being dragged.
+ *
+ * For each pair of adjacent nodes A and B (the other ends of walls connected to
+ * the dragged node), the dragged node forms a 90° angle if and only if it lies
+ * on the Thales circle (diameter = AB, center = midpoint(A,B), radius = |AB|/2).
+ *
+ * Returns the projection of `cursor` onto the closest Thales circle when the
+ * cursor is within `perpRadiusPx` pixels of that circle.
+ *
+ * Priority: lower than endpoint snap, but higher than H/V snap.
+ */
+export function perpendicularSnapForNode(
+  cursor: Point,
+  adjacentNodes: WallNode[],
+  scale: number,
+  perpRadiusPx: number,
+): SnapResult | null {
+  const perpR = perpRadiusPx / scale;
+
+  let best: { distToCircle: number; point: Point } | null = null;
+
+  for (let i = 0; i < adjacentNodes.length; i++) {
+    for (let j = i + 1; j < adjacentNodes.length; j++) {
+      const A = adjacentNodes[i]!;
+      const B = adjacentNodes[j]!;
+
+      // Thales circle: center = midpoint(A,B), radius = |AB|/2
+      const mx = (A.x + B.x) / 2;
+      const my = (A.y + B.y) / 2;
+      const radius = Math.hypot(B.x - A.x, B.y - A.y) / 2;
+
+      if (radius < 1) continue; // A and B are coincident
+
+      const distToCenter = Math.hypot(cursor.x - mx, cursor.y - my);
+      if (distToCenter < 1) continue; // cursor at center — undefined projection
+
+      const distToCircle = Math.abs(distToCenter - radius);
+      if (distToCircle >= perpR) continue;
+
+      // Project cursor onto the Thales circle
+      const dx = (cursor.x - mx) / distToCenter;
+      const dy = (cursor.y - my) / distToCenter;
+      const snapPt: Point = { x: mx + dx * radius, y: my + dy * radius };
+
+      // Exclude degenerate snap near A or B (angle would be 0° or 180°, not 90°)
+      const nearA = Math.hypot(snapPt.x - A.x, snapPt.y - A.y) < radius * 0.15;
+      const nearB = Math.hypot(snapPt.x - B.x, snapPt.y - B.y) < radius * 0.15;
+      if (nearA || nearB) continue;
+
+      if (!best || distToCircle < best.distToCircle) {
+        best = { distToCircle, point: snapPt };
+      }
+    }
+  }
+
+  if (!best) return null;
+  return { point: best.point, type: 'perpendicular' };
+}
