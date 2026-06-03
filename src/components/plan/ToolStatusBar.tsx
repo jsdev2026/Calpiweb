@@ -2,16 +2,10 @@
 import type { PlanTool } from './PlanToolbar';
 
 export const TOOL_STATUS_TEXTS: Partial<Record<PlanTool, string>> = {
-  WALL:      'Cliquez pour poser un point',
-  DOOR:      'Cliquez sur un mur pour placer une porte',
-  PARTITION: 'Cliquez pour tracer une cloison',
-  EXCLUDE:   'Délimitez la zone à exclure',
-  APPLY_H:   "Cliquez sur un mur pour le verrouiller à l'horizontale",
-  APPLY_V:   'Cliquez sur un mur pour le verrouiller à la verticale',
-  COINCIDE:  'Cliquez sur le nœud, puis sur un mur/nœud pour les joindre',
-  DIMENSION: 'Cliquez sur un premier nœud, puis sur le second',
-  ANCHOR:    'Cliquez sur un nœud pour le figer en place',
-  DELETE:    'Cliquez sur un élément pour le supprimer — Échap pour quitter',
+  WALL:    'Cliquez pour poser un point',
+  DOOR:    'Cliquez sur un mur pour placer une porte',
+  EXCLUDE: 'Délimitez la zone à exclure du carrelage',
+  DELETE:  'Cliquez sur un élément pour le supprimer — Échap pour quitter',
 };
 
 export const ToolStatusBar = ({ tool }: { tool: PlanTool }) => {
