@@ -7,6 +7,7 @@ import type { Point } from '@/types/plan';
 import { snapToWalls } from '@/engine/geometry/wallSnap';
 import { computeCornerGeometry, computeJointLines } from '@/engine/geometry/wallGeometry';
 import { computeAutoCotations } from '@/engine/geometry/wallCotation';
+import { wallsToRooms } from '@/engine/geometry/wallFaces';
 import { generateId } from '@/utils/id';
 import { WallEdgeEditor } from './WallEdgeEditor';
 
@@ -17,7 +18,7 @@ const ENDPOINT_RADIUS_PX  = 12;
 const FACE_RADIUS_PX      = 8;
 const HV_SNAP_PX          = 8;
 const NODE_HANDLE_RADIUS_PX = 10;
-const WALL_COLOR          = '#6b6056';
+const WALL_COLOR          = 'var(--canvas-wall)';
 const WALL_SELECTED_COLOR = '#e67e22';
 const SNAP_INDICATOR_R    = 8;
 const DOOR_DEFAULT_WIDTH_MM = 900;
@@ -507,10 +508,11 @@ export const WallDrawingCanvas = ({
 
   // ── Geometry ───────────────────────────────────────────────────────────────
 
-  const nonDoorWalls = useMemo(() => walls.filter(w => !w.isDoor), [walls]);
+  const nonDoorWalls  = useMemo(() => walls.filter(w => !w.isDoor), [walls]);
   const wallPolygons  = useMemo(() => computeCornerGeometry(nonDoorWalls, nodes), [nonDoorWalls, nodes]);
   const jointLines    = useMemo(() => computeJointLines(nonDoorWalls, nodes),     [nonDoorWalls, nodes]);
   const autoCotations = useMemo(() => computeAutoCotations(walls, nodes), [walls, nodes]);
+  const detectedRooms = useMemo(() => wallsToRooms(walls, nodes), [walls, nodes]);
 
   const editingWall = editingWallId ? walls.find((w) => w.id === editingWallId) : null;
   const editingWallN1 = editingWall ? nodes.find((n) => n.id === editingWall.node1Id) : null;
@@ -539,9 +541,9 @@ export const WallDrawingCanvas = ({
 
   return (
     <div
-      className="relative h-full w-full overflow-hidden bg-[#1a1c24]"
+      className="relative h-full w-full overflow-hidden"
       tabIndex={0}
-      style={{ touchAction: 'none' }}
+      style={{ background: 'var(--canvas-bg)', touchAction: 'none' }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -560,10 +562,35 @@ export const WallDrawingCanvas = ({
         <defs>
           <pattern id="wdc-grid" width={20 * scale} height={20 * scale} patternUnits="userSpaceOnUse"
             x={pan.x % (20 * scale)} y={pan.y % (20 * scale)}>
-            <circle cx={10 * scale} cy={10 * scale} r="0.8" fill="#272b38" />
+            <circle cx={10 * scale} cy={10 * scale} r="0.8" fill="var(--canvas-dot)" />
           </pattern>
         </defs>
         <rect width="100%" height="100%" fill="url(#wdc-grid)" />
+
+        {/* Fill des pièces détectées + label */}
+        {detectedRooms.map((room) => {
+          if (room.points.length < 3) return null;
+          const screenPts = room.points
+            .map((p) => worldToScreen(p))
+            .map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`)
+            .join(' ');
+          const cx = room.points.reduce((s, p) => s + p.x, 0) / room.points.length;
+          const cy = room.points.reduce((s, p) => s + p.y, 0) / room.points.length;
+          const sc = worldToScreen({ x: cx, y: cy });
+          return (
+            <g key={`room-fill-${room.id}`} className="pointer-events-none">
+              <polygon points={screenPts} fill="var(--canvas-poly-active)" />
+              <text
+                x={sc.x} y={sc.y}
+                textAnchor="middle" dominantBaseline="middle"
+                fontSize={11} fill="var(--canvas-name-active)"
+                style={{ fontFamily: 'system-ui', userSelect: 'none' }}
+              >
+                {room.name ?? ''}
+              </text>
+            </g>
+          );
+        })}
 
         {/* Wall polygons */}
         {wallPolygons.map((poly) => {
@@ -624,7 +651,7 @@ export const WallDrawingCanvas = ({
           return (
             <line key={`joint-${i}`}
               x1={sp1.x} y1={sp1.y} x2={sp2.x} y2={sp2.y}
-              stroke="#3d3830" strokeWidth={1.5} />
+              stroke="var(--canvas-wall-joint)" strokeWidth={1.5} />
           );
         })}
 
