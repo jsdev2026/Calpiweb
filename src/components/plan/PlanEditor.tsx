@@ -30,14 +30,14 @@ import {
   type FaceSnapPoint,
 } from './DrawingCanvas';
 import { WallDrawingCanvas } from './WallDrawingCanvas';
-import type { Wall, WallNode } from '@/types/wall';
+import type { Wall, WallNode, WallExcludedZone } from '@/types/wall';
 
 // ── History ────────────────────────────────────────────────────────────────
 
 interface HistoryEntry {
   rooms: Room[];
   constraints: Constraint[];
-  wallEngine?: { nodes: WallNode[]; walls: Wall[] };
+  wallEngine?: { nodes: WallNode[]; walls: Wall[]; excludedZones: WallExcludedZone[] };
 }
 
 // ── Pure geometry helpers ──────────────────────────────────────────────────
@@ -532,7 +532,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
       rooms: deepCloneRooms(roomsRef.current),
       constraints: [...constraintsRef.current],
       wallEngine: wallEngineRef.current
-        ? { nodes: [...wallEngineRef.current.nodes], walls: [...wallEngineRef.current.walls] }
+        ? { nodes: [...wallEngineRef.current.nodes], walls: [...wallEngineRef.current.walls], excludedZones: [...(wallEngineRef.current.excludedZones ?? [])] }
         : undefined,
     }, ...prev.slice(0, 49)]);
     setFuture([]);
@@ -1601,7 +1601,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
       rooms: deepCloneRooms(roomsRef.current),
       constraints: [...constraintsRef.current],
       wallEngine: wallEngineRef.current
-        ? { nodes: [...wallEngineRef.current.nodes], walls: [...wallEngineRef.current.walls] }
+        ? { nodes: [...wallEngineRef.current.nodes], walls: [...wallEngineRef.current.walls], excludedZones: [...(wallEngineRef.current.excludedZones ?? [])] }
         : undefined,
     };
     setFuture((f) => [current, ...f.slice(0, 49)]);
@@ -1617,7 +1617,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
       rooms: deepCloneRooms(roomsRef.current),
       constraints: [...constraintsRef.current],
       wallEngine: wallEngineRef.current
-        ? { nodes: [...wallEngineRef.current.nodes], walls: [...wallEngineRef.current.walls] }
+        ? { nodes: [...wallEngineRef.current.nodes], walls: [...wallEngineRef.current.walls], excludedZones: [...(wallEngineRef.current.excludedZones ?? [])] }
         : undefined,
     };
     setPast((p) => [current, ...p.slice(0, 49)]);

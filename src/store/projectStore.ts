@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import type { Project, Room, EdgeType, ProjectStatus, ClientInfo, Constraint, ProjectNote, TilingDimension } from '@/types/project';
 import type { Plan, Point } from '@/types/plan';
 import type { TilingConfig } from '@/types/tiling';
-import type { Wall, WallNode } from '@/types/wall';
+import type { Wall, WallNode, WallExcludedZone } from '@/types/wall';
 import { supabaseDb } from '@/lib/supabase/db';
 import { wallsToRooms } from '@/engine/geometry/wallFaces';
 import { generateId } from '@/utils/id';
@@ -44,7 +44,11 @@ interface ProjectState {
   /** Shift vertex indices for a given room when vertices are inserted/removed. */
   shiftConstraintIndices: (roomId: string, afterIdx: number, delta: number) => void;
 
-  restoreSnapshot: (rooms: Room[], constraints: Constraint[], wallEngine?: { nodes: WallNode[]; walls: Wall[] }) => void;
+  restoreSnapshot: (
+    rooms: Room[],
+    constraints: Constraint[],
+    wallEngine?: { nodes: WallNode[]; walls: Wall[]; excludedZones: WallExcludedZone[] }
+  ) => void;
 
   // Partition actions
   addPartition: (roomId: string, p1: Point, p2: Point, thickness: number) => void;
@@ -72,6 +76,8 @@ interface ProjectState {
   updateWall: (id: string, patch: Partial<Wall>) => void;
   setWalls: (walls: Wall[]) => void;
   initWallEngine: () => void;
+  addWallExcludedZone: (points: Point[]) => void;
+  removeWallExcludedZone: (id: string) => void;
 
   // Tiling dimension actions
   addTilingDimension: (dim: TilingDimension) => void;
@@ -383,7 +389,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         }))
         .filter((w) => w.node1Id !== w.node2Id);
       const nodes = p.wallEngine.nodes.filter((n) => n.id !== dropId);
-      return { ...p, wallEngine: { nodes, walls } };
+      return { ...p, wallEngine: { nodes, walls, excludedZones: p.wallEngine.excludedZones ?? [] } };
     });
   },
 
@@ -400,7 +406,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       const walls = p.wallEngine.walls.filter((w) => w.id !== id);
       const referencedIds = new Set(walls.flatMap((w) => [w.node1Id, w.node2Id]));
       const nodes = p.wallEngine.nodes.filter((n) => referencedIds.has(n.id));
-      return { ...p, wallEngine: { nodes, walls } };
+      return { ...p, wallEngine: { nodes, walls, excludedZones: p.wallEngine.excludedZones ?? [] } };
     });
   },
 
@@ -425,7 +431,41 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   },
 
   initWallEngine: () => {
-    get().updateActive((p) => ({ ...p, wallEngine: p.wallEngine ?? { nodes: [], walls: [] } }));
+    get().updateActive((p) => ({
+      ...p,
+      wallEngine: p.wallEngine ?? { nodes: [], walls: [], excludedZones: [] },
+    }));
+  },
+
+  addWallExcludedZone: (points) => {
+    get().updateActive((p) => {
+      if (!p.wallEngine) return p;
+      return {
+        ...p,
+        updatedAt: Date.now(),
+        wallEngine: {
+          ...p.wallEngine,
+          excludedZones: [
+            ...(p.wallEngine.excludedZones ?? []),
+            { id: generateId(), points },
+          ],
+        },
+      };
+    });
+  },
+
+  removeWallExcludedZone: (id) => {
+    get().updateActive((p) => {
+      if (!p.wallEngine) return p;
+      return {
+        ...p,
+        updatedAt: Date.now(),
+        wallEngine: {
+          ...p.wallEngine,
+          excludedZones: (p.wallEngine.excludedZones ?? []).filter(z => z.id !== id),
+        },
+      };
+    });
   },
 
   addTilingDimension: (dim) => get().updateActive((p) => ({
@@ -453,6 +493,6 @@ export function selectRooms(s: ProjectState): Room[] {
   const project = selectActiveProject(s);
   if (!project) return [];
   const we = project.wallEngine;
-  if (we !== undefined) return wallsToRooms(we.walls, we.nodes);
+  if (we !== undefined) return wallsToRooms(we.walls, we.nodes, we.excludedZones ?? []);
   return project.rooms;
 }

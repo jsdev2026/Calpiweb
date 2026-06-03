@@ -76,7 +76,7 @@ describe('projectStore — wall engine actions', () => {
   it('initWallEngine sets wallEngine to empty nodes/walls', async () => {
     await createAndInit();
     const active = selectActiveProject(useProjectStore.getState());
-    expect(active?.wallEngine).toEqual({ nodes: [], walls: [] });
+    expect(active?.wallEngine).toEqual({ nodes: [], walls: [], excludedZones: [] });
   });
 
   it('addWall appends a wall to wallEngine', async () => {
@@ -239,7 +239,7 @@ describe('selectRooms', () => {
         id: 'p1', name: 'test', status: 'new' as const,
         createdAt: 0, updatedAt: 0,
         rooms: [{ id: 'legacy', name: 'L', points: [], edges: [] as never, partitions: [], excludedZones: [] }],
-        wallEngine: { walls: [], nodes: [] },
+        wallEngine: { walls: [], nodes: [], excludedZones: [] },
         config: {} as never, wallThickness: 100, constraints: [], notes: [],
       }],
       activeProjectId: 'p1',
@@ -260,7 +260,7 @@ describe('selectRooms', () => {
         id: 'p1', name: 'test', status: 'new' as const,
         createdAt: 0, updatedAt: 0,
         rooms: [],
-        wallEngine: { walls, nodes },
+        wallEngine: { walls, nodes, excludedZones: [] },
         config: {} as never, wallThickness: 100, constraints: [], notes: [],
       }],
       activeProjectId: 'p1',

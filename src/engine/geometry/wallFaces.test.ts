@@ -105,7 +105,7 @@ describe('wallsToRooms — excludedZones', () => {
     const rooms = wallsToRooms(rectWalls, rectNodes, zones);
     expect(rooms).toHaveLength(1);
     expect(rooms[0]!.excludedZones).toHaveLength(1);
-    expect(rooms[0]!.excludedZones[0]!.id).toBe('z1');
+    expect(rooms[0]!.excludedZones![0]!.id).toBe('z1');
   });
 
   it('ignores zone whose centroid is outside all rooms', () => {
