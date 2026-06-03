@@ -32,6 +32,10 @@ interface WallDrawingCanvasProps {
   onUpdateNode: (id: string, patch: { x?: number; y?: number }) => void;
   onMergeNodes: (keepId: string, dropId: string) => void;
   onPushHistory: () => void;
+  scale: number;
+  pan: Point;
+  onScaleChange: (s: number) => void;
+  onPanChange: (p: Point) => void;
 }
 
 function screenToWorld(pt: Point, pan: Point, scale: number): Point {
@@ -46,10 +50,14 @@ export const WallDrawingCanvas = ({
   walls, nodes, tool,
   onAddWall, onRemoveWall, onUpdateWall,
   onAddNode, onUpdateNode, onMergeNodes, onPushHistory,
+  scale, pan, onScaleChange, onPanChange,
 }: WallDrawingCanvasProps) => {
   const svgRef = useRef<SVGSVGElement | null>(null);
-  const [scale, setScale] = useState(0.5);
-  const [pan,   setPan]   = useState<Point>({ x: 200, y: 200 });
+  // Refs mutable pour wheel/touch — évitent les stale closures
+  const scaleRef = useRef(scale);
+  const panRef   = useRef(pan);
+  scaleRef.current = scale; // toujours à jour pendant le rendu
+  panRef.current   = pan;
   const [isPanning, setIsPanning] = useState(false);
   const panStart = useRef<{ panX:number; panY:number; clientX:number; clientY:number } | null>(null);
 
@@ -86,7 +94,7 @@ export const WallDrawingCanvas = ({
     y: pt.y * scale + pan.y,
   }), [pan, scale]);
 
-  // Wheel zoom — non-passive
+  // Wheel zoom — centré sur curseur, non-passive
   useEffect(() => {
     const svg = svgRef.current;
     if (!svg) return;
@@ -95,15 +103,18 @@ export const WallDrawingCanvas = ({
       const factor = e.deltaY < 0 ? 1.1 : 0.9;
       const rect = svg.getBoundingClientRect();
       const ox = e.clientX - rect.left, oy = e.clientY - rect.top;
-      setScale((s) => {
-        const ns = Math.max(0.05, Math.min(5, s * factor));
-        setPan((p) => ({ x: ox - (ox - p.x) * (ns / s), y: oy - (oy - p.y) * (ns / s) }));
-        return ns;
-      });
+      const s = scaleRef.current;
+      const p = panRef.current;
+      const ns = Math.max(0.005, Math.min(4, s * factor));
+      const np = { x: ox - (ox - p.x) * (ns / s), y: oy - (oy - p.y) * (ns / s) };
+      scaleRef.current = ns;
+      panRef.current   = np;
+      onScaleChange(ns);
+      onPanChange(np);
     };
     svg.addEventListener('wheel', onWheel, { passive: false });
     return () => svg.removeEventListener('wheel', onWheel);
-  }, []);
+  }, [onScaleChange, onPanChange]);
 
   // ── Hit test helpers ───────────────────────────────────────────────────────
 
@@ -213,7 +224,7 @@ export const WallDrawingCanvas = ({
   const handlePointerMove = (e: ReactPointerEvent<SVGSVGElement>) => {
     if (isPanning && panStart.current) {
       const sp = getSvgPos(e);
-      setPan({
+      onPanChange({
         x: panStart.current.panX + (sp.x - panStart.current.clientX),
         y: panStart.current.panY + (sp.y - panStart.current.clientY),
       });

@@ -1874,6 +1874,10 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
           walls={wallEngine.walls}
           nodes={wallEngine.nodes}
           tool={tool as 'WALL' | 'SELECT' | 'DELETE'}
+          scale={scale}
+          pan={pan}
+          onScaleChange={setScale}
+          onPanChange={setPan}
           onAddWall={addWall}
           onRemoveWall={removeWall}
           onUpdateWall={updateWall}
