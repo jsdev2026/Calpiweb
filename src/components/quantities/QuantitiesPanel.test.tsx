@@ -19,6 +19,10 @@ vi.mock('@/store/projectStore', () => ({
     }),
   selectActiveProject: (state: { activeProjectId: string; projects: { id: string }[] }) =>
     state.projects.find((p) => p.id === state.activeProjectId) ?? null,
+  selectRooms: (state: { activeProjectId: string; projects: { id: string; rooms: unknown[] }[] }) => {
+    const project = state.projects.find((p) => p.id === state.activeProjectId);
+    return project?.rooms ?? [];
+  },
 }));
 
 vi.mock('@/engine/quantities/quantityEngine', () => ({
