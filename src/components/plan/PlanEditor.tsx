@@ -19,6 +19,7 @@ import { DimensionEditor } from './DimensionEditor';
 import { DimensionPopup } from './DimensionPopup';
 import { WallEdgeEditor } from './WallEdgeEditor';
 import { RoomPanel } from './RoomPanel';
+import { WallRoomPanel } from './WallRoomPanel';
 import { RoomTabs } from './RoomTabs';
 import { useDraggableSnap } from './useDraggableSnap';
 import {
@@ -1774,19 +1775,28 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
       )}
 
       <div className="hidden md:block mouse:block">
-        <RoomPanel
-          rooms={rooms}
-          activeRoomId={activeRoomId}
-          onSelectRoom={setActiveRoomId}
-          onAddRoom={handleAddRoom}
-          onRemoveRoom={handleRemoveRoom}
-          onRenameRoom={renameRoom}
-          onClearRoom={handleClearRoom}
-          zone={roomZone}
-          isDragging={roomDragging}
-          onPointerDown={handleRoomPointerDown}
-          tutorialMode={tutorialMode}
-        />
+        {wallEngine !== undefined ? (
+          <WallRoomPanel
+            zone={roomZone}
+            isDragging={roomDragging}
+            onPointerDown={handleRoomPointerDown}
+            tutorialMode={tutorialMode}
+          />
+        ) : (
+          <RoomPanel
+            rooms={rooms}
+            activeRoomId={activeRoomId}
+            onSelectRoom={setActiveRoomId}
+            onAddRoom={handleAddRoom}
+            onRemoveRoom={handleRemoveRoom}
+            onRenameRoom={renameRoom}
+            onClearRoom={handleClearRoom}
+            zone={roomZone}
+            isDragging={roomDragging}
+            onPointerDown={handleRoomPointerDown}
+            tutorialMode={tutorialMode}
+          />
+        )}
       </div>
 
       {/* Mobile: touch hint */}
