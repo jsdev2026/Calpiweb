@@ -2,10 +2,6 @@
 import type { Wall, WallNode } from '@/types/wall';
 import type { Room, EdgeType } from '@/types/project';
 
-function pos(id: string, nodes: WallNode[]): { x: number; y: number } {
-  return nodes.find(n => n.id === id) ?? { x: 0, y: 0 };
-}
-
 function shoelaceArea(pts: { x: number; y: number }[]): number {
   let s = 0;
   for (let i = 0; i < pts.length; i++) {
@@ -36,8 +32,16 @@ function faceId(nodeIds: string[]): string {
 export function wallsToRooms(walls: Wall[], nodes: WallNode[]): Room[] {
   if (walls.length === 0 || nodes.length === 0) return [];
 
+  // O(1) lookups; missing-node guard below ensures no undefined access
+  const nodeMap = new Map(nodes.map(n => [n.id, n]));
+
+  // Drop walls that reference a node not present in the graph
+  const validWalls = walls.filter(w => nodeMap.has(w.node1Id) && nodeMap.has(w.node2Id));
+
+  const getPos = (id: string) => nodeMap.get(id)!;
+
   type HE = { from: string; to: string };
-  const halfEdges: HE[] = walls.flatMap(w => [
+  const halfEdges: HE[] = validWalls.flatMap(w => [
     { from: w.node1Id, to: w.node2Id },
     { from: w.node2Id, to: w.node1Id },
   ]);
@@ -49,14 +53,14 @@ export function wallsToRooms(walls: Wall[], nodes: WallNode[]): Room[] {
   }
 
   const nextHE = (he: HE): HE | null => {
-    const u = pos(he.from, nodes);
-    const v = pos(he.to, nodes);
+    const u = getPos(he.from);
+    const v = getPos(he.to);
     const θRev = Math.atan2(u.y - v.y, u.x - v.x);
     let best: HE | null = null;
     let bestCw = Infinity;
     for (const e of (out.get(he.to) ?? [])) {
       if (e.to === he.from) continue;
-      const w = pos(e.to, nodes);
+      const w = getPos(e.to);
       const θOut = Math.atan2(w.y - v.y, w.x - v.x);
       const cw = ((θRev - θOut) + 2 * Math.PI) % (2 * Math.PI);
       if (cw < bestCw) { bestCw = cw; best = e; }
@@ -65,7 +69,7 @@ export function wallsToRooms(walls: Wall[], nodes: WallNode[]): Room[] {
   };
 
   const visited = new Set<string>();
-  const key = (he: HE) => `${he.from}→${he.to}`;
+  const key = (he: HE) => `${he.from}\x00${he.to}`;
   type FacePt = { nodeId: string; x: number; y: number };
   const faces: FacePt[][] = [];
 
@@ -79,7 +83,7 @@ export function wallsToRooms(walls: Wall[], nodes: WallNode[]): Room[] {
       cur = nextHE(cur);
     }
     if (cur && key(cur) === key(start) && cycle.length >= 3) {
-      faces.push(cycle.map(he => { const p = pos(he.from, nodes); return { nodeId: he.from, x: p.x, y: p.y }; }));
+      faces.push(cycle.map(he => { const p = getPos(he.from); return { nodeId: he.from, x: p.x, y: p.y }; }));
     }
   }
 

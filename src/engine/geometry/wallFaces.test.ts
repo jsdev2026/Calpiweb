@@ -62,6 +62,10 @@ describe('wallsToRooms', () => {
     const rooms = wallsToRooms(walls, nodes);
     expect(rooms).toHaveLength(2);
     rooms.forEach(r => expect(r.points).toHaveLength(4));
+    const ids = rooms.map(r => r.id);
+    expect(new Set(ids).size).toBe(2); // IDs are unique
+    expect(rooms[0]!.name).toBe('Pièce 1');
+    expect(rooms[1]!.name).toBe('Pièce 2');
   });
 
   it('generates stable IDs — same graph always produces same room IDs', () => {
