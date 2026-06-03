@@ -90,6 +90,18 @@ export function detectClosedPolygons(
 
 // ── Helpers internes pour computeAutoCotations ────────────────────────────
 
+/** Détermine si plus est intérieur (côté le plus proche du centroïde). */
+function plusIsInterior(
+  poly: { points: Point[] },
+  centroid: Point,
+): boolean {
+  const midPlus:  Point = { x: (poly.points[0]!.x + poly.points[1]!.x) / 2,
+                             y: (poly.points[0]!.y + poly.points[1]!.y) / 2 };
+  const midMinus: Point = { x: (poly.points[2]!.x + poly.points[3]!.x) / 2,
+                             y: (poly.points[2]!.y + poly.points[3]!.y) / 2 };
+  return dist(midPlus, centroid) < dist(midMinus, centroid);
+}
+
 /** Normale intérieure du mur (côté le plus proche du centroïde). */
 function interiorNormal(
   wall: Wall,
@@ -100,13 +112,7 @@ function interiorNormal(
   const d = wallDir(wall, nodes);
   const nPlus: Point = { x: -d.y, y: d.x };
   if (!poly || poly.points.length < 4) return nPlus;
-  const midPlus:  Point = { x: (poly.points[0]!.x + poly.points[1]!.x) / 2,
-                             y: (poly.points[0]!.y + poly.points[1]!.y) / 2 };
-  const midMinus: Point = { x: (poly.points[2]!.x + poly.points[3]!.x) / 2,
-                             y: (poly.points[2]!.y + poly.points[3]!.y) / 2 };
-  return dist(midPlus, centroid) < dist(midMinus, centroid)
-    ? nPlus
-    : { x: -nPlus.x, y: -nPlus.y };
+  return plusIsInterior(poly, centroid) ? nPlus : { x: -nPlus.x, y: -nPlus.y };
 }
 
 /**
@@ -159,11 +165,7 @@ export function computeAutoCotations(walls: Wall[], nodes: WallNode[]): AutoCota
 
       const dir     = wallDir(wall, nodes);
       const nPlus: Point = { x: -dir.y, y: dir.x };
-      const midPlus:  Point = { x: (poly.points[0]!.x + poly.points[1]!.x) / 2,
-                                 y: (poly.points[0]!.y + poly.points[1]!.y) / 2 };
-      const midMinus: Point = { x: (poly.points[2]!.x + poly.points[3]!.x) / 2,
-                                 y: (poly.points[2]!.y + poly.points[3]!.y) / 2 };
-      const plusIsInt = dist(midPlus, centroid) < dist(midMinus, centroid);
+      const plusIsInt = plusIsInterior(poly, centroid);
 
       // ── Anchors extérieurs (coins WallPolygon côté le plus éloigné) ──
       const extPt1  = plusIsInt ? poly.points[3]! : poly.points[0]!;
