@@ -218,7 +218,7 @@ export const WallDrawingCanvas = ({
   // ── Pointer handlers ───────────────────────────────────────────────────────
 
   const handlePointerDown = (e: ReactPointerEvent<SVGSVGElement>) => {
-    if (e.button === 1 || (e.button === 0 && e.altKey)) {
+    if (e.button === 1 || e.button === 2 || (e.button === 0 && e.altKey)) {
       setIsPanning(true);
       const sp = getSvgPos(e);
       panStart.current = { panX: pan.x, panY: pan.y, clientX: sp.x, clientY: sp.y };
@@ -355,6 +355,11 @@ export const WallDrawingCanvas = ({
         setEditThickness(hit.thickness.toFixed(1));
       } else {
         setEditingWallId(null);
+        // Clic gauche sur zone vide → pan
+        setIsPanning(true);
+        const sp = getSvgPos(e);
+        panStart.current = { panX: pan.x, panY: pan.y, clientX: sp.x, clientY: sp.y };
+        (e.currentTarget as SVGSVGElement).setPointerCapture(e.pointerId);
       }
       return;
     }
@@ -548,6 +553,7 @@ export const WallDrawingCanvas = ({
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onKeyDown={handleKeyDown}
+        onContextMenu={(e) => e.preventDefault()}
         tabIndex={0}
       >
         {/* Grid */}
