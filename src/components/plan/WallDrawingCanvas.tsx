@@ -16,6 +16,7 @@ type PlanTool = 'WALL' | 'SELECT' | 'DELETE' | 'DOOR' | 'EXCLUDE';
 const ENDPOINT_RADIUS_PX  = 12;
 const FACE_RADIUS_PX      = 8;
 const HV_SNAP_PX          = 20;
+const HV_SNAP_DRAG_PX     = 40; // snap H/V amplifié en mode drag nœud
 const NODE_HANDLE_RADIUS_PX = 10;
 const WALL_COLOR          = 'var(--canvas-wall)';
 const WALL_SELECTED_COLOR = '#e67e22';
@@ -389,7 +390,7 @@ export const WallDrawingCanvas = ({
       const snapWalls  = walls.filter((w) => w.node1Id !== draggingNodeId && w.node2Id !== draggingNodeId);
       const snap = isCtrlPressed
         ? null
-        : snapToWalls(world, snapWalls, otherNodes, scale, ENDPOINT_RADIUS_PX, FACE_RADIUS_PX, HV_SNAP_PX);
+        : snapToWalls(world, snapWalls, otherNodes, scale, ENDPOINT_RADIUS_PX, FACE_RADIUS_PX, HV_SNAP_DRAG_PX);
       const pt = snap?.point ?? world;
       dragSnapRef.current = snap;
       onUpdateNode(draggingNodeId, { x: pt.x, y: pt.y });
