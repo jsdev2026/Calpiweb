@@ -8,7 +8,7 @@ import { PlanEditor } from '@/components/plan/PlanEditor';
 import { TilingEditor } from '@/components/tiling/TilingEditor';
 import { QuantitiesPanel } from '@/components/quantities/QuantitiesPanel';
 import { QuantitiesPrintView } from '@/components/quantities/QuantitiesPrintView';
-import { selectActiveProject, useProjectStore } from '@/store/projectStore';
+import { selectActiveProject, selectRooms, useProjectStore } from '@/store/projectStore';
 import { useUiStore } from '@/store/uiStore';
 import { useSharingStore } from '@/store/sharingStore';
 import type { ProjectStatus } from '@/types/project';
@@ -224,6 +224,7 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
   const hydrate = useProjectStore((s) => s.hydrate);
   const setActive = useProjectStore((s) => s.setActive);
   const activeProject = useProjectStore(selectActiveProject);
+  const rooms = useProjectStore(selectRooms);
   const rename = useProjectStore((s) => s.rename);
   const setConfig = useProjectStore((s) => s.setConfig);
   const setStatus = useProjectStore((s) => s.setStatus);
@@ -327,8 +328,8 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
     );
   }
 
-  const canGoTiling = activeProject.rooms.some((r) => r.points.length >= 3);
-  const roomCount = activeProject.rooms.filter(r => r.points.length >= 3).length;
+  const canGoTiling = rooms.some((r) => r.points.length >= 3);
+  const roomCount = rooms.filter(r => r.points.length >= 3).length;
   const isReadOnly = lockStatus === 'locked_by_other' || activeProject.myRole === 'viewer';
   const initials = user?.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() ?? 'CP';
   const planLabel: Record<string, string> = { free: 'Gratuit', pro: 'Pro', team: 'Équipe' };
@@ -517,7 +518,7 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
         {tab === 'TILING' && (
           <div className="flex flex-1 overflow-hidden">
             <TilingEditor
-              rooms={activeProject.rooms}
+              rooms={rooms}
               config={activeProject.config}
               wallThickness={activeProject.wallThickness}
               setConfig={setConfig}
