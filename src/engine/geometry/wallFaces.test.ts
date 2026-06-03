@@ -1,7 +1,7 @@
 // src/engine/geometry/wallFaces.test.ts
 import { describe, it, expect } from 'vitest';
 import { wallsToRooms } from './wallFaces';
-import type { Wall, WallNode } from '@/types/wall';
+import type { Wall, WallNode, WallExcludedZone } from '@/types/wall';
 
 function nd(id: string, x: number, y: number): WallNode { return { id, x, y }; }
 
@@ -80,5 +80,40 @@ describe('wallsToRooms', () => {
     const r2 = wallsToRooms(walls, nodes);
     expect(r1[0]!.id).toBe(r2[0]!.id);
     expect(r1[0]!.id).toMatch(/^wf-/);
+  });
+});
+
+describe('wallsToRooms — excludedZones', () => {
+  const rectNodes = [nd('a', 0, 0), nd('b', 100, 0), nd('c', 100, 100), nd('d', 0, 100)];
+  const rectWalls: Wall[] = [
+    { id: 'w1', node1Id: 'a', node2Id: 'b', thickness: 20 },
+    { id: 'w2', node1Id: 'b', node2Id: 'c', thickness: 20 },
+    { id: 'w3', node1Id: 'c', node2Id: 'd', thickness: 20 },
+    { id: 'w4', node1Id: 'd', node2Id: 'a', thickness: 20 },
+  ];
+
+  it('returns rooms with empty excludedZones when no zones provided', () => {
+    const rooms = wallsToRooms(rectWalls, rectNodes);
+    expect(rooms[0]!.excludedZones).toEqual([]);
+  });
+
+  it('assigns zone to room when zone centroid is inside the room', () => {
+    const zones: WallExcludedZone[] = [{
+      id: 'z1',
+      points: [{ x: 30, y: 30 }, { x: 70, y: 30 }, { x: 70, y: 70 }, { x: 30, y: 70 }],
+    }];
+    const rooms = wallsToRooms(rectWalls, rectNodes, zones);
+    expect(rooms).toHaveLength(1);
+    expect(rooms[0]!.excludedZones).toHaveLength(1);
+    expect(rooms[0]!.excludedZones[0]!.id).toBe('z1');
+  });
+
+  it('ignores zone whose centroid is outside all rooms', () => {
+    const zones: WallExcludedZone[] = [{
+      id: 'z2',
+      points: [{ x: 200, y: 200 }, { x: 250, y: 200 }, { x: 250, y: 250 }, { x: 200, y: 250 }],
+    }];
+    const rooms = wallsToRooms(rectWalls, rectNodes, zones);
+    expect(rooms[0]!.excludedZones).toHaveLength(0);
   });
 });

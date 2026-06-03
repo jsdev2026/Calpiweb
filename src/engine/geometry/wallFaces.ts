@@ -1,6 +1,7 @@
 // src/engine/geometry/wallFaces.ts
-import type { Wall, WallNode } from '@/types/wall';
+import type { Wall, WallNode, WallExcludedZone } from '@/types/wall';
 import type { Room, EdgeType } from '@/types/project';
+import { pointInPolygon } from '@/engine/geometry/polygon';
 
 function shoelaceArea(pts: { x: number; y: number }[]): number {
   let s = 0;
@@ -29,7 +30,11 @@ function faceId(nodeIds: string[]): string {
  *
  * Rooms are computed on the fly and never persisted.
  */
-export function wallsToRooms(walls: Wall[], nodes: WallNode[]): Room[] {
+export function wallsToRooms(
+  walls: Wall[],
+  nodes: WallNode[],
+  excludedZones: WallExcludedZone[] = [],
+): Room[] {
   if (walls.length === 0 || nodes.length === 0) return [];
 
   // O(1) lookups; missing-node guard below ensures no undefined access
@@ -98,12 +103,22 @@ export function wallsToRooms(walls: Wall[], nodes: WallNode[]): Room[] {
     return (a.reduce((s, p) => s + p.x, 0) / a.length) - (b.reduce((s, p) => s + p.x, 0) / b.length);
   });
 
-  return interior.map((pts, idx) => ({
-    id: faceId(pts.map(p => p.nodeId)),
-    name: `Pièce ${idx + 1}`,
-    points: pts.map(p => ({ x: p.x, y: p.y })),
-    edges: pts.map(() => 'WALL' as EdgeType),
-    partitions: [],
-    excludedZones: [],
-  }));
+  return interior.map((pts, idx) => {
+    const facePts = pts.map(p => ({ x: p.x, y: p.y }));
+    const roomZones = excludedZones.filter(zone => {
+      if (zone.points.length < 3) return false;
+      const cx = zone.points.reduce((s, p) => s + p.x, 0) / zone.points.length;
+      const cy = zone.points.reduce((s, p) => s + p.y, 0) / zone.points.length;
+      return pointInPolygon({ x: cx, y: cy }, facePts);
+    });
+
+    return {
+      id: faceId(pts.map(p => p.nodeId)),
+      name: `Pièce ${idx + 1}`,
+      points: pts.map(p => ({ x: p.x, y: p.y })),
+      edges: pts.map(() => 'WALL' as EdgeType),
+      partitions: [],
+      excludedZones: roomZones,
+    };
+  });
 }
