@@ -13,7 +13,6 @@ import { WallEdgeEditor } from './WallEdgeEditor';
 
 type PlanTool = 'WALL' | 'SELECT' | 'DELETE' | 'DOOR' | 'EXCLUDE';
 
-const DEFAULT_THICKNESS   = 20;
 const ENDPOINT_RADIUS_PX  = 12;
 const FACE_RADIUS_PX      = 8;
 const HV_SNAP_PX          = 8;
@@ -39,6 +38,7 @@ interface WallDrawingCanvasProps {
   pan: Point;
   onScaleChange: (s: number) => void;
   onPanChange: (p: Point) => void;
+  wallThickness: number;
   excludedZones: WallExcludedZone[];
   onAddExcludedZone: (points: Point[]) => void;
   onRemoveExcludedZone: (id: string) => void;
@@ -57,6 +57,7 @@ export const WallDrawingCanvas = ({
   onAddWall, onRemoveWall, onUpdateWall,
   onAddNode, onUpdateNode, onMergeNodes, onPushHistory,
   scale, pan, onScaleChange, onPanChange,
+  wallThickness,
   excludedZones, onAddExcludedZone, onRemoveExcludedZone: _onRemoveExcludedZone,
 }: WallDrawingCanvasProps) => {
   const svgRef = useRef<SVGSVGElement | null>(null);
@@ -250,7 +251,7 @@ export const WallDrawingCanvas = ({
           nodeId = generateId();
           onAddNode({ id: nodeId, x: pt.x, y: pt.y });
         }
-        setChain({ nodeIds: [nodeId], thickness: DEFAULT_THICKNESS });
+        setChain({ nodeIds: [nodeId], thickness: wallThickness });
       } else {
         const prevNodeId = chain.nodeIds[chain.nodeIds.length - 1]!;
         const prevNode = nodes.find((n) => n.id === prevNodeId);
@@ -353,7 +354,7 @@ export const WallDrawingCanvas = ({
       setSelectedWallId(hit?.id ?? null);
       if (hit) {
         setEditingWallId(hit.id);
-        setEditThickness(hit.thickness.toFixed(1));
+        setEditThickness((hit.thickness / 10).toFixed(0)); // afficher en cm
       } else {
         setEditingWallId(null);
         // Clic gauche sur zone vide → pan
@@ -501,8 +502,11 @@ export const WallDrawingCanvas = ({
 
   const submitThickness = () => {
     if (!editingWallId) return;
-    const v = parseFloat(editThickness);
-    if (!isNaN(v) && v > 0) { onPushHistory(); onUpdateWall(editingWallId, { thickness: v }); }
+    const cm = parseFloat(editThickness);
+    if (!isNaN(cm) && cm > 0) {
+      onPushHistory();
+      onUpdateWall(editingWallId, { thickness: Math.round(cm * 10) }); // cm → mm
+    }
     setEditingWallId(null);
   };
 
@@ -535,7 +539,7 @@ export const WallDrawingCanvas = ({
     const len = Math.sqrt(dx * dx + dy * dy);
     if (len < 0.5) return null;
     const angle = Math.atan2(dy, dx) * (180 / Math.PI);
-    const halfT = (DEFAULT_THICKNESS / 2) * scale;
+    const halfT = (chain.thickness / 2) * scale;
     return { sl, angle, len, halfT };
   })();
 

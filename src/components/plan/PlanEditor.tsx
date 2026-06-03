@@ -206,6 +206,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
           onUpdateNode={updateNode}
           onMergeNodes={mergeNodes}
           onPushHistory={pushHistory}
+          wallThickness={wallThickness}
           excludedZones={wallEngine?.excludedZones ?? []}
           onAddExcludedZone={addWallExcludedZone}
           onRemoveExcludedZone={removeWallExcludedZone}
