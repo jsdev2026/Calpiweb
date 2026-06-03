@@ -91,6 +91,7 @@ describe('computeCornerGeometry', () => {
     const extX = p1.points[1]!.x - 100;
     expect(extX).toBeGreaterThan(5); // must be greater than T/2=5
   });
+
 });
 
 // ── computeJointLines ──────────────────────────────────────────────────────
