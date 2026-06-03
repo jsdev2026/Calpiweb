@@ -72,11 +72,47 @@ export const WallDrawingCanvas = ({
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
   const dragSnapRef = useRef<SnapResult | null>(null);
 
+  const [isShiftPressed, setIsShiftPressed] = useState(false);
+  const [isCtrlPressed,  setIsCtrlPressed]  = useState(false);
+
   useEffect(() => {
     setSelectedWallId(null);
     setEditingWallId(null);
     setChain(null);
   }, [tool]);
+
+  const tryCloseChain = useCallback(() => {
+    if (!chain || chain.nodeIds.length < 2) return;
+    const firstId = chain.nodeIds[0]!;
+    const lastId  = chain.nodeIds[chain.nodeIds.length - 1]!;
+    if (firstId === lastId) return;
+    onPushHistory();
+    onAddWall({ id: generateId(), node1Id: lastId, node2Id: firstId, thickness: chain.thickness });
+    setChain(null);
+  }, [chain, onAddWall, onPushHistory]);
+
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (e.key === 'Shift')   setIsShiftPressed(true);
+      if (e.key === 'Control') setIsCtrlPressed(true);
+      if (e.key === 'Escape') {
+        setChain(null);
+        setSelectedWallId(null);
+        setEditingWallId(null);
+      }
+      if (e.key === 'Enter') tryCloseChain();
+    };
+    const up = (e: KeyboardEvent) => {
+      if (e.key === 'Shift')   setIsShiftPressed(false);
+      if (e.key === 'Control') setIsCtrlPressed(false);
+    };
+    window.addEventListener('keydown', down);
+    window.addEventListener('keyup',   up);
+    return () => {
+      window.removeEventListener('keydown', down);
+      window.removeEventListener('keyup',   up);
+    };
+  }, [tryCloseChain]);
 
   const getSvgPos = useCallback((e: ReactPointerEvent<SVGSVGElement>): Point => {
     const svg = svgRef.current;
@@ -143,6 +179,14 @@ export const WallDrawingCanvas = ({
     return null;
   }, [walls, nodes, scale]);
 
+  // ── Ortho helper ───────────────────────────────────────────────────────────
+
+  function applyOrtho(cursor: Point, ref: Point): Point {
+    const dx = Math.abs(cursor.x - ref.x);
+    const dy = Math.abs(cursor.y - ref.y);
+    return dx > dy ? { x: cursor.x, y: ref.y } : { x: ref.x, y: cursor.y };
+  }
+
   // ── Pointer handlers ───────────────────────────────────────────────────────
 
   const handlePointerDown = (e: ReactPointerEvent<SVGSVGElement>) => {
@@ -155,9 +199,18 @@ export const WallDrawingCanvas = ({
     }
     if (e.button !== 0) return;
 
-    const world = getWorldPos(e);
-    const snap  = snapToWalls(world, walls, nodes, scale, ENDPOINT_RADIUS_PX, FACE_RADIUS_PX, HV_SNAP_PX);
-    const pt    = snap?.point ?? world;
+    let world = getWorldPos(e);
+
+    if (isShiftPressed && chain && chain.nodeIds.length > 0) {
+      const lastId   = chain.nodeIds[chain.nodeIds.length - 1]!;
+      const lastNode = nodes.find((n) => n.id === lastId);
+      if (lastNode) world = applyOrtho(world, { x: lastNode.x, y: lastNode.y });
+    }
+
+    const snap = isCtrlPressed
+      ? null
+      : snapToWalls(world, walls, nodes, scale, ENDPOINT_RADIUS_PX, FACE_RADIUS_PX, HV_SNAP_PX);
+    const pt = snap?.point ?? world;
 
     if (tool === 'WALL') {
       if (!chain) {
@@ -231,12 +284,14 @@ export const WallDrawingCanvas = ({
       return;
     }
 
-    const world = getWorldPos(e);
+    let world = getWorldPos(e);
 
     if (draggingNodeId) {
       const otherNodes = nodes.filter((n) => n.id !== draggingNodeId);
       const snapWalls  = walls.filter((w) => w.node1Id !== draggingNodeId && w.node2Id !== draggingNodeId);
-      const snap = snapToWalls(world, snapWalls, otherNodes, scale, ENDPOINT_RADIUS_PX, FACE_RADIUS_PX, HV_SNAP_PX);
+      const snap = isCtrlPressed
+        ? null
+        : snapToWalls(world, snapWalls, otherNodes, scale, ENDPOINT_RADIUS_PX, FACE_RADIUS_PX, HV_SNAP_PX);
       const pt = snap?.point ?? world;
       dragSnapRef.current = snap;
       onUpdateNode(draggingNodeId, { x: pt.x, y: pt.y });
@@ -244,7 +299,15 @@ export const WallDrawingCanvas = ({
       return;
     }
 
-    const snap = snapToWalls(world, walls, nodes, scale, ENDPOINT_RADIUS_PX, FACE_RADIUS_PX, HV_SNAP_PX);
+    if (isShiftPressed && chain && chain.nodeIds.length > 0) {
+      const lastId   = chain.nodeIds[chain.nodeIds.length - 1]!;
+      const lastNode = nodes.find((n) => n.id === lastId);
+      if (lastNode) world = applyOrtho(world, { x: lastNode.x, y: lastNode.y });
+    }
+
+    const snap = isCtrlPressed
+      ? null
+      : snapToWalls(world, walls, nodes, scale, ENDPOINT_RADIUS_PX, FACE_RADIUS_PX, HV_SNAP_PX);
     setCursor(snap?.point ?? world);
     setSnapResult(snap);
   };
