@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect, useMemo, type KeyboardEvent } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import type { Wall, WallNode, DrawingChain, SnapResult } from '@/types/wall';
 import type { Point } from '@/types/plan';
@@ -60,6 +60,14 @@ export const WallDrawingCanvas = ({
   panRef.current   = pan;
   const [isPanning, setIsPanning] = useState(false);
   const panStart = useRef<{ panX:number; panY:number; clientX:number; clientY:number } | null>(null);
+  const touchRef = useRef<{
+    type: '1finger' | '2finger';
+    prevDist: number;
+    clientX: number;
+    clientY: number;
+    panX: number;
+    panY: number;
+  } | null>(null);
 
   const [chain,        setChain]        = useState<DrawingChain>(null);
   const [cursor,       setCursor]       = useState<Point | null>(null);
@@ -92,7 +100,7 @@ export const WallDrawingCanvas = ({
   }, [chain, onAddWall, onPushHistory]);
 
   useEffect(() => {
-    const down = (e: KeyboardEvent) => {
+    const down = (e: globalThis.KeyboardEvent) => {
       if (e.key === 'Shift')   setIsShiftPressed(true);
       if (e.key === 'Control') setIsCtrlPressed(true);
       if (e.key === 'Escape') {
@@ -102,7 +110,7 @@ export const WallDrawingCanvas = ({
       }
       if (e.key === 'Enter') tryCloseChain();
     };
-    const up = (e: KeyboardEvent) => {
+    const up = (e: globalThis.KeyboardEvent) => {
       if (e.key === 'Shift')   setIsShiftPressed(false);
       if (e.key === 'Control') setIsCtrlPressed(false);
     };
@@ -334,7 +342,69 @@ export const WallDrawingCanvas = ({
     }
   };
 
-  const handleKeyDown = (e: KeyboardEvent<SVGSVGElement>) => {
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    if (e.touches.length === 2) {
+      const t = e.touches;
+      const dx = t[1]!.clientX - t[0]!.clientX;
+      const dy = t[1]!.clientY - t[0]!.clientY;
+      touchRef.current = {
+        type: '2finger',
+        prevDist: Math.hypot(dx, dy),
+        clientX: (t[0]!.clientX + t[1]!.clientX) / 2,
+        clientY: (t[0]!.clientY + t[1]!.clientY) / 2,
+        panX: panRef.current.x,
+        panY: panRef.current.y,
+      };
+    } else if (e.touches.length === 1 && tool === 'SELECT') {
+      touchRef.current = {
+        type: '1finger',
+        prevDist: 0,
+        clientX: e.touches[0]!.clientX,
+        clientY: e.touches[0]!.clientY,
+        panX: panRef.current.x,
+        panY: panRef.current.y,
+      };
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const ref = touchRef.current;
+    if (!ref) return;
+
+    if (ref.type === '2finger' && e.touches.length === 2) {
+      const t = e.touches;
+      const dist2 = Math.hypot(t[1]!.clientX - t[0]!.clientX, t[1]!.clientY - t[0]!.clientY);
+      const midX = (t[0]!.clientX + t[1]!.clientX) / 2;
+      const midY = (t[0]!.clientY + t[1]!.clientY) / 2;
+      const svg = svgRef.current;
+      if (svg && ref.prevDist > 0) {
+        const ratio = dist2 / ref.prevDist;
+        const rect  = svg.getBoundingClientRect();
+        const mx = midX - rect.left, my = midY - rect.top;
+        const s  = scaleRef.current;
+        const p  = panRef.current;
+        const ns = Math.max(0.005, Math.min(4, s * ratio));
+        const np = { x: mx - (mx - p.x) * (ns / s), y: my - (my - p.y) * (ns / s) };
+        scaleRef.current = ns;
+        panRef.current   = np;
+        onScaleChange(ns);
+        onPanChange(np);
+      }
+      touchRef.current = { ...ref, prevDist: dist2, clientX: midX, clientY: midY };
+    } else if (ref.type === '1finger' && e.touches.length === 1) {
+      const t = e.touches[0]!;
+      onPanChange({
+        x: ref.panX + (t.clientX - ref.clientX),
+        y: ref.panY + (t.clientY - ref.clientY),
+      });
+    }
+  };
+
+  const handleTouchEnd = () => { touchRef.current = null; };
+
+  const handleKeyDown = (e: React.KeyboardEvent<SVGSVGElement>) => {
     if (e.key === 'Escape') setChain(null);
   };
 
@@ -379,7 +449,14 @@ export const WallDrawingCanvas = ({
   })();
 
   return (
-    <div className="relative h-full w-full overflow-hidden bg-[#1a1c24]" tabIndex={0}>
+    <div
+      className="relative h-full w-full overflow-hidden bg-[#1a1c24]"
+      tabIndex={0}
+      style={{ touchAction: 'none' }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       <svg
         ref={svgRef}
         className="h-full w-full cursor-crosshair select-none"
