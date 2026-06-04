@@ -259,7 +259,6 @@ export const WallDrawingCanvas = ({
           nodeId = snap.nodeId;
         } else if (snap?.type === 'face' && snap.wallId) {
           nodeId = generateId();
-          onPushHistory();
           onSplitWall(snap.wallId, { id: nodeId, x: pt.x, y: pt.y });
         } else {
           nodeId = generateId();
@@ -273,14 +272,15 @@ export const WallDrawingCanvas = ({
         if (dist({ x: prevNode.x, y: prevNode.y }, pt) < 1) return;
 
         let targetNodeId: string;
+        let splitWallId: string | null = null;
+
         if (snap?.type === 'endpoint' && snap.nodeId) {
           targetNodeId = snap.nodeId;
         } else if (snap?.type === 'face' && snap.wallId) {
           targetNodeId = generateId();
-          onSplitWall(snap.wallId, { id: targetNodeId, x: pt.x, y: pt.y });
+          splitWallId = snap.wallId;
         } else {
           targetNodeId = generateId();
-          onAddNode({ id: targetNodeId, x: pt.x, y: pt.y });
         }
 
         const alreadyConnected = walls.some(w =>
@@ -289,6 +289,13 @@ export const WallDrawingCanvas = ({
         );
 
         onPushHistory();
+
+        if (splitWallId !== null) {
+          onSplitWall(splitWallId, { id: targetNodeId, x: pt.x, y: pt.y });
+        } else if (!(snap?.type === 'endpoint' && snap.nodeId)) {
+          onAddNode({ id: targetNodeId, x: pt.x, y: pt.y });
+        }
+
         if (!alreadyConnected) {
           onAddWall({ id: generateId(), node1Id: prevNodeId, node2Id: targetNodeId, thickness: chain.thickness });
         }
