@@ -85,6 +85,23 @@ interface ProjectState {
   updateTilingDimensionPerpOffset: (id: string, perpOffset: number) => void;
 }
 
+/** Pure helper — splits a wall at newNode, returns new wallEngine state. */
+export function splitWallInEngine(
+  we: { nodes: WallNode[]; walls: Wall[]; excludedZones: WallExcludedZone[] },
+  wallId: string,
+  newNode: WallNode,
+): { nodes: WallNode[]; walls: Wall[]; excludedZones: WallExcludedZone[] } {
+  const wall = we.walls.find(w => w.id === wallId);
+  if (!wall) return we;
+  const wall1: Wall = { id: generateId(), node1Id: wall.node1Id, node2Id: newNode.id, thickness: wall.thickness };
+  const wall2: Wall = { id: generateId(), node1Id: newNode.id,  node2Id: wall.node2Id, thickness: wall.thickness };
+  return {
+    ...we,
+    nodes: [...we.nodes, newNode],
+    walls:  [...we.walls.filter(w => w.id !== wallId), wall1, wall2],
+  };
+}
+
 const sortByUpdatedDesc = (a: Project, b: Project) => b.updatedAt - a.updatedAt;
 
 export const useProjectStore = create<ProjectState>((set, get) => ({
