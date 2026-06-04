@@ -44,3 +44,9 @@ export interface AutoCotation {
   offset: number;
   label: string;
 }
+
+export interface DoorOpening {
+  from: Point;
+  to: Point;
+  thickness: number;
+}

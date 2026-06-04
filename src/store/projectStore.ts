@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import type { Project, Room, EdgeType, ProjectStatus, ClientInfo, Constraint, ProjectNote, TilingDimension } from '@/types/project';
 import type { Plan, Point } from '@/types/plan';
 import type { TilingConfig } from '@/types/tiling';
-import type { Wall, WallNode, WallExcludedZone } from '@/types/wall';
+import type { Wall, WallNode, WallExcludedZone, DoorOpening } from '@/types/wall';
 import { supabaseDb } from '@/lib/supabase/db';
 import { wallsToRooms } from '@/engine/geometry/wallFaces';
 import { generateId } from '@/utils/id';
@@ -544,4 +544,19 @@ export function selectRooms(s: ProjectState): Room[] {
     });
   }
   return project.rooms;
+}
+
+export function selectDoorOpenings(s: ProjectState): DoorOpening[] {
+  const project = selectActiveProject(s);
+  if (!project?.wallEngine) return [];
+  const { walls, nodes } = project.wallEngine;
+  const nodeMap = new Map(nodes.map((n) => [n.id, n]));
+  return walls
+    .filter((w) => w.isDoor)
+    .flatMap((w) => {
+      const n1 = nodeMap.get(w.node1Id);
+      const n2 = nodeMap.get(w.node2Id);
+      if (!n1 || !n2) return [];
+      return [{ from: { x: n1.x, y: n1.y }, to: { x: n2.x, y: n2.y }, thickness: w.thickness }];
+    });
 }

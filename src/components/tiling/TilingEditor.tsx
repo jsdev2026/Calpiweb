@@ -9,7 +9,7 @@ import type { Point } from '@/types/plan';
 import type { TilingConfig } from '@/types/tiling';
 import { getBoundingBox } from '@/engine/geometry/polygon';
 import { analyzeQuantities } from '@/engine/quantities/quantityEngine';
-import { useProjectStore, selectActiveProject } from '@/store/projectStore';
+import { useProjectStore, selectActiveProject, selectDoorOpenings } from '@/store/projectStore';
 import { useTilingDimension } from '@/hooks/useTilingDimension';
 import { TilingCanvas } from './TilingCanvas';
 import { TilingControls } from './TilingControls';
@@ -83,7 +83,11 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
 
   const handleTilingTouchEnd = () => { tilingTouchRef.current = null; };
 
-  const result = useMemo(() => analyzeQuantities(rooms, config, wallThickness), [rooms, config, wallThickness]);
+  const doorOpenings = useProjectStore(selectDoorOpenings);
+  const result = useMemo(
+    () => analyzeQuantities(rooms, config, wallThickness, doorOpenings),
+    [rooms, config, wallThickness, doorOpenings],
+  );
 
   const dimensions = useProjectStore((s) => selectActiveProject(s)?.tilingDimensions ?? []);
   const updateTilingDimensionPerpOffset = useProjectStore((s) => s.updateTilingDimensionPerpOffset);

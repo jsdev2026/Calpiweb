@@ -1,6 +1,7 @@
 import type { Room } from '@/types/project';
 import type { Point } from '@/types/plan';
 import type { TilingConfig } from '@/types/tiling';
+import type { DoorOpening } from '@/types/wall';
 import { getBoundingBox, rotatePoint, insetRoomPolygon } from '@/engine/geometry/polygon';
 import { computeTilingMultiRoom } from '@/engine/tiling/tilingEngine';
 import { ORDER_MARGIN_RATIO } from '@/constants/businessRules';
@@ -22,9 +23,9 @@ function tileSpaceRooms(rooms: Room[], angle: number, cx: number, cy: number, wa
     });
 }
 
-export function analyzeQuantities(rooms: Room[], config: TilingConfig, wallThickness = 0): QuantityResult {
+export function analyzeQuantities(rooms: Room[], config: TilingConfig, wallThickness = 0, doorOpenings: DoorOpening[] = []): QuantityResult {
   const validRooms = rooms.filter((r) => r.points.length >= 3);
-  const { tiles, stats } = computeTilingMultiRoom(rooms, config, wallThickness);
+  const { tiles, stats } = computeTilingMultiRoom(rooms, config, wallThickness, doorOpenings);
 
   if (validRooms.length === 0 || !stats) {
     return {
