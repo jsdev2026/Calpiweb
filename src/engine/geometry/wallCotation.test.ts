@@ -80,9 +80,9 @@ describe('computeAutoCotations — T-junction (2 pièces adjacentes)', () => {
     expect(result.length).toBeGreaterThan(0);
   });
 
-  it('le mur partagé w5 a au moins une cotation', () => {
+  it('le mur partagé w5 a une cotation intérieure ou extérieure (pas isolated)', () => {
     const result = computeAutoCotations(walls, nodes);
-    expect(result.some(c => c.wallId === 'w5')).toBe(true);
+    expect(result.some(c => c.wallId === 'w5' && (c.side === 'interior' || c.side === 'exterior'))).toBe(true);
   });
 });
 
