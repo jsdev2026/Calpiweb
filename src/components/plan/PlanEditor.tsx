@@ -73,6 +73,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
   const setWallThickness     = useProjectStore((s) => s.setWallThickness);
   const addWallExcludedZone    = useProjectStore((s) => s.addWallExcludedZone);
   const removeWallExcludedZone = useProjectStore((s) => s.removeWallExcludedZone);
+  const splitWall              = useProjectStore((s) => s.splitWall);
   const restoreSnapshot      = useProjectStore((s) => s.restoreSnapshot);
 
   const [scale, setScale]   = useState(0.1);
@@ -210,6 +211,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
           excludedZones={wallEngine?.excludedZones ?? []}
           onAddExcludedZone={addWallExcludedZone}
           onRemoveExcludedZone={removeWallExcludedZone}
+          onSplitWall={splitWall}
         />
       </div>
     </div>

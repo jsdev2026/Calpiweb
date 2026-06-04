@@ -44,6 +44,7 @@ interface WallDrawingCanvasProps {
   excludedZones: WallExcludedZone[];
   onAddExcludedZone: (points: Point[]) => void;
   onRemoveExcludedZone: (id: string) => void;
+  onSplitWall: (wallId: string, newNode: WallNode) => void;
 }
 
 function screenToWorld(pt: Point, pan: Point, scale: number): Point {
@@ -61,6 +62,7 @@ export const WallDrawingCanvas = ({
   scale, pan, onScaleChange, onPanChange,
   wallThickness,
   excludedZones, onAddExcludedZone, onRemoveExcludedZone: _onRemoveExcludedZone,
+  onSplitWall,
 }: WallDrawingCanvasProps) => {
   const svgRef = useRef<SVGSVGElement | null>(null);
   // Refs mutable pour wheel/touch — évitent les stale closures
@@ -110,10 +112,16 @@ export const WallDrawingCanvas = ({
     const firstId = chain.nodeIds[0]!;
     const lastId  = chain.nodeIds[chain.nodeIds.length - 1]!;
     if (firstId === lastId) return;
+    const alreadyConnected = walls.some(w =>
+      (w.node1Id === lastId && w.node2Id === firstId) ||
+      (w.node1Id === firstId && w.node2Id === lastId)
+    );
     onPushHistory();
-    onAddWall({ id: generateId(), node1Id: lastId, node2Id: firstId, thickness: chain.thickness });
+    if (!alreadyConnected) {
+      onAddWall({ id: generateId(), node1Id: lastId, node2Id: firstId, thickness: chain.thickness });
+    }
     setChain(null);
-  }, [chain, onAddWall, onPushHistory]);
+  }, [chain, walls, onAddWall, onPushHistory]);
 
   useEffect(() => {
     const down = (e: globalThis.KeyboardEvent) => {
@@ -249,6 +257,10 @@ export const WallDrawingCanvas = ({
         let nodeId: string;
         if (snap?.type === 'endpoint' && snap.nodeId) {
           nodeId = snap.nodeId;
+        } else if (snap?.type === 'face' && snap.wallId) {
+          nodeId = generateId();
+          onPushHistory();
+          onSplitWall(snap.wallId, { id: nodeId, x: pt.x, y: pt.y });
         } else {
           nodeId = generateId();
           onAddNode({ id: nodeId, x: pt.x, y: pt.y });
@@ -263,13 +275,23 @@ export const WallDrawingCanvas = ({
         let targetNodeId: string;
         if (snap?.type === 'endpoint' && snap.nodeId) {
           targetNodeId = snap.nodeId;
+        } else if (snap?.type === 'face' && snap.wallId) {
+          targetNodeId = generateId();
+          onSplitWall(snap.wallId, { id: targetNodeId, x: pt.x, y: pt.y });
         } else {
           targetNodeId = generateId();
           onAddNode({ id: targetNodeId, x: pt.x, y: pt.y });
         }
 
+        const alreadyConnected = walls.some(w =>
+          (w.node1Id === prevNodeId && w.node2Id === targetNodeId) ||
+          (w.node1Id === targetNodeId && w.node2Id === prevNodeId)
+        );
+
         onPushHistory();
-        onAddWall({ id: generateId(), node1Id: prevNodeId, node2Id: targetNodeId, thickness: chain.thickness });
+        if (!alreadyConnected) {
+          onAddWall({ id: generateId(), node1Id: prevNodeId, node2Id: targetNodeId, thickness: chain.thickness });
+        }
 
         const startId = chain.nodeIds[0]!;
         if (targetNodeId === startId) {
