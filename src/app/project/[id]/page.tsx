@@ -8,7 +8,8 @@ import { PlanEditor } from '@/components/plan/PlanEditor';
 import { TilingEditor } from '@/components/tiling/TilingEditor';
 import { QuantitiesPanel } from '@/components/quantities/QuantitiesPanel';
 import { QuantitiesPrintView } from '@/components/quantities/QuantitiesPrintView';
-import { selectActiveProject, selectRooms, useProjectStore } from '@/store/projectStore';
+import { selectActiveProject, selectDoorOpenings, selectRooms, useProjectStore } from '@/store/projectStore';
+import { useShallow } from 'zustand/react/shallow';
 import { useUiStore } from '@/store/uiStore';
 import { useSharingStore } from '@/store/sharingStore';
 import type { ProjectStatus } from '@/types/project';
@@ -225,6 +226,7 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
   const setActive = useProjectStore((s) => s.setActive);
   const activeProject = useProjectStore(selectActiveProject);
   const rooms = useProjectStore(selectRooms);
+  const doorOpenings = useProjectStore(useShallow(selectDoorOpenings));
   const rename = useProjectStore((s) => s.rename);
   const setConfig = useProjectStore((s) => s.setConfig);
   const setStatus = useProjectStore((s) => s.setStatus);
@@ -531,7 +533,7 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
           puisse masquer tous les autres enfants de body sans position:fixed */}
       {printMounted && createPortal(
         <div id="quantities-print-target">
-          {activeProject && <QuantitiesPrintView project={activeProject} rooms={rooms} />}
+          {activeProject && <QuantitiesPrintView project={activeProject} rooms={rooms} doorOpenings={doorOpenings} />}
         </div>,
         document.body,
       )}

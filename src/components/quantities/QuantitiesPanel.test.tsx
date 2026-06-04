@@ -14,6 +14,7 @@ vi.mock('@/store/projectStore', () => ({
             angle: 0, offsetX: 0, offsetY: 0, stagger: 0, chevronAngle: 45, color: '#93c5fd',
           },
           wallThickness: 0,
+          wallEngine: undefined,
         },
       ],
     }),
@@ -23,6 +24,7 @@ vi.mock('@/store/projectStore', () => ({
     const project = state.projects.find((p) => p.id === state.activeProjectId);
     return project?.rooms ?? [];
   },
+  selectDoorOpenings: () => [],
 }));
 
 vi.mock('@/engine/quantities/quantityEngine', () => ({

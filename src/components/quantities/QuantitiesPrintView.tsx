@@ -1,5 +1,6 @@
 'use client';
 import type { Project, Room } from '@/types/project';
+import type { DoorOpening } from '@/types/wall';
 import { analyzeQuantities } from '@/engine/quantities/quantityEngine';
 import { mergeSimilarCutGroups } from '@/engine/quantities/mergeSimilarCutGroups';
 import { formatCm, formatM2 } from '@/utils/formatters';
@@ -41,9 +42,10 @@ const LAYOUT_LABELS: Record<string, string> = {
 export interface QuantitiesPrintViewProps {
   project: Project;
   rooms?: Room[]; // override project.rooms (e.g. wall-engine derived rooms)
+  doorOpenings?: DoorOpening[];
 }
 
-export const QuantitiesPrintView = ({ project, rooms: roomsProp }: QuantitiesPrintViewProps) => {
+export const QuantitiesPrintView = ({ project, rooms: roomsProp, doorOpenings = [] }: QuantitiesPrintViewProps) => {
   const { config, wallThickness, client, name, description } = project;
   const rooms = roomsProp ?? project.rooms;
 
@@ -58,7 +60,7 @@ export const QuantitiesPrintView = ({ project, rooms: roomsProp }: QuantitiesPri
   const roomResults = validRooms
     .map((room) => ({
       room,
-      result: analyzeQuantities([room], config, wallThickness),
+      result: analyzeQuantities([room], config, wallThickness, doorOpenings),
     }))
     .filter(({ result }) => result.totalTiles > 0);
 

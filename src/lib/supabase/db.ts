@@ -56,8 +56,8 @@ function migrateProject(raw: unknown): Project {
     wallEngine: (() => {
       // New format: { nodes: WallNode[], walls: Wall[] }
       if (p.wallEngine && typeof p.wallEngine === 'object' && !Array.isArray(p.wallEngine)) {
-        const we = p.wallEngine as { nodes: WallNode[]; walls: Wall[]; excludedZones?: WallExcludedZone[] };
-        return { nodes: we.nodes, walls: we.walls, excludedZones: we.excludedZones ?? [] };
+        const we = p.wallEngine as { nodes: WallNode[]; walls: Wall[]; excludedZones?: WallExcludedZone[]; wallRoomNames?: Record<string, string> };
+        return { nodes: we.nodes, walls: we.walls, excludedZones: we.excludedZones ?? [], wallRoomNames: we.wallRoomNames };
       }
       // Old format (p1/p2 arrays) or absent → table rase, treat as not initialized
       return undefined;
