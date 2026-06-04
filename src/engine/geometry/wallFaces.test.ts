@@ -1,6 +1,6 @@
 // src/engine/geometry/wallFaces.test.ts
 import { describe, it, expect } from 'vitest';
-import { wallsToRooms } from './wallFaces';
+import { wallsToRooms, wallFaceCycles } from './wallFaces';
 import type { Wall, WallNode, WallExcludedZone } from '@/types/wall';
 
 function nd(id: string, x: number, y: number): WallNode { return { id, x, y }; }
@@ -115,5 +115,76 @@ describe('wallsToRooms — excludedZones', () => {
     }];
     const rooms = wallsToRooms(rectWalls, rectNodes, zones);
     expect(rooms[0]!.excludedZones).toHaveLength(0);
+  });
+});
+
+describe('wallFaceCycles', () => {
+  it('retourne [] pour un graphe vide', () => {
+    expect(wallFaceCycles([], [])).toEqual([]);
+  });
+
+  it('rectangle 4 murs → 1 cycle, 4 nodeIds, 4 wallIds', () => {
+    const nodes = [nd('a',0,0), nd('b',200,0), nd('c',200,140), nd('d',0,140)];
+    const walls: Wall[] = [
+      { id:'w1', node1Id:'a', node2Id:'b', thickness:10 },
+      { id:'w2', node1Id:'b', node2Id:'c', thickness:10 },
+      { id:'w3', node1Id:'c', node2Id:'d', thickness:10 },
+      { id:'w4', node1Id:'d', node2Id:'a', thickness:10 },
+    ];
+    const result = wallFaceCycles(walls, nodes);
+    expect(result).toHaveLength(1);
+    expect(result[0]!.nodeIds).toHaveLength(4);
+    expect(result[0]!.wallIds).toHaveLength(4);
+    expect(new Set(result[0]!.wallIds)).toEqual(new Set(['w1','w2','w3','w4']));
+  });
+
+  it('wallIds[i] est le mur entre nodeIds[i] et nodeIds[(i+1)%n]', () => {
+    const nodes = [nd('a',0,0), nd('b',200,0), nd('c',200,140), nd('d',0,140)];
+    const walls: Wall[] = [
+      { id:'w1', node1Id:'a', node2Id:'b', thickness:10 },
+      { id:'w2', node1Id:'b', node2Id:'c', thickness:10 },
+      { id:'w3', node1Id:'c', node2Id:'d', thickness:10 },
+      { id:'w4', node1Id:'d', node2Id:'a', thickness:10 },
+    ];
+    const [cycle] = wallFaceCycles(walls, nodes);
+    for (let i = 0; i < cycle!.nodeIds.length; i++) {
+      const n1 = cycle!.nodeIds[i]!;
+      const n2 = cycle!.nodeIds[(i + 1) % cycle!.nodeIds.length]!;
+      const wId = cycle!.wallIds[i]!;
+      const wall = walls.find(w => w.id === wId)!;
+      expect(
+        (wall.node1Id === n1 && wall.node2Id === n2) ||
+        (wall.node1Id === n2 && wall.node2Id === n1)
+      ).toBe(true);
+    }
+  });
+
+  it('T-junction (2 pièces partageant un mur) → 2 cycles', () => {
+    const nodes = [
+      nd('a',0,0), nd('b',100,0), nd('c',200,0),
+      nd('d',200,100), nd('e',100,100), nd('f',0,100),
+    ];
+    const walls: Wall[] = [
+      { id:'w1', node1Id:'a', node2Id:'b', thickness:10 },
+      { id:'w2', node1Id:'b', node2Id:'c', thickness:10 },
+      { id:'w3', node1Id:'c', node2Id:'d', thickness:10 },
+      { id:'w4', node1Id:'d', node2Id:'e', thickness:10 },
+      { id:'w5', node1Id:'e', node2Id:'b', thickness:10 },
+      { id:'w6', node1Id:'e', node2Id:'f', thickness:10 },
+      { id:'w7', node1Id:'f', node2Id:'a', thickness:10 },
+    ];
+    const result = wallFaceCycles(walls, nodes);
+    expect(result).toHaveLength(2);
+    expect(result[0]!.nodeIds).toHaveLength(4);
+    expect(result[1]!.nodeIds).toHaveLength(4);
+  });
+
+  it('chaîne ouverte → 0 cycles', () => {
+    const nodes = [nd('a',0,0), nd('b',100,0), nd('c',200,0)];
+    const walls: Wall[] = [
+      { id:'w1', node1Id:'a', node2Id:'b', thickness:10 },
+      { id:'w2', node1Id:'b', node2Id:'c', thickness:10 },
+    ];
+    expect(wallFaceCycles(walls, nodes)).toHaveLength(0);
   });
 });

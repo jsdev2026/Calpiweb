@@ -3,15 +3,6 @@ import type { Wall, WallNode, WallExcludedZone } from '@/types/wall';
 import type { Room, EdgeType } from '@/types/project';
 import { pointInPolygon } from '@/engine/geometry/polygon';
 
-function shoelaceArea(pts: { x: number; y: number }[]): number {
-  let s = 0;
-  for (let i = 0; i < pts.length; i++) {
-    const j = (i + 1) % pts.length;
-    s += pts[i]!.x * pts[j]!.y - pts[j]!.x * pts[i]!.y;
-  }
-  return s / 2;
-}
-
 /** djb2 hash — stable room ID from sorted node IDs. */
 function faceId(nodeIds: string[]): string {
   const s = [...nodeIds].sort().join('\0');
@@ -20,29 +11,20 @@ function faceId(nodeIds: string[]): string {
   return `wf-${h.toString(36)}`;
 }
 
+export interface FaceCycle {
+  nodeIds: string[];
+  wallIds: string[]; // wallIds[i] = mur entre nodeIds[i] et nodeIds[(i+1) % n]
+}
+
 /**
- * Derive Room[] from a wall/node graph using planar half-edge face traversal.
- *
- * Algorithm: for each directed half-edge (u→v), the next edge in the face cycle
- * is the outgoing edge from v with the smallest clockwise angle from the reversed
- * incoming direction (v→u). Interior faces (positive shoelace area in SVG coords)
- * become Room objects. The outer unbounded face (negative area) is discarded.
- *
- * Rooms are computed on the fly and never persisted.
+ * Retourne tous les cycles de faces intérieures du graphe de murs
+ * via traversée half-edge. Gère les T-junctions (nœuds 3+ arêtes).
  */
-export function wallsToRooms(
-  walls: Wall[],
-  nodes: WallNode[],
-  excludedZones: WallExcludedZone[] = [],
-): Room[] {
+export function wallFaceCycles(walls: Wall[], nodes: WallNode[]): FaceCycle[] {
   if (walls.length === 0 || nodes.length === 0) return [];
 
-  // O(1) lookups; missing-node guard below ensures no undefined access
   const nodeMap = new Map(nodes.map(n => [n.id, n]));
-
-  // Drop walls that reference a node not present in the graph
   const validWalls = walls.filter(w => nodeMap.has(w.node1Id) && nodeMap.has(w.node2Id));
-
   const getPos = (id: string) => nodeMap.get(id)!;
 
   type HE = { from: string; to: string };
@@ -73,10 +55,16 @@ export function wallsToRooms(
     return best;
   };
 
+  // Lookup wallId depuis (from, to) en O(1)
+  const wallLookup = new Map<string, string>();
+  for (const wall of validWalls) {
+    wallLookup.set(`${wall.node1Id}\x00${wall.node2Id}`, wall.id);
+    wallLookup.set(`${wall.node2Id}\x00${wall.node1Id}`, wall.id);
+  }
+
   const visited = new Set<string>();
   const key = (he: HE) => `${he.from}\x00${he.to}`;
-  type FacePt = { nodeId: string; x: number; y: number };
-  const faces: FacePt[][] = [];
+  const cycles: FaceCycle[] = [];
 
   for (const start of halfEdges) {
     if (visited.has(key(start))) continue;
@@ -88,35 +76,68 @@ export function wallsToRooms(
       cur = nextHE(cur);
     }
     if (cur && key(cur) === key(start) && cycle.length >= 3) {
-      faces.push(cycle.map(he => { const p = getPos(he.from); return { nodeId: he.from, x: p.x, y: p.y }; }));
+      const pts = cycle.map(he => { const p = getPos(he.from); return { x: p.x, y: p.y }; });
+      let s = 0;
+      for (let i = 0; i < pts.length; i++) {
+        const j = (i + 1) % pts.length;
+        s += pts[i]!.x * pts[j]!.y - pts[j]!.x * pts[i]!.y;
+      }
+      if (s / 2 > 0) {
+        cycles.push({
+          nodeIds: cycle.map(he => he.from),
+          wallIds: cycle.map(he => wallLookup.get(`${he.from}\x00${he.to}`) ?? ''),
+        });
+      }
     }
   }
 
-  // Interior faces: positive shoelace area (SVG Y-down: CW winding = positive)
-  const interior = faces.filter(pts => shoelaceArea(pts) > 0);
+  return cycles;
+}
 
-  // Sort top-left → bottom-right for stable naming
-  interior.sort((a, b) => {
-    const cya = a.reduce((s, p) => s + p.y, 0) / a.length;
-    const cyb = b.reduce((s, p) => s + p.y, 0) / b.length;
+/**
+ * Derive Room[] from a wall/node graph using planar half-edge face traversal.
+ *
+ * Algorithm: for each directed half-edge (u→v), the next edge in the face cycle
+ * is the outgoing edge from v with the smallest clockwise angle from the reversed
+ * incoming direction (v→u). Interior faces (positive shoelace area in SVG coords)
+ * become Room objects. The outer unbounded face (negative area) is discarded.
+ *
+ * Rooms are computed on the fly and never persisted.
+ */
+export function wallsToRooms(
+  walls: Wall[],
+  nodes: WallNode[],
+  excludedZones: WallExcludedZone[] = [],
+): Room[] {
+  const nodeMap = new Map(nodes.map(n => [n.id, n]));
+  const getPos = (id: string) => { const n = nodeMap.get(id)!; return { x: n.x, y: n.y }; };
+
+  const cycles = wallFaceCycles(walls, nodes);
+
+  // Tri top-left → bottom-right pour nommage stable
+  cycles.sort((a, b) => {
+    const ptsA = a.nodeIds.map(getPos);
+    const ptsB = b.nodeIds.map(getPos);
+    const cya = ptsA.reduce((s, p) => s + p.y, 0) / ptsA.length;
+    const cyb = ptsB.reduce((s, p) => s + p.y, 0) / ptsB.length;
     if (Math.abs(cya - cyb) > 1) return cya - cyb;
-    return (a.reduce((s, p) => s + p.x, 0) / a.length) - (b.reduce((s, p) => s + p.x, 0) / b.length);
+    return (ptsA.reduce((s, p) => s + p.x, 0) / ptsA.length) -
+           (ptsB.reduce((s, p) => s + p.x, 0) / ptsB.length);
   });
 
-  return interior.map((pts, idx) => {
-    const facePts = pts.map(p => ({ x: p.x, y: p.y }));
+  return cycles.map((cycle, idx) => {
+    const facePts = cycle.nodeIds.map(id => getPos(id));
     const roomZones = excludedZones.filter(zone => {
       if (zone.points.length < 3) return false;
       const cx = zone.points.reduce((s, p) => s + p.x, 0) / zone.points.length;
       const cy = zone.points.reduce((s, p) => s + p.y, 0) / zone.points.length;
       return pointInPolygon({ x: cx, y: cy }, facePts);
     });
-
     return {
-      id: faceId(pts.map(p => p.nodeId)),
+      id: faceId(cycle.nodeIds),
       name: `Pièce ${idx + 1}`,
-      points: pts.map(p => ({ x: p.x, y: p.y })),
-      edges: pts.map(() => 'WALL' as EdgeType),
+      points: facePts,
+      edges: facePts.map(() => 'WALL' as EdgeType),
       partitions: [],
       excludedZones: roomZones,
     };
