@@ -93,8 +93,8 @@ export function splitWallInEngine(
 ): { nodes: WallNode[]; walls: Wall[]; excludedZones: WallExcludedZone[] } {
   const wall = we.walls.find(w => w.id === wallId);
   if (!wall) return we;
-  const wall1: Wall = { id: generateId(), node1Id: wall.node1Id, node2Id: newNode.id, thickness: wall.thickness };
-  const wall2: Wall = { id: generateId(), node1Id: newNode.id,  node2Id: wall.node2Id, thickness: wall.thickness };
+  const wall1: Wall = { ...wall, id: generateId(), node1Id: wall.node1Id, node2Id: newNode.id };
+  const wall2: Wall = { ...wall, id: generateId(), node1Id: newNode.id,  node2Id: wall.node2Id };
   return {
     ...we,
     nodes: [...we.nodes, newNode],
