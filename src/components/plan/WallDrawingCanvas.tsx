@@ -849,6 +849,10 @@ export const WallDrawingCanvas = ({
             return <rect x={sc.x - s / 2} y={sc.y - s / 2} width={s} height={s}
               fill="rgba(39,174,96,0.2)" stroke="#27ae60" strokeWidth={2} />;
           }
+          if (snapResult?.type === 'collinear') {
+            return <circle cx={sc.x} cy={sc.y} r={SNAP_INDICATOR_R}
+              fill="none" stroke="#8b5cf6" strokeWidth={1.5} />;
+          }
           return null;
         })()}
 
