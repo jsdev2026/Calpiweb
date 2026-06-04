@@ -23,10 +23,11 @@ export interface WallExcludedZone {
 
 export interface SnapResult {
   point: Point;
-  type: 'endpoint' | 'face' | 'hv' | 'perpendicular';
+  type: 'endpoint' | 'face' | 'hv' | 'perpendicular' | 'collinear';
   wallId?: string;
   nodeId?: string;
   axis?: 'h' | 'v';
+  dir?: Point;  // direction normalisée — utilisée par le snap colinéaire
 }
 
 export type DrawingChain = {

@@ -1,6 +1,6 @@
 // src/engine/geometry/wallSnap.test.ts
 import { describe, it, expect } from 'vitest';
-import { snapToWalls, perpendicularSnapForNode, adjacentAxisSnapForNode } from './wallSnap';
+import { snapToWalls, perpendicularSnapForNode, adjacentAxisSnapForNode, collinearSnap, collinearSnapForNode } from './wallSnap';
 import type { Wall, WallNode } from '@/types/wall';
 
 const SCALE = 1;
@@ -215,5 +215,71 @@ describe('snapToWalls — H/V snap', () => {
     // near n2=(100,0) but also near y=0 axis
     const r = snapToWalls({ x:100, y:3 }, [horizontal, vertical], nodes, SCALE, EP_R, FA_R, HV_R);
     expect(r?.type).toBe('endpoint');
+  });
+});
+
+describe('collinearSnap', () => {
+  const nodes = [nd('n1', 0, 0), nd('n2', 200, 0)];
+  const walls: Wall[] = [{ id: 'w1', node1Id: 'n1', node2Id: 'n2', thickness: 20 }];
+
+  it('snappe le curseur sur la droite infinie du mur (milieu du segment)', () => {
+    const r = collinearSnap({ x: 100, y: 8 }, walls, nodes, 1, 12);
+    expect(r?.type).toBe('collinear');
+    expect(r?.point.x).toBeCloseTo(100);
+    expect(r?.point.y).toBeCloseTo(0);
+  });
+
+  it("snappe au-delà de l'extrémité du mur (extension)", () => {
+    const r = collinearSnap({ x: 300, y: 5 }, walls, nodes, 1, 12);
+    expect(r?.type).toBe('collinear');
+    expect(r?.point.x).toBeCloseTo(300);
+    expect(r?.point.y).toBeCloseTo(0);
+  });
+
+  it('retourne null quand le curseur est trop loin de la droite', () => {
+    const r = collinearSnap({ x: 100, y: 20 }, walls, nodes, 1, 12);
+    expect(r).toBeNull();
+  });
+
+  it('peuple dir avec la direction normalisée du mur', () => {
+    const r = collinearSnap({ x: 100, y: 5 }, walls, nodes, 1, 12);
+    expect(r?.dir?.x).toBeCloseTo(1);
+    expect(r?.dir?.y).toBeCloseTo(0);
+  });
+});
+
+describe('collinearSnapForNode', () => {
+  const A = nd('a', 0, 0);
+  const B = nd('b', 200, 0);
+
+  it('snappe le curseur sur la droite A-B', () => {
+    const r = collinearSnapForNode({ x: 100, y: 8 }, [A, B], 1, 12);
+    expect(r?.type).toBe('collinear');
+    expect(r?.point.x).toBeCloseTo(100);
+    expect(r?.point.y).toBeCloseTo(0);
+  });
+
+  it('retourne null avec un seul nœud adjacent (pas de paire)', () => {
+    const r = collinearSnapForNode({ x: 100, y: 5 }, [A], 1, 12);
+    expect(r).toBeNull();
+  });
+
+  it('retourne null quand le curseur est trop loin', () => {
+    const r = collinearSnapForNode({ x: 100, y: 20 }, [A, B], 1, 12);
+    expect(r).toBeNull();
+  });
+
+  it('fonctionne avec une paire diagonale', () => {
+    const C = nd('c', 0, 0), D = nd('d', 100, 100);
+    const r = collinearSnapForNode({ x: 50, y: 55 }, [C, D], 1, 12);
+    expect(r?.type).toBe('collinear');
+    expect(r?.point.x).toBeCloseTo(52.5, 0);
+    expect(r?.point.y).toBeCloseTo(52.5, 0);
+  });
+
+  it('peuple dir avec la direction normalisée de la paire', () => {
+    const r = collinearSnapForNode({ x: 100, y: 5 }, [A, B], 1, 12);
+    expect(r?.dir?.x).toBeCloseTo(1);
+    expect(r?.dir?.y).toBeCloseTo(0);
   });
 });

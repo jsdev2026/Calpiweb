@@ -182,3 +182,66 @@ export function perpendicularSnapForNode(
   if (!best) return null;
   return { point: best.point, type: 'perpendicular' };
 }
+
+/**
+ * Snap colinéaire pour le DESSIN : projette le curseur sur la droite
+ * INFINIE de chaque mur existant. Permet de prolonger un mur en ligne droite.
+ */
+export function collinearSnap(
+  cursor: Point,
+  walls: Wall[],
+  nodes: WallNode[],
+  scale: number,
+  snapPx: number,
+): SnapResult | null {
+  const r = snapPx / scale;
+  let best: { point: Point; dist: number; dir: Point } | null = null;
+
+  for (const wall of walls) {
+    const n1 = nodes.find(n => n.id === wall.node1Id);
+    const n2 = nodes.find(n => n.id === wall.node2Id);
+    if (!n1 || !n2) continue;
+    const dx = n2.x - n1.x, dy = n2.y - n1.y;
+    const lenSq = dx * dx + dy * dy;
+    if (lenSq < 1) continue;
+    const len = Math.sqrt(lenSq);
+    const dir: Point = { x: dx / len, y: dy / len };
+    const t = ((cursor.x - n1.x) * dx + (cursor.y - n1.y) * dy) / lenSq;
+    const proj: Point = { x: n1.x + t * dx, y: n1.y + t * dy };
+    const d = Math.hypot(cursor.x - proj.x, cursor.y - proj.y);
+    if (d < r && (!best || d < best.dist)) best = { point: proj, dist: d, dir };
+  }
+
+  return best ? { point: best.point, type: 'collinear', dir: best.dir } : null;
+}
+
+/**
+ * Snap colinéaire pour le DRAG de nœud : projette le curseur sur la droite
+ * définie par chaque paire de nœuds adjacents du nœud déplacé.
+ */
+export function collinearSnapForNode(
+  cursor: Point,
+  adjacentNodes: WallNode[],
+  scale: number,
+  snapPx: number,
+): SnapResult | null {
+  const r = snapPx / scale;
+  let best: { point: Point; dist: number; dir: Point } | null = null;
+
+  for (let i = 0; i < adjacentNodes.length; i++) {
+    for (let j = i + 1; j < adjacentNodes.length; j++) {
+      const A = adjacentNodes[i]!, B = adjacentNodes[j]!;
+      const dx = B.x - A.x, dy = B.y - A.y;
+      const lenSq = dx * dx + dy * dy;
+      if (lenSq < 1) continue;
+      const len = Math.sqrt(lenSq);
+      const dir: Point = { x: dx / len, y: dy / len };
+      const t = ((cursor.x - A.x) * dx + (cursor.y - A.y) * dy) / lenSq;
+      const proj: Point = { x: A.x + t * dx, y: A.y + t * dy };
+      const d = Math.hypot(cursor.x - proj.x, cursor.y - proj.y);
+      if (d < r && (!best || d < best.dist)) best = { point: proj, dist: d, dir };
+    }
+  }
+
+  return best ? { point: best.point, type: 'collinear', dir: best.dir } : null;
+}
