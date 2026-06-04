@@ -160,6 +160,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
         e.preventDefault();
         if (futureRef.current.length > 0) handleRedo();
       }
+      if (e.key === 'Escape') setTool('SELECT');
     };
     window.addEventListener('keydown', down);
     return () => window.removeEventListener('keydown', down);
