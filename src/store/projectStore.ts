@@ -538,7 +538,10 @@ export function selectRooms(s: ProjectState): Room[] {
   if (we !== undefined) {
     const rooms = wallsToRooms(we.walls, we.nodes, we.excludedZones ?? []);
     const names = we.wallRoomNames ?? {};
-    return rooms.map((r) => names[r.id] ? { ...r, name: names[r.id] } : r);
+    return rooms.map((r) => {
+      const customName = names[r.id];
+      return customName ? { ...r, name: customName } : r;
+    });
   }
   return project.rooms;
 }

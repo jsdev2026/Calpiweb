@@ -1,7 +1,7 @@
 // src/components/plan/WallRoomPanel.tsx
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { GripVertical } from 'lucide-react';
 import { useProjectStore } from '@/store/projectStore';
@@ -52,7 +52,6 @@ export const WallRoomPanel = ({
   const startRename = (room: Room) => {
     setRenamingId(room.id);
     setRenameValue(room.name ?? '');
-    setTimeout(() => inputRef.current?.select(), 10);
   };
 
   const commitRename = () => {
@@ -61,6 +60,10 @@ export const WallRoomPanel = ({
       setRenamingId(null);
     }
   };
+
+  useEffect(() => {
+    if (renamingId) inputRef.current?.select();
+  }, [renamingId]);
 
   return (
     <>
