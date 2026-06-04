@@ -4,7 +4,7 @@ import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import type { Wall, WallNode, DrawingChain, SnapResult, WallExcludedZone } from '@/types/wall';
 import type { Point } from '@/types/plan';
-import { snapToWalls, perpendicularSnapForNode, adjacentAxisSnapForNode } from '@/engine/geometry/wallSnap';
+import { snapToWalls, perpendicularSnapForNode, adjacentAxisSnapForNode, collinearSnap, collinearSnapForNode } from '@/engine/geometry/wallSnap';
 import { computeCornerGeometry, computeJointLines } from '@/engine/geometry/wallGeometry';
 import { computeAutoCotations } from '@/engine/geometry/wallCotation';
 import { wallsToRooms } from '@/engine/geometry/wallFaces';
@@ -15,9 +15,10 @@ type PlanTool = 'WALL' | 'SELECT' | 'DELETE' | 'DOOR' | 'EXCLUDE';
 
 const ENDPOINT_RADIUS_PX  = 12;
 const FACE_RADIUS_PX      = 8;
-const HV_SNAP_PX          = 20;
-const HV_SNAP_DRAG_PX     = 40; // snap H/V amplifié en mode drag nœud
-const PERP_SNAP_PX        = 30; // snap perpendicularité (cercle de Thales) en mode drag
+const HV_SNAP_PX          = 15;  // était 20
+const HV_SNAP_DRAG_PX     = 28;  // était 40
+const PERP_SNAP_PX        = 22;  // était 30
+const COLLINEAR_SNAP_PX   = 12;  // snap colinéaire — dessin + drag
 const NODE_HANDLE_RADIUS_PX = 10;
 const WALL_COLOR          = 'var(--canvas-wall)';
 const WALL_SELECTED_COLOR = '#e67e22';
@@ -247,9 +248,12 @@ export const WallDrawingCanvas = ({
       if (lastNode) world = applyOrtho(world, { x: lastNode.x, y: lastNode.y });
     }
 
-    const snap = isCtrlPressed
+    const baseSnap = isCtrlPressed
       ? null
       : snapToWalls(world, walls, nodes, scale, ENDPOINT_RADIUS_PX, FACE_RADIUS_PX, HV_SNAP_PX);
+    const snap = (isCtrlPressed || baseSnap?.type === 'endpoint')
+      ? baseSnap
+      : (collinearSnap(world, walls, nodes, scale, COLLINEAR_SNAP_PX) ?? baseSnap);
     const pt = snap?.point ?? world;
 
     if (tool === 'WALL') {
@@ -438,13 +442,10 @@ export const WallDrawingCanvas = ({
 
       let snap = null;
       if (!isCtrlPressed) {
-        // 1. Endpoint snap (priorité absolue)
         const wallSnap = snapToWalls(world, snapWalls, otherNodes, scale, ENDPOINT_RADIUS_PX, FACE_RADIUS_PX, HV_SNAP_DRAG_PX);
         if (wallSnap?.type === 'endpoint') {
           snap = wallSnap;
         } else {
-          // 2. Axes adjacents : horizontalité/verticalité des murs connectés
-          //    L'intersection H+V prend le dessus sur tout le reste
           const adjSnap = adjacentNodes.length > 0
             ? adjacentAxisSnapForNode(world, adjacentNodes, scale, HV_SNAP_DRAG_PX)
             : null;
@@ -452,12 +453,13 @@ export const WallDrawingCanvas = ({
             // Intersection H+V : priorité max après endpoint
             snap = adjSnap;
           } else {
-            // 3. Perpendicularité (Thales 90°)
+            const colSnap = adjacentNodes.length >= 2
+              ? collinearSnapForNode(world, adjacentNodes, scale, COLLINEAR_SNAP_PX)
+              : null;
             const perpSnap = adjacentNodes.length >= 2
               ? perpendicularSnapForNode(world, adjacentNodes, scale, PERP_SNAP_PX)
               : null;
-            // 4. Fallback : single-axis adjacent, puis snap général
-            snap = perpSnap ?? adjSnap ?? wallSnap;
+            snap = colSnap ?? perpSnap ?? adjSnap ?? wallSnap;
           }
         }
       }
@@ -476,9 +478,12 @@ export const WallDrawingCanvas = ({
       if (lastNode) world = applyOrtho(world, { x: lastNode.x, y: lastNode.y });
     }
 
-    const snap = isCtrlPressed
+    const baseSnap = isCtrlPressed
       ? null
       : snapToWalls(world, walls, nodes, scale, ENDPOINT_RADIUS_PX, FACE_RADIUS_PX, HV_SNAP_PX);
+    const snap = (isCtrlPressed || baseSnap?.type === 'endpoint')
+      ? baseSnap
+      : (collinearSnap(world, walls, nodes, scale, COLLINEAR_SNAP_PX) ?? baseSnap);
     setCursor(snap?.point ?? world);
     setSnapResult(snap);
   };
@@ -785,6 +790,20 @@ export const WallDrawingCanvas = ({
               fill={WALL_COLOR} stroke="#e67e22" strokeWidth={1} strokeDasharray="6,3" rx={1} />
           </g>
         )}
+
+        {/* Snap colinéaire — ligne pointillée violette dans la direction du mur */}
+        {snapResult?.type === 'collinear' && snapResult.dir && cursor && (() => {
+          const sc = worldToScreen(cursor);
+          const d = snapResult.dir!;
+          const BIG = 2000;
+          return (
+            <line
+              x1={sc.x - d.x * BIG} y1={sc.y - d.y * BIG}
+              x2={sc.x + d.x * BIG} y2={sc.y + d.y * BIG}
+              stroke="#8b5cf6" strokeWidth={1} strokeDasharray="6,3" opacity={0.6}
+            />
+          );
+        })()}
 
         {/* H/V snap guide lines */}
         {snapResult?.type === 'hv' && cursor && (() => {
