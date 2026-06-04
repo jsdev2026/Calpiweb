@@ -261,6 +261,7 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
           activeTool={activeTool}
           wallThickness={wallThickness}
           dimensionLayer={dimensionLayer}
+          doorOpenings={doorOpenings}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}

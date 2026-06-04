@@ -4,6 +4,7 @@ import type { PointerEvent as ReactPointerEvent, RefObject, ReactNode, MouseEven
 import type { Room } from '@/types/project';
 import type { Point } from '@/types/plan';
 import type { Tile, TilingConfig } from '@/types/tiling';
+import type { DoorOpening } from '@/types/wall';
 import { getBoundingBox, insetRoomPolygon } from '@/engine/geometry/polygon';
 import { formatCm } from '@/utils/formatters';
 import { partitionToPolygon } from '@/engine/tiling/tilingEngine';
@@ -19,10 +20,25 @@ interface TilingCanvasProps {
   activeTool: 'pan' | 'dimension';
   wallThickness: number;
   dimensionLayer: ReactNode;
+  doorOpenings?: DoorOpening[];
   onPointerDown: (e: ReactPointerEvent<SVGSVGElement>) => void;
   onPointerMove: (e: ReactPointerEvent<SVGSVGElement>) => void;
   onPointerUp: () => void;
   onClick: (e: MouseEvent<SVGSVGElement>) => void;
+}
+
+function doorRectPath(door: DoorOpening): string {
+  const dx = door.to.x - door.from.x, dy = door.to.y - door.from.y;
+  const L = Math.sqrt(dx * dx + dy * dy);
+  if (L < 1) return '';
+  const px = (-dy / L) * door.thickness, py = (dx / L) * door.thickness;
+  const pts = [
+    { x: door.from.x + px, y: door.from.y + py },
+    { x: door.to.x   + px, y: door.to.y   + py },
+    { x: door.to.x   - px, y: door.to.y   - py },
+    { x: door.from.x - px, y: door.from.y - py },
+  ];
+  return `M ${pts.map((p) => `${p.x},${p.y}`).join(' L ')} Z`;
 }
 
 export const TilingCanvas = ({
@@ -35,6 +51,7 @@ export const TilingCanvas = ({
   activeTool,
   wallThickness,
   dimensionLayer,
+  doorOpenings = [],
   onPointerDown,
   onPointerMove,
   onPointerUp,
@@ -82,6 +99,7 @@ export const TilingCanvas = ({
                     return `M ${poly.map((p) => `${p.x},${p.y}`).join(' L ')} Z`;
                   })
                 ),
+                ...doorOpenings.map(doorRectPath).filter(Boolean),
               ].join(' ')}
             />
           </clipPath>
@@ -94,6 +112,12 @@ export const TilingCanvas = ({
             fill="var(--tile-joint)"
           />
         ))}
+
+        {doorOpenings.map((door, i) => {
+          const path = doorRectPath(door);
+          if (!path) return null;
+          return <path key={`door-bg-${i}`} d={path} fill="var(--tile-joint)" />;
+        })}
 
         <g clipPath="url(#tiledClip)">
           <g transform={`rotate(${effectiveAngle}, ${centerX}, ${centerY})`}>
