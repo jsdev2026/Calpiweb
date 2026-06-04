@@ -1,53 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { detectClosedPolygons, computeAutoCotations } from './wallCotation';
+import { computeAutoCotations } from './wallCotation';
 import type { Wall, WallNode } from '@/types/wall';
 
 function nd(id: string, x: number, y: number): WallNode { return { id, x, y }; }
 function w(id: string, n1: string, n2: string, t = 10): Wall {
   return { id, node1Id: n1, node2Id: n2, thickness: t };
 }
-
-// ── detectClosedPolygons ──────────────────────────────────────────────────
-
-describe('detectClosedPolygons', () => {
-  it('pièce rectangulaire 4 murs → 1 polygone avec 4 wallIds', () => {
-    const nodes = [nd('a',0,0), nd('b',200,0), nd('c',200,140), nd('d',0,140)];
-    const walls = [w('w1','a','b'), w('w2','b','c'), w('w3','c','d'), w('w4','d','a')];
-    const result = detectClosedPolygons(walls, nodes);
-    expect(result).toHaveLength(1);
-    expect(result[0]!.wallIds).toHaveLength(4);
-    expect(new Set(result[0]!.wallIds)).toEqual(new Set(['w1','w2','w3','w4']));
-  });
-
-  it('4 murs fermés + 1 mur isolé → 1 polygone, mur isolé non inclus', () => {
-    const nodes = [nd('a',0,0), nd('b',200,0), nd('c',200,140), nd('d',0,140),
-                   nd('e',400,0), nd('f',500,0)];
-    const walls = [w('w1','a','b'), w('w2','b','c'), w('w3','c','d'), w('w4','d','a'),
-                   w('wi','e','f')];
-    const result = detectClosedPolygons(walls, nodes);
-    expect(result).toHaveLength(1);
-    expect(result[0]!.wallIds).not.toContain('wi');
-  });
-
-  it('T-junction → 0 polygones', () => {
-    // node b a 3 connexions : w1(a-b), w2(b-c), w3(b-m)
-    const nodes = [nd('a',0,0), nd('b',100,0), nd('c',200,0), nd('m',100,100)];
-    const walls = [w('w1','a','b'), w('w2','b','c'), w('w3','b','m')];
-    expect(detectClosedPolygons(walls, nodes)).toHaveLength(0);
-  });
-
-  it('2 murs ouverts → 0 polygones', () => {
-    const nodes = [nd('a',0,0), nd('b',100,0), nd('c',200,0)];
-    const walls = [w('w1','a','b'), w('w2','b','c')];
-    expect(detectClosedPolygons(walls, nodes)).toHaveLength(0);
-  });
-
-  it('mur unique isolé → 0 polygones', () => {
-    const nodes = [nd('a',0,0), nd('b',100,0)];
-    const walls = [w('w1','a','b')];
-    expect(detectClosedPolygons(walls, nodes)).toHaveLength(0);
-  });
-});
 
 // ── computeAutoCotations ──────────────────────────────────────────────────
 
@@ -102,6 +60,29 @@ describe('computeAutoCotations', () => {
     const result = computeAutoCotations(isoWalls, isoNodes);
     expect(result[0]!.normal.x).toBeCloseTo(0);
     expect(result[0]!.normal.y).toBeCloseTo(1);
+  });
+});
+
+describe('computeAutoCotations — T-junction (2 pièces adjacentes)', () => {
+  // Pièce gauche a-b-e-f (100×100mm), pièce droite b-c-d-e (100×100mm)
+  // Mur partagé e-b
+  const nodes = [
+    nd('a',0,0), nd('b',100,0), nd('c',200,0),
+    nd('d',200,100), nd('e',100,100), nd('f',0,100),
+  ];
+  const walls = [
+    w('w1','a','b'), w('w2','b','c'), w('w3','c','d'),
+    w('w4','d','e'), w('w5','e','b'), w('w6','e','f'), w('w7','f','a'),
+  ];
+
+  it('retourne des cotations (non vide malgré la T-junction)', () => {
+    const result = computeAutoCotations(walls, nodes);
+    expect(result.length).toBeGreaterThan(0);
+  });
+
+  it('le mur partagé w5 a au moins une cotation', () => {
+    const result = computeAutoCotations(walls, nodes);
+    expect(result.some(c => c.wallId === 'w5')).toBe(true);
   });
 });
 
