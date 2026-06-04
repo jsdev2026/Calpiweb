@@ -288,6 +288,14 @@ export const WallDrawingCanvas = ({
           (w.node1Id === targetNodeId && w.node2Id === prevNodeId)
         );
 
+        // Quand le split crée lui-même le lien prevNodeId→targetNodeId, ne pas doubler le mur.
+        // splitWallInEngine crée wall.node1Id→newNode et newNode→wall.node2Id.
+        // Si prevNodeId est l'une de ces extrémités, le lien est déjà créé par le split.
+        const snapWallObj = splitWallId !== null ? walls.find(w => w.id === splitWallId) : null;
+        const splitWillCreateLink =
+          snapWallObj &&
+          (snapWallObj.node1Id === prevNodeId || snapWallObj.node2Id === prevNodeId);
+
         onPushHistory();
 
         if (splitWallId !== null) {
@@ -296,7 +304,7 @@ export const WallDrawingCanvas = ({
           onAddNode({ id: targetNodeId, x: pt.x, y: pt.y });
         }
 
-        if (!alreadyConnected) {
+        if (!alreadyConnected && !splitWillCreateLink) {
           onAddWall({ id: generateId(), node1Id: prevNodeId, node2Id: targetNodeId, thickness: chain.thickness });
         }
 
