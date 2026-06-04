@@ -99,6 +99,7 @@ export interface Project {
     nodes: WallNode[];
     walls: Wall[];
     excludedZones: WallExcludedZone[];
+    wallRoomNames?: Record<string, string>;
   }; // wall-segment engine (node model)
   config: TilingConfig;
   wallThickness: number;

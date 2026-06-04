@@ -1,6 +1,7 @@
 // src/components/plan/WallRoomPanel.tsx
 'use client';
 
+import { useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { GripVertical } from 'lucide-react';
 import { useProjectStore } from '@/store/projectStore';
@@ -8,6 +9,7 @@ import { selectRooms } from '@/store/projectStore';
 import { getPolygonArea } from '@/engine/geometry/polygon';
 import { formatM2 } from '@/utils/formatters';
 import type { SnapZone } from './useDraggableSnap';
+import type { Room } from '@/types/project';
 
 interface WallRoomPanelProps {
   zone: SnapZone;
@@ -42,6 +44,23 @@ export const WallRoomPanel = ({
   tutorialMode = false,
 }: WallRoomPanelProps) => {
   const rooms = useProjectStore(selectRooms);
+  const renameWallRoom = useProjectStore((s) => s.renameWallRoom);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const startRename = (room: Room) => {
+    setRenamingId(room.id);
+    setRenameValue(room.name ?? '');
+    setTimeout(() => inputRef.current?.select(), 10);
+  };
+
+  const commitRename = () => {
+    if (renamingId) {
+      renameWallRoom(renamingId, renameValue.trim());
+      setRenamingId(null);
+    }
+  };
 
   return (
     <>
@@ -88,9 +107,27 @@ export const WallRoomPanel = ({
           ) : (
             rooms.map((room) => (
               <div key={room.id} className="rounded-xl px-3 py-1.5">
-                <p className="text-[11px] font-bold text-orange-500 dark:text-orange-400">
-                  {room.name ?? 'Pièce'}
-                </p>
+                {renamingId === room.id ? (
+                  <input
+                    ref={inputRef}
+                    value={renameValue}
+                    onChange={(e) => setRenameValue(e.target.value)}
+                    onBlur={commitRename}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') commitRename();
+                      if (e.key === 'Escape') setRenamingId(null);
+                    }}
+                    className="w-full rounded bg-zinc-800 px-1 text-[11px] font-bold text-orange-400 outline-none"
+                  />
+                ) : (
+                  <p
+                    className="text-[11px] font-bold text-orange-500 dark:text-orange-400 cursor-pointer select-none"
+                    title="Double-clic pour renommer"
+                    onDoubleClick={() => startRename(room)}
+                  >
+                    {room.name}
+                  </p>
+                )}
                 <p className="text-[10px]" style={{ color: 'var(--text2)' }}>
                   {formatM2(getPolygonArea(room.points))}
                 </p>

@@ -9,7 +9,7 @@ import { generateId } from '@/utils/id';
 import { DEFAULT_TILING_CONFIG } from '@/constants/tileDefaults';
 import { WALL_THICKNESS_MM } from '@/constants/businessRules';
 
-interface ProjectState {
+export interface ProjectState {
   projects: Project[];
   activeProjectId: string | null;
   hydrated: boolean;
@@ -25,6 +25,7 @@ interface ProjectState {
   removeRoom: (roomId: string) => void;
   updateRoom: (roomId: string, points: Plan, edges: EdgeType[]) => void;
   renameRoom: (roomId: string, name: string) => void;
+  renameWallRoom: (roomId: string, name: string) => void;
 
   setConfig: (config: TilingConfig) => void;
   setWallThickness: (mm: number) => void;
@@ -196,6 +197,19 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     }));
   },
 
+  renameWallRoom: (roomId, name) => {
+    get().updateActive((p) => {
+      if (!p.wallEngine) return p;
+      return {
+        ...p,
+        wallEngine: {
+          ...p.wallEngine,
+          wallRoomNames: { ...(p.wallEngine.wallRoomNames ?? {}), [roomId]: name },
+        },
+      };
+    });
+  },
+
   setConfig: (config) => get().updateActive((p) => ({ ...p, config })),
   setWallThickness: (mm) => get().updateActive((p) => ({ ...p, wallThickness: mm })),
   setStatus: (status) => get().updateActive((p) => ({ ...p, status })),
@@ -266,7 +280,9 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       ...p,
       rooms,
       constraints,
-      ...(wallEngine !== undefined ? { wallEngine } : {}),
+      ...(wallEngine !== undefined
+        ? { wallEngine: { ...wallEngine, wallRoomNames: p.wallEngine?.wallRoomNames } }
+        : {}),
     }));
   },
 
@@ -519,6 +535,10 @@ export function selectRooms(s: ProjectState): Room[] {
   const project = selectActiveProject(s);
   if (!project) return [];
   const we = project.wallEngine;
-  if (we !== undefined) return wallsToRooms(we.walls, we.nodes, we.excludedZones ?? []);
+  if (we !== undefined) {
+    const rooms = wallsToRooms(we.walls, we.nodes, we.excludedZones ?? []);
+    const names = we.wallRoomNames ?? {};
+    return rooms.map((r) => names[r.id] ? { ...r, name: names[r.id] } : r);
+  }
   return project.rooms;
 }
