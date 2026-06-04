@@ -741,6 +741,17 @@ export const WallDrawingCanvas = ({
         {/* H/V snap guide lines */}
         {snapResult?.type === 'hv' && cursor && (() => {
           const sc = worldToScreen(cursor);
+          if (!snapResult.axis) {
+            // Intersection : afficher les deux lignes (croix)
+            return (
+              <>
+                <line x1={0} y1={sc.y} x2="100%" y2={sc.y}
+                  stroke="#27ae60" strokeWidth={1} strokeDasharray="6,3" opacity={0.7} />
+                <line x1={sc.x} y1={0} x2={sc.x} y2="100%"
+                  stroke="#27ae60" strokeWidth={1} strokeDasharray="6,3" opacity={0.7} />
+              </>
+            );
+          }
           if (snapResult.axis === 'h') {
             return <line x1={0} y1={sc.y} x2="100%" y2={sc.y}
               stroke="#27ae60" strokeWidth={1} strokeDasharray="6,3" opacity={0.5} />;

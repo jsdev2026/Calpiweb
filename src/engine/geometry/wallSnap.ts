@@ -71,22 +71,19 @@ export function snapToWalls(
   }
   if (bestFa) return bestFa;
 
-  // 3. H/V snap — check alignment with ANY node (including chain-start nodes not yet connected to walls)
-  let bestHvDist = hvR;
-  let bestHv: SnapResult | null = null;
+  // 3. H/V snap — collect H and V candidates independently, then return intersection if both active
+  let bestH: { y: number; dist: number } | null = null;
+  let bestV: { x: number; dist: number } | null = null;
   for (const n of nodes) {
     const dy = Math.abs(cursor.y - n.y);
-    if (dy < bestHvDist) {
-      bestHvDist = dy;
-      bestHv = { point: { x: cursor.x, y: n.y }, type: 'hv', axis: 'h' };
-    }
+    if (dy < hvR && (!bestH || dy < bestH.dist)) bestH = { y: n.y, dist: dy };
     const dx = Math.abs(cursor.x - n.x);
-    if (dx < bestHvDist) {
-      bestHvDist = dx;
-      bestHv = { point: { x: n.x, y: cursor.y }, type: 'hv', axis: 'v' };
-    }
+    if (dx < hvR && (!bestV || dx < bestV.dist)) bestV = { x: n.x, dist: dx };
   }
-  if (bestHv) return bestHv;
+  // Intersection: both H and V active simultaneously → snap to crossing point
+  if (bestH && bestV) return { point: { x: bestV.x, y: bestH.y }, type: 'hv' };
+  if (bestH) return { point: { x: cursor.x, y: bestH.y }, type: 'hv', axis: 'h' };
+  if (bestV) return { point: { x: bestV.x, y: cursor.y }, type: 'hv', axis: 'v' };
 
   return null;
 }

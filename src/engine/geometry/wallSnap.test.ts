@@ -114,6 +114,39 @@ describe('snapToWalls — H/V snap without walls (first chain node)', () => {
   });
 });
 
+describe('snapToWalls — intersection snap (H + V simultaneous)', () => {
+  // n1=(0,0), n2=(100,0), n3=(100,200) with walls h and v
+  it('snaps to intersection when cursor is within both H and V radius', () => {
+    // Cursor at (5, 3): within V radius of n1.x=0 (dx=5<8) AND H radius of n2.y=0 (dy=3<8)
+    // Intersection = (0, 0) = n1 — but n1 is an active node (endpoint would catch it)
+    // Use a cursor far from endpoints but within both H and V of different nodes
+    // n1=(0,0): V snap at x=0; n3=(100,200): H snap at y=200
+    // Cursor at (5, 197): dx=5 from x=0, dy=3 from y=200 → intersection at (0, 200)
+    const r = snapToWalls({ x: 5, y: 197 }, [horizontal, vertical], nodes, SCALE, EP_R, FA_R, HV_R);
+    expect(r?.type).toBe('hv');
+    expect(r?.axis).toBeUndefined(); // intersection has no single axis
+    expect(r?.point.x).toBeCloseTo(0);
+    expect(r?.point.y).toBeCloseTo(200);
+  });
+
+  it('intersection snap takes priority over single-axis snap', () => {
+    // Cursor at (3, 3): within V of n1.x=0 (dx=3) AND H of n1.y=0 (dy=3)
+    // Both active → intersection = (0,0) which is n1 — endpoint snap wins
+    // Use distinct nodes: cursor at (3, 197) — V of n1(x=0) + H of n3(y=200)
+    const r = snapToWalls({ x: 3, y: 197 }, [horizontal, vertical], nodes, SCALE, EP_R, FA_R, HV_R);
+    expect(r?.type).toBe('hv');
+    expect(r?.axis).toBeUndefined();
+    expect(r?.point).toEqual({ x: 0, y: 200 });
+  });
+
+  it('falls back to single H snap when only H is in range', () => {
+    // Cursor at (150, 3): dy=3 from y=0 (H snap) but no node at x≈150 → single H
+    const r = snapToWalls({ x: 150, y: 3 }, [horizontal], nodes, SCALE, EP_R, FA_R, HV_R);
+    expect(r?.type).toBe('hv');
+    expect(r?.axis).toBe('h');
+  });
+});
+
 describe('snapToWalls — H/V snap', () => {
   it('snaps horizontally when cursor is near same Y as a node', () => {
     // cursor at (150, 3) — near y=0 of n1/n2 but far from endpoint and face
