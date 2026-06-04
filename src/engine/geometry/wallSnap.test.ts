@@ -1,6 +1,6 @@
 // src/engine/geometry/wallSnap.test.ts
 import { describe, it, expect } from 'vitest';
-import { snapToWalls, perpendicularSnapForNode } from './wallSnap';
+import { snapToWalls, perpendicularSnapForNode, adjacentAxisSnapForNode } from './wallSnap';
 import type { Wall, WallNode } from '@/types/wall';
 
 const SCALE = 1;
@@ -52,6 +52,46 @@ describe('snapToWalls — face', () => {
   it('does not snap to face beyond wall bounds', () => {
     const r = snapToWalls({ x:300, y:20 }, [horizontal], nodes, SCALE, EP_R, FA_R, HV_R);
     expect(r).toBeNull();
+  });
+});
+
+describe('adjacentAxisSnapForNode', () => {
+  // A=(0,0), B=(300,200) — adjacent nodes of the dragged node
+  const A = nd('a', 0, 0);
+  const B = nd('b', 300, 200);
+  const HV = 20;
+
+  it('returns intersection when cursor is within H of A and V of B simultaneously', () => {
+    // Cursor near (300, 5): within V of B.x=300 (dx=0) and H of A.y=0 (dy=5)
+    const r = adjacentAxisSnapForNode({ x: 300, y: 5 }, [A, B], 1, HV);
+    expect(r?.type).toBe('hv');
+    expect(r?.axis).toBeUndefined(); // intersection
+    expect(r?.point).toEqual({ x: 300, y: 0 });
+  });
+
+  it('returns single H snap when only H is in range', () => {
+    // Cursor at (500, 5): H of A.y=0 active, but no node at x≈500
+    const r = adjacentAxisSnapForNode({ x: 500, y: 5 }, [A, B], 1, HV);
+    expect(r?.type).toBe('hv');
+    expect(r?.axis).toBe('h');
+    expect(r?.point.y).toBeCloseTo(0);
+  });
+
+  it('returns single V snap when only V is in range', () => {
+    const r = adjacentAxisSnapForNode({ x: 5, y: 500 }, [A, B], 1, HV);
+    expect(r?.axis).toBe('v');
+    expect(r?.point.x).toBeCloseTo(0);
+  });
+
+  it('returns null when cursor is far from all adjacent nodes', () => {
+    const r = adjacentAxisSnapForNode({ x: 150, y: 100 }, [A, B], 1, HV);
+    expect(r).toBeNull();
+  });
+
+  it('works with a single adjacent node (no intersection possible)', () => {
+    const r = adjacentAxisSnapForNode({ x: 5, y: 5 }, [A], 1, HV);
+    // Both H and V snap to A=(0,0) → intersection at (0,0)
+    expect(r?.point).toEqual({ x: 0, y: 0 });
   });
 });
 

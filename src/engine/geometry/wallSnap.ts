@@ -89,6 +89,41 @@ export function snapToWalls(
 }
 
 /**
+ * Adjacent axis snap for a node being dragged.
+ *
+ * Specifically checks alignment with the OTHER ends of the walls connected to
+ * the dragged node (adjacentNodes = [A, B, …]). When the cursor is simultaneously
+ * within hvSnapPx of both y=A.y (horizontal) and x=B.x (vertical), returns the
+ * intersection point (B.x, A.y) — the position that makes both walls axis-aligned.
+ *
+ * This is higher priority than the general H/V snap because it is specific to
+ * the walls being reshaped by the drag.
+ */
+export function adjacentAxisSnapForNode(
+  cursor: Point,
+  adjacentNodes: WallNode[],
+  scale: number,
+  hvSnapPx: number,
+): SnapResult | null {
+  const hvR = hvSnapPx / scale;
+
+  let bestH: { y: number; dist: number } | null = null;
+  let bestV: { x: number; dist: number } | null = null;
+
+  for (const n of adjacentNodes) {
+    const dy = Math.abs(cursor.y - n.y);
+    if (dy < hvR && (!bestH || dy < bestH.dist)) bestH = { y: n.y, dist: dy };
+    const dx = Math.abs(cursor.x - n.x);
+    if (dx < hvR && (!bestV || dx < bestV.dist)) bestV = { x: n.x, dist: dx };
+  }
+
+  if (bestH && bestV) return { point: { x: bestV.x, y: bestH.y }, type: 'hv' }; // intersection
+  if (bestH) return { point: { x: cursor.x, y: bestH.y }, type: 'hv', axis: 'h' };
+  if (bestV) return { point: { x: bestV.x, y: cursor.y }, type: 'hv', axis: 'v' };
+  return null;
+}
+
+/**
  * Perpendicular snap for a node being dragged.
  *
  * For each pair of adjacent nodes A and B (the other ends of walls connected to

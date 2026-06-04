@@ -4,7 +4,7 @@ import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import type { Wall, WallNode, DrawingChain, SnapResult, WallExcludedZone } from '@/types/wall';
 import type { Point } from '@/types/plan';
-import { snapToWalls, perpendicularSnapForNode } from '@/engine/geometry/wallSnap';
+import { snapToWalls, perpendicularSnapForNode, adjacentAxisSnapForNode } from '@/engine/geometry/wallSnap';
 import { computeCornerGeometry, computeJointLines } from '@/engine/geometry/wallGeometry';
 import { computeAutoCotations } from '@/engine/geometry/wallCotation';
 import { wallsToRooms } from '@/engine/geometry/wallFaces';
@@ -401,16 +401,27 @@ export const WallDrawingCanvas = ({
 
       let snap = null;
       if (!isCtrlPressed) {
-        // 1. Endpoint snap (priorité max)
+        // 1. Endpoint snap (priorité absolue)
         const wallSnap = snapToWalls(world, snapWalls, otherNodes, scale, ENDPOINT_RADIUS_PX, FACE_RADIUS_PX, HV_SNAP_DRAG_PX);
         if (wallSnap?.type === 'endpoint') {
           snap = wallSnap;
         } else {
-          // 2. Perpendicularité (Thales) — priorité sur H/V
-          const perpSnap = adjacentNodes.length >= 2
-            ? perpendicularSnapForNode(world, adjacentNodes, scale, PERP_SNAP_PX)
+          // 2. Axes adjacents : horizontalité/verticalité des murs connectés
+          //    L'intersection H+V prend le dessus sur tout le reste
+          const adjSnap = adjacentNodes.length > 0
+            ? adjacentAxisSnapForNode(world, adjacentNodes, scale, HV_SNAP_DRAG_PX)
             : null;
-          snap = perpSnap ?? wallSnap;
+          if (adjSnap && !adjSnap.axis) {
+            // Intersection H+V : priorité max après endpoint
+            snap = adjSnap;
+          } else {
+            // 3. Perpendicularité (Thales 90°)
+            const perpSnap = adjacentNodes.length >= 2
+              ? perpendicularSnapForNode(world, adjacentNodes, scale, PERP_SNAP_PX)
+              : null;
+            // 4. Fallback : single-axis adjacent, puis snap général
+            snap = perpSnap ?? adjSnap ?? wallSnap;
+          }
         }
       }
 
