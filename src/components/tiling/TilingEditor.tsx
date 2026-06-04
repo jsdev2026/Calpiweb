@@ -4,6 +4,7 @@ import { Ruler } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import React from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import type { Room } from '@/types/project';
 import type { Point } from '@/types/plan';
 import type { TilingConfig } from '@/types/tiling';
@@ -83,7 +84,7 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
 
   const handleTilingTouchEnd = () => { tilingTouchRef.current = null; };
 
-  const doorOpenings = useProjectStore(selectDoorOpenings);
+  const doorOpenings = useProjectStore(useShallow(selectDoorOpenings));
   const result = useMemo(
     () => analyzeQuantities(rooms, config, wallThickness, doorOpenings),
     [rooms, config, wallThickness, doorOpenings],
