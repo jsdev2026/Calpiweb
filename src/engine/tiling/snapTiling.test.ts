@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { snapToTiling, getParallelAngle } from './snapTiling';
 import type { Room } from '@/types/project';
 import type { Tile } from '@/types/tiling';
+import type { WallNode } from '@/types/wall';
 
 const room300: Room = {
   id: 'r1',
@@ -74,5 +75,41 @@ describe('getParallelAngle', () => {
   it('returns null for empty rooms list', () => {
     const angle = getParallelAngle({ x: 0, y: 0 }, [], 0);
     expect(angle).toBeNull();
+  });
+});
+
+describe('snapToTiling — wall-node snap', () => {
+  const nodes: WallNode[] = [
+    { id: 'n1', x: 0, y: 0 },
+    { id: 'n2', x: 3000, y: 0 },
+  ];
+
+  it('retourne kind wall-node et nodeId quand le curseur est proche d\'un nœud', () => {
+    // n1 est à (0,0), curseur à (5, 3) — dist ~5.8 < rayon 15/1
+    const result = snapToTiling({ x: 5, y: 3 }, [room300], [], 0, 1, nodes);
+    expect(result).not.toBeNull();
+    expect(result!.kind).toBe('wall-node');
+    expect(result!.nodeId).toBe('n1');
+    expect(result!.point.x).toBeCloseTo(0);
+    expect(result!.point.y).toBeCloseTo(0);
+  });
+
+  it('wall-node a priorité sur wall-vertex quand les deux sont proches', () => {
+    // room300 a un wall-vertex à (0,0). n1 est aussi à (0,0).
+    // wall-node doit gagner (priorité 0 < 1).
+    const result = snapToTiling({ x: 2, y: 2 }, [room300], [], 0, 1, nodes);
+    expect(result!.kind).toBe('wall-node');
+    expect(result!.nodeId).toBe('n1');
+  });
+
+  it('retourne null si aucun nœud dans le rayon et nodes fournis', () => {
+    const result = snapToTiling({ x: 9999, y: 9999 }, [], [], 0, 1, nodes);
+    expect(result).toBeNull();
+  });
+
+  it('sans nodes, le comportement existant est préservé', () => {
+    const result = snapToTiling({ x: 1, y: 1 }, [room300], [], 0, 1);
+    expect(result!.kind).toBe('wall-vertex');
+    expect(result!.nodeId).toBeUndefined();
   });
 });

@@ -1,11 +1,13 @@
 import type { Point } from '@/types/plan';
 import type { Room } from '@/types/project';
 import type { Tile } from '@/types/tiling';
+import type { WallNode } from '@/types/wall';
 import { insetRoomPolygon } from '@/engine/geometry/polygon';
 
 export interface SnapResult {
   point: Point;
-  kind: 'wall-vertex' | 'wall-midpoint' | 'tile-corner' | 'tile-midpoint';
+  kind: 'wall-node' | 'wall-vertex' | 'wall-midpoint' | 'tile-corner' | 'tile-midpoint';
+  nodeId?: string;
 }
 
 interface BestCandidate {
@@ -20,18 +22,28 @@ export function snapToTiling(
   tiles: Tile[],
   wallThickness: number,
   scale: number,
+  nodes: WallNode[] = [],
 ): SnapResult | null {
   const radius = 15 / scale;
   const state: { best: BestCandidate | null } = { best: null };
 
-  const consider = (pt: Point, kind: SnapResult['kind'], priority: number) => {
+  const consider = (pt: Point, kind: SnapResult['kind'], priority: number, nodeId?: string) => {
     const dist = Math.hypot(pt.x - worldPt.x, pt.y - worldPt.y);
     if (dist > radius) return;
-    const candidate: BestCandidate = { priority, dist, result: { point: { x: pt.x, y: pt.y }, kind } };
+    const candidate: BestCandidate = {
+      priority,
+      dist,
+      result: { point: { x: pt.x, y: pt.y }, kind, ...(nodeId ? { nodeId } : {}) },
+    };
     if (!state.best || priority < state.best.priority || (priority === state.best.priority && dist < state.best.dist)) {
       state.best = candidate;
     }
   };
+
+  // Priority 0: wall-node (nœuds de mur bruts — la plus haute priorité)
+  for (const node of nodes) {
+    consider({ x: node.x, y: node.y }, 'wall-node', 0, node.id);
+  }
 
   // Priority 1: wall-vertex (inset polygon vertices)
   for (const room of rooms) {
