@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type { Room } from '@/types/project';
 import type { Point } from '@/types/plan';
 import type { Tile } from '@/types/tiling';
+import type { WallNode } from '@/types/wall';
 import type { DimDirection, TilingDimension } from '@/types/tilingDimension';
 import { generateId } from '@/utils/id';
 import { getBoundingBox } from '@/engine/geometry/polygon';
@@ -55,6 +56,7 @@ export function useTilingDimension(
   wallThickness: number,
   scale: number,
   active: boolean,
+  nodes: WallNode[] = [],
 ): {
   hoverSnap: SnapResult | null;
   preview: DimPreview | null;
@@ -115,7 +117,7 @@ export function useTilingDimension(
   const onPointerMove = useCallback(
     (worldPt: Point) => {
       if (!active) return;
-      const snap = snapToTiling(worldPt, rooms, tiles, wallThickness, scale);
+      const snap = snapToTiling(worldPt, rooms, tiles, wallThickness, scale, nodes);
       setHoverSnap(snap);
       if (phase === 'picking_end' && snap && p1 !== null && manualDirection === null) {
         const dx = snap.point.x - p1.x;
@@ -123,13 +125,13 @@ export function useTilingDimension(
         setAutoDirection(Math.abs(dx) >= Math.abs(dy) ? 'H' : 'V');
       }
     },
-    [active, rooms, tiles, wallThickness, scale, phase, p1, manualDirection],
+    [active, rooms, tiles, wallThickness, scale, nodes, phase, p1, manualDirection],
   );
 
   const onClick = useCallback(
     (worldPt: Point, ctrlHeld: boolean) => {
       if (!active) return;
-      const snap = snapToTiling(worldPt, rooms, tiles, wallThickness, scale);
+      const snap = snapToTiling(worldPt, rooms, tiles, wallThickness, scale, nodes);
       const target = snap?.point ?? worldPt;
 
       if (phase === 'picking_start') {
@@ -153,7 +155,6 @@ export function useTilingDimension(
       const parallelAngle =
         dir === 'parallel' ? (getParallelAngle(p1, rooms, wallThickness) ?? 0) : undefined;
 
-      // Compute rendered line endpoints
       let rx2: number, ry2: number;
       if (dir === 'H') {
         rx2 = target.x; ry2 = p1.y;
@@ -177,6 +178,7 @@ export function useTilingDimension(
         direction: dir,
         ...(parallelAngle !== undefined ? { parallelAngle } : {}),
         perpOffset,
+        ...(snap?.nodeId ? { p2NodeId: snap.nodeId } : {}),
       };
 
       addTilingDimension(dim);
@@ -186,7 +188,7 @@ export function useTilingDimension(
       setManualDirection(null);
       setAutoDirection('H');
     },
-    [active, rooms, tiles, wallThickness, scale, phase, p1, manualDirection, autoDirection, addTilingDimension],
+    [active, rooms, tiles, wallThickness, scale, nodes, phase, p1, manualDirection, autoDirection, addTilingDimension],
   );
 
   const onContextMenu = useCallback(
