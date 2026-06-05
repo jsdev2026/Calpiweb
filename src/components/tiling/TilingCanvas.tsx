@@ -5,6 +5,7 @@ import type { Room } from '@/types/project';
 import type { Point } from '@/types/plan';
 import type { Tile, TilingConfig } from '@/types/tiling';
 import type { DoorOpening } from '@/types/wall';
+import type { WallPolygon } from '@/engine/geometry/wallGeometry';
 import { getBoundingBox, insetRoomPolygon } from '@/engine/geometry/polygon';
 import { formatCm } from '@/utils/formatters';
 import { partitionToPolygon } from '@/engine/tiling/tilingEngine';
@@ -21,6 +22,7 @@ interface TilingCanvasProps {
   wallThickness: number;
   dimensionLayer: ReactNode;
   doorOpenings?: DoorOpening[];
+  wallPolygons?: WallPolygon[];
   onPointerDown: (e: ReactPointerEvent<SVGSVGElement>) => void;
   onPointerMove: (e: ReactPointerEvent<SVGSVGElement>) => void;
   onPointerUp: () => void;
@@ -31,7 +33,7 @@ function doorRectPath(door: DoorOpening): string {
   const dx = door.to.x - door.from.x, dy = door.to.y - door.from.y;
   const L = Math.sqrt(dx * dx + dy * dy);
   if (L < 1) return '';
-  const px = (-dy / L) * door.thickness, py = (dx / L) * door.thickness;
+  const px = (-dy / L) * (door.thickness / 2), py = (dx / L) * (door.thickness / 2);
   const pts = [
     { x: door.from.x + px, y: door.from.y + py },
     { x: door.to.x   + px, y: door.to.y   + py },
@@ -52,6 +54,7 @@ export const TilingCanvas = ({
   wallThickness,
   dimensionLayer,
   doorOpenings = [],
+  wallPolygons = [],
   onPointerDown,
   onPointerMove,
   onPointerUp,
@@ -157,24 +160,17 @@ export const TilingCanvas = ({
           ))
         )}
 
-        {/* Room walls and doors */}
-        {validRooms.map((room) =>
-          room.points.map((p, i) => {
-            const nextP = room.points[(i + 1) % room.points.length]!;
-            const isDoor = (room.edges[i] ?? 'WALL') === 'DOOR';
-            const edgeThick = room.edgeThicknesses?.[i] ?? wallThickness;
-            return (
-              <line
-                key={`edge-${room.id}-${i}`}
-                x1={p.x} y1={p.y} x2={nextP.x} y2={nextP.y}
-                stroke={isDoor ? '#f97316' : '#ea580c'}
-                strokeWidth={isDoor ? edgeThick * 0.5 : edgeThick}
-                strokeLinecap="round"
-                strokeDasharray={isDoor ? `${edgeThick * 1.2},${edgeThick * 0.8}` : undefined}
-              />
-            );
-          }),
-        )}
+        {/* Wall polygons — même géométrie que le plan editor */}
+        {wallPolygons.map((poly) => {
+          if (!poly.points.length) return null;
+          return (
+            <polygon
+              key={`wall-${poly.wallId}`}
+              points={poly.points.map((p) => `${p.x},${p.y}`).join(' ')}
+              fill="var(--canvas-wall)"
+            />
+          );
+        })}
 
         {/* Partitions — filled polygon showing actual thickness */}
         {validRooms.map((room) =>

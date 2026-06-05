@@ -11,6 +11,7 @@ import type { TilingConfig } from '@/types/tiling';
 import { getBoundingBox } from '@/engine/geometry/polygon';
 import { analyzeQuantities } from '@/engine/quantities/quantityEngine';
 import { useProjectStore, selectActiveProject, selectDoorOpenings } from '@/store/projectStore';
+import { computeCornerGeometry } from '@/engine/geometry/wallGeometry';
 import { useTilingDimension } from '@/hooks/useTilingDimension';
 import { TilingCanvas } from './TilingCanvas';
 import { TilingControls } from './TilingControls';
@@ -85,6 +86,11 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
   const handleTilingTouchEnd = () => { tilingTouchRef.current = null; };
 
   const doorOpenings = useProjectStore(useShallow(selectDoorOpenings));
+  const wallEngine = useProjectStore(s => selectActiveProject(s)?.wallEngine);
+  const wallPolygons = useMemo(
+    () => computeCornerGeometry((wallEngine?.walls ?? []).filter(w => !w.isDoor), wallEngine?.nodes ?? []),
+    [wallEngine],
+  );
   const result = useMemo(
     () => analyzeQuantities(rooms, config, wallThickness, doorOpenings),
     [rooms, config, wallThickness, doorOpenings],
@@ -262,6 +268,7 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
           wallThickness={wallThickness}
           dimensionLayer={dimensionLayer}
           doorOpenings={doorOpenings}
+          wallPolygons={wallPolygons}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
