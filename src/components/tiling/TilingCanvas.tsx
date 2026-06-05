@@ -145,6 +145,19 @@ export const TilingCanvas = ({
           </g>
         </g>
 
+        {/* Wall polygons — même géométrie que le plan editor */}
+        {wallPolygons.map((poly) => {
+          if (!poly.points.length) return null;
+          return (
+            <polygon
+              key={`wall-${poly.wallId}`}
+              points={poly.points.map((p) => `${p.x},${p.y}`).join(' ')}
+              fill="var(--canvas-wall)"
+              className="pointer-events-none"
+            />
+          );
+        })}
+
         {/* Excluded zones — amber outline */}
         {validRooms.map((room) =>
           (room.excludedZones ?? []).map((zone) => (
@@ -159,18 +172,6 @@ export const TilingCanvas = ({
             />
           ))
         )}
-
-        {/* Wall polygons — même géométrie que le plan editor */}
-        {wallPolygons.map((poly) => {
-          if (!poly.points.length) return null;
-          return (
-            <polygon
-              key={`wall-${poly.wallId}`}
-              points={poly.points.map((p) => `${p.x},${p.y}`).join(' ')}
-              fill="var(--canvas-wall)"
-            />
-          );
-        })}
 
         {/* Partitions — filled polygon showing actual thickness */}
         {validRooms.map((room) =>
