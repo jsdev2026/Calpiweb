@@ -781,6 +781,7 @@ export const WallDrawingCanvas = ({
               {/* Label cliquable — pointer-events réactivés sur ce groupe uniquement */}
               <g
                 style={{ cursor: 'pointer', pointerEvents: 'auto' }}
+                onPointerDown={(e) => e.stopPropagation()}
                 onClick={(e) => { e.stopPropagation(); setSelectedCot({ wallId: c.wallId, side: c.side }); }}
               >
                 <text
