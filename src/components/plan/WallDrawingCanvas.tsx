@@ -108,6 +108,7 @@ export const WallDrawingCanvas = ({
     setEditingWallId(null);
     setChain(null);
     setExcludePoints([]);
+    setSelectedCot(null);
   }, [tool]);
 
   const tryCloseChain = useCallback(() => {
@@ -135,6 +136,7 @@ export const WallDrawingCanvas = ({
         setSelectedWallId(null);
         setEditingWallId(null);
         setExcludePoints([]);
+        setSelectedCot(null);
       }
       if (e.key === 'Enter') {
         tryCloseChain();
@@ -923,7 +925,6 @@ export const WallDrawingCanvas = ({
             onApply={(nodeId, newPos) => {
               onPushHistory();
               onUpdateNode(nodeId, newPos);
-              setSelectedCot(null);
             }}
             onClose={() => setSelectedCot(null)}
           />
