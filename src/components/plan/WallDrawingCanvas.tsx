@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
-import type { Wall, WallNode, DrawingChain, SnapResult, WallExcludedZone } from '@/types/wall';
+import type { Wall, WallNode, DrawingChain, SnapResult, WallExcludedZone, AutoCotation } from '@/types/wall';
 import type { Point } from '@/types/plan';
 import { snapToWalls, perpendicularSnapForNode, adjacentAxisSnapForNode, collinearSnap, collinearSnapForNode } from '@/engine/geometry/wallSnap';
 import { computeCornerGeometry, computeJointLines } from '@/engine/geometry/wallGeometry';
@@ -10,6 +10,7 @@ import { computeAutoCotations } from '@/engine/geometry/wallCotation';
 import { wallsToRooms } from '@/engine/geometry/wallFaces';
 import { generateId } from '@/utils/id';
 import { WallEdgeEditor } from './WallEdgeEditor';
+import { AutoCotationPanel } from './AutoCotationPanel';
 
 type PlanTool = 'WALL' | 'SELECT' | 'DELETE' | 'DOOR' | 'EXCLUDE';
 
@@ -88,6 +89,7 @@ export const WallDrawingCanvas = ({
   const [selectedWallId, setSelectedWallId] = useState<string | null>(null);
   const [editingWallId,  setEditingWallId]  = useState<string | null>(null);
   const [editThickness,  setEditThickness]  = useState('');
+  const [selectedCot, setSelectedCot] = useState<{ wallId: string; side: AutoCotation['side'] } | null>(null);
 
   // Node drag state
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
@@ -573,7 +575,10 @@ export const WallDrawingCanvas = ({
   const handleTouchEnd = () => { touchRef.current = null; };
 
   const handleKeyDown = (e: React.KeyboardEvent<SVGSVGElement>) => {
-    if (e.key === 'Escape') setChain(null);
+    if (e.key === 'Escape') {
+      setChain(null);
+      setSelectedCot(null);
+    }
   };
 
   // ── WallEdgeEditor ─────────────────────────────────────────────────────────
@@ -741,16 +746,17 @@ export const WallDrawingCanvas = ({
         {autoCotations.map((c, i) => {
           const sa1 = worldToScreen(c.anchor1);
           const sa2 = worldToScreen(c.anchor2);
-          // Offset en coordonnées écran
           const ox = c.normal.x * c.offset * scale;
           const oy = c.normal.y * c.offset * scale;
           const sl1 = { x: sa1.x + ox, y: sa1.y + oy };
           const sl2 = { x: sa2.x + ox, y: sa2.y + oy };
           const smid = { x: (sl1.x + sl2.x) / 2, y: (sl1.y + sl2.y) / 2 };
+          const isSelected = selectedCot?.wallId === c.wallId && selectedCot?.side === c.side;
           const color =
+            isSelected ? '#f97316' :
             c.side === 'exterior' ? '#22c55e' :
             c.side === 'interior' ? '#3b82f6' : '#f97316';
-          const tick = 5; // px
+          const tick = 5;
           return (
             <g key={`cot-${i}`} className="pointer-events-none">
               {/* Lignes témoins pointillées */}
@@ -761,7 +767,7 @@ export const WallDrawingCanvas = ({
               {/* Ligne de cote */}
               <line x1={sl1.x} y1={sl1.y} x2={sl2.x} y2={sl2.y}
                 stroke={color} strokeWidth={1} />
-              {/* Ticks perpendiculaires (le long de la normale) */}
+              {/* Ticks perpendiculaires */}
               <line
                 x1={sl1.x - c.normal.x * tick} y1={sl1.y - c.normal.y * tick}
                 x2={sl1.x + c.normal.x * tick} y2={sl1.y + c.normal.y * tick}
@@ -770,15 +776,20 @@ export const WallDrawingCanvas = ({
                 x1={sl2.x - c.normal.x * tick} y1={sl2.y - c.normal.y * tick}
                 x2={sl2.x + c.normal.x * tick} y2={sl2.y + c.normal.y * tick}
                 stroke={color} strokeWidth={1.5} />
-              {/* Label */}
-              <text
-                x={smid.x + c.normal.x * 12} y={smid.y + c.normal.y * 12}
-                textAnchor="middle" dominantBaseline="middle"
-                fontSize={11} fill={color}
-                style={{ fontFamily: 'monospace', userSelect: 'none' }}
+              {/* Label cliquable — pointer-events réactivés sur ce groupe uniquement */}
+              <g
+                style={{ cursor: 'pointer', pointerEvents: 'auto' }}
+                onClick={(e) => { e.stopPropagation(); setSelectedCot({ wallId: c.wallId, side: c.side }); }}
               >
-                {c.label}
-              </text>
+                <text
+                  x={smid.x + c.normal.x * 12} y={smid.y + c.normal.y * 12}
+                  textAnchor="middle" dominantBaseline="middle"
+                  fontSize={11} fill={color} fontWeight={isSelected ? 'bold' : 'normal'}
+                  style={{ fontFamily: 'monospace', userSelect: 'none' }}
+                >
+                  {c.label}
+                </text>
+              </g>
             </g>
           );
         })}
@@ -896,6 +907,28 @@ export const WallDrawingCanvas = ({
           onCancel={() => setEditingWallId(null)}
         />
       )}
+
+      {/* AutoCotationPanel */}
+      {selectedCot && (() => {
+        const cot = autoCotations.find(
+          (ac) => ac.wallId === selectedCot.wallId && ac.side === selectedCot.side,
+        );
+        const wall = walls.find((w) => w.id === selectedCot.wallId);
+        return cot && wall ? (
+          <AutoCotationPanel
+            key={`${selectedCot.wallId}-${selectedCot.side}`}
+            cot={cot}
+            wall={wall}
+            nodes={nodes}
+            onApply={(nodeId, newPos) => {
+              onPushHistory();
+              onUpdateNode(nodeId, newPos);
+              setSelectedCot(null);
+            }}
+            onClose={() => setSelectedCot(null)}
+          />
+        ) : null;
+      })()}
 
       {/* Panel raccourcis — desktop uniquement */}
       <div
