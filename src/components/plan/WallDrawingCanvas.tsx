@@ -47,6 +47,8 @@ interface WallDrawingCanvasProps {
   onAddExcludedZone: (points: Point[]) => void;
   onRemoveExcludedZone: (id: string) => void;
   onSplitWall: (wallId: string, newNode: WallNode) => void;
+  wallRoomNames?: Record<string, string>;
+  onRenameRoom?: (id: string, name: string) => void;
 }
 
 function screenToWorld(pt: Point, pan: Point, scale: number): Point {
@@ -65,6 +67,7 @@ export const WallDrawingCanvas = ({
   wallThickness,
   excludedZones, onAddExcludedZone, onRemoveExcludedZone: _onRemoveExcludedZone,
   onSplitWall,
+  wallRoomNames, onRenameRoom,
 }: WallDrawingCanvasProps) => {
   const svgRef = useRef<SVGSVGElement | null>(null);
   // Refs mutable pour wheel/touch — évitent les stale closures
@@ -90,6 +93,8 @@ export const WallDrawingCanvas = ({
   const [editingWallId,  setEditingWallId]  = useState<string | null>(null);
   const [editThickness,  setEditThickness]  = useState('');
   const [selectedCot, setSelectedCot] = useState<{ wallId: string; side: AutoCotation['side']; screenX: number; screenY: number } | null>(null);
+  const [renamingRoom, setRenamingRoom] = useState<{ id: string; screenX: number; screenY: number } | null>(null);
+  const [renameValue,  setRenameValue]  = useState('');
 
   // Node drag state
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
@@ -109,6 +114,7 @@ export const WallDrawingCanvas = ({
     setChain(null);
     setExcludePoints([]);
     setSelectedCot(null);
+    setRenamingRoom(null);
   }, [tool]);
 
   const tryCloseChain = useCallback(() => {
@@ -137,6 +143,7 @@ export const WallDrawingCanvas = ({
         setEditingWallId(null);
         setExcludePoints([]);
         setSelectedCot(null);
+        setRenamingRoom(null);
       }
       if (e.key === 'Enter') {
         tryCloseChain();
@@ -576,10 +583,19 @@ export const WallDrawingCanvas = ({
 
   const handleTouchEnd = () => { touchRef.current = null; };
 
+  const submitRename = () => {
+    if (renamingRoom && onRenameRoom) {
+      const trimmed = renameValue.trim();
+      if (trimmed) onRenameRoom(renamingRoom.id, trimmed);
+    }
+    setRenamingRoom(null);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<SVGSVGElement>) => {
     if (e.key === 'Escape') {
       setChain(null);
       setSelectedCot(null);
+      setRenamingRoom(null);
     }
   };
 
@@ -666,16 +682,23 @@ export const WallDrawingCanvas = ({
           const cx = room.points.reduce((s, p) => s + p.x, 0) / room.points.length;
           const cy = room.points.reduce((s, p) => s + p.y, 0) / room.points.length;
           const sc = worldToScreen({ x: cx, y: cy });
+          const displayName = wallRoomNames?.[room.id] ?? room.name ?? '';
           return (
-            <g key={`room-fill-${room.id}`} className="pointer-events-none">
-              <polygon points={screenPts} fill="var(--canvas-poly-active)" />
+            <g key={`room-fill-${room.id}`}>
+              <polygon points={screenPts} fill="var(--canvas-poly-active)" className="pointer-events-none" />
               <text
                 x={sc.x} y={sc.y}
                 textAnchor="middle" dominantBaseline="middle"
                 fontSize={11} fill="var(--canvas-name-active)"
-                style={{ fontFamily: 'system-ui', userSelect: 'none' }}
+                style={{ fontFamily: 'system-ui', userSelect: 'none', cursor: 'text', pointerEvents: 'auto' }}
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setRenamingRoom({ id: room.id, screenX: sc.x, screenY: sc.y });
+                  setRenameValue(displayName);
+                }}
               >
-                {room.name ?? ''}
+                {displayName}
               </text>
             </g>
           );
@@ -933,6 +956,28 @@ export const WallDrawingCanvas = ({
           />
         ) : null;
       })()}
+
+      {/* Rename room input */}
+      {renamingRoom && (
+        <div
+          className="absolute z-30"
+          style={{ left: renamingRoom.screenX, top: renamingRoom.screenY, transform: 'translate(-50%, -50%)' }}
+        >
+          <input
+            type="text"
+            autoFocus
+            value={renameValue}
+            onChange={(e) => setRenameValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') submitRename();
+              if (e.key === 'Escape') setRenamingRoom(null);
+            }}
+            onBlur={submitRename}
+            className="rounded border border-orange-500 bg-zinc-900/95 px-2 py-1 text-center text-xs font-bold text-white shadow-xl outline-none"
+            style={{ minWidth: '6rem' }}
+          />
+        </div>
+      )}
 
       {/* Panel raccourcis — desktop uniquement */}
       <div

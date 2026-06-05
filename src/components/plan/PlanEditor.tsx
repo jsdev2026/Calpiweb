@@ -63,6 +63,7 @@ export function computeInitialView(
 export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) => {
   const wallEngine           = useProjectStore((s) => selectActiveProject(s)?.wallEngine);
   const wallThickness        = useProjectStore((s) => selectActiveProject(s)?.wallThickness ?? 100);
+  const wallRoomNames        = useProjectStore((s) => selectActiveProject(s)?.wallEngine?.wallRoomNames ?? {});
   const addWall              = useProjectStore((s) => s.addWall);
   const removeWall           = useProjectStore((s) => s.removeWall);
   const updateWall           = useProjectStore((s) => s.updateWall);
@@ -71,6 +72,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
   const mergeNodes           = useProjectStore((s) => s.mergeNodes);
   const initWallEngine       = useProjectStore((s) => s.initWallEngine);
   const setWallThickness     = useProjectStore((s) => s.setWallThickness);
+  const renameWallRoom       = useProjectStore((s) => s.renameWallRoom);
   const addWallExcludedZone    = useProjectStore((s) => s.addWallExcludedZone);
   const removeWallExcludedZone = useProjectStore((s) => s.removeWallExcludedZone);
   const splitWall              = useProjectStore((s) => s.splitWall);
@@ -213,6 +215,8 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
           onAddExcludedZone={addWallExcludedZone}
           onRemoveExcludedZone={removeWallExcludedZone}
           onSplitWall={splitWall}
+          wallRoomNames={wallRoomNames}
+          onRenameRoom={renameWallRoom}
         />
       </div>
     </div>
