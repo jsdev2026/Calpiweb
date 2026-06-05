@@ -21,7 +21,7 @@ describe('computeNewNode2', () => {
   });
 
   it('interior — ajoute l\'épaisseur pour trouver node_dist', () => {
-    // label int = node_dist - thickness => on entre 180mm (int), thickness=10 => node_dist=190
+    // interior label = node_dist - thickness, so node_dist = label + thickness = 180 + 10 = 190
     const result = computeNewNode2(wallH, nodesH, 180, 'interior');
     expect(result.x).toBeCloseTo(190);
     expect(result.y).toBeCloseTo(0);

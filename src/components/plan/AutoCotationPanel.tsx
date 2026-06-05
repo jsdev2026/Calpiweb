@@ -1,7 +1,6 @@
 'use client';
 
-import type { AutoCotation } from '@/types/wall';
-import type { Wall, WallNode } from '@/types/wall';
+import type { AutoCotation, Wall, WallNode } from '@/types/wall';
 import type { Point } from '@/types/plan';
 
 export function computeNewNode2(
