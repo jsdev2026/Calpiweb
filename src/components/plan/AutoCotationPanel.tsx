@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import type { AutoCotation, Wall, WallNode } from '@/types/wall';
 import type { Point } from '@/types/plan';
 import { cmToMm, mmToCm } from '@/utils/units';
@@ -48,12 +48,14 @@ interface AutoCotationPanelProps {
   cot: AutoCotation;
   wall: Wall;
   nodes: WallNode[];
+  screenX: number;
+  screenY: number;
   onApply: (nodeId: string, newPos: Point) => void;
   onClose: () => void;
 }
 
 export const AutoCotationPanel = ({
-  cot, wall, nodes, onApply, onClose,
+  cot, wall, nodes, screenX, screenY, onApply, onClose,
 }: AutoCotationPanelProps) => {
   const [rawValue, setRawValue] = useState(
     () => mmToCm(anchorDistMm(cot)).toFixed(1),
@@ -72,8 +74,17 @@ export const AutoCotationPanel = ({
     onClose();
   };
 
+  const above = screenY > 160;
+  const panelStyle: React.CSSProperties = {
+    position: 'absolute',
+    left: screenX,
+    top: above ? screenY - 10 : screenY + 10,
+    transform: above ? 'translate(-50%, -100%)' : 'translate(-50%, 0)',
+    zIndex: 30,
+  };
+
   return (
-    <div className="absolute right-4 top-4 z-30 w-52 rounded-xl border border-orange-500/60 bg-zinc-900 p-3 shadow-2xl">
+    <div style={panelStyle} className="w-52 rounded-xl border border-orange-500/60 bg-zinc-900 p-3 shadow-2xl">
       <div className="mb-2 flex items-center justify-between">
         <span className="text-[10px] font-bold uppercase tracking-wider text-orange-400">
           Côte sélectionnée

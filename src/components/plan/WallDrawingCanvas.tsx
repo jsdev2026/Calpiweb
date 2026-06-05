@@ -89,7 +89,7 @@ export const WallDrawingCanvas = ({
   const [selectedWallId, setSelectedWallId] = useState<string | null>(null);
   const [editingWallId,  setEditingWallId]  = useState<string | null>(null);
   const [editThickness,  setEditThickness]  = useState('');
-  const [selectedCot, setSelectedCot] = useState<{ wallId: string; side: AutoCotation['side'] } | null>(null);
+  const [selectedCot, setSelectedCot] = useState<{ wallId: string; side: AutoCotation['side']; screenX: number; screenY: number } | null>(null);
 
   // Node drag state
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
@@ -782,7 +782,7 @@ export const WallDrawingCanvas = ({
               <g
                 style={{ cursor: 'pointer', pointerEvents: 'auto' }}
                 onPointerDown={(e) => e.stopPropagation()}
-                onClick={(e) => { e.stopPropagation(); setSelectedCot({ wallId: c.wallId, side: c.side }); }}
+                onClick={(e) => { e.stopPropagation(); setSelectedCot({ wallId: c.wallId, side: c.side, screenX: smid.x + c.normal.x * 12, screenY: smid.y + c.normal.y * 12 }); }}
               >
                 <text
                   x={smid.x + c.normal.x * 12} y={smid.y + c.normal.y * 12}
@@ -923,6 +923,8 @@ export const WallDrawingCanvas = ({
             cot={cot}
             wall={wall}
             nodes={nodes}
+            screenX={selectedCot.screenX}
+            screenY={selectedCot.screenY}
             onApply={(nodeId, newPos) => {
               onPushHistory();
               onUpdateNode(nodeId, newPos);
