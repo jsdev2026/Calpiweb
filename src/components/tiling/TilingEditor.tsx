@@ -1,6 +1,5 @@
 'use client';
 
-import { Ruler } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import React from 'react';
@@ -289,25 +288,8 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
         <div
           data-testid="controls-bar"
           className="absolute bottom-20 md:bottom-4 mouse:bottom-4 left-1/2 z-10 -translate-x-1/2 flex flex-col md:flex-row mouse:flex-row items-start md:items-center mouse:items-center gap-2 md:gap-5 mouse:gap-5 rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 px-5 py-3 shadow-2xl backdrop-blur-md w-[calc(100%-2rem)] md:w-auto mouse:w-auto">
-          {/* Row 1 : Côtes + Angle */}
+          {/* Row 1 : Angle */}
           <div className="flex w-full items-center gap-2.5">
-            <button
-              type="button"
-              onClick={() => setActiveTool((t) => {
-                const next = t === 'dimension' ? 'pan' : 'dimension';
-                if (next === 'pan') setSelectedDimId(null);
-                return next;
-              })}
-              title="Placer des côtes (Échap pour quitter)"
-              className={`flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all ${
-                activeTool === 'dimension'
-                  ? 'border border-orange-500/50 bg-orange-500/10 text-orange-400'
-                  : 'border border-gray-300 dark:border-zinc-700 bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-zinc-500 hover:border-gray-400 dark:hover:border-zinc-500'
-              }`}
-            >
-              <Ruler size={12} /> Côtes
-            </button>
-            <div className="h-5 w-px bg-gray-200 dark:bg-zinc-700" />
             <div className="flex flex-1 items-center gap-2">
               <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-500">Angle</span>
               <input
