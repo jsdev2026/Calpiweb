@@ -69,6 +69,7 @@ export const AutoCotationPanel = ({
     setError(null);
     const newPos = computeNewNode2(wall, nodes, cmToMm(val), cot.side);
     onApply(wall.node2Id, newPos);
+    onClose();
   };
 
   return (
