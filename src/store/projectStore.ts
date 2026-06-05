@@ -85,6 +85,7 @@ export interface ProjectState {
   addTilingDimension: (dim: TilingDimension) => void;
   removeTilingDimension: (id: string) => void;
   updateTilingDimensionPerpOffset: (id: string, perpOffset: number) => void;
+  updateTilingDimension: (id: string, patch: Partial<TilingDimension>) => void;
 }
 
 /** Pure helper — splits a wall at newNode, returns new wallEngine state. */
@@ -524,6 +525,13 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     ...p,
     tilingDimensions: (p.tilingDimensions ?? []).map((d) =>
       d.id === id ? { ...d, perpOffset } : d,
+    ),
+  })),
+
+  updateTilingDimension: (id, patch) => get().updateActive((p) => ({
+    ...p,
+    tilingDimensions: (p.tilingDimensions ?? []).map((d) =>
+      d.id === id ? { ...d, ...patch } : d,
     ),
   })),
 }));

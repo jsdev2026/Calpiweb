@@ -12,6 +12,7 @@ vi.mock('@/lib/supabase/db', () => ({
 import { supabaseDb } from '@/lib/supabase/db';
 import { useProjectStore, selectActiveProject, selectRooms } from './projectStore';
 import type { Wall, WallNode } from '@/types/wall';
+import type { TilingDimension } from '@/types/tilingDimension';
 
 function nd(id: string, x: number, y: number): WallNode { return { id, x, y }; }
 
@@ -268,5 +269,46 @@ describe('selectRooms', () => {
     const result = selectRooms(useProjectStore.getState());
     expect(result).toHaveLength(1);
     expect(result[0]!.points).toHaveLength(4);
+  });
+});
+
+describe('projectStore — updateTilingDimension', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    useProjectStore.setState({ projects: [], activeProjectId: null, hydrated: false });
+  });
+
+  async function createAndInit() {
+    mockSupabaseDb.getProfile.mockResolvedValue({ plan: 'free' });
+    mockSupabaseDb.save.mockResolvedValue(undefined);
+    await useProjectStore.getState().create();
+    useProjectStore.getState().initWallEngine();
+  }
+
+  it('patches p2 without affecting other fields', async () => {
+    await createAndInit();
+    const dim: TilingDimension = {
+      id: 'd1',
+      p1: { x: 0, y: 0 },
+      p2: { x: 200, y: 0 },
+      direction: 'H' as const,
+      perpOffset: 600,
+      p2NodeId: 'n2',
+    };
+    useProjectStore.getState().addTilingDimension(dim);
+    useProjectStore.getState().updateTilingDimension('d1', { p2: { x: 300, y: 0 } });
+
+    const dims = selectActiveProject(useProjectStore.getState())?.tilingDimensions ?? [];
+    expect(dims).toHaveLength(1);
+    expect(dims[0]?.p2.x).toBe(300);
+    expect(dims[0]?.p2NodeId).toBe('n2');    // préservé
+    expect(dims[0]?.perpOffset).toBe(600);   // préservé
+  });
+
+  it('ignore un id inexistant sans erreur', async () => {
+    await createAndInit();
+    expect(() =>
+      useProjectStore.getState().updateTilingDimension('ghost', { p2: { x: 0, y: 0 } }),
+    ).not.toThrow();
   });
 });
