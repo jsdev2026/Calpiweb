@@ -354,6 +354,7 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
           const dim = dimensions.find((d) => d.id === selectedDimId);
           return dim ? (
             <DimPropertiesPanel
+              key={dim.id}
               dim={dim}
               onClose={() => setSelectedDimId(null)}
             />
