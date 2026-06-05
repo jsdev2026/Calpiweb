@@ -118,6 +118,46 @@ describe('wallsToRooms — excludedZones', () => {
   });
 });
 
+describe('wallsToRooms — isDoor propagation', () => {
+  it('marque l\'arête porte comme DOOR dans le tableau edges de la pièce', () => {
+    const nodes = [nd('a', 0, 0), nd('b', 100, 0), nd('c', 100, 100), nd('d', 0, 100)];
+    const walls: Wall[] = [
+      { id: 'w1', node1Id: 'a', node2Id: 'b', thickness: 20 },
+      { id: 'w2', node1Id: 'b', node2Id: 'c', thickness: 20, isDoor: true },
+      { id: 'w3', node1Id: 'c', node2Id: 'd', thickness: 20 },
+      { id: 'w4', node1Id: 'd', node2Id: 'a', thickness: 20 },
+    ];
+    const rooms = wallsToRooms(walls, nodes);
+    expect(rooms).toHaveLength(1);
+    const doorCount = rooms[0]!.edges.filter(e => e === 'DOOR').length;
+    const wallCount = rooms[0]!.edges.filter(e => e === 'WALL').length;
+    expect(doorCount).toBe(1);
+    expect(wallCount).toBe(3);
+  });
+
+  it('deux pièces partageant un mur porte — les deux pièces ont une arête DOOR', () => {
+    // 6 nodes: a(0,0) b(100,0) c(200,0) d(200,100) e(100,100) f(0,100)
+    // Room gauche : a-b-e-f   Room droite : b-c-d-e
+    const nodes = [
+      nd('a', 0, 0), nd('b', 100, 0), nd('c', 200, 0),
+      nd('d', 200, 100), nd('e', 100, 100), nd('f', 0, 100),
+    ];
+    const walls: Wall[] = [
+      { id: 'w1', node1Id: 'a', node2Id: 'b', thickness: 20 },
+      { id: 'w2', node1Id: 'b', node2Id: 'c', thickness: 20 },
+      { id: 'w3', node1Id: 'c', node2Id: 'd', thickness: 20 },
+      { id: 'w4', node1Id: 'd', node2Id: 'e', thickness: 20 },
+      { id: 'w5', node1Id: 'e', node2Id: 'b', thickness: 20, isDoor: true },
+      { id: 'w6', node1Id: 'e', node2Id: 'f', thickness: 20 },
+      { id: 'w7', node1Id: 'f', node2Id: 'a', thickness: 20 },
+    ];
+    const rooms = wallsToRooms(walls, nodes);
+    expect(rooms).toHaveLength(2);
+    const totalDoorEdges = rooms.reduce((sum, r) => sum + r.edges.filter(e => e === 'DOOR').length, 0);
+    expect(totalDoorEdges).toBe(2); // chaque pièce voit l'arête porte comme DOOR
+  });
+});
+
 describe('wallFaceCycles', () => {
   it('retourne [] pour un graphe vide', () => {
     expect(wallFaceCycles([], [])).toEqual([]);

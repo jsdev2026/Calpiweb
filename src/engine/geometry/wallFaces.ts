@@ -111,6 +111,7 @@ export function wallsToRooms(
 ): Room[] {
   const nodeMap = new Map(nodes.map(n => [n.id, n]));
   const getPos = (id: string) => { const n = nodeMap.get(id)!; return { x: n.x, y: n.y }; };
+  const wallMap = new Map(walls.map(w => [w.id, w]));
 
   const cycles = wallFaceCycles(walls, nodes);
 
@@ -137,7 +138,7 @@ export function wallsToRooms(
       id: faceId(cycle.nodeIds),
       name: `Pièce ${idx + 1}`,
       points: facePts,
-      edges: facePts.map(() => 'WALL' as EdgeType),
+      edges: cycle.wallIds.map(wid => (wallMap.get(wid)?.isDoor ? 'DOOR' : 'WALL') as EdgeType),
       partitions: [],
       excludedZones: roomZones,
     };
