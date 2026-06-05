@@ -5,9 +5,9 @@ import { formatCm } from '@/utils/formatters';
 import { wallFaceCycles } from './wallFaces';
 
 // ── Constantes ────────────────────────────────────────────────────────────
-const COTE_OFFSET_EXT = 400; // mm depuis la face extérieure
-const COTE_OFFSET_INT = 200; // mm depuis la face intérieure, vers l'intérieur
-const COTE_OFFSET_ISO = 300; // mm depuis l'axe, mur isolé
+const COTE_OFFSET_EXT = 150; // mm depuis la face extérieure
+const COTE_OFFSET_INT = 100; // mm depuis la face intérieure, vers l'intérieur
+const COTE_OFFSET_ISO = 150; // mm depuis l'axe, mur isolé
 
 // ── Helpers géométriques ──────────────────────────────────────────────────
 
