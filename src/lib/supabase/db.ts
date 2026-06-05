@@ -1,5 +1,5 @@
 import type { Project, Room, EdgeType, ProjectStatus, ClientInfo, Constraint, ProjectNote, Partition, ExcludedZone, TilingDimension } from '@/types/project';
-import type { Wall, WallNode } from '@/types/wall';
+import type { Wall, WallNode, WallExcludedZone } from '@/types/wall';
 import type { MyRole, ShareRole } from '@/types/sharing';
 import type { Point } from '@/types/plan';
 import type { TilingConfig } from '@/types/tiling';
@@ -56,7 +56,8 @@ function migrateProject(raw: unknown): Project {
     wallEngine: (() => {
       // New format: { nodes: WallNode[], walls: Wall[] }
       if (p.wallEngine && typeof p.wallEngine === 'object' && !Array.isArray(p.wallEngine)) {
-        return p.wallEngine as { nodes: WallNode[]; walls: Wall[] };
+        const we = p.wallEngine as { nodes: WallNode[]; walls: Wall[]; excludedZones?: WallExcludedZone[]; wallRoomNames?: Record<string, string> };
+        return { nodes: we.nodes, walls: we.walls, excludedZones: we.excludedZones ?? [], wallRoomNames: we.wallRoomNames };
       }
       // Old format (p1/p2 arrays) or absent → table rase, treat as not initialized
       return undefined;

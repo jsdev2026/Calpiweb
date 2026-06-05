@@ -4,12 +4,14 @@ import { Ruler } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import React from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import type { Room } from '@/types/project';
 import type { Point } from '@/types/plan';
 import type { TilingConfig } from '@/types/tiling';
 import { getBoundingBox } from '@/engine/geometry/polygon';
 import { analyzeQuantities } from '@/engine/quantities/quantityEngine';
-import { useProjectStore, selectActiveProject } from '@/store/projectStore';
+import { useProjectStore, selectActiveProject, selectDoorOpenings } from '@/store/projectStore';
+import { computeCornerGeometry } from '@/engine/geometry/wallGeometry';
 import { useTilingDimension } from '@/hooks/useTilingDimension';
 import { TilingCanvas } from './TilingCanvas';
 import { TilingControls } from './TilingControls';
@@ -83,7 +85,16 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
 
   const handleTilingTouchEnd = () => { tilingTouchRef.current = null; };
 
-  const result = useMemo(() => analyzeQuantities(rooms, config, wallThickness), [rooms, config, wallThickness]);
+  const doorOpenings = useProjectStore(useShallow(selectDoorOpenings));
+  const wallEngine = useProjectStore(s => selectActiveProject(s)?.wallEngine);
+  const wallPolygons = useMemo(
+    () => computeCornerGeometry((wallEngine?.walls ?? []).filter(w => !w.isDoor), wallEngine?.nodes ?? []),
+    [wallEngine],
+  );
+  const result = useMemo(
+    () => analyzeQuantities(rooms, config, wallThickness, doorOpenings),
+    [rooms, config, wallThickness, doorOpenings],
+  );
 
   const dimensions = useProjectStore((s) => selectActiveProject(s)?.tilingDimensions ?? []);
   const updateTilingDimensionPerpOffset = useProjectStore((s) => s.updateTilingDimensionPerpOffset);
@@ -256,6 +267,8 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
           activeTool={activeTool}
           wallThickness={wallThickness}
           dimensionLayer={dimensionLayer}
+          doorOpenings={doorOpenings}
+          wallPolygons={wallPolygons}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}

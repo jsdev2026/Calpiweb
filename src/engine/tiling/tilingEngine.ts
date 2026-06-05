@@ -1,4 +1,5 @@
 import type { Point } from '@/types/plan';
+import type { DoorOpening } from '@/types/wall';
 import type { EdgeType, ExcludedZone, Partition, Room } from '@/types/project';
 import type { Tile, TileType, TilingConfig, TilingResult } from '@/types/tiling';
 import { getBoundingBox, distance, rotatePoint, getPolygonArea, pointInPolygon, getIntersection, insetRoomPolygon } from '@/engine/geometry/polygon';
@@ -267,14 +268,14 @@ export const computeTiling = (
   return { tiles: filtered, stats: computeStats(filtered, netArea, width, height) };
 };
 
-export const computeTilingMultiRoom = (rooms: Room[], config: TilingConfig, wallThickness = 0): TilingResult => {
+export const computeTilingMultiRoom = (rooms: Room[], config: TilingConfig, wallThickness = 0, doorOpenings: DoorOpening[] = []): TilingResult => {
   const valid = rooms.filter((r) => r.points.length >= 3);
   if (valid.length === 0) return { tiles: [], stats: null };
   // Note: computeTiling derives its rotation pivot from the inset polygon bbox.
   // For rectangular rooms this equals the raw bbox center (symmetric inset).
   // For irregular rooms with asymmetric wall thickness and angle !== 0, a small
   // pivot offset may occur. Acceptable for current use cases.
-  if (valid.length === 1) return computeTiling(
+  if (valid.length === 1 && doorOpenings.length === 0) return computeTiling(
     insetRoomPolygon(valid[0]!, wallThickness), config, valid[0]!.edges, valid[0]!.excludedZones, valid[0]!.partitions,
   );
 
@@ -325,6 +326,40 @@ export const computeTilingMultiRoom = (rooms: Room[], config: TilingConfig, wall
         }
       }
       rowIndex += 1;
+    }
+
+    // Carreaux dans les ouvertures de porte (STRAIGHT, angle = 0 uniquement)
+    if (angle === 0 && doorOpenings.length > 0) {
+      for (const door of doorOpenings) {
+        const dx = door.to.x - door.from.x, dy = door.to.y - door.from.y;
+        const L = Math.sqrt(dx * dx + dy * dy);
+        if (L < 1) continue;
+        const dirX = dx / L, dirY = dy / L;
+        const perpX = -dirY, perpY = dirX;
+        const halfGap = wallThickness;
+        let ri = 0;
+        for (let y = startY - stepY; y < endY + stepY; y += stepY) {
+          const rowStagger = (ri % 2) * (stepX * staggerRatio);
+          for (let x = startX - stepX - rowStagger; x < endX + stepX; x += stepX) {
+            const corners = [
+              { x, y }, { x: x + width, y },
+              { x: x + width, y: y + height }, { x, y: y + height },
+            ];
+            const fits = corners.every((c) => {
+              const t = (c.x - door.from.x) * dirX + (c.y - door.from.y) * dirY;
+              const s = (c.x - door.from.x) * perpX + (c.y - door.from.y) * perpY;
+              return t >= 0 && t <= L && Math.abs(s) <= halfGap;
+            });
+            if (fits) {
+              const id = `door-${x.toFixed(0)}-${y.toFixed(0)}`;
+              if (!tiles.some((t) => t.id === id)) {
+                tiles.push({ id, rect: { x, y, w: width, h: height }, type: 'WHOLE' as const });
+              }
+            }
+          }
+          ri++;
+        }
+      }
     }
   } else if (layout === 'HERRINGBONE') {
     const positions = buildHerringbonePositions(centerX, centerY, maxRadius, config);

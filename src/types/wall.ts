@@ -11,19 +11,27 @@ export interface Wall {
   id: string;
   node1Id: string;
   node2Id: string;
-  thickness: number; // cm, default 20
+  thickness: number;
+  isDoor?: boolean;
+}
+
+export interface WallExcludedZone {
+  id: string;
+  points: Point[];
+  label?: string;
 }
 
 export interface SnapResult {
   point: Point;
-  type: 'endpoint' | 'face' | 'hv';
+  type: 'endpoint' | 'face' | 'hv' | 'perpendicular' | 'collinear';
   wallId?: string;
-  nodeId?: string;   // set when type === 'endpoint'
-  axis?: 'h' | 'v'; // set when type === 'hv'
+  nodeId?: string;
+  axis?: 'h' | 'v';
+  dir?: Point;  // direction normalisée — utilisée par le snap colinéaire
 }
 
 export type DrawingChain = {
-  nodeIds: string[];   // IDs of nodes already placed in the chain
+  nodeIds: string[];
   thickness: number;
 } | null;
 
@@ -35,4 +43,10 @@ export interface AutoCotation {
   normal: Point;
   offset: number;
   label: string;
+}
+
+export interface DoorOpening {
+  from: Point;
+  to: Point;
+  thickness: number;
 }

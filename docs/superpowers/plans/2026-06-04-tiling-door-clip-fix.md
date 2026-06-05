@@ -1,3 +1,119 @@
+# Calepinage — Fix clip SVG ouvertures de porte
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Rendre visibles les carreaux de porte dans le calepinage en étendant le `<clipPath>` SVG pour inclure les rectangles des ouvertures de porte.
+
+**Architecture:** Une seule tâche — 2 fichiers. `TilingCanvas` reçoit un nouveau prop `doorOpenings`, les rectangles d'ouverture sont ajoutés au `<clipPath>` (evenodd, non-chevauchants avec les pièces → rendus visibles). `TilingEditor` transmet le prop (les ouvertures sont déjà sélectionnées via `useShallow`).
+
+**Tech Stack:** TypeScript, React, SVG.
+
+---
+
+## Fichiers
+
+| Fichier | Action |
+|---------|--------|
+| `src/components/tiling/TilingCanvas.tsx` | Ajouter prop `doorOpenings`, helper `doorRectPath`, étendre le `<clipPath>` et le fond joint |
+| `src/components/tiling/TilingEditor.tsx` | Passer `doorOpenings={doorOpenings}` à `<TilingCanvas>` |
+
+---
+
+## Task 1 : Étendre `TilingCanvas` + câbler `TilingEditor`
+
+**Files:**
+- Modify: `src/components/tiling/TilingCanvas.tsx`
+- Modify: `src/components/tiling/TilingEditor.tsx`
+
+### Contexte sur le code existant
+
+`TilingCanvas.tsx` (lignes 12-26) — interface actuelle :
+```ts
+interface TilingCanvasProps {
+  svgRef: RefObject<SVGSVGElement>;
+  rooms: Room[];
+  tiles: Tile[];
+  config: TilingConfig;
+  scale: number;
+  pan: Point;
+  activeTool: 'pan' | 'dimension';
+  wallThickness: number;
+  dimensionLayer: ReactNode;
+  onPointerDown: (e: ReactPointerEvent<SVGSVGElement>) => void;
+  onPointerMove: (e: ReactPointerEvent<SVGSVGElement>) => void;
+  onPointerUp: () => void;
+  onClick: (e: MouseEvent<SVGSVGElement>) => void;
+}
+```
+
+Le `<clipPath>` (lignes 66-87) construit son chemin `d` avec trois spread :
+```ts
+d={[
+  ...validRooms.map((r) =>
+    `M ${insetRoomPolygon(r, wallThickness).map((p) => `${p.x},${p.y}`).join(' L ')} Z`
+  ),
+  ...validRooms.flatMap((r) =>
+    (r.excludedZones ?? []).map((z) =>
+      `M ${z.points.map((p) => `${p.x},${p.y}`).join(' L ')} Z`
+    )
+  ),
+  ...validRooms.flatMap((r) =>
+    (r.partitions ?? []).map((pt) => {
+      const poly = partitionToPolygon(pt);
+      return `M ${poly.map((p) => `${p.x},${p.y}`).join(' L ')} Z`;
+    })
+  ),
+].join(' ')}
+```
+
+Le fond joint des pièces (lignes 90-96) :
+```tsx
+{validRooms.map((room) => (
+  <polygon
+    key={`bg-${room.id}`}
+    points={insetRoomPolygon(room, wallThickness).map((p) => `${p.x},${p.y}`).join(' ')}
+    fill="var(--tile-joint)"
+  />
+))}
+```
+
+`TilingEditor.tsx` ligne 87 :
+```ts
+const doorOpenings = useProjectStore(useShallow(selectDoorOpenings));
+```
+
+`TilingEditor.tsx` lignes 254-268 :
+```tsx
+<TilingCanvas
+  svgRef={svgRef}
+  rooms={rooms}
+  tiles={result.tiles}
+  config={config}
+  scale={scale}
+  pan={pan}
+  activeTool={activeTool}
+  wallThickness={wallThickness}
+  dimensionLayer={dimensionLayer}
+  onPointerDown={handlePointerDown}
+  onPointerMove={handlePointerMove}
+  onPointerUp={handlePointerUp}
+  onClick={handleClick}
+/>
+```
+
+---
+
+- [ ] **Step 1 : Modifier `TilingCanvas.tsx`**
+
+Remplacer le contenu de `src/components/tiling/TilingCanvas.tsx` par la version suivante. Les changements sont :
+1. Ajout de l'import `DoorOpening` (ligne 7)
+2. Ajout de `doorOpenings?: DoorOpening[]` dans l'interface (ligne 25)
+3. Ajout de `doorOpenings = []` dans le destructuring (ligne 41)
+4. Ajout de la fonction helper `doorRectPath` (après le destructuring)
+5. Ajout des rectangles d'ouverture dans le `<clipPath>` (4ème spread)
+6. Ajout du fond joint pour les ouvertures de porte (après les fonds des pièces)
+
+```tsx
 'use client';
 
 import type { PointerEvent as ReactPointerEvent, RefObject, ReactNode, MouseEvent } from 'react';
@@ -5,7 +121,6 @@ import type { Room } from '@/types/project';
 import type { Point } from '@/types/plan';
 import type { Tile, TilingConfig } from '@/types/tiling';
 import type { DoorOpening } from '@/types/wall';
-import type { WallPolygon } from '@/engine/geometry/wallGeometry';
 import { getBoundingBox, insetRoomPolygon } from '@/engine/geometry/polygon';
 import { formatCm } from '@/utils/formatters';
 import { partitionToPolygon } from '@/engine/tiling/tilingEngine';
@@ -22,7 +137,6 @@ interface TilingCanvasProps {
   wallThickness: number;
   dimensionLayer: ReactNode;
   doorOpenings?: DoorOpening[];
-  wallPolygons?: WallPolygon[];
   onPointerDown: (e: ReactPointerEvent<SVGSVGElement>) => void;
   onPointerMove: (e: ReactPointerEvent<SVGSVGElement>) => void;
   onPointerUp: () => void;
@@ -33,7 +147,7 @@ function doorRectPath(door: DoorOpening): string {
   const dx = door.to.x - door.from.x, dy = door.to.y - door.from.y;
   const L = Math.sqrt(dx * dx + dy * dy);
   if (L < 1) return '';
-  const px = (-dy / L) * (door.thickness / 2), py = (dx / L) * (door.thickness / 2);
+  const px = (-dy / L) * door.thickness, py = (dx / L) * door.thickness;
   const pts = [
     { x: door.from.x + px, y: door.from.y + py },
     { x: door.to.x   + px, y: door.to.y   + py },
@@ -54,7 +168,6 @@ export const TilingCanvas = ({
   wallThickness,
   dimensionLayer,
   doorOpenings = [],
-  wallPolygons = [],
   onPointerDown,
   onPointerMove,
   onPointerUp,
@@ -66,7 +179,6 @@ export const TilingCanvas = ({
   const centerX = (bbox.minX + bbox.maxX) / 2;
   const centerY = (bbox.minY + bbox.maxY) / 2;
 
-  // Reference dimensions: only for straight layout at angle = 0
   const canShowDims = activeTool === 'dimension' && config.angle === 0 && config.layout === 'STRAIGHT';
   const effectiveAngle = config.angle;
 
@@ -145,19 +257,6 @@ export const TilingCanvas = ({
           </g>
         </g>
 
-        {/* Wall polygons — même géométrie que le plan editor */}
-        {wallPolygons.map((poly) => {
-          if (!poly.points.length) return null;
-          return (
-            <polygon
-              key={`wall-${poly.wallId}`}
-              points={poly.points.map((p) => `${p.x},${p.y}`).join(' ')}
-              fill="var(--canvas-wall)"
-              className="pointer-events-none"
-            />
-          );
-        })}
-
         {/* Excluded zones — amber outline */}
         {validRooms.map((room) =>
           (room.excludedZones ?? []).map((zone) => (
@@ -171,6 +270,25 @@ export const TilingCanvas = ({
               className="pointer-events-none"
             />
           ))
+        )}
+
+        {/* Room walls and doors */}
+        {validRooms.map((room) =>
+          room.points.map((p, i) => {
+            const nextP = room.points[(i + 1) % room.points.length]!;
+            const isDoor = (room.edges[i] ?? 'WALL') === 'DOOR';
+            const edgeThick = room.edgeThicknesses?.[i] ?? wallThickness;
+            return (
+              <line
+                key={`edge-${room.id}-${i}`}
+                x1={p.x} y1={p.y} x2={nextP.x} y2={nextP.y}
+                stroke={isDoor ? '#f97316' : '#ea580c'}
+                strokeWidth={isDoor ? edgeThick * 0.5 : edgeThick}
+                strokeLinecap="round"
+                strokeDasharray={isDoor ? `${edgeThick * 1.2},${edgeThick * 0.8}` : undefined}
+              />
+            );
+          }),
         )}
 
         {/* Partitions — filled polygon showing actual thickness */}
@@ -221,3 +339,50 @@ export const TilingCanvas = ({
     </svg>
   );
 };
+```
+
+- [ ] **Step 2 : Modifier `TilingEditor.tsx` — passer `doorOpenings`**
+
+Dans `src/components/tiling/TilingEditor.tsx`, trouver le JSX `<TilingCanvas` (ligne ~254) et ajouter le prop `doorOpenings` :
+
+```tsx
+<TilingCanvas
+  svgRef={svgRef}
+  rooms={rooms}
+  tiles={result.tiles}
+  config={config}
+  scale={scale}
+  pan={pan}
+  activeTool={activeTool}
+  wallThickness={wallThickness}
+  dimensionLayer={dimensionLayer}
+  doorOpenings={doorOpenings}
+  onPointerDown={handlePointerDown}
+  onPointerMove={handlePointerMove}
+  onPointerUp={handlePointerUp}
+  onClick={handleClick}
+/>
+```
+
+- [ ] **Step 3 : TypeScript**
+
+```
+npx tsc --noEmit
+```
+
+Attendu : 0 erreurs.
+
+- [ ] **Step 4 : Suite de tests**
+
+```
+npx vitest run
+```
+
+Attendu : 383 tests PASS (le changement est purement visuel/SVG — aucun test unitaire n'existe pour le rendu SVG, la vérification est manuelle).
+
+- [ ] **Step 5 : Commit**
+
+```
+git add src/components/tiling/TilingCanvas.tsx src/components/tiling/TilingEditor.tsx
+git commit -m "fix(tiling): étendre clipPath aux ouvertures de porte — carreaux visibles dans le passage"
+```

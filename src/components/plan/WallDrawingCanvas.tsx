@@ -1,25 +1,30 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect, useMemo, type KeyboardEvent } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
-import type { Wall, WallNode, DrawingChain, SnapResult } from '@/types/wall';
+import type { Wall, WallNode, DrawingChain, SnapResult, WallExcludedZone } from '@/types/wall';
 import type { Point } from '@/types/plan';
-import { snapToWalls } from '@/engine/geometry/wallSnap';
+import { snapToWalls, perpendicularSnapForNode, adjacentAxisSnapForNode, collinearSnap, collinearSnapForNode } from '@/engine/geometry/wallSnap';
 import { computeCornerGeometry, computeJointLines } from '@/engine/geometry/wallGeometry';
 import { computeAutoCotations } from '@/engine/geometry/wallCotation';
+import { wallsToRooms } from '@/engine/geometry/wallFaces';
 import { generateId } from '@/utils/id';
 import { WallEdgeEditor } from './WallEdgeEditor';
 
-type PlanTool = 'WALL' | 'SELECT' | 'DELETE';
+type PlanTool = 'WALL' | 'SELECT' | 'DELETE' | 'DOOR' | 'EXCLUDE';
 
-const DEFAULT_THICKNESS   = 20;
 const ENDPOINT_RADIUS_PX  = 12;
 const FACE_RADIUS_PX      = 8;
-const HV_SNAP_PX          = 8;
+const HV_SNAP_PX          = 15;  // était 20
+const HV_SNAP_DRAG_PX     = 28;  // était 40
+const PERP_SNAP_PX        = 22;  // était 30
+const COLLINEAR_SNAP_PX   = 12;  // snap colinéaire — dessin + drag
 const NODE_HANDLE_RADIUS_PX = 10;
-const WALL_COLOR          = '#6b6056';
+const WALL_COLOR          = 'var(--canvas-wall)';
 const WALL_SELECTED_COLOR = '#e67e22';
 const SNAP_INDICATOR_R    = 8;
+const DOOR_DEFAULT_WIDTH_MM = 900;
+const DOOR_MIN_WALL_MM      = 600;
 
 interface WallDrawingCanvasProps {
   walls: Wall[];
@@ -32,6 +37,15 @@ interface WallDrawingCanvasProps {
   onUpdateNode: (id: string, patch: { x?: number; y?: number }) => void;
   onMergeNodes: (keepId: string, dropId: string) => void;
   onPushHistory: () => void;
+  scale: number;
+  pan: Point;
+  onScaleChange: (s: number) => void;
+  onPanChange: (p: Point) => void;
+  wallThickness: number;
+  excludedZones: WallExcludedZone[];
+  onAddExcludedZone: (points: Point[]) => void;
+  onRemoveExcludedZone: (id: string) => void;
+  onSplitWall: (wallId: string, newNode: WallNode) => void;
 }
 
 function screenToWorld(pt: Point, pan: Point, scale: number): Point {
@@ -46,12 +60,27 @@ export const WallDrawingCanvas = ({
   walls, nodes, tool,
   onAddWall, onRemoveWall, onUpdateWall,
   onAddNode, onUpdateNode, onMergeNodes, onPushHistory,
+  scale, pan, onScaleChange, onPanChange,
+  wallThickness,
+  excludedZones, onAddExcludedZone, onRemoveExcludedZone: _onRemoveExcludedZone,
+  onSplitWall,
 }: WallDrawingCanvasProps) => {
   const svgRef = useRef<SVGSVGElement | null>(null);
-  const [scale, setScale] = useState(0.5);
-  const [pan,   setPan]   = useState<Point>({ x: 200, y: 200 });
+  // Refs mutable pour wheel/touch — évitent les stale closures
+  const scaleRef = useRef(scale);
+  const panRef   = useRef(pan);
+  scaleRef.current = scale; // toujours à jour pendant le rendu
+  panRef.current   = pan;
   const [isPanning, setIsPanning] = useState(false);
   const panStart = useRef<{ panX:number; panY:number; clientX:number; clientY:number } | null>(null);
+  const touchRef = useRef<{
+    type: '1finger' | '2finger';
+    prevDist: number;
+    clientX: number;
+    clientY: number;
+    panX: number;
+    panY: number;
+  } | null>(null);
 
   const [chain,        setChain]        = useState<DrawingChain>(null);
   const [cursor,       setCursor]       = useState<Point | null>(null);
@@ -64,11 +93,67 @@ export const WallDrawingCanvas = ({
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
   const dragSnapRef = useRef<SnapResult | null>(null);
 
+  const [excludePoints, setExcludePoints] = useState<Point[]>([]);
+  const excludePointsRef = useRef<Point[]>([]);
+  excludePointsRef.current = excludePoints;
+  const lastClickRef = useRef<{ time: number; x: number; y: number }>({ time: 0, x: 0, y: 0 });
+
+  const [isShiftPressed, setIsShiftPressed] = useState(false);
+  const [isCtrlPressed,  setIsCtrlPressed]  = useState(false);
+
   useEffect(() => {
     setSelectedWallId(null);
     setEditingWallId(null);
     setChain(null);
+    setExcludePoints([]);
   }, [tool]);
+
+  const tryCloseChain = useCallback(() => {
+    if (!chain || chain.nodeIds.length < 2) return;
+    const firstId = chain.nodeIds[0]!;
+    const lastId  = chain.nodeIds[chain.nodeIds.length - 1]!;
+    if (firstId === lastId) return;
+    const alreadyConnected = walls.some(w =>
+      (w.node1Id === lastId && w.node2Id === firstId) ||
+      (w.node1Id === firstId && w.node2Id === lastId)
+    );
+    onPushHistory();
+    if (!alreadyConnected) {
+      onAddWall({ id: generateId(), node1Id: lastId, node2Id: firstId, thickness: chain.thickness });
+    }
+    setChain(null);
+  }, [chain, walls, onAddWall, onPushHistory]);
+
+  useEffect(() => {
+    const down = (e: globalThis.KeyboardEvent) => {
+      if (e.key === 'Shift')   setIsShiftPressed(true);
+      if (e.key === 'Control') setIsCtrlPressed(true);
+      if (e.key === 'Escape') {
+        setChain(null);
+        setSelectedWallId(null);
+        setEditingWallId(null);
+        setExcludePoints([]);
+      }
+      if (e.key === 'Enter') {
+        tryCloseChain();
+        if (excludePointsRef.current.length >= 3) {
+          onPushHistory();
+          onAddExcludedZone([...excludePointsRef.current]);
+          setExcludePoints([]);
+        }
+      }
+    };
+    const up = (e: globalThis.KeyboardEvent) => {
+      if (e.key === 'Shift')   setIsShiftPressed(false);
+      if (e.key === 'Control') setIsCtrlPressed(false);
+    };
+    window.addEventListener('keydown', down);
+    window.addEventListener('keyup',   up);
+    return () => {
+      window.removeEventListener('keydown', down);
+      window.removeEventListener('keyup',   up);
+    };
+  }, [tryCloseChain]);
 
   const getSvgPos = useCallback((e: ReactPointerEvent<SVGSVGElement>): Point => {
     const svg = svgRef.current;
@@ -86,7 +171,7 @@ export const WallDrawingCanvas = ({
     y: pt.y * scale + pan.y,
   }), [pan, scale]);
 
-  // Wheel zoom — non-passive
+  // Wheel zoom — centré sur curseur, non-passive
   useEffect(() => {
     const svg = svgRef.current;
     if (!svg) return;
@@ -95,15 +180,18 @@ export const WallDrawingCanvas = ({
       const factor = e.deltaY < 0 ? 1.1 : 0.9;
       const rect = svg.getBoundingClientRect();
       const ox = e.clientX - rect.left, oy = e.clientY - rect.top;
-      setScale((s) => {
-        const ns = Math.max(0.05, Math.min(5, s * factor));
-        setPan((p) => ({ x: ox - (ox - p.x) * (ns / s), y: oy - (oy - p.y) * (ns / s) }));
-        return ns;
-      });
+      const s = scaleRef.current;
+      const p = panRef.current;
+      const ns = Math.max(0.005, Math.min(4, s * factor));
+      const np = { x: ox - (ox - p.x) * (ns / s), y: oy - (oy - p.y) * (ns / s) };
+      scaleRef.current = ns;
+      panRef.current   = np;
+      onScaleChange(ns);
+      onPanChange(np);
     };
     svg.addEventListener('wheel', onWheel, { passive: false });
     return () => svg.removeEventListener('wheel', onWheel);
-  }, []);
+  }, [onScaleChange, onPanChange]);
 
   // ── Hit test helpers ───────────────────────────────────────────────────────
 
@@ -132,10 +220,18 @@ export const WallDrawingCanvas = ({
     return null;
   }, [walls, nodes, scale]);
 
+  // ── Ortho helper ───────────────────────────────────────────────────────────
+
+  function applyOrtho(cursor: Point, ref: Point): Point {
+    const dx = Math.abs(cursor.x - ref.x);
+    const dy = Math.abs(cursor.y - ref.y);
+    return dx > dy ? { x: cursor.x, y: ref.y } : { x: ref.x, y: cursor.y };
+  }
+
   // ── Pointer handlers ───────────────────────────────────────────────────────
 
   const handlePointerDown = (e: ReactPointerEvent<SVGSVGElement>) => {
-    if (e.button === 1 || (e.button === 0 && e.altKey)) {
+    if (e.button === 1 || e.button === 2 || (e.button === 0 && e.altKey)) {
       setIsPanning(true);
       const sp = getSvgPos(e);
       panStart.current = { panX: pan.x, panY: pan.y, clientX: sp.x, clientY: sp.y };
@@ -144,20 +240,35 @@ export const WallDrawingCanvas = ({
     }
     if (e.button !== 0) return;
 
-    const world = getWorldPos(e);
-    const snap  = snapToWalls(world, walls, nodes, scale, ENDPOINT_RADIUS_PX, FACE_RADIUS_PX, HV_SNAP_PX);
-    const pt    = snap?.point ?? world;
+    let world = getWorldPos(e);
+
+    if (isShiftPressed && chain && chain.nodeIds.length > 0) {
+      const lastId   = chain.nodeIds[chain.nodeIds.length - 1]!;
+      const lastNode = nodes.find((n) => n.id === lastId);
+      if (lastNode) world = applyOrtho(world, { x: lastNode.x, y: lastNode.y });
+    }
+
+    const baseSnap = isCtrlPressed
+      ? null
+      : snapToWalls(world, walls, nodes, scale, ENDPOINT_RADIUS_PX, FACE_RADIUS_PX, HV_SNAP_PX);
+    const snap = (isCtrlPressed || baseSnap?.type === 'endpoint')
+      ? baseSnap
+      : (collinearSnap(world, walls, nodes, scale, COLLINEAR_SNAP_PX) ?? baseSnap);
+    const pt = snap?.point ?? world;
 
     if (tool === 'WALL') {
       if (!chain) {
         let nodeId: string;
         if (snap?.type === 'endpoint' && snap.nodeId) {
           nodeId = snap.nodeId;
+        } else if (snap?.type === 'face' && snap.wallId) {
+          nodeId = generateId();
+          onSplitWall(snap.wallId, { id: nodeId, x: pt.x, y: pt.y });
         } else {
           nodeId = generateId();
           onAddNode({ id: nodeId, x: pt.x, y: pt.y });
         }
-        setChain({ nodeIds: [nodeId], thickness: DEFAULT_THICKNESS });
+        setChain({ nodeIds: [nodeId], thickness: wallThickness });
       } else {
         const prevNodeId = chain.nodeIds[chain.nodeIds.length - 1]!;
         const prevNode = nodes.find((n) => n.id === prevNodeId);
@@ -165,15 +276,41 @@ export const WallDrawingCanvas = ({
         if (dist({ x: prevNode.x, y: prevNode.y }, pt) < 1) return;
 
         let targetNodeId: string;
+        let splitWallId: string | null = null;
+
         if (snap?.type === 'endpoint' && snap.nodeId) {
           targetNodeId = snap.nodeId;
+        } else if (snap?.type === 'face' && snap.wallId) {
+          targetNodeId = generateId();
+          splitWallId = snap.wallId;
         } else {
           targetNodeId = generateId();
+        }
+
+        const alreadyConnected = walls.some(w =>
+          (w.node1Id === prevNodeId && w.node2Id === targetNodeId) ||
+          (w.node1Id === targetNodeId && w.node2Id === prevNodeId)
+        );
+
+        // Quand le split crée lui-même le lien prevNodeId→targetNodeId, ne pas doubler le mur.
+        // splitWallInEngine crée wall.node1Id→newNode et newNode→wall.node2Id.
+        // Si prevNodeId est l'une de ces extrémités, le lien est déjà créé par le split.
+        const snapWallObj = splitWallId !== null ? walls.find(w => w.id === splitWallId) : null;
+        const splitWillCreateLink =
+          snapWallObj &&
+          (snapWallObj.node1Id === prevNodeId || snapWallObj.node2Id === prevNodeId);
+
+        onPushHistory();
+
+        if (splitWallId !== null) {
+          onSplitWall(splitWallId, { id: targetNodeId, x: pt.x, y: pt.y });
+        } else if (!(snap?.type === 'endpoint' && snap.nodeId)) {
           onAddNode({ id: targetNodeId, x: pt.x, y: pt.y });
         }
 
-        onPushHistory();
-        onAddWall({ id: generateId(), node1Id: prevNodeId, node2Id: targetNodeId, thickness: chain.thickness });
+        if (!alreadyConnected && !splitWillCreateLink) {
+          onAddWall({ id: generateId(), node1Id: prevNodeId, node2Id: targetNodeId, thickness: chain.thickness });
+        }
 
         const startId = chain.nodeIds[0]!;
         if (targetNodeId === startId) {
@@ -182,6 +319,69 @@ export const WallDrawingCanvas = ({
           setChain({ ...chain, nodeIds: [...chain.nodeIds, targetNodeId] });
         }
       }
+      return;
+    }
+
+    if (tool === 'EXCLUDE') {
+      const now = Date.now();
+      const last = lastClickRef.current;
+      const isDouble = now - last.time < 350 && dist(world, { x: last.x, y: last.y }) < 30 / scale;
+      lastClickRef.current = { time: now, x: world.x, y: world.y };
+
+      if (isDouble) {
+        if (excludePoints.length >= 3) {
+          onPushHistory();
+          onAddExcludedZone([...excludePoints]);
+          setExcludePoints([]);
+        }
+        return;
+      }
+
+      setExcludePoints((prev) => [...prev, world]);
+      return;
+    }
+
+    if (tool === 'DOOR') {
+      const hit = hitTestWall(world);
+      if (!hit) return;
+      const n1 = nodes.find((n) => n.id === hit.node1Id);
+      const n2 = nodes.find((n) => n.id === hit.node2Id);
+      if (!n1 || !n2) return;
+
+      if (hit.isDoor) {
+        onPushHistory();
+        onRemoveWall(hit.id);
+        return;
+      }
+
+      const dx = n2.x - n1.x, dy = n2.y - n1.y;
+      const len = Math.hypot(dx, dy);
+      if (len < DOOR_MIN_WALL_MM) return;
+
+      const halfW = Math.min(DOOR_DEFAULT_WIDTH_MM / 2, len * 0.4);
+      const t = Math.max(0, Math.min(1,
+        ((world.x - n1.x) * dx + (world.y - n1.y) * dy) / (len * len),
+      ));
+      const tCenter = Math.max(halfW / len, Math.min(1 - halfW / len, t));
+
+      const d1: Point = {
+        x: n1.x + (dx / len) * (tCenter * len - halfW),
+        y: n1.y + (dy / len) * (tCenter * len - halfW),
+      };
+      const d2: Point = {
+        x: n1.x + (dx / len) * (tCenter * len + halfW),
+        y: n1.y + (dy / len) * (tCenter * len + halfW),
+      };
+
+      const id1 = generateId(), id2 = generateId();
+      // Add new nodes + walls BEFORE removing the original (prevents node pruning)
+      onPushHistory();
+      onAddNode({ id: id1, x: d1.x, y: d1.y });
+      onAddNode({ id: id2, x: d2.x, y: d2.y });
+      onAddWall({ id: generateId(), node1Id: hit.node1Id, node2Id: id1,         thickness: hit.thickness });
+      onAddWall({ id: generateId(), node1Id: id1,          node2Id: id2,         thickness: hit.thickness, isDoor: true });
+      onAddWall({ id: generateId(), node1Id: id2,          node2Id: hit.node2Id, thickness: hit.thickness });
+      onRemoveWall(hit.id);
       return;
     }
 
@@ -197,9 +397,14 @@ export const WallDrawingCanvas = ({
       setSelectedWallId(hit?.id ?? null);
       if (hit) {
         setEditingWallId(hit.id);
-        setEditThickness(hit.thickness.toFixed(1));
+        setEditThickness((hit.thickness / 10).toFixed(0)); // afficher en cm
       } else {
         setEditingWallId(null);
+        // Clic gauche sur zone vide → pan
+        setIsPanning(true);
+        const sp = getSvgPos(e);
+        panStart.current = { panX: pan.x, panY: pan.y, clientX: sp.x, clientY: sp.y };
+        (e.currentTarget as SVGSVGElement).setPointerCapture(e.pointerId);
       }
       return;
     }
@@ -213,27 +418,72 @@ export const WallDrawingCanvas = ({
   const handlePointerMove = (e: ReactPointerEvent<SVGSVGElement>) => {
     if (isPanning && panStart.current) {
       const sp = getSvgPos(e);
-      setPan({
+      onPanChange({
         x: panStart.current.panX + (sp.x - panStart.current.clientX),
         y: panStart.current.panY + (sp.y - panStart.current.clientY),
       });
       return;
     }
 
-    const world = getWorldPos(e);
+    let world = getWorldPos(e);
 
     if (draggingNodeId) {
       const otherNodes = nodes.filter((n) => n.id !== draggingNodeId);
       const snapWalls  = walls.filter((w) => w.node1Id !== draggingNodeId && w.node2Id !== draggingNodeId);
-      const snap = snapToWalls(world, snapWalls, otherNodes, scale, ENDPOINT_RADIUS_PX, FACE_RADIUS_PX, HV_SNAP_PX);
+
+      // Nœuds adjacents (autres extrémités des murs connectés au nœud dragué)
+      const adjacentNodes = walls
+        .filter((w) => w.node1Id === draggingNodeId || w.node2Id === draggingNodeId)
+        .map((w) => {
+          const otherId = w.node1Id === draggingNodeId ? w.node2Id : w.node1Id;
+          return nodes.find((n) => n.id === otherId);
+        })
+        .filter((n): n is WallNode => n !== undefined);
+
+      let snap = null;
+      if (!isCtrlPressed) {
+        const wallSnap = snapToWalls(world, snapWalls, otherNodes, scale, ENDPOINT_RADIUS_PX, FACE_RADIUS_PX, HV_SNAP_DRAG_PX);
+        if (wallSnap?.type === 'endpoint') {
+          snap = wallSnap;
+        } else {
+          const adjSnap = adjacentNodes.length > 0
+            ? adjacentAxisSnapForNode(world, adjacentNodes, scale, HV_SNAP_DRAG_PX)
+            : null;
+          if (adjSnap && !adjSnap.axis) {
+            // Intersection H+V : priorité max après endpoint
+            snap = adjSnap;
+          } else {
+            const colSnap = adjacentNodes.length >= 2
+              ? collinearSnapForNode(world, adjacentNodes, scale, COLLINEAR_SNAP_PX)
+              : null;
+            const perpSnap = adjacentNodes.length >= 2
+              ? perpendicularSnapForNode(world, adjacentNodes, scale, PERP_SNAP_PX)
+              : null;
+            snap = colSnap ?? perpSnap ?? adjSnap ?? wallSnap;
+          }
+        }
+      }
+
       const pt = snap?.point ?? world;
       dragSnapRef.current = snap;
+      setSnapResult(snap); // afficher indicateur pendant le drag
       onUpdateNode(draggingNodeId, { x: pt.x, y: pt.y });
       setCursor(pt);
       return;
     }
 
-    const snap = snapToWalls(world, walls, nodes, scale, ENDPOINT_RADIUS_PX, FACE_RADIUS_PX, HV_SNAP_PX);
+    if (isShiftPressed && chain && chain.nodeIds.length > 0) {
+      const lastId   = chain.nodeIds[chain.nodeIds.length - 1]!;
+      const lastNode = nodes.find((n) => n.id === lastId);
+      if (lastNode) world = applyOrtho(world, { x: lastNode.x, y: lastNode.y });
+    }
+
+    const baseSnap = isCtrlPressed
+      ? null
+      : snapToWalls(world, walls, nodes, scale, ENDPOINT_RADIUS_PX, FACE_RADIUS_PX, HV_SNAP_PX);
+    const snap = (isCtrlPressed || baseSnap?.type === 'endpoint')
+      ? baseSnap
+      : (collinearSnap(world, walls, nodes, scale, COLLINEAR_SNAP_PX) ?? baseSnap);
     setCursor(snap?.point ?? world);
     setSnapResult(snap);
   };
@@ -260,7 +510,69 @@ export const WallDrawingCanvas = ({
     }
   };
 
-  const handleKeyDown = (e: KeyboardEvent<SVGSVGElement>) => {
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    if (e.touches.length === 2) {
+      const t = e.touches;
+      const dx = t[1]!.clientX - t[0]!.clientX;
+      const dy = t[1]!.clientY - t[0]!.clientY;
+      touchRef.current = {
+        type: '2finger',
+        prevDist: Math.hypot(dx, dy),
+        clientX: (t[0]!.clientX + t[1]!.clientX) / 2,
+        clientY: (t[0]!.clientY + t[1]!.clientY) / 2,
+        panX: panRef.current.x,
+        panY: panRef.current.y,
+      };
+    } else if (e.touches.length === 1 && tool === 'SELECT') {
+      touchRef.current = {
+        type: '1finger',
+        prevDist: 0,
+        clientX: e.touches[0]!.clientX,
+        clientY: e.touches[0]!.clientY,
+        panX: panRef.current.x,
+        panY: panRef.current.y,
+      };
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const ref = touchRef.current;
+    if (!ref) return;
+
+    if (ref.type === '2finger' && e.touches.length === 2) {
+      const t = e.touches;
+      const dist2 = Math.hypot(t[1]!.clientX - t[0]!.clientX, t[1]!.clientY - t[0]!.clientY);
+      const midX = (t[0]!.clientX + t[1]!.clientX) / 2;
+      const midY = (t[0]!.clientY + t[1]!.clientY) / 2;
+      const svg = svgRef.current;
+      if (svg && ref.prevDist > 0) {
+        const ratio = dist2 / ref.prevDist;
+        const rect  = svg.getBoundingClientRect();
+        const mx = midX - rect.left, my = midY - rect.top;
+        const s  = scaleRef.current;
+        const p  = panRef.current;
+        const ns = Math.max(0.005, Math.min(4, s * ratio));
+        const np = { x: mx - (mx - p.x) * (ns / s), y: my - (my - p.y) * (ns / s) };
+        scaleRef.current = ns;
+        panRef.current   = np;
+        onScaleChange(ns);
+        onPanChange(np);
+      }
+      touchRef.current = { ...ref, prevDist: dist2, clientX: midX, clientY: midY };
+    } else if (ref.type === '1finger' && e.touches.length === 1) {
+      const t = e.touches[0]!;
+      onPanChange({
+        x: ref.panX + (t.clientX - ref.clientX),
+        y: ref.panY + (t.clientY - ref.clientY),
+      });
+    }
+  };
+
+  const handleTouchEnd = () => { touchRef.current = null; };
+
+  const handleKeyDown = (e: React.KeyboardEvent<SVGSVGElement>) => {
     if (e.key === 'Escape') setChain(null);
   };
 
@@ -268,16 +580,21 @@ export const WallDrawingCanvas = ({
 
   const submitThickness = () => {
     if (!editingWallId) return;
-    const v = parseFloat(editThickness);
-    if (!isNaN(v) && v > 0) { onPushHistory(); onUpdateWall(editingWallId, { thickness: v }); }
+    const cm = parseFloat(editThickness);
+    if (!isNaN(cm) && cm > 0) {
+      onPushHistory();
+      onUpdateWall(editingWallId, { thickness: Math.round(cm * 10) }); // cm → mm
+    }
     setEditingWallId(null);
   };
 
   // ── Geometry ───────────────────────────────────────────────────────────────
 
-  const wallPolygons = useMemo(() => computeCornerGeometry(walls, nodes), [walls, nodes]);
-  const jointLines    = useMemo(() => computeJointLines(walls, nodes),     [walls, nodes]);
+  const nonDoorWalls  = useMemo(() => walls.filter(w => !w.isDoor), [walls]);
+  const wallPolygons  = useMemo(() => computeCornerGeometry(nonDoorWalls, nodes), [nonDoorWalls, nodes]);
+  const jointLines    = useMemo(() => computeJointLines(nonDoorWalls, nodes),     [nonDoorWalls, nodes]);
   const autoCotations = useMemo(() => computeAutoCotations(walls, nodes), [walls, nodes]);
+  const detectedRooms = useMemo(() => wallsToRooms(walls, nodes), [walls, nodes]);
 
   const editingWall = editingWallId ? walls.find((w) => w.id === editingWallId) : null;
   const editingWallN1 = editingWall ? nodes.find((n) => n.id === editingWall.node1Id) : null;
@@ -300,12 +617,19 @@ export const WallDrawingCanvas = ({
     const len = Math.sqrt(dx * dx + dy * dy);
     if (len < 0.5) return null;
     const angle = Math.atan2(dy, dx) * (180 / Math.PI);
-    const halfT = (DEFAULT_THICKNESS / 2) * scale;
+    const halfT = (chain.thickness / 2) * scale;
     return { sl, angle, len, halfT };
   })();
 
   return (
-    <div className="relative h-full w-full overflow-hidden bg-[#1a1c24]" tabIndex={0}>
+    <div
+      className="relative h-full w-full overflow-hidden"
+      tabIndex={0}
+      style={{ background: 'var(--canvas-bg)', touchAction: 'none' }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       <svg
         ref={svgRef}
         className="h-full w-full cursor-crosshair select-none"
@@ -313,16 +637,42 @@ export const WallDrawingCanvas = ({
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onKeyDown={handleKeyDown}
+        onContextMenu={(e) => e.preventDefault()}
         tabIndex={0}
       >
         {/* Grid */}
         <defs>
           <pattern id="wdc-grid" width={20 * scale} height={20 * scale} patternUnits="userSpaceOnUse"
             x={pan.x % (20 * scale)} y={pan.y % (20 * scale)}>
-            <circle cx={10 * scale} cy={10 * scale} r="0.8" fill="#272b38" />
+            <circle cx={10 * scale} cy={10 * scale} r="0.8" fill="var(--canvas-dot)" />
           </pattern>
         </defs>
         <rect width="100%" height="100%" fill="url(#wdc-grid)" />
+
+        {/* Fill des pièces détectées + label */}
+        {detectedRooms.map((room) => {
+          if (room.points.length < 3) return null;
+          const screenPts = room.points
+            .map((p) => worldToScreen(p))
+            .map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`)
+            .join(' ');
+          const cx = room.points.reduce((s, p) => s + p.x, 0) / room.points.length;
+          const cy = room.points.reduce((s, p) => s + p.y, 0) / room.points.length;
+          const sc = worldToScreen({ x: cx, y: cy });
+          return (
+            <g key={`room-fill-${room.id}`} className="pointer-events-none">
+              <polygon points={screenPts} fill="var(--canvas-poly-active)" />
+              <text
+                x={sc.x} y={sc.y}
+                textAnchor="middle" dominantBaseline="middle"
+                fontSize={11} fill="var(--canvas-name-active)"
+                style={{ fontFamily: 'system-ui', userSelect: 'none' }}
+              >
+                {room.name ?? ''}
+              </text>
+            </g>
+          );
+        })}
 
         {/* Wall polygons */}
         {wallPolygons.map((poly) => {
@@ -336,6 +686,46 @@ export const WallDrawingCanvas = ({
           return <polygon key={poly.wallId} points={screenPts} fill={color} />;
         })}
 
+        {/* Ouvertures (murs isDoor) — ligne dashed orange */}
+        {walls.filter(w => w.isDoor).map(w => {
+          const n1 = nodes.find((n) => n.id === w.node1Id);
+          const n2 = nodes.find((n) => n.id === w.node2Id);
+          if (!n1 || !n2) return null;
+          const s1 = worldToScreen({ x: n1.x, y: n1.y });
+          const s2 = worldToScreen({ x: n2.x, y: n2.y });
+          return (
+            <line key={`door-${w.id}`}
+              x1={s1.x} y1={s1.y} x2={s2.x} y2={s2.y}
+              stroke="#e67e22" strokeWidth={2} strokeDasharray="8,4"
+            />
+          );
+        })}
+
+        {/* Zones exclues existantes */}
+        {excludedZones.map(zone => {
+          if (zone.points.length < 3) return null;
+          const pts = zone.points.map(p => worldToScreen(p));
+          const d = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ') + ' Z';
+          return (
+            <path key={zone.id} d={d}
+              fill="#f59e0b" fillOpacity={0.25}
+              stroke="#f59e0b" strokeWidth={1.5} strokeDasharray="5,3"
+            />
+          );
+        })}
+
+        {/* Zone en cours de tracé */}
+        {tool === 'EXCLUDE' && excludePoints.length >= 1 && cursor && (() => {
+          const pts = [...excludePoints, cursor].map(p => worldToScreen(p));
+          const d = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+          return (
+            <path d={d}
+              fill="none"
+              stroke="#f59e0b" strokeWidth={1.5} strokeDasharray="5,3"
+            />
+          );
+        })()}
+
         {/* Joint lines */}
         {jointLines.map((line, i) => {
           const sp1 = worldToScreen(line.p1);
@@ -343,7 +733,7 @@ export const WallDrawingCanvas = ({
           return (
             <line key={`joint-${i}`}
               x1={sp1.x} y1={sp1.y} x2={sp2.x} y2={sp2.y}
-              stroke="#3d3830" strokeWidth={1.5} />
+              stroke="var(--canvas-wall-joint)" strokeWidth={1.5} />
           );
         })}
 
@@ -401,9 +791,34 @@ export const WallDrawingCanvas = ({
           </g>
         )}
 
-        {/* H/V snap guide lines */}
-        {tool === 'WALL' && snapResult?.type === 'hv' && cursor && (() => {
+        {/* Snap colinéaire — ligne pointillée violette dans la direction du mur */}
+        {snapResult?.type === 'collinear' && snapResult.dir && cursor && (() => {
           const sc = worldToScreen(cursor);
+          const d = snapResult.dir!;
+          const BIG = 2000;
+          return (
+            <line
+              x1={sc.x - d.x * BIG} y1={sc.y - d.y * BIG}
+              x2={sc.x + d.x * BIG} y2={sc.y + d.y * BIG}
+              stroke="#8b5cf6" strokeWidth={1} strokeDasharray="6,3" opacity={0.6}
+            />
+          );
+        })()}
+
+        {/* H/V snap guide lines */}
+        {snapResult?.type === 'hv' && cursor && (() => {
+          const sc = worldToScreen(cursor);
+          if (!snapResult.axis) {
+            // Intersection : afficher les deux lignes (croix)
+            return (
+              <>
+                <line x1={0} y1={sc.y} x2="100%" y2={sc.y}
+                  stroke="#27ae60" strokeWidth={1} strokeDasharray="6,3" opacity={0.7} />
+                <line x1={sc.x} y1={0} x2={sc.x} y2="100%"
+                  stroke="#27ae60" strokeWidth={1} strokeDasharray="6,3" opacity={0.7} />
+              </>
+            );
+          }
           if (snapResult.axis === 'h') {
             return <line x1={0} y1={sc.y} x2="100%" y2={sc.y}
               stroke="#27ae60" strokeWidth={1} strokeDasharray="6,3" opacity={0.5} />;
@@ -413,7 +828,7 @@ export const WallDrawingCanvas = ({
         })()}
 
         {/* Snap indicator */}
-        {tool === 'WALL' && cursor && (() => {
+        {cursor && (() => {
           const sc = worldToScreen(cursor);
           if (snapResult?.type === 'endpoint') {
             return <circle cx={sc.x} cy={sc.y} r={SNAP_INDICATOR_R}
@@ -427,6 +842,16 @@ export const WallDrawingCanvas = ({
           if (snapResult?.type === 'hv') {
             return <circle cx={sc.x} cy={sc.y} r={SNAP_INDICATOR_R}
               fill="none" stroke="#27ae60" strokeWidth={1.5} strokeDasharray="3,2" />;
+          }
+          if (snapResult?.type === 'perpendicular') {
+            // Petit carré vert = symbole d'angle droit
+            const s = SNAP_INDICATOR_R;
+            return <rect x={sc.x - s / 2} y={sc.y - s / 2} width={s} height={s}
+              fill="rgba(39,174,96,0.2)" stroke="#27ae60" strokeWidth={2} />;
+          }
+          if (snapResult?.type === 'collinear') {
+            return <circle cx={sc.x} cy={sc.y} r={SNAP_INDICATOR_R}
+              fill="none" stroke="#8b5cf6" strokeWidth={1.5} />;
           }
           return null;
         })()}
@@ -471,6 +896,26 @@ export const WallDrawingCanvas = ({
           onCancel={() => setEditingWallId(null)}
         />
       )}
+
+      {/* Panel raccourcis — desktop uniquement */}
+      <div
+        className="pointer-events-none absolute bottom-5 right-5 z-10 hidden md:block mouse:block rounded-xl px-4 py-3 text-[11px] shadow-xl backdrop-blur-md"
+        style={{ border: '1px solid var(--bdr)', background: 'var(--surf)', opacity: 0.9 }}
+      >
+        <p className="mb-2 text-[9px] font-black uppercase tracking-[0.2em]" style={{ color: 'var(--muted)' }}>Raccourcis</p>
+        <div className="grid grid-cols-[1fr_auto] items-center gap-x-5 gap-y-1.5" style={{ color: 'var(--text2)' }}>
+          <span>Annuler la chaîne</span>
+          <kbd className="justify-self-end rounded px-1.5 py-0.5 font-mono text-[9px]" style={{ border: '1px solid var(--bdr2)', background: 'var(--surf2)', color: 'var(--text2)' }}>Échap</kbd>
+          <span>Orthogonalité</span>
+          <kbd className="justify-self-end rounded px-1.5 py-0.5 font-mono text-[9px]" style={{ border: '1px solid var(--bdr2)', background: 'var(--surf2)', color: 'var(--text2)' }}>⇧ Maj</kbd>
+          <span>Sans aimantation</span>
+          <kbd className="justify-self-end rounded px-1.5 py-0.5 font-mono text-[9px]" style={{ border: '1px solid var(--bdr2)', background: 'var(--surf2)', color: 'var(--text2)' }}>Ctrl</kbd>
+          <span>Annuler</span>
+          <kbd className="justify-self-end rounded px-1.5 py-0.5 font-mono text-[9px]" style={{ border: '1px solid var(--bdr2)', background: 'var(--surf2)', color: 'var(--text2)' }}>Ctrl+Z</kbd>
+          <span>Rétablir</span>
+          <kbd className="justify-self-end rounded px-1.5 py-0.5 font-mono text-[9px]" style={{ border: '1px solid var(--bdr2)', background: 'var(--surf2)', color: 'var(--text2)' }}>Ctrl+Y</kbd>
+        </div>
+      </div>
     </div>
   );
 };

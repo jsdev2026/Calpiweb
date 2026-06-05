@@ -2,7 +2,7 @@ import type { Point } from './plan';
 import type { TilingConfig } from './tiling';
 import type { TilingDimension } from './tilingDimension';
 import type { MyRole, ProjectLock } from './sharing';
-import type { Wall, WallNode } from './wall';
+import type { Wall, WallNode, WallExcludedZone } from './wall';
 
 export type { TilingDimension };
 
@@ -95,7 +95,12 @@ export interface Project {
   createdAt: number;
   updatedAt: number;
   rooms: Room[];
-  wallEngine?: { nodes: WallNode[]; walls: Wall[] }; // wall-segment engine (node model)
+  wallEngine?: {
+    nodes: WallNode[];
+    walls: Wall[];
+    excludedZones: WallExcludedZone[];
+    wallRoomNames?: Record<string, string>;
+  }; // wall-segment engine (node model)
   config: TilingConfig;
   wallThickness: number;
   constraints: Constraint[];

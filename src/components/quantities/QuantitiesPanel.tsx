@@ -1,7 +1,8 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { selectActiveProject, useProjectStore } from '@/store/projectStore';
+import { selectActiveProject, selectDoorOpenings, selectRooms, useProjectStore } from '@/store/projectStore';
+import { useShallow } from 'zustand/react/shallow';
 import { analyzeQuantities } from '@/engine/quantities/quantityEngine';
 import { mergeSimilarCutGroups } from '@/engine/quantities/mergeSimilarCutGroups';
 import { formatCm, formatM2 } from '@/utils/formatters';
@@ -34,6 +35,8 @@ const PinButton = ({ inBar, pinned, onPin }: PinButtonProps) => (
 
 export const QuantitiesPanel = () => {
   const project = useProjectStore(selectActiveProject);
+  const rooms = useProjectStore(selectRooms);
+  const doorOpenings = useProjectStore(useShallow(selectDoorOpenings));
   const [highlightGroup, setHighlightGroup] = useState<number | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileTab, setMobileTab] = useState<'plan' | 'coupes'>('plan');
@@ -42,8 +45,8 @@ export const QuantitiesPanel = () => {
 
   const result = useMemo(() => {
     if (!project) return null;
-    return analyzeQuantities(project.rooms, project.config, project.wallThickness);
-  }, [project]);
+    return analyzeQuantities(rooms, project.config, project.wallThickness, doorOpenings);
+  }, [project, rooms, doorOpenings]);
 
   const mergedCutGroups = useMemo(
     () => (result ? mergeSimilarCutGroups(result.cutGroups) : []),
@@ -205,7 +208,7 @@ export const QuantitiesPanel = () => {
             <QuantityPlanView
               result={result}
               config={project.config}
-              rooms={project.rooms}
+              rooms={rooms}
               highlightGroup={highlightGroup}
             />
           </div>

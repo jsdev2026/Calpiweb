@@ -92,8 +92,8 @@ export function computeCornerGeometry(walls: Wall[], nodes: WallNode[]): WallPol
     return {
       wallId: wall.id,
       points: [
-        { x: p1.x - dir.x * extN1 + n.x * h, y: p1.y - dir.y * extN1 + n.y * h },
-        { x: p2.x + dir.x * extN2 + n.x * h, y: p2.y + dir.y * extN2 + n.y * h },
+        { x: p1.x + dir.x * extN1 + n.x * h, y: p1.y + dir.y * extN1 + n.y * h },
+        { x: p2.x - dir.x * extN2 + n.x * h, y: p2.y - dir.y * extN2 + n.y * h },
         { x: p2.x + dir.x * extN2 - n.x * h, y: p2.y + dir.y * extN2 - n.y * h },
         { x: p1.x - dir.x * extN1 - n.x * h, y: p1.y - dir.y * extN1 - n.y * h },
       ],
