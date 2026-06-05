@@ -1,0 +1,163 @@
+<h2>Trois évolutions du panneau quantitatif</h2>
+<p class="subtitle">Stat strip compact · Coupes récupérables · Panneau masquable</p>
+
+<div class="cards">
+
+  <!-- Option A -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:0;background:#09090b;border-radius:8px 8px 0 0;overflow:hidden;">
+
+      <!-- Header -->
+      <div style="background:#18181b;border-bottom:1px solid #27272a;padding:8px 16px;">
+        <div style="font-size:12px;font-weight:900;color:#e4e4e7">Tableau des quantités</div>
+        <div style="font-size:9px;color:#52525b;margin-top:1px">Format : 30×30 cm — Joint : 3 mm — Surface : 9.50 m²</div>
+      </div>
+
+      <!-- Stat strip compact — 4 boxes in one row -->
+      <div style="background:#18181b;border-bottom:1px solid #27272a;padding:6px 12px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;">
+          <!-- Entiers -->
+          <div style="border-left:2px solid #3b82f6;background:#27272a;border-radius:5px;padding:4px 8px;">
+            <div style="font-size:16px;font-weight:900;color:#e4e4e7;line-height:1">10</div>
+            <div style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#52525b;margin-top:2px">Entiers</div>
+            <div style="font-size:8px;color:#3f3f46;margin-top:1px">0.90 m²</div>
+          </div>
+          <!-- Coupes -->
+          <div style="border-left:2px solid #f97316;background:#27272a;border-radius:5px;padding:4px 8px;">
+            <div style="font-size:16px;font-weight:900;color:#e4e4e7;line-height:1">6</div>
+            <div style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#52525b;margin-top:2px">À couper</div>
+            <div style="font-size:8px;color:#3f3f46;margin-top:1px">0.38 m² posés</div>
+          </div>
+          <!-- Récupérées -->
+          <div style="border-left:2px solid #10b981;background:#27272a;border-radius:5px;padding:4px 8px;">
+            <div style="font-size:16px;font-weight:900;color:#34d399;line-height:1">2</div>
+            <div style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#52525b;margin-top:2px">Récupérées</div>
+            <div style="font-size:8px;color:#3f3f46;margin-top:1px">dans une chute</div>
+          </div>
+          <!-- Total -->
+          <div style="border:1px solid #f9731620;background:#f9731608;border-radius:5px;padding:4px 8px;display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <div style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#f97316cc">Total</div>
+              <div style="font-size:8px;color:#52525b;margin-top:1px;line-height:1.4">10 + (6−2) = 14<br>× 1.10</div>
+              <div style="font-size:8px;color:#f97316aa">1.26 m²</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:20px;font-weight:900;color:#fb923c;line-height:1">16</div>
+              <div style="font-size:8px;color:#f9731660">carreaux</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Body: plan + panel avec bouton masquer -->
+      <div style="display:flex;height:120px;">
+        <!-- Plan -->
+        <div style="flex:1;padding:8px;display:flex;flex-direction:column;gap:4px;border-right:1px solid #27272a;">
+          <div style="font-size:7px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#52525b;">Plan annoté</div>
+          <div style="flex:1;background:#141417;border-radius:4px;border:1px solid #27272a;display:flex;align-items:center;justify-content:center;">
+            <div style="width:60px;height:60px;background:#1e293b;border-radius:3px;position:relative;overflow:hidden;">
+              <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:repeating-linear-gradient(0deg,transparent,transparent 11px,#27272a 11px,#27272a 12px),repeating-linear-gradient(90deg,transparent,transparent 11px,#27272a 11px,#27272a 12px);"></div>
+            </div>
+          </div>
+        </div>
+        <!-- Right panel avec bouton masquer en haut -->
+        <div style="width:110px;display:flex;flex-direction:column;">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 8px;border-bottom:1px solid #27272a;">
+            <div style="font-size:7px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#52525b;">Groupes</div>
+            <!-- Bouton masquer -->
+            <div style="width:16px;height:16px;border-radius:3px;background:#27272a;border:1px solid #3f3f46;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+              <span style="font-size:10px;color:#71717a">›</span>
+            </div>
+          </div>
+          <div style="flex:1;padding:4px 6px;display:flex;flex-direction:column;gap:2px;overflow:hidden;">
+            <div style="height:14px;background:#27272a;border-radius:3px;border-left:2px solid #f87171;"></div>
+            <div style="height:14px;background:#27272a;border-radius:3px;border-left:2px solid #fb923c;"></div>
+            <div style="height:14px;background:#27272a;border-radius:3px;border-left:2px solid #facc15;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — 4 boîtes égales + bouton ‹ dans header (recommandé)</h3>
+      <p>4e boîte "Récupérées" au même niveau. Formule du total claire : 10 + (6−2) = 14 × 1.10. Bouton ‹/› en haut du panneau droit.</p>
+    </div>
+  </div>
+
+  <!-- Option B -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:0;background:#09090b;border-radius:8px 8px 0 0;overflow:hidden;">
+
+      <!-- Header -->
+      <div style="background:#18181b;border-bottom:1px solid #27272a;padding:8px 16px;">
+        <div style="font-size:12px;font-weight:900;color:#e4e4e7">Tableau des quantités</div>
+        <div style="font-size:9px;color:#52525b;margin-top:1px">Format : 30×30 cm — Joint : 3 mm — Surface : 9.50 m²</div>
+      </div>
+
+      <!-- Stat strip compact — 3 boxes, récupérées inline dans "À couper" -->
+      <div style="background:#18181b;border-bottom:1px solid #27272a;padding:6px 12px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1.4fr;gap:6px;">
+          <!-- Entiers -->
+          <div style="border-left:2px solid #3b82f6;background:#27272a;border-radius:5px;padding:4px 8px;">
+            <div style="font-size:16px;font-weight:900;color:#e4e4e7;line-height:1">10</div>
+            <div style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#52525b;margin-top:2px">Entiers</div>
+            <div style="font-size:8px;color:#3f3f46;margin-top:1px">0.90 m²</div>
+          </div>
+          <!-- Coupes + récupérées inline -->
+          <div style="border-left:2px solid #f97316;background:#27272a;border-radius:5px;padding:4px 8px;">
+            <div style="font-size:16px;font-weight:900;color:#e4e4e7;line-height:1">6</div>
+            <div style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#52525b;margin-top:2px">À couper</div>
+            <div style="font-size:8px;color:#34d399;margin-top:1px">↩ 2 récupérées</div>
+          </div>
+          <!-- Total — formule avec récup -->
+          <div style="border:1px solid #f9731620;background:#f9731608;border-radius:5px;padding:4px 8px;display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <div style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#f97316cc">Total à commander</div>
+              <div style="font-size:8px;color:#52525b;margin-top:1px;line-height:1.5">10 entiers<br>+ 4 coupes nettes<br>= 14 × 1.10</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:20px;font-weight:900;color:#fb923c;line-height:1">16</div>
+              <div style="font-size:8px;color:#f9731660">carreaux</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Body: plan + panneau avec chevron sur la bordure -->
+      <div style="display:flex;height:120px;position:relative;">
+        <div style="flex:1;padding:8px;display:flex;flex-direction:column;gap:4px;">
+          <div style="font-size:7px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#52525b;">Plan annoté</div>
+          <div style="flex:1;background:#141417;border-radius:4px;border:1px solid #27272a;display:flex;align-items:center;justify-content:center;">
+            <div style="width:60px;height:60px;background:#1e293b;border-radius:3px;position:relative;overflow:hidden;">
+              <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:repeating-linear-gradient(0deg,transparent,transparent 11px,#27272a 11px,#27272a 12px),repeating-linear-gradient(90deg,transparent,transparent 11px,#27272a 11px,#27272a 12px);"></div>
+            </div>
+          </div>
+        </div>
+        <!-- Chevron centré sur la bordure -->
+        <div style="position:absolute;right:110px;top:50%;transform:translateY(-50%);z-index:10;width:16px;height:28px;background:#27272a;border:1px solid #3f3f46;border-radius:3px;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+          <span style="font-size:10px;color:#71717a">›</span>
+        </div>
+        <div style="width:110px;border-left:1px solid #27272a;padding:4px 6px;display:flex;flex-direction:column;gap:2px;overflow:hidden;">
+          <div style="font-size:7px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#52525b;margin-bottom:2px;">Groupes</div>
+          <div style="height:14px;background:#27272a;border-radius:3px;border-left:2px solid #f87171;"></div>
+          <div style="height:14px;background:#27272a;border-radius:3px;border-left:2px solid #fb923c;"></div>
+          <div style="height:14px;background:#27272a;border-radius:3px;border-left:2px solid #facc15;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — 3 boîtes + ↩ inline + chevron sur bordure</h3>
+      <p>"↩ 2 récupérées" dans la boîte "À couper". Formule plus verbale dans Total. Bouton chevron centré sur la frontière plan/panneau.</p>
+    </div>
+  </div>
+
+</div>
+
+<div class="section" style="margin-top:16px">
+  <h3>Données disponibles dans QuantityResult</h3>
+  <ul style="font-size:12px;line-height:1.8;color:#94a3b8;list-style:disc;padding-left:20px;margin-top:6px">
+    <li><strong style="color:#e4e4e7">cuts.length</strong> — nombre total de carreaux à couper</li>
+    <li><strong style="color:#e4e4e7">totalReuseCount</strong> — coupes récupérées dans des chutes</li>
+    <li><strong style="color:#e4e4e7">tilesForCuts</strong> — carreaux nets nécessaires (= cuts.length − totalReuseCount)</li>
+    <li><strong style="color:#e4e4e7">toOrder</strong> — Math.ceil((wholeCount + tilesForCuts) × 1.10)</li>
+  </ul>
+</div>

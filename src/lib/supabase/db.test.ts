@@ -5,17 +5,23 @@ const mockSelect = vi.fn();
 const mockEq = vi.fn();
 const mockOrder = vi.fn();
 const mockSingle = vi.fn();
+const mockMaybeSingle = vi.fn();
 const mockUpsert = vi.fn();
 const mockDelete = vi.fn();
 const mockGetUser = vi.fn();
+const mockIn = vi.fn();
+const mockGt = vi.fn();
 
 const mockChain = {
   select: mockSelect,
   eq: mockEq,
   order: mockOrder,
   single: mockSingle,
+  maybeSingle: mockMaybeSingle,
   upsert: mockUpsert,
   delete: mockDelete,
+  in: mockIn,
+  gt: mockGt,
 };
 
 // Each method returns mockChain so calls can be chained
@@ -23,6 +29,8 @@ mockSelect.mockReturnValue(mockChain);
 mockEq.mockReturnValue(mockChain);
 mockOrder.mockReturnValue(mockChain);
 mockDelete.mockReturnValue(mockChain);
+mockIn.mockReturnValue(mockChain);
+mockGt.mockReturnValue(mockChain);
 
 vi.mock('@/lib/supabase/client', () => ({
   createClient: () => ({
@@ -53,17 +61,29 @@ const makeProject = (id = 'proj-1'): Project => ({
 });
 
 describe('supabaseDb.getAll', () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } });
+  });
 
   it('returns projects from Supabase rows', async () => {
     const p = makeProject();
-    mockOrder.mockResolvedValueOnce({ data: [{ data: p }], error: null });
+    mockOrder.mockResolvedValueOnce({ data: [{ id: p.id, user_id: 'user-1', data: p }], error: null });
+    mockOrder.mockResolvedValueOnce({ data: [], error: null });
+    mockGt.mockResolvedValueOnce({ data: [], error: null });
     const result = await supabaseDb.getAll();
-    expect(result).toEqual([p]);
+    expect(result[0]).toMatchObject({ id: p.id, name: p.name });
   });
 
   it('returns empty array when no data', async () => {
     mockOrder.mockResolvedValueOnce({ data: null, error: null });
+    mockOrder.mockResolvedValueOnce({ data: [], error: null });
+    const result = await supabaseDb.getAll();
+    expect(result).toEqual([]);
+  });
+
+  it('returns empty array when user is not authenticated', async () => {
+    mockGetUser.mockResolvedValueOnce({ data: { user: null } });
     const result = await supabaseDb.getAll();
     expect(result).toEqual([]);
   });
@@ -123,9 +143,58 @@ describe('supabaseDb.delete', () => {
 describe('supabaseDb.getProfile', () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it('returns profile plan', async () => {
-    mockSingle.mockResolvedValueOnce({ data: { plan: 'pro' }, error: null });
+  it('returns profile plan when profile exists', async () => {
+    mockGetUser.mockResolvedValueOnce({ data: { user: { id: 'user-1' } } });
+    mockMaybeSingle.mockResolvedValueOnce({ data: { plan: 'pro' }, error: null });
     const profile = await supabaseDb.getProfile();
     expect(profile.plan).toBe('pro');
+  });
+
+  it('returns free plan when profile row does not exist', async () => {
+    mockGetUser.mockResolvedValueOnce({ data: { user: { id: 'user-1' } } });
+    mockMaybeSingle.mockResolvedValueOnce({ data: null, error: null });
+    const profile = await supabaseDb.getProfile();
+    expect(profile.plan).toBe('free');
+  });
+
+  it('returns free plan when user is not authenticated', async () => {
+    mockGetUser.mockResolvedValueOnce({ data: { user: null } });
+    const profile = await supabaseDb.getProfile();
+    expect(profile.plan).toBe('free');
+  });
+
+  it('throws on Supabase error', async () => {
+    mockGetUser.mockResolvedValueOnce({ data: { user: { id: 'user-1' } } });
+    mockMaybeSingle.mockResolvedValueOnce({ data: null, error: { code: 'XXXXX', message: 'DB error' } });
+    await expect(supabaseDb.getProfile()).rejects.toThrow('[XXXXX] DB error');
+  });
+});
+
+describe('supabaseDb.getAll — with shared projects', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('sets myRole to owner when user_id matches', async () => {
+    mockGetUser.mockResolvedValueOnce({ data: { user: { id: 'user-1' } } });
+    const p = makeProject();
+    // projects query
+    mockOrder.mockResolvedValueOnce({ data: [{ id: p.id, user_id: 'user-1', data: p }], error: null });
+    // shares query
+    mockOrder.mockResolvedValueOnce({ data: [], error: null });
+    // locks query — mockGt is the terminal call (after .in())
+    mockGt.mockResolvedValueOnce({ data: [], error: null });
+
+    const result = await supabaseDb.getAll();
+    expect(result[0]?.myRole).toBe('owner');
+  });
+
+  it('sets myRole to editor for shared project', async () => {
+    mockGetUser.mockResolvedValueOnce({ data: { user: { id: 'user-1' } } });
+    const p = makeProject('shared-proj');
+    mockOrder.mockResolvedValueOnce({ data: [{ id: p.id, user_id: 'user-99', data: p }], error: null });
+    mockOrder.mockResolvedValueOnce({ data: [{ project_id: p.id, role: 'editor' }], error: null });
+    mockGt.mockResolvedValueOnce({ data: [], error: null });
+
+    const result = await supabaseDb.getAll();
+    expect(result[0]?.myRole).toBe('editor');
   });
 });

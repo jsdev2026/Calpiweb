@@ -1,0 +1,85 @@
+<h2>Option A — densité maximale</h2>
+<p class="subtitle">6 cartes dans le panneau 360 px — sans scroller</p>
+
+<div class="section">
+  <div class="mockup">
+    <div class="mockup-header">Groupes de coupes — panneau 360 px</div>
+    <div class="mockup-body" style="background:#09090b;padding:10px;display:flex;flex-direction:column;gap:2px;width:320px;margin:0 auto;">
+
+      <!-- Titre section -->
+      <div style="font-size:8px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#52525b;padding:0 2px;margin-bottom:4px;">Groupes de coupes</div>
+
+      <!-- Carte 1 -->
+      <div style="display:flex;align-items:center;gap:6px;background:#18181b;border:1px solid #27272a;border-left:3px solid #f87171;border-radius:6px;padding:4px 8px;">
+        <span style="width:14px;height:14px;border-radius:50%;background:#f8717120;border:1.5px solid #f8717140;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:900;color:#f87171;flex-shrink:0">1</span>
+        <svg width="18" height="21" style="flex-shrink:0"><rect width="18" height="21" fill="#27272a" rx="2"/><rect x="0" y="10" width="9" height="11" fill="#93c5fd" rx="1"/><line x1="0" y1="10" x2="0" y2="21" stroke="#f97316" stroke-width="1.2" stroke-dasharray="3,2"/><rect width="18" height="21" fill="none" stroke="#3f3f46" stroke-width="0.5" rx="2"/></svg>
+        <span style="font-family:monospace;font-size:11px;font-weight:700;color:#e4e4e7;flex-shrink:0">150×300</span>
+        <span style="font-size:9px;color:#52525b;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Chute&nbsp;150×300</span>
+        <span style="font-size:11px;font-weight:900;color:#e4e4e7;flex-shrink:0">3<span style="font-size:8px;font-weight:400;color:#52525b">&nbsp;nets</span></span>
+      </div>
+
+      <!-- Carte 2 — avec réutilisation -->
+      <div style="display:flex;align-items:center;gap:6px;background:#18181b;border:1px solid #27272a;border-left:3px solid #fb923c;border-radius:6px;padding:4px 8px;">
+        <span style="width:14px;height:14px;border-radius:50%;background:#fb923c20;border:1.5px solid #fb923c40;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:900;color:#fb923c;flex-shrink:0">2</span>
+        <svg width="18" height="21" style="flex-shrink:0"><rect width="18" height="21" fill="#27272a" rx="2"/><rect x="9" y="10" width="9" height="11" fill="#86efac" rx="1"/><line x1="18" y1="10" x2="18" y2="21" stroke="#f97316" stroke-width="1.2" stroke-dasharray="3,2"/><rect width="18" height="21" fill="none" stroke="#3f3f46" stroke-width="0.5" rx="2"/></svg>
+        <span style="font-family:monospace;font-size:11px;font-weight:700;color:#e4e4e7;flex-shrink:0">200×300</span>
+        <span style="font-size:9px;color:#52525b;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Chute&nbsp;200×100&ensp;<span style="color:#34d399;font-weight:700">↩2</span></span>
+        <span style="font-size:11px;font-weight:900;color:#34d399;flex-shrink:0">3<span style="font-size:8px;font-weight:400;color:#52525b">&nbsp;nets</span></span>
+      </div>
+
+      <!-- Carte 3 -->
+      <div style="display:flex;align-items:center;gap:6px;background:#18181b;border:1px solid #27272a;border-left:3px solid #facc15;border-radius:6px;padding:4px 8px;">
+        <span style="width:14px;height:14px;border-radius:50%;background:#facc1520;border:1.5px solid #facc1540;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:900;color:#facc15;flex-shrink:0">3</span>
+        <svg width="18" height="21" style="flex-shrink:0"><rect width="18" height="21" fill="#27272a" rx="2"/><rect x="0" y="0" width="9" height="10" fill="#93c5fd" rx="1"/><line x1="0" y1="0" x2="0" y2="10" stroke="#f97316" stroke-width="1.2" stroke-dasharray="3,2"/><line x1="0" y1="0" x2="9" y2="0" stroke="#f97316" stroke-width="1.2" stroke-dasharray="3,2"/><rect width="18" height="21" fill="none" stroke="#3f3f46" stroke-width="0.5" rx="2"/></svg>
+        <span style="font-family:monospace;font-size:11px;font-weight:700;color:#e4e4e7;flex-shrink:0">80×80</span>
+        <span style="font-size:9px;color:#52525b;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Chute&nbsp;220×300</span>
+        <span style="font-size:11px;font-weight:900;color:#e4e4e7;flex-shrink:0">8<span style="font-size:8px;font-weight:400;color:#52525b">&nbsp;nets</span></span>
+      </div>
+
+      <!-- Carte 4 — sans chute -->
+      <div style="display:flex;align-items:center;gap:6px;background:#18181b;border:1px solid #27272a;border-left:3px solid #4ade80;border-radius:6px;padding:4px 8px;">
+        <span style="width:14px;height:14px;border-radius:50%;background:#4ade8020;border:1.5px solid #4ade8040;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:900;color:#4ade80;flex-shrink:0">4</span>
+        <svg width="18" height="21" style="flex-shrink:0"><rect width="18" height="21" fill="#27272a" rx="2"/><rect x="0" y="10" width="18" height="11" fill="#93c5fd" rx="1"/><line x1="0" y1="10" x2="18" y2="10" stroke="#f97316" stroke-width="1.2" stroke-dasharray="3,2"/><rect width="18" height="21" fill="none" stroke="#3f3f46" stroke-width="0.5" rx="2"/></svg>
+        <span style="font-family:monospace;font-size:11px;font-weight:700;color:#e4e4e7;flex-shrink:0">300×120</span>
+        <span style="font-size:9px;color:#52525b;flex:1"></span>
+        <span style="font-size:11px;font-weight:900;color:#e4e4e7;flex-shrink:0">4<span style="font-size:8px;font-weight:400;color:#52525b">&nbsp;nets</span></span>
+      </div>
+
+      <!-- Carte 5 -->
+      <div style="display:flex;align-items:center;gap:6px;background:#18181b;border:1px solid #27272a;border-left:3px solid #22d3ee;border-radius:6px;padding:4px 8px;">
+        <span style="width:14px;height:14px;border-radius:50%;background:#22d3ee20;border:1.5px solid #22d3ee40;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:900;color:#22d3ee;flex-shrink:0">5</span>
+        <svg width="18" height="21" style="flex-shrink:0"><rect width="18" height="21" fill="#27272a" rx="2"/><rect x="9" y="0" width="9" height="21" fill="#93c5fd" rx="1"/><line x1="9" y1="0" x2="9" y2="21" stroke="#f97316" stroke-width="1.2" stroke-dasharray="3,2"/><rect width="18" height="21" fill="none" stroke="#3f3f46" stroke-width="0.5" rx="2"/></svg>
+        <span style="font-family:monospace;font-size:11px;font-weight:700;color:#e4e4e7;flex-shrink:0">150×300</span>
+        <span style="font-size:9px;color:#52525b;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Chute&nbsp;150×300</span>
+        <span style="font-size:11px;font-weight:900;color:#e4e4e7;flex-shrink:0">2<span style="font-size:8px;font-weight:400;color:#52525b">&nbsp;nets</span></span>
+      </div>
+
+      <!-- Carte 6 — avec réutilisation -->
+      <div style="display:flex;align-items:center;gap:6px;background:#18181b;border:1px solid #27272a;border-left:3px solid #818cf8;border-radius:6px;padding:4px 8px;">
+        <span style="width:14px;height:14px;border-radius:50%;background:#818cf820;border:1.5px solid #818cf840;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:900;color:#818cf8;flex-shrink:0">6</span>
+        <svg width="18" height="21" style="flex-shrink:0"><rect width="18" height="21" fill="#27272a" rx="2"/><rect x="0" y="0" width="12" height="14" fill="#86efac" rx="1"/><line x1="12" y1="0" x2="12" y2="14" stroke="#f97316" stroke-width="1.2" stroke-dasharray="3,2"/><line x1="0" y1="14" x2="12" y2="14" stroke="#f97316" stroke-width="1.2" stroke-dasharray="3,2"/><rect width="18" height="21" fill="none" stroke="#3f3f46" stroke-width="0.5" rx="2"/></svg>
+        <span style="font-family:monospace;font-size:11px;font-weight:700;color:#e4e4e7;flex-shrink:0">200×250</span>
+        <span style="font-size:9px;color:#52525b;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Chute&nbsp;200×50&ensp;<span style="color:#34d399;font-weight:700">↩1</span></span>
+        <span style="font-size:11px;font-weight:900;color:#34d399;flex-shrink:0">5<span style="font-size:8px;font-weight:400;color:#52525b">&nbsp;nets</span></span>
+      </div>
+
+      <!-- Footer total -->
+      <div style="display:flex;justify-content:space-between;padding:6px 4px 0;border-top:1px solid #27272a;margin-top:4px;">
+        <span style="font-size:9px;color:#52525b">Carreaux nets pour coupes</span>
+        <span style="font-family:monospace;font-size:9px;font-weight:900;color:#e4e4e7">25 carreaux</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Ce qui change par rapport à l'actuel</h3>
+  <ul style="font-size:13px;line-height:1.8;color:#94a3b8;list-style:disc;padding-left:20px;margin-top:8px;">
+    <li>Hauteur : <strong style="color:#e4e4e7">~30 px/carte</strong> au lieu de ~68 px (−55 %)</li>
+    <li>Badge réduit à <strong style="color:#e4e4e7">14 px</strong>, vignette à <strong style="color:#e4e4e7">18×21 px</strong></li>
+    <li><strong style="color:#e4e4e7">"Chute X×Y"</strong> inline (supprime la ligne dédiée)</li>
+    <li><strong style="color:#e4e4e7">"↩N"</strong> inline dans la zone chute (supprime le badge multilignes)</li>
+    <li><strong style="color:#e4e4e7">Padding</strong> : py-1.5 / px-2 (au lieu de py-2 / px-3)</li>
+    <li>Légende sous le plan <strong style="color:#e4e4e7">supprimée</strong></li>
+  </ul>
+</div>

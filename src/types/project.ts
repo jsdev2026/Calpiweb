@@ -1,5 +1,10 @@
 import type { Point } from './plan';
 import type { TilingConfig } from './tiling';
+import type { TilingDimension } from './tilingDimension';
+import type { MyRole, ProjectLock } from './sharing';
+import type { Wall, WallNode, WallExcludedZone } from './wall';
+
+export type { TilingDimension };
 
 export type EdgeType = 'WALL' | 'DOOR';
 
@@ -38,9 +43,17 @@ export type ConstraintType =
   | 'V_DISTANCE'    // fixed vertical distance |y2 - y1|
   | 'POINT_ON_LINE' // vertex projected onto a line (defined by two other vertices)
 
+/** Face reference for a PointRef — which side of a wall a constraint endpoint is anchored to. */
+export type PointFace = 'INSIDE' | 'AXIS' | 'OUTSIDE';
+
+/** Dimension constraint types (subset of ConstraintType used for user-facing cotes). */
+export type DimConstraintType = 'H_DISTANCE' | 'V_DISTANCE' | 'LENGTH';
+
 export interface PointRef {
   roomId: string;
   vertexIdx: number;
+  face?: 'INSIDE' | 'AXIS' | 'OUTSIDE';
+  // absent / undefined → 'INSIDE' (backward compatible)
 }
 
 export interface Constraint {
@@ -49,6 +62,10 @@ export interface Constraint {
   // FIX: [p]  |  HORIZONTAL/VERTICAL/COINCIDENT/LENGTH: [p1, p2]  |  POINT_ON_LINE: [point, lineP1, lineP2]
   pts: PointRef[];
   value?: number | { x: number; y: number }; // LENGTH → mm distance; FIX → {x,y} anchor coords
+  /** Distance d'affichage en mm depuis le point de référence géométrique.
+   *  Défaut implicite = DIM_OFFSET (500 mm). Minimum = 100 mm.
+   *  Ne participe pas au solveur — affichage uniquement. */
+  displayOffset?: number;
 }
 
 // ── Project ────────────────────────────────────────────────────────────────
@@ -78,8 +95,17 @@ export interface Project {
   createdAt: number;
   updatedAt: number;
   rooms: Room[];
+  wallEngine?: {
+    nodes: WallNode[];
+    walls: Wall[];
+    excludedZones: WallExcludedZone[];
+    wallRoomNames?: Record<string, string>;
+  }; // wall-segment engine (node model)
   config: TilingConfig;
   wallThickness: number;
   constraints: Constraint[];
   notes: ProjectNote[];
+  tilingDimensions?: TilingDimension[];
+  myRole?: MyRole;
+  lock?: ProjectLock | null;
 }

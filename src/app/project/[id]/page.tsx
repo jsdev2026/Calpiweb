@@ -1,13 +1,17 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
-import { FileDown, LogOut, Moon, Settings, Sun, Trash2, X } from 'lucide-react';
+import { ChevronLeft, FileDown, LogOut, Moon, Settings, Sun, Trash2, X } from 'lucide-react';
 import { PlanEditor } from '@/components/plan/PlanEditor';
 import { TilingEditor } from '@/components/tiling/TilingEditor';
 import { QuantitiesPanel } from '@/components/quantities/QuantitiesPanel';
-import { selectActiveProject, useProjectStore } from '@/store/projectStore';
+import { QuantitiesPrintView } from '@/components/quantities/QuantitiesPrintView';
+import { selectActiveProject, selectDoorOpenings, selectRooms, useProjectStore } from '@/store/projectStore';
+import { useShallow } from 'zustand/react/shallow';
 import { useUiStore } from '@/store/uiStore';
+import { useSharingStore } from '@/store/sharingStore';
 import type { ProjectStatus } from '@/types/project';
 
 type WorkspaceTab = 'PLAN' | 'TILING' | 'QUANTITIES';
@@ -221,12 +225,21 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
   const hydrate = useProjectStore((s) => s.hydrate);
   const setActive = useProjectStore((s) => s.setActive);
   const activeProject = useProjectStore(selectActiveProject);
+  const rooms = useProjectStore(selectRooms);
+  const doorOpenings = useProjectStore(useShallow(selectDoorOpenings));
   const rename = useProjectStore((s) => s.rename);
   const setConfig = useProjectStore((s) => s.setConfig);
   const setStatus = useProjectStore((s) => s.setStatus);
   const setProjectInfo = useProjectStore((s) => s.setProjectInfo);
   const addNote = useProjectStore((s) => s.addNote);
   const removeNote = useProjectStore((s) => s.removeNote);
+
+  const acquireLock = useSharingStore((s) => s.acquireLock);
+  const releaseLock = useSharingStore((s) => s.releaseLock);
+  const refreshLock = useSharingStore((s) => s.refreshLock);
+
+  const [lockStatus, setLockStatus] = useState<'idle' | 'acquired' | 'locked_by_other'>('idle');
+  const [lockInfo, setLockInfo] = useState<{ lockedByDisplayName: string } | null>(null);
 
   const darkMode = useUiStore((s) => s.darkMode);
   const toggleDarkMode = useUiStore((s) => s.toggleDarkMode);
@@ -235,21 +248,61 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
 
   const [tab, setTab] = useState<WorkspaceTab>('PLAN');
   const [showSettings, setShowSettings] = useState(false);
+  const [printMounted, setPrintMounted] = useState(false);
+  useEffect(() => { setPrintMounted(true); }, []);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   const handlePrint = useCallback(() => {
-    if (tab === 'PLAN') return;
-    const style = document.createElement('style');
-    style.id = '__cp_print__';
-    style.textContent = `@media print { body * { visibility: hidden !important; } #print-target, #print-target * { visibility: visible !important; overflow: visible !important; max-height: none !important; } #print-target { position: absolute !important; inset: 0 !important; width: 100% !important; height: auto !important; } }`;
-    document.head.appendChild(style);
-    window.addEventListener('afterprint', () => document.getElementById('__cp_print__')?.remove(), { once: true });
     window.print();
-  }, [tab]);
+  }, []);
 
   useEffect(() => { void hydrate(); }, [hydrate]);
   useEffect(() => { if (hydrated) setActive(id); }, [id, hydrated, setActive]);
+
+  useEffect(() => {
+    if (!hydrated || !activeProject) return;
+    const isEditor = activeProject.myRole === 'editor' || activeProject.myRole === 'owner';
+    if (!isEditor) return;
+
+    void acquireLock(id).then((status) => {
+      setLockStatus(status);
+      if (status === 'locked_by_other' && activeProject.lock) {
+        setLockInfo({ lockedByDisplayName: activeProject.lock.lockedByDisplayName });
+      }
+    });
+
+    return () => {
+      void releaseLock(id);
+      setLockInfo(null);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, hydrated, activeProject?.myRole]);
+
+  useEffect(() => {
+    if (lockStatus !== 'acquired') return;
+    const interval = setInterval(() => { void refreshLock(id); }, 10 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [id, lockStatus]);
+
+  useEffect(() => {
+    if (!activeProject) return;
+    const isEditor = activeProject.myRole === 'editor' || activeProject.myRole === 'owner';
+    if (!isEditor) return;
+    const handler = () => { void releaseLock(id); };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [id, activeProject?.myRole]);
+
+  useEffect(() => {
+    if (lockStatus !== 'locked_by_other') return;
+    const interval = setInterval(async () => {
+      const status = await acquireLock(id);
+      setLockStatus(status);
+      if (status === 'acquired') setLockInfo(null);
+    }, 60 * 1000);
+    return () => clearInterval(interval);
+  }, [id, lockStatus]);
 
   // Close user menu on outside click
   useEffect(() => {
@@ -277,8 +330,9 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
     );
   }
 
-  const canGoTiling = activeProject.rooms.some((r) => r.points.length >= 3);
-  const roomCount = activeProject.rooms.filter(r => r.points.length >= 3).length;
+  const canGoTiling = rooms.some((r) => r.points.length >= 3);
+  const roomCount = rooms.filter(r => r.points.length >= 3).length;
+  const isReadOnly = lockStatus === 'locked_by_other' || activeProject.myRole === 'viewer';
   const initials = user?.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() ?? 'CP';
   const planLabel: Record<string, string> = { free: 'Gratuit', pro: 'Pro', team: 'Équipe' };
 
@@ -288,7 +342,7 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
       {/* Topbar */}
       <header className="shell-topbar px-5 gap-0">
         {/* Logo */}
-        <div className="flex items-center gap-2 mr-3">
+        <div className="hidden md:flex mouse:flex shrink-0 items-center gap-2 mr-3">
           <div className="flex h-6 w-6 items-center justify-center rounded-md" style={{ background: 'var(--accent)' }}>
             <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
               <rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.2" fill="white"/>
@@ -300,65 +354,76 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
           <span style={{ fontFamily: 'var(--font-display)', fontSize: 13.5, fontWeight: 700, color: 'var(--text)' }}>CaléPlan</span>
         </div>
 
-        <div className="h-4 w-px mx-3" style={{ background: 'var(--bdr)' }} />
+        <div className="hidden md:block mouse:block h-4 w-px mx-3" style={{ background: 'var(--bdr)' }} />
+
+        {/* Mobile-only back button */}
+        <button
+          type="button"
+          onClick={() => router.push('/dashboard')}
+          className="flex md:hidden mouse:hidden btn-icon mr-1"
+          aria-label="Retour aux projets"
+        >
+          <ChevronLeft size={18} />
+        </button>
 
         {/* Breadcrumb */}
-        <div className="flex items-center gap-1.5 text-[12.5px]" style={{ color: 'var(--text2)' }}>
-          <button type="button" onClick={() => router.push('/dashboard')} className="hover:underline" style={{ color: 'var(--text2)' }}>
+        <div className="flex min-w-0 shrink items-center gap-1.5 text-[12.5px]" style={{ color: 'var(--text2)' }}>
+          <button type="button" onClick={() => router.push('/dashboard')} className="hover:underline hidden md:inline mouse:inline shrink-0" style={{ color: 'var(--text2)' }}>
             Projets
           </button>
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ opacity: 0.4 }}><path d="M4 2l4 4-4 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="hidden md:block mouse:block shrink-0" style={{ opacity: 0.4 }}><path d="M4 2l4 4-4 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
           <input
             type="text"
             value={activeProject.name}
             onChange={(e) => rename(activeProject.id, e.target.value)}
+            readOnly={isReadOnly}
+            className="hidden md:block mouse:block min-w-0 truncate"
             style={{
               background: 'transparent', border: 'none', outline: 'none',
               fontFamily: 'var(--font-display)', fontSize: 13.5, fontWeight: 600,
-              color: 'var(--text)', minWidth: 120, maxWidth: 260,
+              color: 'var(--text)', maxWidth: 260,
             }}
             onFocus={(e) => { e.target.style.background = 'var(--surf2)'; e.target.style.borderRadius = 'var(--rs)'; e.target.style.padding = '2px 6px'; }}
             onBlur={(e) => { e.target.style.background = 'transparent'; e.target.style.padding = '0'; }}
           />
         </div>
 
-        <div className="mx-3 h-4 w-px" style={{ background: 'var(--bdr)' }} />
+        <div className="hidden md:block mouse:block mx-3 h-4 w-px" style={{ background: 'var(--bdr)' }} />
 
         {/* Status badge */}
         <button
           type="button"
           onClick={() => setStatus(STATUS_CYCLE[activeProject.status])}
           title="Cliquer pour changer le statut"
-          className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold transition-opacity hover:opacity-75 ${STATUS_CLASS[activeProject.status]}`}
+          className={`hidden md:inline-flex mouse:inline-flex shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold transition-opacity hover:opacity-75 ${STATUS_CLASS[activeProject.status]}`}
         >
           {STATUS_LABELS[activeProject.status]}
         </button>
 
         {/* Client */}
         {activeProject.client?.name && (
-          <div className="mx-3 flex items-center gap-1.5 text-[12px]" style={{ color: 'var(--muted)' }}>
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="4" r="2.5" stroke="currentColor" strokeWidth="1.2"/><path d="M1.5 10c0-2 2-3.5 4.5-3.5S10.5 8 10.5 10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
-            <span>{activeProject.client.name}</span>
-            <span style={{ opacity: 0.4 }}>·</span>
-            <span>{new Date(activeProject.updatedAt).toLocaleDateString('fr-FR')}</span>
+          <div className="hidden md:flex mouse:flex shrink min-w-0 mx-3 items-center gap-1.5 text-[12px]" style={{ color: 'var(--muted)' }}>
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="shrink-0"><circle cx="6" cy="4" r="2.5" stroke="currentColor" strokeWidth="1.2"/><path d="M1.5 10c0-2 2-3.5 4.5-3.5S10.5 8 10.5 10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
+            <span className="truncate">{activeProject.client.name}</span>
+            <span className="shrink-0" style={{ opacity: 0.4 }}>·</span>
+            <span className="shrink-0">{new Date(activeProject.updatedAt).toLocaleDateString('fr-FR')}</span>
           </div>
         )}
 
         {/* Actions */}
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto shrink-0 flex items-center gap-2">
           <button type="button" onClick={toggleDarkMode} className="btn-icon" aria-label="Thème">
             {darkMode ? <Sun size={14} /> : <Moon size={14} />}
           </button>
           <button
             type="button"
-            className="btn-secondary flex items-center gap-1.5 text-[12.5px]"
+            className="hidden md:flex mouse:flex btn-secondary items-center gap-1.5 text-[12.5px]"
             style={{ padding: '5px 10px' }}
             onClick={handlePrint}
-            disabled={tab === 'PLAN'}
           >
             <FileDown size={13} /> PDF
           </button>
-          <button type="button" className="btn-icon" aria-label="Paramètres" onClick={() => setShowSettings(true)}>
+          <button type="button" className="btn-icon disabled:opacity-40 disabled:cursor-not-allowed" aria-label="Paramètres" title={isReadOnly ? 'Lecture seule' : 'Paramètres du projet'} onClick={() => setShowSettings(true)} disabled={isReadOnly}>
             <Settings size={14} />
           </button>
 
@@ -403,6 +468,22 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
         </div>
       </header>
 
+      {/* Lock banner */}
+      {lockStatus === 'locked_by_other' && (
+        <div
+          className="flex items-center gap-2 border-b px-5 py-2 text-[12px]"
+          style={{ background: 'rgba(249,115,22,0.08)', borderColor: 'var(--bdr)', color: '#f97316' }}
+        >
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+            <rect x="3" y="6" width="8" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.3"/>
+            <path d="M5 6V4.5a2 2 0 1 1 4 0V6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+          </svg>
+          Édition en cours par{' '}
+          <strong>{lockInfo?.lockedByDisplayName ?? 'un autre utilisateur'}</strong>.{' '}
+          Vous êtes en lecture seule.
+        </div>
+      )}
+
       {/* Tab bar */}
       <div className="shell-tabs px-1">
         {([
@@ -432,14 +513,14 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
       <main className="flex flex-1 overflow-hidden">
         {tab === 'PLAN' && <PlanEditor onNavigateBack={() => router.push('/')} />}
         {tab === 'QUANTITIES' && (
-          <div id="print-target" className="flex flex-1 overflow-hidden">
+          <div className="flex flex-1 overflow-hidden">
             <QuantitiesPanel />
           </div>
         )}
         {tab === 'TILING' && (
-          <div id="print-target" className="flex flex-1 overflow-hidden">
+          <div className="flex flex-1 overflow-hidden">
             <TilingEditor
-              rooms={activeProject.rooms}
+              rooms={rooms}
               config={activeProject.config}
               wallThickness={activeProject.wallThickness}
               setConfig={setConfig}
@@ -447,6 +528,15 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
           </div>
         )}
       </main>
+
+      {/* Cible d'impression — portal sur document.body pour que @media print
+          puisse masquer tous les autres enfants de body sans position:fixed */}
+      {printMounted && createPortal(
+        <div id="quantities-print-target">
+          {activeProject && <QuantitiesPrintView project={activeProject} rooms={rooms} doorOpenings={doorOpenings} />}
+        </div>,
+        document.body,
+      )}
 
       {/* Settings Modal */}
       {showSettings && (

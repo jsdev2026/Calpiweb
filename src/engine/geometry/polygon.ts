@@ -1,4 +1,5 @@
 import type { Point } from '@/types/plan';
+import type { Room } from '@/types/project';
 
 export interface BoundingBox {
   minX: number;
@@ -77,3 +78,52 @@ export const getBoundingBox = (pts: Point[]): BoundingBox => {
     maxY: Math.max(...ys),
   };
 };
+
+/** Line–line intersection (infinite lines). Returns null if lines are parallel. */
+function lineIntersect(A: Point, B: Point, C: Point, D: Point): Point | null {
+  const denom = (D.y - C.y) * (B.x - A.x) - (D.x - C.x) * (B.y - A.y);
+  if (Math.abs(denom) < 1e-9) return null;
+  const t = ((D.x - C.x) * (A.y - C.y) - (D.y - C.y) * (A.x - C.x)) / denom;
+  return { x: A.x + (B.x - A.x) * t, y: A.y + (B.y - A.y) * t };
+}
+
+/**
+ * Returns the room polygon inset inward by half each wall's thickness.
+ * For edge i: inset = (room.edgeThicknesses?.[i] ?? defaultThickness) / 2.
+ * Winding-aware: detects CW/CCW from shoelace and picks the correct inward normal.
+ */
+export function insetRoomPolygon(room: Room, defaultThickness: number): Point[] {
+  const pts = room.points;
+  const n = pts.length;
+  if (n < 3) return pts;
+
+  // Shoelace to detect winding. > 0 → CW in y-down (standard room convention).
+  let shoelace = 0;
+  for (let i = 0; i < n; i++) {
+    const p = pts[i]!;
+    const q = pts[(i + 1) % n]!;
+    shoelace += p.x * q.y - q.x * p.y;
+  }
+  if (Math.abs(shoelace) < 1e-9) return pts; // degenerate (collinear) polygon
+  // CW in y-down → inward is left of edge direction: normal = (-dy, dx).
+  // CCW in y-down → inward is right of edge direction: normal = (dy, -dx).
+  const sign = shoelace > 0 ? 1 : -1;
+
+  const offsetEdges = pts.map((p, i) => {
+    const q = pts[(i + 1) % n]!;
+    const t = room.edgeThicknesses?.[i] ?? defaultThickness;
+    const inset = t / 2;
+    const dx = q.x - p.x;
+    const dy = q.y - p.y;
+    const len = Math.sqrt(dx * dx + dy * dy);
+    if (len < 1e-9) return { p1: p, p2: q };
+    const nx = sign * (-dy / len) * inset;
+    const ny = sign * (dx / len) * inset;
+    return { p1: { x: p.x + nx, y: p.y + ny }, p2: { x: q.x + nx, y: q.y + ny } };
+  });
+
+  return offsetEdges.map((edge, i) => {
+    const prev = offsetEdges[(i + n - 1) % n]!;
+    return lineIntersect(prev.p1, prev.p2, edge.p1, edge.p2) ?? edge.p1;
+  });
+}

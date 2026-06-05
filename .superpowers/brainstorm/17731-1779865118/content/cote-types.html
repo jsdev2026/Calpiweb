@@ -1,0 +1,198 @@
+<h2>Quels types de références de cote avez-vous besoin ?</h2>
+<p class="subtitle">En construction, une cote peut se mesurer depuis différentes faces de mur. Cochez tous ceux qui s'appliquent à votre usage.</p>
+
+<style>
+.wall-diagram {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 10px 10px;
+}
+.wall-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  height: 54px;
+  width: 100%;
+}
+.wall-block {
+  background: #78716c;
+  border: 2px solid #57534e;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: #d6d3d1;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+.interior-space {
+  background: rgba(251,191,36,0.08);
+  border-top: 1px dashed #78716c;
+  border-bottom: 1px dashed #78716c;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+}
+.dim-arrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+}
+.arrow-line {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  position: relative;
+}
+.h-line {
+  height: 2px;
+  flex: 1;
+}
+.arrow-head-left::before {
+  content: '◄';
+  font-size: 10px;
+  line-height: 1;
+}
+.arrow-head-right::after {
+  content: '►';
+  font-size: 10px;
+  line-height: 1;
+}
+.dim-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+.ref-tick {
+  width: 2px;
+  height: 16px;
+  position: absolute;
+}
+.tick-left { left: 0; }
+.tick-right { right: 0; }
+
+.options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 600px) { .options { grid-template-columns: 1fr; } }
+
+.option { border-radius: 12px; }
+</style>
+
+<div class="options" data-multiselect>
+
+  <!-- A: Intérieur à intérieur -->
+  <div class="option" data-choice="ii" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Intérieur → Intérieur</h3>
+      <p>Face intérieure d'un mur à la face intérieure de l'autre — cote de passage libre</p>
+      <div class="wall-diagram">
+        <div class="wall-row">
+          <div class="wall-block" style="width:22px;height:100%;writing-mode:vertical-lr;font-size:8px;">MUR</div>
+          <div class="interior-space" style="flex:1;"></div>
+          <div class="wall-block" style="width:22px;height:100%;writing-mode:vertical-lr;font-size:8px;">MUR</div>
+        </div>
+        <div class="dim-arrow">
+          <div class="arrow-line">
+            <span class="arrow-head-left" style="color:#22c55e;font-size:10px;">◄</span>
+            <div class="h-line" style="background:#22c55e;"></div>
+            <span class="arrow-head-right" style="color:#22c55e;font-size:10px;">►</span>
+            <div class="ref-tick tick-left" style="background:#22c55e;left:10px;"></div>
+            <div class="ref-tick tick-right" style="background:#22c55e;right:10px;"></div>
+          </div>
+          <span class="dim-label" style="color:#22c55e;">← Cote intérieure →</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- B: Extérieur à extérieur -->
+  <div class="option" data-choice="ee" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Extérieur → Extérieur</h3>
+      <p>Face extérieure d'un mur à la face extérieure de l'autre — cote hors-tout</p>
+      <div class="wall-diagram">
+        <div class="wall-row">
+          <div class="wall-block" style="width:22px;height:100%;writing-mode:vertical-lr;font-size:8px;">MUR</div>
+          <div class="interior-space" style="flex:1;"></div>
+          <div class="wall-block" style="width:22px;height:100%;writing-mode:vertical-lr;font-size:8px;">MUR</div>
+        </div>
+        <div class="dim-arrow">
+          <div class="arrow-line">
+            <span style="color:#3b82f6;font-size:10px;">◄</span>
+            <div class="h-line" style="background:#3b82f6;"></div>
+            <span style="color:#3b82f6;font-size:10px;">►</span>
+            <div class="ref-tick tick-left" style="background:#3b82f6;left:0;"></div>
+            <div class="ref-tick tick-right" style="background:#3b82f6;right:0;"></div>
+          </div>
+          <span class="dim-label" style="color:#3b82f6;">← Cote extérieure →</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- C: Axe à axe -->
+  <div class="option" data-choice="aa" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Axe → Axe</h3>
+      <p>Milieu d'un mur au milieu de l'autre — cote d'axe, souvent utilisée en structure</p>
+      <div class="wall-diagram">
+        <div class="wall-row">
+          <div class="wall-block" style="width:22px;height:100%;writing-mode:vertical-lr;font-size:8px;">MUR</div>
+          <div class="interior-space" style="flex:1;"></div>
+          <div class="wall-block" style="width:22px;height:100%;writing-mode:vertical-lr;font-size:8px;">MUR</div>
+        </div>
+        <div class="dim-arrow">
+          <div class="arrow-line">
+            <span style="color:#a855f7;font-size:10px;">◄</span>
+            <div class="h-line" style="background:#a855f7;"></div>
+            <span style="color:#a855f7;font-size:10px;">►</span>
+            <div class="ref-tick tick-left" style="background:#a855f7;left:11px;"></div>
+            <div class="ref-tick tick-right" style="background:#a855f7;right:11px;"></div>
+          </div>
+          <span class="dim-label" style="color:#a855f7;">← Cote d'axe →</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- D: Mixte -->
+  <div class="option" data-choice="mix" onclick="toggleSelect(this)">
+    <div class="letter">D</div>
+    <div class="content">
+      <h3>Mixte (libre)</h3>
+      <p>Choix indépendant pour chaque extrémité — ex. intérieur d'un côté, extérieur de l'autre</p>
+      <div class="wall-diagram">
+        <div class="wall-row">
+          <div class="wall-block" style="width:22px;height:100%;writing-mode:vertical-lr;font-size:8px;">MUR</div>
+          <div class="interior-space" style="flex:1;"></div>
+          <div class="wall-block" style="width:22px;height:100%;writing-mode:vertical-lr;font-size:8px;">MUR</div>
+        </div>
+        <div class="dim-arrow">
+          <div class="arrow-line">
+            <span style="color:#f59e0b;font-size:10px;">◄</span>
+            <div class="h-line" style="background:linear-gradient(to right,#22c55e,#3b82f6);"></div>
+            <span style="color:#f59e0b;font-size:10px;">►</span>
+            <div class="ref-tick tick-left" style="background:#22c55e;left:10px;"></div>
+            <div class="ref-tick tick-right" style="background:#3b82f6;right:0;"></div>
+          </div>
+          <span class="dim-label" style="color:#f59e0b;">← Int. / Ext. →</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top:16px;">Sélection multiple possible — cochez tout ce dont vous avez besoin sur le terrain.</p>

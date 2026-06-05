@@ -2,11 +2,13 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { List, LayoutGrid, LogOut, Moon, Plus, Search, Settings, Sun, X } from 'lucide-react';
+import { List, LayoutGrid, LogOut, Moon, Plus, Search, Settings, Share2, Sun, X } from 'lucide-react';
 import { useProjectStore } from '@/store/projectStore';
 import { useUiStore } from '@/store/uiStore';
 import type { Project, ProjectStatus } from '@/types/project';
 import { NewProjectModal } from '@/components/NewProjectModal';
+import { SharePanel } from '@/components/home/SharePanel';
+import { UpgradeModal } from '@/components/home/UpgradeModal';
 import type { ClientInfo } from '@/types/project';
 
 const STATUS_LABELS: Record<ProjectStatus, string> = { new: 'Nouveau', wip: 'En cours', done: 'Terminé' };
@@ -48,7 +50,7 @@ const PlanMiniature = ({ project, size = 140 }: { project: Project; size?: numbe
   const oy = (size - h * s) / 2 - minY * s;
 
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ display: 'block', background: 'var(--surf2)' }}>
+    <svg width="100%" height="100%" viewBox={`0 0 ${size} ${size}`} preserveAspectRatio="xMidYMid meet" style={{ display: 'block', background: 'var(--surf2)' }}>
       {project.rooms.map((room) => {
         if (room.points.length < 3) return null;
         const pts = room.points.map((p) => `${p.x * s + ox},${p.y * s + oy}`).join(' ');
@@ -285,8 +287,8 @@ const ProjectSettingsModal = ({
 // ── Project card (grid view) ──────────────────────────────────────────────────
 
 const ProjectCard = ({
-  project, onOpen, onDelete, onSettings,
-}: { project: Project; onOpen: () => void; onDelete: () => void; onSettings: (e: React.MouseEvent) => void }) => {
+  project, onOpen, onDelete, onSettings, onShare,
+}: { project: Project; onOpen: () => void; onDelete: () => void; onSettings: (e: React.MouseEvent) => void; onShare: () => void }) => {
   const handleDelete = (e: React.MouseEvent) => { e.stopPropagation(); onDelete(); };
   const handleSettings = (e: React.MouseEvent) => { e.stopPropagation(); onSettings(e); };
 
@@ -301,7 +303,7 @@ const ProjectCard = ({
       onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.transform = ''; (e.currentTarget as HTMLDivElement).style.boxShadow = 'var(--sh)'; }}
     >
       {/* Miniature */}
-      <div className="relative overflow-hidden" style={{ height: 140 }}>
+      <div className="relative overflow-hidden w-full" style={{ height: 140 }}>
         <PlanMiniature project={project} size={140} />
         <button
           type="button" onClick={handleSettings}
@@ -312,6 +314,17 @@ const ProjectCard = ({
           onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--muted)'; }}>
           <Settings size={11} />
         </button>
+        {(!project.myRole || project.myRole === 'owner') && (
+          <button
+            type="button" onClick={(e) => { e.stopPropagation(); onShare(); }}
+            aria-label="Partager"
+            className="absolute left-10 top-2 flex h-6 w-6 items-center justify-center rounded-md opacity-0 transition-opacity group-hover:opacity-100"
+            style={{ background: 'var(--surf)', color: 'var(--muted)', border: '1px solid var(--bdr)' }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--accent)'; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--muted)'; }}>
+            <Share2 size={11} />
+          </button>
+        )}
         <button
           type="button" onClick={handleDelete}
           aria-label="Supprimer"
@@ -339,9 +352,16 @@ const ProjectCard = ({
         <span className="text-[11px]" style={{ color: 'var(--muted)' }}>
           {new Date(project.updatedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
         </span>
-        <span className={`rounded-full px-2 py-0.5 text-[10.5px] font-semibold ${STATUS_CLASS[project.status]}`}>
-          {STATUS_LABELS[project.status]}
-        </span>
+        <div className="flex items-center gap-1.5">
+          {(project.myRole === 'viewer' || project.myRole === 'editor') && (
+            <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold" style={{ background: 'var(--accent-l)', color: 'var(--accent)', border: '1px solid var(--accent)' }}>
+              {project.myRole === 'editor' ? 'Éditeur' : 'Lecteur'}
+            </span>
+          )}
+          <span className={`rounded-full px-2 py-0.5 text-[10.5px] font-semibold ${STATUS_CLASS[project.status]}`}>
+            {STATUS_LABELS[project.status]}
+          </span>
+        </div>
       </div>
     </div>
   );
@@ -350,8 +370,8 @@ const ProjectCard = ({
 // ── Project row (list view) ───────────────────────────────────────────────────
 
 const ProjectRow = ({
-  project, onOpen, onDelete, onSettings,
-}: { project: Project; onOpen: () => void; onDelete: () => void; onSettings: (e: React.MouseEvent) => void }) => {
+  project, onOpen, onDelete, onSettings, onShare,
+}: { project: Project; onOpen: () => void; onDelete: () => void; onSettings: (e: React.MouseEvent) => void; onShare: () => void }) => {
   const handleDelete = (e: React.MouseEvent) => { e.stopPropagation(); onDelete(); };
   const handleSettings = (e: React.MouseEvent) => { e.stopPropagation(); onSettings(e); };
 
@@ -386,7 +406,18 @@ const ProjectRow = ({
         </span>
       </div>
 
-      {/* Settings + Delete */}
+      {/* Share + Settings + Delete */}
+      {(!project.myRole || project.myRole === 'owner') && (
+        <button
+          type="button" onClick={(e) => { e.stopPropagation(); onShare(); }}
+          aria-label="Partager"
+          className="shrink-0 rounded p-1 opacity-0 transition-opacity group-hover:opacity-100"
+          style={{ color: 'var(--muted)' }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--accent)'; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--muted)'; }}>
+          <Share2 size={14} />
+        </button>
+      )}
       <button
         type="button" onClick={handleSettings}
         className="shrink-0 rounded p-1 opacity-0 transition-opacity group-hover:opacity-100"
@@ -434,6 +465,8 @@ export default function DashboardPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [settingsProjectId, setSettingsProjectId] = useState<string | null>(null);
+  const [sharingProjectId, setSharingProjectId] = useState<string | null>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
@@ -462,6 +495,14 @@ export default function DashboardPage() {
         setCreateError(msg);
         console.error('Erreur création projet:', err);
       }
+    }
+  };
+
+  const handleNewProject = () => {
+    if (user?.plan === 'free' && projects.length >= 1) {
+      setShowUpgradeModal(true);
+    } else {
+      setShowNewModal(true);
     }
   };
 
@@ -684,12 +725,13 @@ export default function DashboardPage() {
                 onOpen={() => handleOpen(p)}
                 onDelete={() => { if (confirm('Supprimer ce projet ?')) void removeProject(p.id); }}
                 onSettings={() => { setActive(p.id); setSettingsProjectId(p.id); }}
+                onShare={() => setSharingProjectId(p.id)}
               />
             ))}
             {/* New project card — hidden on mobile (FAB is used instead) */}
             <button
               type="button"
-              onClick={() => setShowNewModal(true)}
+              onClick={handleNewProject}
               className="group hidden md:flex flex-col items-center justify-center gap-3 rounded-[var(--r)] border-2 border-dashed transition-all"
               style={{ minHeight: 200, borderColor: 'var(--bdr2)', color: 'var(--muted)', cursor: 'pointer', background: 'transparent' }}
               onMouseEnter={(e) => { const el = e.currentTarget as HTMLButtonElement; el.style.borderColor = 'var(--accent)'; el.style.background = 'var(--accent-l)'; el.style.color = 'var(--accent)'; }}
@@ -720,11 +762,12 @@ export default function DashboardPage() {
                 onOpen={() => handleOpen(p)}
                 onDelete={() => { if (confirm('Supprimer ce projet ?')) void removeProject(p.id); }}
                 onSettings={() => { setActive(p.id); setSettingsProjectId(p.id); }}
+                onShare={() => setSharingProjectId(p.id)}
               />
             ))}
             <button
               type="button"
-              onClick={() => setShowNewModal(true)}
+              onClick={handleNewProject}
               className="flex items-center gap-3 rounded-[var(--rs)] border-2 border-dashed px-4 py-3 transition-all"
               style={{ borderColor: 'var(--bdr2)', color: 'var(--muted)', cursor: 'pointer', background: 'transparent' }}
               onMouseEnter={(e) => { const el = e.currentTarget as HTMLButtonElement; el.style.borderColor = 'var(--accent)'; el.style.color = 'var(--accent)'; el.style.background = 'var(--accent-l)'; }}
@@ -742,7 +785,7 @@ export default function DashboardPage() {
       {/* FAB — mobile only */}
       <button
         type="button"
-        onClick={() => setShowNewModal(true)}
+        onClick={handleNewProject}
         className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-2xl md:hidden"
         style={{ background: 'var(--accent)', color: '#fff' }}
         aria-label="Nouveau projet"
@@ -758,11 +801,22 @@ export default function DashboardPage() {
         />
       )}
 
+      {showUpgradeModal && (
+        <UpgradeModal onClose={() => setShowUpgradeModal(false)} />
+      )}
+
       {settingsProject && (
         <ProjectSettingsModal
           project={settingsProject}
           onClose={() => setSettingsProjectId(null)}
           onSave={handleSaveSettings}
+        />
+      )}
+
+      {sharingProjectId !== null && (
+        <SharePanel
+          projectId={sharingProjectId}
+          onClose={() => setSharingProjectId(null)}
         />
       )}
     </div>

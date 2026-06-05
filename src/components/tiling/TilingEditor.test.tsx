@@ -5,8 +5,13 @@ import { describe, it, expect, vi, beforeAll } from 'vitest';
 vi.mock('./TilingCanvas', () => ({ TilingCanvas: () => <div data-testid="tiling-canvas" /> }));
 vi.mock('./TilingControls', () => ({ TilingControls: () => <div data-testid="tiling-controls" /> }));
 vi.mock('@/components/results/ResultsPanel', () => ({ ResultsPanel: () => <div data-testid="results-panel" /> }));
-vi.mock('@/engine/tiling/tilingEngine', () => ({
-  computeTilingMultiRoom: () => ({ tiles: [], stats: { totalTiles: 0, wholeTiles: 0, cutTiles: 0, reusedTiles: 0, wastePercent: 0, surface: 0, cutGroups: [] } }),
+vi.mock('@/engine/quantities/quantityEngine', () => ({
+  analyzeQuantities: () => ({
+    tileW: 300, tileH: 300, joint: 3,
+    wholeCount: 0, cuts: [], cutGroups: [],
+    totalReuseCount: 0, tilesForCuts: 0, totalTiles: 0, toOrder: 0, roomArea: 0,
+    tiles: [],
+  }),
 }));
 vi.mock('@/engine/geometry/polygon', () => ({ getBoundingBox: () => ({ minX: 0, minY: 0, maxX: 100, maxY: 100 }) }));
 
@@ -42,5 +47,19 @@ describe('TilingEditor mobile tabs', () => {
     const reglagesBtn = screen.getByRole('button', { name: /Réglages/i });
     fireEvent.click(reglagesBtn);
     expect(reglagesBtn.getAttribute('data-active')).toBe('true');
+  });
+});
+
+describe('TilingEditor controls bar', () => {
+  it('renders Déc. X and Déc. Y as separate rows', () => {
+    render(<TilingEditor rooms={[]} config={config} wallThickness={0} setConfig={() => {}} />);
+    expect(screen.getByTestId('dec-x-row')).toBeDefined();
+    expect(screen.getByTestId('dec-y-row')).toBeDefined();
+  });
+
+  it('controls bar className includes bottom-20', () => {
+    render(<TilingEditor rooms={[]} config={config} wallThickness={0} setConfig={() => {}} />);
+    const bar = screen.getByTestId('controls-bar');
+    expect(bar.className).toContain('bottom-20');
   });
 });

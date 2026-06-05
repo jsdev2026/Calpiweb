@@ -1,0 +1,93 @@
+<h2>Rendu des côtes tiling — quelle approche ?</h2>
+<p class="subtitle">Le problème actuel : la police déborde du cadre, les flèches changent de taille selon le zoom. Deux approches pour corriger ça.</p>
+
+<div class="section">
+  <h3 style="margin-bottom:12px;">Problème actuel</h3>
+  <div class="mockup">
+    <div class="mockup-header">État actuel — taille fixe en coordonnées monde</div>
+    <div class="mockup-body" style="padding:32px 24px;">
+      <svg width="100%" height="140" viewBox="0 0 700 140">
+        <!-- Dim line current style -->
+        <line x1="80" y1="90" x2="620" y2="90" stroke="#f97316" stroke-width="2"/>
+        <!-- Extension lines -->
+        <line x1="80" y1="70" x2="80" y2="100" stroke="#94a3b8" stroke-width="1.2"/>
+        <line x1="620" y1="70" x2="620" y2="100" stroke="#94a3b8" stroke-width="1.2"/>
+        <!-- Arrowheads -->
+        <polygon points="80,90 95,84 95,96" fill="#f97316"/>
+        <polygon points="620,90 605,84 605,96" fill="#f97316"/>
+        <!-- Label pill — too tall, font overflows -->
+        <rect x="290" y="62" width="120" height="55" fill="white" rx="8" stroke="#e2e8f0" stroke-width="1"/>
+        <!-- Font too big for the pill -->
+        <text x="350" y="101" text-anchor="middle" font-size="38" fill="#0f172a" font-weight="700">310</text>
+        <text x="205" y="30" text-anchor="middle" font-size="11" fill="#94a3b8">← police déborde du cadre au zoom avant</text>
+        <text x="498" y="30" text-anchor="middle" font-size="11" fill="#94a3b8">flèches trop petites au zoom arrière →</text>
+        <line x1="205" y1="35" x2="310" y2="70" stroke="#94a3b8" stroke-width="0.7" stroke-dasharray="3,2"/>
+        <line x1="498" y1="35" x2="605" y2="73" stroke="#94a3b8" stroke-width="0.7" stroke-dasharray="3,2"/>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<div class="cards" style="margin-top:24px;">
+
+  <div class="card" data-choice="A" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:20px 16px; background:var(--bg2); border-radius:8px 8px 0 0;">
+      <svg width="100%" height="120" viewBox="0 0 500 120">
+        <!-- Option A: Scale-invariant — sizes stay constant in screen pixels -->
+        <line x1="60" y1="70" x2="440" y2="70" stroke="#f97316" stroke-width="2"/>
+        <line x1="60" y1="50" x2="60" y2="82" stroke="#94a3b8" stroke-width="1.2"/>
+        <line x1="440" y1="50" x2="440" y2="82" stroke="#94a3b8" stroke-width="1.2"/>
+        <polygon points="60,70 76,64 76,76" fill="#f97316"/>
+        <polygon points="440,70 424,64 424,76" fill="#f97316"/>
+        <!-- Pill sized to text, font fixed size -->
+        <rect x="210" y="52" width="80" height="28" fill="white" rx="6" stroke="#e2e8f0" stroke-width="1"/>
+        <text x="250" y="71" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">310 cm</text>
+        <text x="250" y="18" text-anchor="middle" font-size="10" fill="#64748b" font-style="italic">même apparence à tous les niveaux de zoom</text>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>A — Taille invariante au zoom</h3>
+      <p>La police, les flèches et le cadre ont une taille fixe <em>en pixels écran</em>, quelle que soit l'échelle. On passe le <code>scale</code> en prop et on divise toutes les tailles par <code>scale</code>.</p>
+      <div class="pros-cons" style="margin-top:8px;">
+        <div class="pros"><h4>+</h4><ul><li>Toujours lisible</li><li>Comportement standard des CAO</li></ul></div>
+        <div class="cons"><h4>−</h4><ul><li>Nécessite de propager <code>scale</code> jusqu'à DimLine</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" data-choice="B" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:20px 16px; background:var(--bg2); border-radius:8px 8px 0 0;">
+      <svg width="100%" height="120" viewBox="0 0 500 120">
+        <!-- Option B: Proportional to dim length -->
+        <!-- Short dimension -->
+        <line x1="60" y1="50" x2="200" y2="50" stroke="#f97316" stroke-width="2"/>
+        <line x1="60" y1="36" x2="60" y2="58" stroke="#94a3b8" stroke-width="1.2"/>
+        <line x1="200" y1="36" x2="200" y2="58" stroke="#94a3b8" stroke-width="1.2"/>
+        <polygon points="60,50 72,45 72,55" fill="#f97316"/>
+        <polygon points="200,50 188,45 188,55" fill="#f97316"/>
+        <rect x="102" y="37" width="56" height="20" fill="white" rx="4" stroke="#e2e8f0" stroke-width="1"/>
+        <text x="130" y="51" text-anchor="middle" font-size="11" fill="#0f172a" font-weight="700">85 cm</text>
+        <!-- Long dimension -->
+        <line x1="60" y1="90" x2="440" y2="90" stroke="#f97316" stroke-width="2"/>
+        <line x1="60" y1="76" x2="60" y2="98" stroke="#94a3b8" stroke-width="1.2"/>
+        <line x1="440" y1="76" x2="440" y2="98" stroke="#94a3b8" stroke-width="1.2"/>
+        <polygon points="60,90 80,83 80,97" fill="#f97316"/>
+        <polygon points="440,90 420,83 420,97" fill="#f97316"/>
+        <rect x="210" y="74" width="80" height="28" fill="white" rx="6" stroke="#e2e8f0" stroke-width="1"/>
+        <text x="250" y="93" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">310 cm</text>
+        <text x="380" y="18" text-anchor="middle" font-size="10" fill="#64748b" font-style="italic">taille proportionnelle à la longueur mesurée</text>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>B — Taille proportionnelle à la côte</h3>
+      <p>La taille des éléments reste proportionnelle à la longueur mesurée, mais on fixe le ratio pour que le cadre contienne toujours le texte. Les petites côtes ont des petites flèches.</p>
+      <div class="pros-cons" style="margin-top:8px;">
+        <div class="pros"><h4>+</h4><ul><li>Pas besoin de propager <code>scale</code></li><li>Cohérent avec les coords monde</li></ul></div>
+        <div class="cons"><h4>−</h4><ul><li>Illisible sur les petites côtes zoomées</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<p style="margin-top:20px; font-size:13px; color:var(--muted);">Clique sur une option ou réponds dans le terminal.</p>

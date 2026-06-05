@@ -1,0 +1,73 @@
+<h2>Topbar mobile — quelle option ?</h2>
+<p class="subtitle">375px — iPhone SE. Éléments conservés sur mobile en <span style="color:#f97316;font-weight:700">orange</span>, masqués en grisé.</p>
+
+<div class="cards">
+
+  <!-- Option A -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:16px 12px;background:#f8fafc;border-radius:10px 10px 0 0">
+      <div style="display:flex;align-items:center;gap:6px;height:44px;background:#fff;border-radius:8px;border:1px solid #e2e8f0;padding:0 10px;font-size:11px;font-family:system-ui;box-shadow:0 1px 3px rgba(0,0,0,.06)">
+        <!-- back -->
+        <span style="color:#f97316;font-size:16px;flex-shrink:0">‹</span>
+        <!-- name input -->
+        <span style="color:#f97316;font-weight:600;font-size:12px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Salle de bain RDC</span>
+        <!-- actions -->
+        <span style="color:#f97316;font-size:13px;margin-left:auto">☀</span>
+        <span style="color:#f97316;font-size:13px">⚙</span>
+        <!-- avatar seul, pas de badge -->
+        <span style="background:#f97316;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0">JS</span>
+      </div>
+      <p style="font-size:10px;color:#94a3b8;margin-top:6px;text-align:center">Badge plan masqué sur mobile</p>
+    </div>
+    <div class="card-body">
+      <h3>A — Avatar seul</h3>
+      <p>Le badge "Gratuit" / "Pro" est masqué sur mobile. Seul l'avatar reste. Le menu déroulant s'ouvre normalement au tap.</p>
+    </div>
+  </div>
+
+  <!-- Option B -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:16px 12px;background:#f8fafc;border-radius:10px 10px 0 0">
+      <div style="display:flex;align-items:center;gap:6px;height:44px;background:#fff;border-radius:8px;border:1px solid #e2e8f0;padding:0 10px;font-size:11px;font-family:system-ui;box-shadow:0 1px 3px rgba(0,0,0,.06)">
+        <span style="color:#f97316;font-size:16px;flex-shrink:0">‹</span>
+        <!-- name tronqué strict -->
+        <span style="color:#f97316;font-weight:600;font-size:12px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Salle de bain…</span>
+        <span style="color:#f97316;font-size:13px;margin-left:auto">☀</span>
+        <span style="color:#f97316;font-size:13px">⚙</span>
+        <!-- avatar + badge -->
+        <span style="display:flex;align-items:center;gap:4px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:6px;padding:3px 6px;flex-shrink:0">
+          <span style="background:#f97316;color:#fff;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700">JS</span>
+          <span style="font-size:9px;font-weight:600;color:#f97316">Pro</span>
+        </span>
+      </div>
+      <p style="font-size:10px;color:#94a3b8;margin-top:6px;text-align:center">Nom tronqué à 100px, badge conservé</p>
+    </div>
+    <div class="card-body">
+      <h3>B — Nom tronqué + badge</h3>
+      <p>Le nom du projet est limité à ~100px avec ellipsis. Le badge plan reste visible. Tout tient sur 375px.</p>
+    </div>
+  </div>
+
+  <!-- Option C -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:16px 12px;background:#f8fafc;border-radius:10px 10px 0 0">
+      <div style="display:flex;align-items:center;gap:6px;height:44px;background:#fff;border-radius:8px;border:1px solid #e2e8f0;padding:0 10px;font-size:11px;font-family:system-ui;box-shadow:0 1px 3px rgba(0,0,0,.06)">
+        <span style="color:#f97316;font-size:16px;flex-shrink:0">‹</span>
+        <!-- pas de nom, juste flex-1 vide -->
+        <span style="flex:1"></span>
+        <span style="color:#f97316;font-size:13px">☀</span>
+        <span style="color:#f97316;font-size:13px">⚙</span>
+        <span style="display:flex;align-items:center;gap:4px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:6px;padding:3px 6px;flex-shrink:0">
+          <span style="background:#f97316;color:#fff;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700">JS</span>
+          <span style="font-size:9px;font-weight:600;color:#64748b">Gratuit</span>
+        </span>
+      </div>
+      <p style="font-size:10px;color:#94a3b8;margin-top:6px;text-align:center">Nom masqué (visible via ⚙ Settings)</p>
+    </div>
+    <div class="card-body">
+      <h3>C — Nom masqué</h3>
+      <p>Le nom du projet disparaît de la topbar sur mobile. Il reste modifiable via l'icône Settings. Topbar ultra-compacte.</p>
+    </div>
+  </div>
+
+</div>

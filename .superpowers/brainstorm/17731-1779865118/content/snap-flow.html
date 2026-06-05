@@ -1,0 +1,172 @@
+<h2>Flow de l'outil DIMENSION — style CAD</h2>
+<p class="subtitle">Validation du comportement attendu étape par étape. Dites-moi si cela correspond à ce que vous imaginez.</p>
+
+<style>
+svg.plan { font-family: system-ui; }
+.step-block {
+  background: #0f0f11;
+  border: 1px solid #27272a;
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+.step-num {
+  flex-shrink: 0;
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: #1d4ed8;
+  color: white;
+  font-size: 12px;
+  font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+}
+.step-body h4 { margin: 0 0 4px; font-size: 13px; color: #f4f4f5; font-weight: 700; }
+.step-body p  { margin: 0; font-size: 11px; color: #71717a; line-height: 1.5; }
+.step-body em { color: #f97316; font-style: normal; font-weight: 700; }
+
+.steps-grid { display: flex; flex-direction: column; gap: 10px; }
+
+.snap-legend {
+  display: flex; gap: 12px; flex-wrap: wrap;
+  background: #18181b; border-radius: 8px; padding: 8px 12px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.05em;
+}
+.snap-legend span { display: flex; align-items: center; gap: 5px; }
+.snap-dot-lg { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+</style>
+
+<!-- Légende snaps -->
+<div class="snap-legend" style="margin-bottom:14px;">
+  <span><span class="snap-dot-lg" style="background:#22c55e;border:2px solid white;"></span> Face intérieure (I)</span>
+  <span><span class="snap-dot-lg" style="background:#a855f7;border:2px solid white;"></span> Axe / milieu (A)</span>
+  <span><span class="snap-dot-lg" style="background:#3b82f6;border:2px solid white;"></span> Face extérieure (E)</span>
+  <span><span class="snap-dot-lg" style="background:#f97316;border:2px solid white;"></span> Point de référence confirmé</span>
+</div>
+
+<!-- SVG Illustration du flow -->
+<div style="background:#0f0f11;border-radius:12px;padding:16px;margin-bottom:16px;overflow-x:auto;">
+<svg width="100%" viewBox="0 0 900 220" class="plan">
+  <defs>
+    <marker id="arr" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" fill="#f97316"/>
+    </marker>
+    <marker id="arr-dim" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" fill="#22c55e"/>
+    </marker>
+    <marker id="arr-dim-r" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto-start-reverse">
+      <path d="M0,0 L6,3 L0,6 Z" fill="#22c55e"/>
+    </marker>
+  </defs>
+
+  <!-- ÉTAPE 1: hover mur gauche -->
+  <!-- Mur gauche -->
+  <rect x="40" y="40" width="28" height="160" fill="#57534e" rx="2"/>
+  <text x="54" y="205" text-anchor="middle" font-size="9" fill="#71717a">Mur 1</text>
+  <!-- Snap dots sur mur gauche -->
+  <circle cx="68" cy="120" r="6" fill="#22c55e" stroke="white" stroke-width="2"/> <!-- inside -->
+  <circle cx="54" cy="120" r="5" fill="#a855f7" stroke="white" stroke-width="1.5"/> <!-- axis -->
+  <circle cx="40" cy="120" r="4" fill="#3b82f6" stroke="white" stroke-width="1.5" opacity="0.6"/> <!-- outside -->
+  <!-- Cursor near inside face -->
+  <text x="78" cy="120" y="120" font-size="11" fill="#22c55e">← curseur</text>
+  <text x="40" y="22" font-size="10" fill="#52525b" font-weight="700">① Hover → 3 snaps apparaissent</text>
+
+  <!-- Séparateur -->
+  <line x1="170" y1="10" x2="170" y2="215" stroke="#27272a" stroke-width="1.5" stroke-dasharray="4,4"/>
+
+  <!-- ÉTAPE 2: 1er clic confirmé -->
+  <rect x="195" y="40" width="28" height="160" fill="#57534e" rx="2"/>
+  <!-- Snap confirmé (orange) -->
+  <circle cx="223" cy="120" r="8" fill="#f97316" stroke="white" stroke-width="2"/>
+  <text x="223" y="113" text-anchor="middle" font-size="8" fill="white" font-weight="800">I</text>
+  <!-- Ligne preview vers curseur -->
+  <line x1="223" y1="120" x2="330" y2="120" stroke="#f97316" stroke-width="2" stroke-dasharray="8,5" opacity="0.7"/>
+  <!-- Curseur -->
+  <text x="332" y="124" font-size="11" fill="#f97316">+</text>
+  <!-- Label H distance -->
+  <rect x="245" y="108" width="60" height="16" fill="#1e1b18" rx="4"/>
+  <text x="275" y="120" text-anchor="middle" font-size="9" fill="#f97316cc" font-weight="700">H  42.3 cm</text>
+  <text x="195" y="22" font-size="10" fill="#52525b" font-weight="700">② Clic → 1er point fixé (face I)</text>
+
+  <!-- Séparateur -->
+  <line x1="380" y1="10" x2="380" y2="215" stroke="#27272a" stroke-width="1.5" stroke-dasharray="4,4"/>
+
+  <!-- ÉTAPE 3: hover mur droit -->
+  <rect x="405" y="40" width="28" height="160" fill="#57534e" rx="2"/>
+  <rect x="570" y="40" width="28" height="160" fill="#57534e" rx="2"/>
+  <text x="570" y="205" text-anchor="middle" font-size="9" fill="#71717a">Mur 2</text>
+  <!-- Point fixé sur mur 1 -->
+  <circle cx="405" cy="120" r="7" fill="#f97316" stroke="white" stroke-width="2"/>
+  <text x="405" y="113" text-anchor="middle" font-size="7" fill="white" font-weight="800">I</text>
+  <!-- Snaps sur mur droit -->
+  <circle cx="570" cy="120" r="6" fill="#3b82f6" stroke="white" stroke-width="2"/> <!-- outside (face extérieure, curseur dessus) -->
+  <circle cx="584" cy="120" r="4" fill="#22c55e" stroke="white" stroke-width="1.5" opacity="0.6"/>
+  <circle cx="577" cy="120" r="4" fill="#a855f7" stroke="white" stroke-width="1.5" opacity="0.6"/>
+  <!-- Preview dim line -->
+  <line x1="405" y1="120" x2="570" y2="120" stroke="#f97316" stroke-width="2" stroke-dasharray="8,5" opacity="0.7"/>
+  <rect x="468" y="108" width="60" height="16" fill="#1e1b18" rx="4"/>
+  <text x="498" y="120" text-anchor="middle" font-size="9" fill="#f97316cc" font-weight="700">H  165 cm</text>
+  <text x="395" y="22" font-size="10" fill="#52525b" font-weight="700">③ Hover mur 2 → snaps apparaissent</text>
+
+  <!-- Séparateur -->
+  <line x1="660" y1="10" x2="660" y2="215" stroke="#27272a" stroke-width="1.5" stroke-dasharray="4,4"/>
+
+  <!-- ÉTAPE 4: 2e clic → popup -->
+  <rect x="680" y="40" width="28" height="160" fill="#57534e" rx="2"/>
+  <rect x="845" y="40" width="28" height="160" fill="#57534e" rx="2"/>
+  <!-- Point 1 -->
+  <circle cx="680" cy="120" r="7" fill="#f97316" stroke="white" stroke-width="2"/>
+  <text x="680" y="113" text-anchor="middle" font-size="7" fill="white" font-weight="800">I</text>
+  <!-- Point 2 confirmé -->
+  <circle cx="845" cy="120" r="7" fill="#f97316" stroke="white" stroke-width="2"/>
+  <text x="845" y="113" text-anchor="middle" font-size="7" fill="white" font-weight="800">E</text>
+  <!-- Ligne de cote finale -->
+  <line x1="680" y1="155" x2="845" y2="155" stroke="#22c55e" stroke-width="2" marker-start="url(#arr-dim-r)" marker-end="url(#arr-dim)"/>
+  <line x1="680" y1="120" x2="680" y2="165" stroke="#22c55e" stroke-width="1" opacity="0.5"/>
+  <line x1="845" y1="120" x2="845" y2="165" stroke="#22c55e" stroke-width="1" opacity="0.5"/>
+  <rect x="731" y="145" width="63" height="16" fill="#18181b" rx="4"/>
+  <text x="762" y="157" text-anchor="middle" font-size="9" fill="#22c55e" font-weight="700">? cm</text>
+  <!-- Mini popup -->
+  <rect x="715" y="60" width="90" height="40" fill="#18181b" rx="6" stroke="#f9731655" stroke-width="1.5"/>
+  <text x="760" y="78" text-anchor="middle" font-size="8" fill="#71717a" font-weight="700">Cote I→E</text>
+  <rect x="722" y="82" width="50" height="12" fill="#27272a" rx="3"/>
+  <text x="747" y="91" text-anchor="middle" font-size="9" fill="#fafafa" font-weight="700">165.0</text>
+  <text x="775" y="91" font-size="8" fill="#71717a">cm</text>
+  <text x="680" y="22" font-size="10" fill="#52525b" font-weight="700">④ 2e clic → popup valeur (I→E mixte)</text>
+</svg>
+</div>
+
+<!-- Description étapes -->
+<div class="steps-grid">
+  <div class="step-block">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <h4>Hover sur un mur → 3 points de snap apparaissent sur la face</h4>
+      <p>Face <em>intérieure</em> (vert), <em>axe</em> (violet), <em>extérieure</em> (bleu). Le point le plus proche du curseur se met en évidence. Aussi disponible sur les cloisons et zones.</p>
+    </div>
+  </div>
+  <div class="step-block">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <h4>Clic → 1er point de référence confirmé</h4>
+      <p>Le point snapé s'affiche en <em>orange</em> avec sa lettre (I/A/E). Une ligne de preview suit le curseur en montrant la distance en temps réel.</p>
+    </div>
+  </div>
+  <div class="step-block">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <h4>Hover sur un 2e mur → mêmes snaps</h4>
+      <p>Le preview montre la cote en continu. Possible vers <em>n'importe quel élément</em> : mur, cloison, nœud de zone.</p>
+    </div>
+  </div>
+  <div class="step-block">
+    <div class="step-num">4</div>
+    <div class="step-body">
+      <h4>Clic → popup de valeur, type auto-détecté (H / V / L)</h4>
+      <p>La popup indique la référence choisie (ex. <em>Cote I→E</em>). L'utilisateur saisit la valeur désirée → contrainte stockée. L'outil reste en DIMENSION pour la cote suivante.</p>
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:14px;">Ce flow vous convient-il ? Confirmez ou signalez ce qui diffère de ce que vous attendez.</p>

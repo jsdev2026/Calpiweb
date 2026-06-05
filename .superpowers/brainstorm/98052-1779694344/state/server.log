@@ -1,0 +1,6 @@
+{"type":"server-started","port":53277,"host":"0.0.0.0","url_host":"localhost","url":"http://localhost:53277","screen_dir":"/workspaces/Calpiweb/.superpowers/brainstorm/98052-1779694344/content","state_dir":"/workspaces/Calpiweb/.superpowers/brainstorm/98052-1779694344/state"}
+{"type":"screen-added","file":"/workspaces/Calpiweb/.superpowers/brainstorm/98052-1779694344/content/topbar.html"}
+{"type":"screen-added","file":"/workspaces/Calpiweb/.superpowers/brainstorm/98052-1779694344/content/tiling-controls.html"}
+{"type":"screen-added","file":"/workspaces/Calpiweb/.superpowers/brainstorm/98052-1779694344/content/plan2d.html"}
+{"type":"screen-added","file":"/workspaces/Calpiweb/.superpowers/brainstorm/98052-1779694344/content/waiting.html"}
+{"type":"server-stopped","reason":"idle timeout"}

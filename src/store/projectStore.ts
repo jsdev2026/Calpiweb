@@ -1,60 +1,15 @@
 import { create } from 'zustand';
-import type { Project, Room, EdgeType, ProjectStatus, ClientInfo, Constraint, ProjectNote, Partition, ExcludedZone } from '@/types/project';
+import type { Project, Room, EdgeType, ProjectStatus, ClientInfo, Constraint, ProjectNote, TilingDimension } from '@/types/project';
 import type { Plan, Point } from '@/types/plan';
 import type { TilingConfig } from '@/types/tiling';
+import type { Wall, WallNode, WallExcludedZone, DoorOpening } from '@/types/wall';
 import { supabaseDb } from '@/lib/supabase/db';
+import { wallsToRooms } from '@/engine/geometry/wallFaces';
 import { generateId } from '@/utils/id';
 import { DEFAULT_TILING_CONFIG } from '@/constants/tileDefaults';
 import { WALL_THICKNESS_MM } from '@/constants/businessRules';
 
-function migrateProject(raw: unknown): Project {
-  const p = raw as Record<string, unknown>;
-
-  let rooms: Room[];
-  if (Array.isArray(p.rooms)) {
-    rooms = (p.rooms as Array<Record<string, unknown>>).map((r) => ({
-      id: r.id as string,
-      name: r.name as string | undefined,
-      points: (r.points as Point[]) ?? [],
-      edges: (r.edges as EdgeType[]) ?? new Array<EdgeType>(((r.points as Point[]) ?? []).length).fill('WALL'),
-      edgeThicknesses: (r.edgeThicknesses as (number | undefined)[] | undefined) ?? [],
-      partitions: ((r.partitions as Partition[] | undefined) ?? []).map((pt) => ({ ...pt, thickness: pt.thickness ?? 100 })),
-      excludedZones: (r.excludedZones as ExcludedZone[] | undefined) ?? [],
-    }));
-  } else {
-    const legacyPoints = (p.plan as Point[] | undefined) ?? [];
-    rooms = [{ id: generateId(), points: legacyPoints, edges: new Array<EdgeType>(legacyPoints.length).fill('WALL'), partitions: [], excludedZones: [] }];
-  }
-
-  const rawConfig = (p.config as TilingConfig | undefined) ?? { ...DEFAULT_TILING_CONFIG };
-  const config: TilingConfig = {
-    ...rawConfig,
-    stagger: rawConfig.stagger < 2 ? Math.round(rawConfig.stagger * 100) : rawConfig.stagger,
-    layout: rawConfig.layout ?? 'STRAIGHT',
-  };
-
-  return {
-    id: p.id as string,
-    name: p.name as string,
-    client: (() => {
-      const raw = p.client;
-      if (!raw) return undefined;
-      if (typeof raw === 'string') return raw ? { name: raw } : undefined;
-      return raw as ClientInfo;
-    })(),
-    status: (p.status as ProjectStatus | undefined) ?? 'new',
-    createdAt: p.createdAt as number,
-    updatedAt: p.updatedAt as number,
-    rooms,
-    config,
-    wallThickness: (p.wallThickness as number | undefined) ?? WALL_THICKNESS_MM,
-    constraints: (p.constraints as Constraint[] | undefined) ?? [],
-    description: p.description as string | undefined,
-    notes: (p.notes as ProjectNote[] | undefined) ?? [],
-  };
-}
-
-interface ProjectState {
+export interface ProjectState {
   projects: Project[];
   activeProjectId: string | null;
   hydrated: boolean;
@@ -70,6 +25,7 @@ interface ProjectState {
   removeRoom: (roomId: string) => void;
   updateRoom: (roomId: string, points: Plan, edges: EdgeType[]) => void;
   renameRoom: (roomId: string, name: string) => void;
+  renameWallRoom: (roomId: string, name: string) => void;
 
   setConfig: (config: TilingConfig) => void;
   setWallThickness: (mm: number) => void;
@@ -85,10 +41,15 @@ interface ProjectState {
   addConstraint: (c: Constraint) => void;
   removeConstraint: (id: string) => void;
   updateConstraintValue: (id: string, value: Constraint['value']) => void;
+  updateConstraintDisplayOffset: (id: string, offset: number) => void;
   /** Shift vertex indices for a given room when vertices are inserted/removed. */
   shiftConstraintIndices: (roomId: string, afterIdx: number, delta: number) => void;
 
-  restoreSnapshot: (rooms: Room[], constraints: Constraint[]) => void;
+  restoreSnapshot: (
+    rooms: Room[],
+    constraints: Constraint[],
+    wallEngine?: { nodes: WallNode[]; walls: Wall[]; excludedZones: WallExcludedZone[] }
+  ) => void;
 
   // Partition actions
   addPartition: (roomId: string, p1: Point, p2: Point, thickness: number) => void;
@@ -103,6 +64,44 @@ interface ProjectState {
   updateExcludedZonePoints: (roomId: string, zoneId: string, points: Point[]) => void;
 
   clearPartitionsAndZones: (roomId: string) => void;
+
+  // Wall engine — node actions
+  addNode: (node: WallNode) => void;
+  updateNode: (id: string, patch: Partial<Pick<WallNode, 'x' | 'y'>>) => void;
+  removeNode: (id: string) => void;
+  setNodes: (nodes: WallNode[]) => void;
+  mergeNodes: (keepId: string, dropId: string) => void;
+  // Wall engine — wall actions
+  addWall: (wall: Wall) => void;
+  removeWall: (id: string) => void;
+  updateWall: (id: string, patch: Partial<Wall>) => void;
+  setWalls: (walls: Wall[]) => void;
+  initWallEngine: () => void;
+  addWallExcludedZone: (points: Point[]) => void;
+  removeWallExcludedZone: (id: string) => void;
+  splitWall: (wallId: string, newNode: WallNode) => void;
+
+  // Tiling dimension actions
+  addTilingDimension: (dim: TilingDimension) => void;
+  removeTilingDimension: (id: string) => void;
+  updateTilingDimensionPerpOffset: (id: string, perpOffset: number) => void;
+}
+
+/** Pure helper — splits a wall at newNode, returns new wallEngine state. */
+export function splitWallInEngine(
+  we: { nodes: WallNode[]; walls: Wall[]; excludedZones: WallExcludedZone[] },
+  wallId: string,
+  newNode: WallNode,
+): { nodes: WallNode[]; walls: Wall[]; excludedZones: WallExcludedZone[] } {
+  const wall = we.walls.find(w => w.id === wallId);
+  if (!wall) return we;
+  const wall1: Wall = { ...wall, id: generateId(), node1Id: wall.node1Id, node2Id: newNode.id };
+  const wall2: Wall = { ...wall, id: generateId(), node1Id: newNode.id,  node2Id: wall.node2Id };
+  return {
+    ...we,
+    nodes: [...we.nodes, newNode],
+    walls:  [...we.walls.filter(w => w.id !== wallId), wall1, wall2],
+  };
 }
 
 const sortByUpdatedDesc = (a: Project, b: Project) => b.updatedAt - a.updatedAt;
@@ -115,7 +114,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   hydrate: async () => {
     if (get().hydrated) return;
     const all = await supabaseDb.getAll();
-    set({ projects: all.map(migrateProject).sort(sortByUpdatedDesc), hydrated: true });
+    set({ projects: all.sort(sortByUpdatedDesc), hydrated: true });
   },
 
   create: async (data) => {
@@ -131,7 +130,8 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       status: 'new',
       createdAt: now,
       updatedAt: now,
-      rooms: [{ id: generateId(), points: [], edges: [], partitions: [], excludedZones: [] }],
+      rooms: [],
+      wallEngine: { nodes: [], walls: [], excludedZones: [] },
       config: { ...DEFAULT_TILING_CONFIG },
       wallThickness: WALL_THICKNESS_MM,
       constraints: [],
@@ -197,6 +197,19 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     }));
   },
 
+  renameWallRoom: (roomId, name) => {
+    get().updateActive((p) => {
+      if (!p.wallEngine) return p;
+      return {
+        ...p,
+        wallEngine: {
+          ...p.wallEngine,
+          wallRoomNames: { ...(p.wallEngine.wallRoomNames ?? {}), [roomId]: name },
+        },
+      };
+    });
+  },
+
   setConfig: (config) => get().updateActive((p) => ({ ...p, config })),
   setWallThickness: (mm) => get().updateActive((p) => ({ ...p, wallThickness: mm })),
   setStatus: (status) => get().updateActive((p) => ({ ...p, status })),
@@ -239,6 +252,15 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     }));
   },
 
+  updateConstraintDisplayOffset: (id, offset) => {
+    get().updateActive((p) => ({
+      ...p,
+      constraints: p.constraints.map((c) =>
+        c.id === id ? { ...c, displayOffset: offset } : c
+      ),
+    }));
+  },
+
   shiftConstraintIndices: (roomId, afterIdx, delta) => {
     get().updateActive((p) => ({
       ...p,
@@ -253,8 +275,15 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     }));
   },
 
-  restoreSnapshot: (rooms, constraints) => {
-    get().updateActive((p) => ({ ...p, rooms, constraints }));
+  restoreSnapshot: (rooms, constraints, wallEngine) => {
+    get().updateActive((p) => ({
+      ...p,
+      rooms,
+      constraints,
+      ...(wallEngine !== undefined
+        ? { wallEngine: { ...wallEngine, wallRoomNames: p.wallEngine?.wallRoomNames } }
+        : {}),
+    }));
   },
 
   addPartition: (roomId, p1, p2, thickness) => {
@@ -349,7 +378,185 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       };
     });
   },
+
+  addNode: (node) => {
+    get().updateActive((p) => {
+      if (!p.wallEngine) return p;
+      return { ...p, wallEngine: { ...p.wallEngine, nodes: [...p.wallEngine.nodes, node] } };
+    });
+  },
+
+  updateNode: (id, patch) => {
+    get().updateActive((p) => {
+      if (!p.wallEngine) return p;
+      return {
+        ...p,
+        wallEngine: {
+          ...p.wallEngine,
+          nodes: p.wallEngine.nodes.map((n) => n.id === id ? { ...n, ...patch } : n),
+        },
+      };
+    });
+  },
+
+  removeNode: (id) => {
+    get().updateActive((p) => {
+      if (!p.wallEngine) return p;
+      return { ...p, wallEngine: { ...p.wallEngine, nodes: p.wallEngine.nodes.filter((n) => n.id !== id) } };
+    });
+  },
+
+  setNodes: (nodes) => {
+    get().updateActive((p) => {
+      if (!p.wallEngine) return p;
+      return { ...p, wallEngine: { ...p.wallEngine, nodes } };
+    });
+  },
+
+  mergeNodes: (keepId, dropId) => {
+    get().updateActive((p) => {
+      if (!p.wallEngine) return p;
+      const walls = p.wallEngine.walls
+        .map((w) => ({
+          ...w,
+          node1Id: w.node1Id === dropId ? keepId : w.node1Id,
+          node2Id: w.node2Id === dropId ? keepId : w.node2Id,
+        }))
+        .filter((w) => w.node1Id !== w.node2Id);
+      const nodes = p.wallEngine.nodes.filter((n) => n.id !== dropId);
+      return { ...p, wallEngine: { nodes, walls, excludedZones: p.wallEngine.excludedZones ?? [] } };
+    });
+  },
+
+  addWall: (wall) => {
+    get().updateActive((p) => {
+      if (!p.wallEngine) return p;
+      return { ...p, wallEngine: { ...p.wallEngine, walls: [...p.wallEngine.walls, wall] } };
+    });
+  },
+
+  removeWall: (id) => {
+    get().updateActive((p) => {
+      if (!p.wallEngine) return p;
+      const walls = p.wallEngine.walls.filter((w) => w.id !== id);
+      const referencedIds = new Set(walls.flatMap((w) => [w.node1Id, w.node2Id]));
+      const nodes = p.wallEngine.nodes.filter((n) => referencedIds.has(n.id));
+      return { ...p, wallEngine: { nodes, walls, excludedZones: p.wallEngine.excludedZones ?? [] } };
+    });
+  },
+
+  updateWall: (id, patch) => {
+    get().updateActive((p) => {
+      if (!p.wallEngine) return p;
+      return {
+        ...p,
+        wallEngine: {
+          ...p.wallEngine,
+          walls: p.wallEngine.walls.map((w) => w.id === id ? { ...w, ...patch } : w),
+        },
+      };
+    });
+  },
+
+  setWalls: (walls) => {
+    get().updateActive((p) => {
+      if (!p.wallEngine) return p;
+      return { ...p, wallEngine: { ...p.wallEngine, walls } };
+    });
+  },
+
+  initWallEngine: () => {
+    get().updateActive((p) => ({
+      ...p,
+      wallEngine: p.wallEngine ?? { nodes: [], walls: [], excludedZones: [] },
+    }));
+  },
+
+  addWallExcludedZone: (points) => {
+    get().updateActive((p) => {
+      if (!p.wallEngine) return p;
+      return {
+        ...p,
+        updatedAt: Date.now(),
+        wallEngine: {
+          ...p.wallEngine,
+          excludedZones: [
+            ...(p.wallEngine.excludedZones ?? []),
+            { id: generateId(), points },
+          ],
+        },
+      };
+    });
+  },
+
+  removeWallExcludedZone: (id) => {
+    get().updateActive((p) => {
+      if (!p.wallEngine) return p;
+      return {
+        ...p,
+        updatedAt: Date.now(),
+        wallEngine: {
+          ...p.wallEngine,
+          excludedZones: (p.wallEngine.excludedZones ?? []).filter(z => z.id !== id),
+        },
+      };
+    });
+  },
+
+  splitWall: (wallId, newNode) => {
+    get().updateActive((p) => {
+      if (!p.wallEngine) return p;
+      return { ...p, wallEngine: splitWallInEngine(p.wallEngine, wallId, newNode) };
+    });
+  },
+
+  addTilingDimension: (dim) => get().updateActive((p) => ({
+    ...p,
+    tilingDimensions: [...(p.tilingDimensions ?? []), dim],
+  })),
+
+  removeTilingDimension: (id) => get().updateActive((p) => ({
+    ...p,
+    tilingDimensions: (p.tilingDimensions ?? []).filter((d) => d.id !== id),
+  })),
+
+  updateTilingDimensionPerpOffset: (id, perpOffset) => get().updateActive((p) => ({
+    ...p,
+    tilingDimensions: (p.tilingDimensions ?? []).map((d) =>
+      d.id === id ? { ...d, perpOffset } : d,
+    ),
+  })),
 }));
 
 export const selectActiveProject = (state: ProjectState): Project | null =>
   state.projects.find((p) => p.id === state.activeProjectId) ?? null;
+
+export function selectRooms(s: ProjectState): Room[] {
+  const project = selectActiveProject(s);
+  if (!project) return [];
+  const we = project.wallEngine;
+  if (we !== undefined) {
+    const rooms = wallsToRooms(we.walls, we.nodes, we.excludedZones ?? []);
+    const names = we.wallRoomNames ?? {};
+    return rooms.map((r) => {
+      const customName = names[r.id];
+      return customName ? { ...r, name: customName } : r;
+    });
+  }
+  return project.rooms;
+}
+
+export function selectDoorOpenings(s: ProjectState): DoorOpening[] {
+  const project = selectActiveProject(s);
+  if (!project?.wallEngine) return [];
+  const { walls, nodes } = project.wallEngine;
+  const nodeMap = new Map(nodes.map((n) => [n.id, n]));
+  return walls
+    .filter((w) => w.isDoor)
+    .flatMap((w) => {
+      const n1 = nodeMap.get(w.node1Id);
+      const n2 = nodeMap.get(w.node2Id);
+      if (!n1 || !n2) return [];
+      return [{ from: { x: n1.x, y: n1.y }, to: { x: n2.x, y: n2.y }, thickness: w.thickness }];
+    });
+}

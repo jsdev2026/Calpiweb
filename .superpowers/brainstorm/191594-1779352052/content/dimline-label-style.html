@@ -1,0 +1,84 @@
+<h2>Style du label — moins de contraste</h2>
+<p class="subtitle">Option A confirmée (invariant au zoom). Quel style de cadre pour le label ?</p>
+
+<div class="cards" style="margin-top:8px;">
+
+  <div class="card" data-choice="1" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:28px 16px 20px; background:#f8fafc; border-radius:8px 8px 0 0;">
+      <svg width="100%" height="80" viewBox="0 0 500 80">
+        <line x1="40" y1="40" x2="460" y2="40" stroke="#f97316" stroke-width="2"/>
+        <line x1="40" y1="24" x2="40" y2="52" stroke="#cbd5e1" stroke-width="1.2"/>
+        <line x1="460" y1="24" x2="460" y2="52" stroke="#cbd5e1" stroke-width="1.2"/>
+        <polygon points="40,40 57,33 57,47" fill="#f97316"/>
+        <polygon points="460,40 443,33 443,47" fill="#f97316"/>
+        <!-- Pill: fond blanc pur, bordure grise légère -->
+        <rect x="208" y="24" width="84" height="26" fill="white" rx="13" stroke="#e2e8f0" stroke-width="1"/>
+        <text x="250" y="41" text-anchor="middle" font-size="13" fill="#334155" font-weight="600">310 cm</text>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>1 — Pill blanc, bordure subtile</h3>
+      <p>Fond blanc opaque, contour gris très clair (<code>#e2e8f0</code>), texte gris foncé. Propre mais visible sur fond clair uniquement.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="2" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:28px 16px 20px; background:#f8fafc; border-radius:8px 8px 0 0;">
+      <svg width="100%" height="80" viewBox="0 0 500 80">
+        <line x1="40" y1="40" x2="460" y2="40" stroke="#f97316" stroke-width="2"/>
+        <line x1="40" y1="24" x2="40" y2="52" stroke="#cbd5e1" stroke-width="1.2"/>
+        <line x1="460" y1="24" x2="460" y2="52" stroke="#cbd5e1" stroke-width="1.2"/>
+        <polygon points="40,40 57,33 57,47" fill="#f97316"/>
+        <polygon points="460,40 443,33 443,47" fill="#f97316"/>
+        <!-- Pill: fond semi-transparent, sans bordure -->
+        <rect x="208" y="24" width="84" height="26" fill="rgba(255,255,255,0.82)" rx="13"/>
+        <text x="250" y="41" text-anchor="middle" font-size="13" fill="#475569" font-weight="600">310 cm</text>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>2 — Pill translucide, sans bordure</h3>
+      <p>Fond blanc à 82 % d'opacité, pas de bordure. Laisse transparaître légèrement le fond — effet "flottant" discret.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="3" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:28px 16px 20px; background:#f8fafc; border-radius:8px 8px 0 0;">
+      <svg width="100%" height="80" viewBox="0 0 500 80">
+        <line x1="40" y1="40" x2="460" y2="40" stroke="#f97316" stroke-width="2"/>
+        <line x1="40" y1="24" x2="40" y2="52" stroke="#cbd5e1" stroke-width="1.2"/>
+        <line x1="460" y1="24" x2="460" y2="52" stroke="#cbd5e1" stroke-width="1.2"/>
+        <polygon points="40,40 57,33 57,47" fill="#f97316"/>
+        <polygon points="460,40 443,33 443,47" fill="#f97316"/>
+        <!-- Texte seul avec halo blanc -->
+        <text x="250" y="41" text-anchor="middle" font-size="13" fill="white" font-weight="800" stroke="white" stroke-width="4" paint-order="stroke">310 cm</text>
+        <text x="250" y="41" text-anchor="middle" font-size="13" fill="#64748b" font-weight="600">310 cm</text>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>3 — Texte nu avec halo</h3>
+      <p>Pas de cadre du tout. Un halo blanc (<code>stroke="white"</code>) autour du texte assure la lisibilité sur n'importe quel fond. Ultra-épuré.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="4" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:28px 16px 20px; background:#f8fafc; border-radius:8px 8px 0 0;">
+      <svg width="100%" height="80" viewBox="0 0 500 80">
+        <line x1="40" y1="40" x2="460" y2="40" stroke="#f97316" stroke-width="2"/>
+        <line x1="40" y1="24" x2="40" y2="52" stroke="#cbd5e1" stroke-width="1.2"/>
+        <line x1="460" y1="24" x2="460" y2="52" stroke="#cbd5e1" stroke-width="1.2"/>
+        <polygon points="40,40 57,33 57,47" fill="#f97316"/>
+        <polygon points="460,40 443,33 443,47" fill="#f97316"/>
+        <!-- Pill teinte orange très pâle, sans bordure -->
+        <rect x="208" y="24" width="84" height="26" fill="rgba(249,115,22,0.08)" rx="13"/>
+        <text x="250" y="41" text-anchor="middle" font-size="13" fill="#ea580c" font-weight="700">310 cm</text>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>4 — Pill teinté orange pâle</h3>
+      <p>Fond à 8 % d'opacité dans la couleur de la côte, texte orange foncé. Cohérent avec la couleur des flèches, très doux.</p>
+    </div>
+  </div>
+
+</div>
+
+<p style="margin-top:16px; font-size:13px; color:var(--muted);">Clique sur un style ou combine plusieurs. Tu peux aussi demander un mix.</p>

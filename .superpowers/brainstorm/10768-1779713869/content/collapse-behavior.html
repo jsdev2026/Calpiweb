@@ -1,0 +1,131 @@
+<h2>Comment les bandeaux doivent-ils se replier ?</h2>
+<p class="subtitle">Les deux bandeaux (en-tête + bande statistiques) occupent ~130px. Voici 3 comportements possibles.</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="A" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f8fafc;border-radius:8px;padding:12px;font-family:system-ui">
+      <!-- Option A: Scroll automatique -->
+      <div style="border:1.5px solid #e2e8f0;border-radius:8px;overflow:hidden;font-size:11px;height:180px;display:flex;flex-direction:column">
+        <div id="optA-header" style="background:#fff;border-bottom:1px solid #e2e8f0;padding:8px 12px;transition:all 0.3s;overflow:hidden">
+          <div style="font-weight:800;font-size:12px;color:#111">Tableau des quantités</div>
+          <div style="color:#9ca3af;margin-top:2px">Format: 60×60 — Joint: 2mm</div>
+        </div>
+        <div id="optA-stats" style="background:#fff;border-bottom:1px solid #e2e8f0;padding:8px 12px;display:grid;grid-template-columns:1fr 1fr;gap:6px;transition:all 0.3s;overflow:hidden">
+          <div style="background:#f1f5f9;border-left:3px solid #3b82f6;border-radius:6px;padding:5px 8px">
+            <div style="font-weight:900;font-size:14px">48</div>
+            <div style="font-size:9px;color:#9ca3af;text-transform:uppercase">Carreaux entiers</div>
+          </div>
+          <div style="background:#f1f5f9;border-left:3px solid #f97316;border-radius:6px;padding:5px 8px">
+            <div style="font-weight:900;font-size:14px">12</div>
+            <div style="font-size:9px;color:#9ca3af;text-transform:uppercase">À couper</div>
+          </div>
+        </div>
+        <div style="flex:1;background:#f1f5f9;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:10px">
+          ↕ Zone plan (scrollable)
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:8px;font-size:10px;color:#64748b">
+        ↓ En scrollant dans le plan…
+      </div>
+      <div style="border:1.5px solid #e2e8f0;border-radius:8px;overflow:hidden;font-size:11px;height:120px;display:flex;flex-direction:column;margin-top:6px">
+        <div style="background:#fff;border-bottom:1px solid #f97316;padding:3px 12px;display:flex;align-items:center;justify-content:between">
+          <span style="font-size:9px;color:#9ca3af;font-weight:700">QUANTITATIF</span>
+          <span style="font-size:9px;color:#f97316;margin-left:auto">▲ Afficher</span>
+        </div>
+        <div style="flex:1;background:#f1f5f9;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:10px">
+          Plan agrandi
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Scroll automatique</h3>
+      <p>Les bandeaux se replient automatiquement quand on scroll dans le plan ou les coupes. Une mini-barre reste visible avec un bouton "▲ Afficher" pour les restaurer.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="B" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f8fafc;border-radius:8px;padding:12px;font-family:system-ui">
+      <div style="border:1.5px solid #e2e8f0;border-radius:8px;overflow:hidden;font-size:11px;height:180px;display:flex;flex-direction:column">
+        <div style="background:#fff;border-bottom:1px solid #e2e8f0;padding:8px 12px;display:flex;align-items:center">
+          <div style="flex:1">
+            <div style="font-weight:800;font-size:12px;color:#111">Tableau des quantités</div>
+            <div style="color:#9ca3af;margin-top:2px">Format: 60×60 — Joint: 2mm</div>
+          </div>
+          <div style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:6px;padding:4px 8px;font-size:10px;color:#64748b;cursor:pointer;display:flex;align-items:center;gap:4px">
+            <span>▲</span> Réduire
+          </div>
+        </div>
+        <div style="background:#fff;border-bottom:1px solid #e2e8f0;padding:8px 12px;display:grid;grid-template-columns:1fr 1fr;gap:6px">
+          <div style="background:#f1f5f9;border-left:3px solid #3b82f6;border-radius:6px;padding:5px 8px">
+            <div style="font-weight:900;font-size:14px">48</div>
+            <div style="font-size:9px;color:#9ca3af;text-transform:uppercase">Carreaux entiers</div>
+          </div>
+          <div style="background:#f1f5f9;border-left:3px solid #f97316;border-radius:6px;padding:5px 8px">
+            <div style="font-weight:900;font-size:14px">12</div>
+            <div style="font-size:9px;color:#9ca3af;text-transform:uppercase">À couper</div>
+          </div>
+        </div>
+        <div style="flex:1;background:#f1f5f9;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:10px">
+          Zone plan
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:8px;font-size:10px;color:#64748b">
+        ↓ Après clic sur "Réduire"…
+      </div>
+      <div style="border:1.5px solid #e2e8f0;border-radius:8px;overflow:hidden;font-size:11px;height:120px;display:flex;flex-direction:column;margin-top:6px">
+        <div style="background:#fff;border-bottom:1px solid #e2e8f0;padding:5px 12px;display:flex;align-items:center">
+          <span style="font-weight:700;font-size:10px;color:#94a3b8">Tableau des quantités</span>
+          <span style="margin-left:auto;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:6px;padding:3px 8px;font-size:10px;color:#64748b">▼ Développer</span>
+        </div>
+        <div style="flex:1;background:#f1f5f9;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:10px">
+          Plan agrandi
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Bouton toggle</h3>
+      <p>Un bouton "▲ Réduire / ▼ Développer" dans le header permet de replier/déplier manuellement. L'état est mémorisé. Contrôle explicite, pas de surprise.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="C" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f8fafc;border-radius:8px;padding:12px;font-family:system-ui">
+      <div style="border:1.5px solid #e2e8f0;border-radius:8px;overflow:hidden;font-size:11px;height:180px;display:flex;flex-direction:column">
+        <div style="background:#fff;border-bottom:1px solid #e2e8f0;padding:8px 12px">
+          <div style="font-weight:800;font-size:12px;color:#111">Tableau des quantités</div>
+          <div style="color:#9ca3af;margin-top:2px">Format: 60×60 — Joint: 2mm</div>
+        </div>
+        <div style="background:#fff;border-bottom:4px solid #f97316;padding:8px 12px;display:grid;grid-template-columns:1fr 1fr;gap:6px;cursor:ns-resize">
+          <div style="background:#f1f5f9;border-left:3px solid #3b82f6;border-radius:6px;padding:5px 8px">
+            <div style="font-weight:900;font-size:14px">48</div>
+            <div style="font-size:9px;color:#9ca3af;text-transform:uppercase">Carreaux entiers</div>
+          </div>
+          <div style="background:#f1f5f9;border-left:3px solid #f97316;border-radius:6px;padding:5px 8px">
+            <div style="font-weight:900;font-size:14px">12</div>
+            <div style="font-size:9px;color:#9ca3af;text-transform:uppercase">À couper</div>
+          </div>
+        </div>
+        <div style="flex:1;background:#f1f5f9;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:10px">
+          Zone plan ← faire glisser la barre ↕
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:8px;font-size:10px;color:#64748b">
+        ↓ Après drag vers le haut…
+      </div>
+      <div style="border:1.5px solid #e2e8f0;border-radius:8px;overflow:hidden;font-size:11px;height:120px;display:flex;flex-direction:column;margin-top:6px">
+        <div style="background:#fff;border-bottom:4px solid #f97316;padding:5px 12px;cursor:ns-resize">
+          <span style="font-size:9px;color:#94a3b8;font-weight:700">Tableau des quantités — ↕ glisser</span>
+        </div>
+        <div style="flex:1;background:#f1f5f9;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:10px">
+          Plan agrandi
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Poignée drag</h3>
+      <p>Une barre de séparation draggable entre les bandeaux et le plan permet de redimensionner librement. Très flexible mais plus complexe à implémenter.</p>
+    </div>
+  </div>
+
+</div>

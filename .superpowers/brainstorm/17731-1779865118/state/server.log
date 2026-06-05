@@ -1,0 +1,6 @@
+{"type":"server-started","port":56482,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:56482","screen_dir":"/workspaces/Calpiweb/.superpowers/brainstorm/17731-1779865118/content","state_dir":"/workspaces/Calpiweb/.superpowers/brainstorm/17731-1779865118/state"}
+{"type":"screen-added","file":"/workspaces/Calpiweb/.superpowers/brainstorm/17731-1779865118/content/cote-types.html"}
+{"type":"screen-added","file":"/workspaces/Calpiweb/.superpowers/brainstorm/17731-1779865118/content/ux-interaction.html"}
+{"type":"screen-added","file":"/workspaces/Calpiweb/.superpowers/brainstorm/17731-1779865118/content/snap-flow.html"}
+{"type":"screen-added","file":"/workspaces/Calpiweb/.superpowers/brainstorm/17731-1779865118/content/waiting-1.html"}
+{"type":"server-stopped","reason":"idle timeout"}

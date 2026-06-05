@@ -1,0 +1,243 @@
+<h2>Comment l'utilisateur choisit-il la référence de chaque extrémité ?</h2>
+<p class="subtitle">3 approches pour sélectionner intérieur / extérieur / axe lors de la pose d'une cote</p>
+
+<style>
+.popup-mock {
+  background: #18181b;
+  border: 1.5px solid #f97316aa;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 11px;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 200px;
+}
+.popup-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #a1a1aa;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.seg-toggle {
+  display: flex;
+  gap: 2px;
+  background: #27272a;
+  border-radius: 6px;
+  padding: 2px;
+}
+.seg-btn {
+  padding: 3px 7px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #71717a;
+  cursor: default;
+}
+.seg-btn.active-green { background: #16a34a; color: white; }
+.seg-btn.active-blue  { background: #2563eb; color: white; }
+.seg-btn.active-purple{ background: #7c3aed; color: white; }
+.seg-btn.active-orange{ background: #ea580c; color: white; }
+
+.dim-input-mock {
+  background: #27272a;
+  border: 1px solid #3f3f46;
+  border-radius: 5px;
+  padding: 4px 8px;
+  color: #fafafa;
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 60px;
+  text-align: right;
+}
+
+.snap-wall {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+.snap-wall-block {
+  width: 18px;
+  height: 60px;
+  background: #78716c;
+  border: 2px solid #57534e;
+  border-radius: 3px;
+  position: relative;
+}
+.snap-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid white;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  cursor: default;
+}
+.snap-dot-inside  { background: #16a34a; top: 4px; }
+.snap-dot-outside { background: #2563eb; bottom: 4px; }
+.snap-dot-axis    { background: #7c3aed; top: 50%; transform: translate(-50%, -50%); }
+
+.snap-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  position: absolute;
+}
+.snap-label-i { color: #16a34a; left: 22px; top: 3px; }
+.snap-label-e { color: #2563eb; left: 22px; bottom: 3px; }
+.snap-label-a { color: #7c3aed; left: 22px; top: 50%; transform: translateY(-50%); }
+
+.sub-toolbar {
+  display: flex;
+  gap: 4px;
+  background: #18181b;
+  border: 1px solid #3f3f46;
+  border-radius: 8px;
+  padding: 4px 6px;
+  align-items: center;
+}
+.sub-tb-btn {
+  padding: 4px 10px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #71717a;
+  background: transparent;
+  cursor: default;
+}
+.sub-tb-btn.on { background: #1d4ed8; color: white; }
+.sub-tb-label {
+  font-size: 9px;
+  color: #52525b;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-right: 2px;
+}
+
+.options { display: grid; grid-template-columns: 1fr; gap: 14px; }
+.option .content { display: flex; flex-direction: column; gap: 10px; }
+.mockup-zone {
+  background: #0f0f11;
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  min-height: 90px;
+}
+</style>
+
+<div class="options">
+
+  <!-- A: Toggles dans le popup -->
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Toggles I / E / A dans le popup de cote <span style="font-size:11px;color:#22c55e;font-weight:600;">(recommandé)</span></h3>
+      <p>L'éditeur de cote existant gagne deux lignes — une par extrémité — pour choisir la référence. Chaque extrémité est indépendante → mixte possible.</p>
+      <div class="mockup-zone">
+        <div class="popup-mock">
+          <span style="font-size:9px;font-weight:800;letter-spacing:0.15em;color:#71717a;text-transform:uppercase;">Cote</span>
+          <!-- Type H/V/L -->
+          <div class="popup-row">
+            Type
+            <div class="seg-toggle">
+              <span class="seg-btn active-orange">H</span>
+              <span class="seg-btn">V</span>
+              <span class="seg-btn">L</span>
+            </div>
+            <input class="dim-input-mock" value="285.0" readonly style="width:55px;" />
+            <span style="color:#71717a;font-size:10px;">cm</span>
+          </div>
+          <!-- Extrémité gauche -->
+          <div class="popup-row">
+            Début
+            <div class="seg-toggle">
+              <span class="seg-btn active-green" title="Intérieur">I</span>
+              <span class="seg-btn" title="Extérieur">E</span>
+              <span class="seg-btn" title="Axe">A</span>
+            </div>
+          </div>
+          <!-- Extrémité droite -->
+          <div class="popup-row">
+            Fin
+            <div class="seg-toggle">
+              <span class="seg-btn active-blue" title="Extérieur">E</span>
+              <span class="seg-btn">I</span>
+              <span class="seg-btn">A</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pros-cons" style="font-size:11px;">
+        <div class="pros"><h4>Pour</h4><ul><li>Mixte naturellement possible</li><li>Discret, cohérent avec l'existant</li><li>Changeable après coup</li></ul></div>
+        <div class="cons"><h4>Contre</h4><ul><li>Le popup s'allonge un peu</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- B: Snap sur la face au clic -->
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Snap sur la face lors du clic (outil DIMENSION)</h3>
+      <p>En mode DIMENSION, survoler un mur fait apparaître 3 points de snap : face intérieure (vert), axe (violet), face extérieure (bleu). Le clic pose la cote sur le point le plus proche.</p>
+      <div class="mockup-zone">
+        <div style="display:flex;align-items:center;gap:30px;">
+          <div class="snap-wall">
+            <div class="snap-wall-block">
+              <div class="snap-dot snap-dot-inside"></div>
+              <div class="snap-dot snap-dot-axis"></div>
+              <div class="snap-dot snap-dot-outside"></div>
+            </div>
+          </div>
+          <div style="position:relative;font-size:10px;color:#52525b;display:flex;flex-direction:column;gap:8px;">
+            <span style="color:#22c55e;">● Face intérieure</span>
+            <span style="color:#7c3aed;">● Axe</span>
+            <span style="color:#3b82f6;">● Face extérieure</span>
+          </div>
+        </div>
+      </div>
+      <div class="pros-cons" style="font-size:11px;">
+        <div class="pros"><h4>Pour</h4><ul><li>Direct et spatial</li><li>Mixte possible si chaque clic choisit</li></ul></div>
+        <div class="cons"><h4>Contre</h4><ul><li>3 points proches sur mobile = difficile</li><li>Refonte du hit-testing</li><li>Non modifiable après coup</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- C: Mode global avant le clic -->
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Mode global dans la toolbar DIMENSION</h3>
+      <p>La toolbar affiche un sélecteur de référence (I / E / A) avant de cliquer. Tous les points posés dans cette session utilisent ce mode. Pour un mixte, il faut changer le mode entre les deux clics.</p>
+      <div class="mockup-zone">
+        <div style="display:flex;flex-direction:column;gap:8px;align-items:center;">
+          <div class="sub-tb-label">Référence active</div>
+          <div class="sub-toolbar">
+            <span class="sub-tb-label">Réf.</span>
+            <span class="sub-tb-btn">I</span>
+            <span class="sub-tb-btn on">E</span>
+            <span class="sub-tb-btn">A</span>
+          </div>
+          <span style="font-size:10px;color:#52525b;">→ cliquer 1er point, changer mode, cliquer 2ème point</span>
+        </div>
+      </div>
+      <div class="pros-cons" style="font-size:11px;">
+        <div class="pros"><h4>Pour</h4><ul><li>Simple, toujours visible</li></ul></div>
+        <div class="cons"><h4>Contre</h4><ul><li>Mixte = 2 actions distinctes, peu intuitif</li><li>Risque d'oublier de changer le mode</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+</div>

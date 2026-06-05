@@ -11,6 +11,7 @@ interface RoomTabsProps {
   onAddRoom: () => void;
   onRemoveRoom: (id: string) => void;
   onRenameRoom: (id: string, name: string) => void;
+  onClearRoom?: () => void;
   vertical?: boolean;
 }
 
@@ -21,6 +22,7 @@ export const RoomTabs = ({
   onAddRoom,
   onRemoveRoom,
   onRenameRoom,
+  onClearRoom,
   vertical = false,
 }: RoomTabsProps) => {
   const [renamingId, setRenamingId] = useState<string | null>(null);
@@ -59,9 +61,10 @@ export const RoomTabs = ({
           ) : (
             <button
               type="button"
-              title={room.name ? `${room.name} (double-clic pour renommer)` : `Pièce ${i + 1} — double-clic pour nommer`}
+              title={room.id === activeRoomId && onClearRoom ? 'Clic droit pour effacer la pièce' : room.name ? `${room.name} (double-clic pour renommer)` : `Pièce ${i + 1} — double-clic pour nommer`}
               onClick={() => onSelectRoom(room.id)}
               onDoubleClick={() => startRename(room)}
+              onContextMenu={room.id === activeRoomId && onClearRoom ? (e) => { e.preventDefault(); onClearRoom(); } : undefined}
               className={`flex h-8 min-w-[2.5rem] items-center justify-center rounded-xl px-3 text-[11px] font-bold transition-all ${
                 room.id === activeRoomId
                   ? 'bg-orange-600 text-white shadow-md'
