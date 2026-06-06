@@ -262,7 +262,8 @@ export const WallDrawingCanvas = ({
     const baseSnap = isCtrlPressed
       ? null
       : snapToWalls(world, walls, nodes, scale, ENDPOINT_RADIUS_PX, FACE_RADIUS_PX, HV_SNAP_PX);
-    const snap = (isCtrlPressed || baseSnap?.type === 'endpoint')
+    // face snap (cursor on wall segment) takes priority over collinear snap (infinite line extension)
+    const snap = (isCtrlPressed || baseSnap?.type === 'endpoint' || baseSnap?.type === 'face')
       ? baseSnap
       : (collinearSnap(world, walls, nodes, scale, COLLINEAR_SNAP_PX) ?? baseSnap);
     const pt = snap?.point ?? world;
@@ -324,7 +325,13 @@ export const WallDrawingCanvas = ({
         }
 
         const startId = chain.nodeIds[0]!;
-        if (targetNodeId === startId) {
+        // Also auto-close when the split of a wall creates an edge to the chain's start node.
+        // e.g. chain starts at B, user snaps to wall B→C at P → split creates B→P;
+        // the room B-…-P is now closed via the B→P edge.
+        const splitConnectsToStart =
+          !!snapWallObj &&
+          (snapWallObj.node1Id === startId || snapWallObj.node2Id === startId);
+        if (targetNodeId === startId || splitConnectsToStart) {
           setChain(null);
         } else {
           setChain({ ...chain, nodeIds: [...chain.nodeIds, targetNodeId] });
@@ -492,7 +499,8 @@ export const WallDrawingCanvas = ({
     const baseSnap = isCtrlPressed
       ? null
       : snapToWalls(world, walls, nodes, scale, ENDPOINT_RADIUS_PX, FACE_RADIUS_PX, HV_SNAP_PX);
-    const snap = (isCtrlPressed || baseSnap?.type === 'endpoint')
+    // face snap (cursor on wall segment) takes priority over collinear snap (infinite line extension)
+    const snap = (isCtrlPressed || baseSnap?.type === 'endpoint' || baseSnap?.type === 'face')
       ? baseSnap
       : (collinearSnap(world, walls, nodes, scale, COLLINEAR_SNAP_PX) ?? baseSnap);
     setCursor(snap?.point ?? world);
