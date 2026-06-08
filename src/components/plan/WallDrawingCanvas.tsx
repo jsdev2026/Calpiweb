@@ -10,6 +10,7 @@ import { computeAutoCotations } from '@/engine/geometry/wallCotation';
 import { wallsToRooms } from '@/engine/geometry/wallFaces';
 import { computeWallNormal, computeWallPerpMove } from '@/engine/geometry/wallDrag';
 import { generateId } from '@/utils/id';
+import { pointInPolygon } from '@/engine/geometry/polygon';
 import { WallEdgeEditor } from './WallEdgeEditor';
 import { AutoCotationPanel } from './AutoCotationPanel';
 
@@ -85,7 +86,7 @@ export const WallDrawingCanvas = ({
   onAddNode, onUpdateNode, onMergeNodes, onPushHistory,
   scale, pan, onScaleChange, onPanChange,
   wallThickness,
-  excludedZones, onAddExcludedZone, onRemoveExcludedZone: _onRemoveExcludedZone, onUpdateExcludeZoneNode,
+  excludedZones, onAddExcludedZone, onRemoveExcludedZone, onUpdateExcludeZoneNode,
   onSplitWall,
   onConnectNodeToWall,
   wallRoomNames, onRenameRoom,
@@ -518,7 +519,29 @@ export const WallDrawingCanvas = ({
 
     if (tool === 'DELETE') {
       const hit = hitTestWall(world);
-      if (hit) { onPushHistory(); onRemoveWall(hit.id); }
+      if (hit) { onPushHistory(); onRemoveWall(hit.id); return; }
+
+      // Hit test zones exclues — corps (intérieur) ou contour
+      for (const zone of excludedZones) {
+        if (zone.nodes.length < 3) continue;
+        const pts = zone.nodes.map(n => ({ x: n.x, y: n.y }));
+        let isHit = pointInPolygon(world, pts);
+        if (!isHit) {
+          for (let i = 0; i < pts.length; i++) {
+            const p1 = pts[i]!;
+            const p2 = pts[(i + 1) % pts.length]!;
+            const dx = p2.x - p1.x, dy = p2.y - p1.y;
+            const lenSq = dx * dx + dy * dy;
+            if (lenSq === 0) continue;
+            const t = Math.max(0, Math.min(1,
+              ((world.x - p1.x) * dx + (world.y - p1.y) * dy) / lenSq,
+            ));
+            const proj = { x: p1.x + t * dx, y: p1.y + t * dy };
+            if (dist(world, proj) < 8 / scale) { isHit = true; break; }
+          }
+        }
+        if (isHit) { onPushHistory(); onRemoveExcludedZone(zone.id); return; }
+      }
     }
   };
 

@@ -75,6 +75,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
   const renameWallRoom       = useProjectStore((s) => s.renameWallRoom);
   const addWallExcludedZone    = useProjectStore((s) => s.addWallExcludedZone);
   const removeWallExcludedZone = useProjectStore((s) => s.removeWallExcludedZone);
+  const updateExcludeZoneNode  = useProjectStore((s) => s.updateExcludeZoneNode);
   const splitWall              = useProjectStore((s) => s.splitWall);
   const connectNodeToWall      = useProjectStore((s) => s.connectNodeToWall);
   const restoreSnapshot      = useProjectStore((s) => s.restoreSnapshot);
@@ -215,6 +216,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
           excludedZones={wallEngine?.excludedZones ?? []}
           onAddExcludedZone={addWallExcludedZone}
           onRemoveExcludedZone={removeWallExcludedZone}
+          onUpdateExcludeZoneNode={updateExcludeZoneNode}
           onSplitWall={splitWall}
           onConnectNodeToWall={connectNodeToWall}
           wallRoomNames={wallRoomNames}
