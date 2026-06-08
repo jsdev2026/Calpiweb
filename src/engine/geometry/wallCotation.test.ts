@@ -90,3 +90,74 @@ describe('computeAutoCotations — T-junction (2 pièces adjacentes)', () => {
 function dist(a: { x: number; y: number }, b: { x: number; y: number }): number {
   return Math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2);
 }
+
+describe('computeAutoCotations — cloisons', () => {
+  // Scénario : mur horizontal w1(a→b, t=20) + cloison wC(b→c, t=10) verticale
+  // a(0,0) b(100,0) c(100,100)
+  // degré : a=1, b=2, c=1
+  // wC : p1=b(connecté, deg2), p2=c(libre, deg1)
+  //   dir b→c = (0,1)  ;  adjWalls à b hors wC = [w1] t=20
+  //   anchor1 = b + (20/2)*(0,1) = (100,10)
+  //   anchor2 = c = (100,100)
+  //   label = dist = 90mm = "9.0 cm"
+  const nodes = [nd('a', 0, 0), nd('b', 100, 0), nd('c', 100, 100)];
+  const walls = [w('w1', 'a', 'b', 20), w('wC', 'b', 'c', 10)];
+
+  it('Cas 1 (deg2=1) — anchor1 ajusté à la face intérieure du mur de connexion', () => {
+    const result = computeAutoCotations(walls, nodes);
+    const cot = result.find((c) => c.wallId === 'wC')!;
+    expect(cot).toBeDefined();
+    expect(cot.side).toBe('isolated');
+    expect(cot.anchor1.x).toBeCloseTo(100);
+    expect(cot.anchor1.y).toBeCloseTo(10);  // b + (20/2)*(0,1)
+    expect(cot.anchor2.x).toBeCloseTo(100);
+    expect(cot.anchor2.y).toBeCloseTo(100);
+    expect(cot.label).toBe('9.0 cm');
+  });
+
+  it('Cas 1 (deg1=1) — anchor2 ajusté quand le nœud1 est libre', () => {
+    // w1 : a(libre,deg1) → b(connecté,deg2)
+    // dir a→b = (1,0) ; adjWalls à b hors w1 = [wC] t=10
+    // anchor1 = a = (0,0)   anchor2 = b - (10/2)*(1,0) = (95,0)
+    // label = 95mm = "9.5 cm"
+    const result = computeAutoCotations(walls, nodes);
+    const cot = result.find((c) => c.wallId === 'w1')!;
+    expect(cot).toBeDefined();
+    expect(cot.side).toBe('isolated');
+    expect(cot.anchor1.x).toBeCloseTo(0);
+    expect(cot.anchor1.y).toBeCloseTo(0);
+    expect(cot.anchor2.x).toBeCloseTo(95);  // b - (10/2)*(1,0)
+    expect(cot.anchor2.y).toBeCloseTo(0);
+    expect(cot.label).toBe('9.5 cm');
+  });
+
+  it('Cas 2 (deux bouts libres) — anchor inchangé', () => {
+    const freeNodes = [nd('p', 0, 0), nd('q', 150, 0)];
+    const freeWalls = [w('wf', 'p', 'q', 10)];
+    const result = computeAutoCotations(freeWalls, freeNodes);
+    expect(result).toHaveLength(1);
+    const cot = result[0]!;
+    expect(cot.anchor1).toMatchObject({ x: 0, y: 0 });
+    expect(cot.anchor2).toMatchObject({ x: 150, y: 0 });
+    expect(cot.label).toBe('15.0 cm');
+  });
+
+  it('cloison dans une pièce — pas de cotation isolated pour les murs de pièce', () => {
+    const rNodes = [
+      nd('a', 0, 0), nd('b', 200, 0), nd('c', 200, 200), nd('d', 0, 200),
+      nd('m', 100, 0), nd('f', 100, 100),
+    ];
+    const rWalls = [
+      w('r1', 'a', 'm', 20), w('r2', 'm', 'b', 20),
+      w('r3', 'b', 'c', 20), w('r4', 'c', 'd', 20), w('r5', 'd', 'a', 20),
+      w('rC', 'm', 'f', 15),
+    ];
+    const result = computeAutoCotations(rWalls, rNodes);
+    const isolated = result.filter((c) => c.side === 'isolated');
+    expect(isolated).toHaveLength(1);
+    expect(isolated[0]!.wallId).toBe('rC');
+    // anchor1 = m(100,0) + (20/2)*(0,1) = (100,10)
+    expect(isolated[0]!.anchor1.y).toBeCloseTo(10);
+    expect(isolated[0]!.anchor2).toMatchObject({ x: 100, y: 100 });
+  });
+});

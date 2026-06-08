@@ -154,20 +154,57 @@ export function computeAutoCotations(walls: Wall[], nodes: WallNode[]): AutoCota
     }
   }
 
-  // ── Murs isolés ───────────────────────────────────────────────────────
+  // ── Degré des nœuds — pour détecter les cloisons ─────────────────────────
+  const nodeDegree = new Map<string, number>();
   for (const wall of walls) {
-    if (wallsInRooms.has(wall.id)) continue;
+    if (wall.isDoor) continue;
+    nodeDegree.set(wall.node1Id, (nodeDegree.get(wall.node1Id) ?? 0) + 1);
+    nodeDegree.set(wall.node2Id, (nodeDegree.get(wall.node2Id) ?? 0) + 1);
+  }
+
+  // ── Cloisons (murs hors pièce, au moins un bout libre) ───────────────────
+  for (const wall of walls) {
+    if (wallsInRooms.has(wall.id) || wall.isDoor) continue;
     const p1 = nodePos(wall.node1Id, nodes);
     const p2 = nodePos(wall.node2Id, nodes);
     const d  = dist(p1, p2);
     if (d < 1) continue;
     const dir: Point    = { x: (p2.x - p1.x) / d, y: (p2.y - p1.y) / d };
     const normal: Point = { x: -dir.y, y: dir.x };
+
+    const deg1 = nodeDegree.get(wall.node1Id) ?? 0;
+    const deg2 = nodeDegree.get(wall.node2Id) ?? 0;
+
+    let anchor1: Point = p1;
+    let anchor2: Point = p2;
+
+    if (deg1 === 1 && deg2 > 1) {
+      // p1 libre, p2 connecté → reculer anchor2 de tAdj/2 vers p1
+      const adj = walls.filter(
+        (w) => !w.isDoor && w.id !== wall.id &&
+               (w.node1Id === wall.node2Id || w.node2Id === wall.node2Id),
+      );
+      const tAdj = adj.length > 0 ? adj.reduce((s, w) => s + w.thickness, 0) / adj.length : 0;
+      anchor2 = { x: p2.x - dir.x * tAdj / 2, y: p2.y - dir.y * tAdj / 2 };
+    } else if (deg2 === 1 && deg1 > 1) {
+      // p2 libre, p1 connecté → avancer anchor1 de tAdj/2 vers p2
+      const adj = walls.filter(
+        (w) => !w.isDoor && w.id !== wall.id &&
+               (w.node1Id === wall.node1Id || w.node2Id === wall.node1Id),
+      );
+      const tAdj = adj.length > 0 ? adj.reduce((s, w) => s + w.thickness, 0) / adj.length : 0;
+      anchor1 = { x: p1.x + dir.x * tAdj / 2, y: p1.y + dir.y * tAdj / 2 };
+    }
+    // Cas 2 (deg1===1 && deg2===1) : anchor1=p1, anchor2=p2 — inchangé
+
+    const anchorDist = dist(anchor1, anchor2);
+    if (anchorDist < 1) continue;
+
     result.push({
       wallId: wall.id, side: 'isolated',
-      anchor1: p1, anchor2: p2,
+      anchor1, anchor2,
       normal, offset: COTE_OFFSET_ISO,
-      label: formatCm(d),
+      label: formatCm(anchorDist),
     });
   }
 
