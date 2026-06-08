@@ -101,4 +101,11 @@ describe('connectNodeToWallInEngine', () => {
     const result = connectNodeToWallInEngine(we, 'w1', 'ghost', { x: 100, y: 0 });
     expect(result).toBe(we);
   });
+
+  it('préserve isDoor sur les deux sous-murs', () => {
+    const doorWall: Wall = { id: 'dw', node1Id: 'a', node2Id: 'b', thickness: 100, isDoor: true };
+    const doorWe = { nodes, walls: [doorWall], excludedZones: [] };
+    const result = connectNodeToWallInEngine(doorWe, 'dw', 'free', { x: 100, y: 0 });
+    result.walls.forEach(w => expect(w.isDoor).toBe(true));
+  });
 });
