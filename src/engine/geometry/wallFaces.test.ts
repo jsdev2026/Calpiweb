@@ -228,3 +228,53 @@ describe('wallFaceCycles', () => {
     expect(wallFaceCycles(walls, nodes)).toHaveLength(0);
   });
 });
+
+describe('wallFaceCycles — cloisons (T-junction)', () => {
+  // Rectangle a(0,0) b(100,0) c(100,100) d(0,100)
+  // Mur du haut splitté en a→m et m→b, avec m(50,0)
+  // Cloison m→f, f(50,60) — pend dans la pièce
+  const nodes = [
+    nd('a', 0, 0), nd('b', 100, 0), nd('c', 100, 100), nd('d', 0, 100),
+    nd('m', 50, 0),
+    nd('f', 50, 60),
+  ];
+  const walls: Wall[] = [
+    { id: 'w1a', node1Id: 'a', node2Id: 'm', thickness: 20 },
+    { id: 'w1b', node1Id: 'm', node2Id: 'b', thickness: 20 },
+    { id: 'w2',  node1Id: 'b', node2Id: 'c', thickness: 20 },
+    { id: 'w3',  node1Id: 'c', node2Id: 'd', thickness: 20 },
+    { id: 'w4',  node1Id: 'd', node2Id: 'a', thickness: 20 },
+    { id: 'wC',  node1Id: 'm', node2Id: 'f', thickness: 15 }, // cloison
+  ];
+
+  it('pièce rectangulaire préservée quand une cloison pend depuis un nœud du contour', () => {
+    const rooms = wallsToRooms(walls, nodes);
+    expect(rooms).toHaveLength(1);
+    // Le cycle inclut les 5 nœuds du contour (a, m, b, c, d)
+    expect(rooms[0]!.points).toHaveLength(5);
+  });
+
+  it('cloison complètement libre ne crée pas de pièce', () => {
+    const freeNodes = [nd('p', 0, 0), nd('q', 0, 100)];
+    const freeWalls: Wall[] = [{ id: 'wF', node1Id: 'p', node2Id: 'q', thickness: 15 }];
+    expect(wallsToRooms(freeWalls, freeNodes)).toHaveLength(0);
+  });
+
+  it('pièce + cloison connectée à un coin existant (degré 3)', () => {
+    // Rectangle normal + cloison sortant du coin b
+    const n2 = [
+      nd('a', 0, 0), nd('b', 100, 0), nd('c', 100, 100), nd('d', 0, 100),
+      nd('e', 100, 50), // free end of cloison
+    ];
+    const w2: Wall[] = [
+      { id: 'r1', node1Id: 'a', node2Id: 'b', thickness: 20 },
+      { id: 'r2', node1Id: 'b', node2Id: 'c', thickness: 20 },
+      { id: 'r3', node1Id: 'c', node2Id: 'd', thickness: 20 },
+      { id: 'r4', node1Id: 'd', node2Id: 'a', thickness: 20 },
+      { id: 'rC', node1Id: 'b', node2Id: 'e', thickness: 10 },
+    ];
+    const rooms = wallsToRooms(w2, n2);
+    expect(rooms).toHaveLength(1);
+    expect(rooms[0]!.points).toHaveLength(4); // a, b, c, d
+  });
+});

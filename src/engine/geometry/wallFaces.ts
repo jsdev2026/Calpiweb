@@ -16,6 +16,23 @@ export interface FaceCycle {
   wallIds: string[]; // wallIds[i] = mur entre nodeIds[i] et nodeIds[(i+1) % n]
 }
 
+/** Retire itérativement les murs pendants (nœud de degré 1) jusqu'à stabilité. */
+function pruneLeaves(walls: Wall[]): Wall[] {
+  let current = walls;
+  while (true) {
+    const degree = new Map<string, number>();
+    for (const w of current) {
+      degree.set(w.node1Id, (degree.get(w.node1Id) ?? 0) + 1);
+      degree.set(w.node2Id, (degree.get(w.node2Id) ?? 0) + 1);
+    }
+    const next = current.filter(
+      (w) => w.isDoor || (degree.get(w.node1Id) !== 1 && degree.get(w.node2Id) !== 1),
+    );
+    if (next.length === current.length) return current;
+    current = next;
+  }
+}
+
 /**
  * Retourne tous les cycles de faces intérieures du graphe de murs
  * via traversée half-edge. Gère les T-junctions (nœuds 3+ arêtes).
@@ -23,8 +40,11 @@ export interface FaceCycle {
 export function wallFaceCycles(walls: Wall[], nodes: WallNode[]): FaceCycle[] {
   if (walls.length === 0 || nodes.length === 0) return [];
 
+  const coreWalls = pruneLeaves(walls);
+  if (coreWalls.length === 0) return [];
+
   const nodeMap = new Map(nodes.map(n => [n.id, n]));
-  const validWalls = walls.filter(w => nodeMap.has(w.node1Id) && nodeMap.has(w.node2Id));
+  const validWalls = coreWalls.filter(w => nodeMap.has(w.node1Id) && nodeMap.has(w.node2Id));
   const getPos = (id: string) => nodeMap.get(id)!;
 
   type HE = { from: string; to: string };
