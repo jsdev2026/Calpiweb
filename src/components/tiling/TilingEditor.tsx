@@ -1,6 +1,5 @@
 'use client';
 
-import { Ruler } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import React from 'react';
@@ -16,6 +15,7 @@ import { useTilingDimension } from '@/hooks/useTilingDimension';
 import { TilingCanvas } from './TilingCanvas';
 import { TilingControls } from './TilingControls';
 import { TilingDimensionLayer } from './TilingDimensionLayer';
+import { DimPropertiesPanel } from './DimPropertiesPanel';
 import { ResultsPanel } from '@/components/results/ResultsPanel';
 
 interface TilingEditorProps {
@@ -36,6 +36,7 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
     startPerp: number; startMX: number; startMY: number;
   } | null>(null);
   const [livePerpOverride, setLivePerpOverride] = useState<{ id: string; perpOffset: number } | null>(null);
+  const [selectedDimId, setSelectedDimId] = useState<string | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const tilingTouchRef = useRef<{ dist: number; midX: number; midY: number; panX: number; panY: number } | null>(null);
 
@@ -99,7 +100,11 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
   const dimensions = useProjectStore((s) => selectActiveProject(s)?.tilingDimensions ?? []);
   const updateTilingDimensionPerpOffset = useProjectStore((s) => s.updateTilingDimensionPerpOffset);
 
-  const dimHook = useTilingDimension(rooms, result.tiles, wallThickness, scale, activeTool === 'dimension');
+  const dimHook = useTilingDimension(
+    rooms, result.tiles, wallThickness, scale,
+    activeTool === 'dimension',
+    wallEngine?.nodes ?? [],
+  );
 
   const validRooms = rooms.filter((r) => r.points.length >= 3);
 
@@ -141,7 +146,10 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && activeTool === 'dimension') setActiveTool('pan');
+      if (e.key === 'Escape' && activeTool === 'dimension') {
+        setActiveTool('pan');
+        setSelectedDimId(null);
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
@@ -217,6 +225,7 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
       livePerpOverride={livePerpOverride}
       onContextMenu={dimHook.onContextMenu}
       onDimDragStart={handleDimDragStart}
+      onSelect={setSelectedDimId}
     />
   );
 
@@ -279,21 +288,8 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
         <div
           data-testid="controls-bar"
           className="absolute bottom-20 md:bottom-4 mouse:bottom-4 left-1/2 z-10 -translate-x-1/2 flex flex-col md:flex-row mouse:flex-row items-start md:items-center mouse:items-center gap-2 md:gap-5 mouse:gap-5 rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 px-5 py-3 shadow-2xl backdrop-blur-md w-[calc(100%-2rem)] md:w-auto mouse:w-auto">
-          {/* Row 1 : Côtes + Angle */}
+          {/* Row 1 : Angle */}
           <div className="flex w-full items-center gap-2.5">
-            <button
-              type="button"
-              onClick={() => setActiveTool((t) => t === 'dimension' ? 'pan' : 'dimension')}
-              title="Placer des côtes (Échap pour quitter)"
-              className={`flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all ${
-                activeTool === 'dimension'
-                  ? 'border border-orange-500/50 bg-orange-500/10 text-orange-400'
-                  : 'border border-gray-300 dark:border-zinc-700 bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-zinc-500 hover:border-gray-400 dark:hover:border-zinc-500'
-              }`}
-            >
-              <Ruler size={12} /> Côtes
-            </button>
-            <div className="h-5 w-px bg-gray-200 dark:bg-zinc-700" />
             <div className="flex flex-1 items-center gap-2">
               <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-500">Angle</span>
               <input
@@ -336,6 +332,16 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
 
       {/* Controls sidebar — full width on mobile (Réglages tab), right panel on desktop */}
       <aside className={`z-20 flex w-full flex-col overflow-y-auto dark:bg-zinc-900 bg-white shadow-2xl md:w-80 ${mobileTab === 'apercu' ? 'hidden md:flex' : 'flex'}`}>
+        {selectedDimId && (() => {
+          const dim = dimensions.find((d) => d.id === selectedDimId);
+          return dim ? (
+            <DimPropertiesPanel
+              key={dim.id}
+              dim={dim}
+              onClose={() => setSelectedDimId(null)}
+            />
+          ) : null;
+        })()}
         <TilingControls config={config} onChange={setConfig} />
         <ResultsPanel result={result} />
       </aside>

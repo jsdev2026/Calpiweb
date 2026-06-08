@@ -10,19 +10,20 @@ interface DimLineProps {
   scale?: number;
   onContextMenu?: (e: MouseEvent<SVGGElement>) => void;
   onPointerDown?: (e: PointerEvent<SVGGElement>) => void;
+  onLabelClick?: () => void;
 }
 
 export const DimLine = ({
   x1, y1, x2, y2, label,
   perpOffset = 500, scale = 1,
-  onContextMenu, onPointerDown,
+  onContextMenu, onPointerDown, onLabelClick,
 }: DimLineProps) => {
   const dx = x2 - x1, dy = y2 - y1;
   const len = Math.hypot(dx, dy);
   if (len < 10) return null;
 
-  const ux = dx / len, uy = dy / len;   // unit tangent
-  const nx = -dy / len, ny = dx / len;  // left normal
+  const ux = dx / len, uy = dy / len;
+  const nx = -dy / len, ny = dx / len;
 
   const ox = nx * perpOffset, oy = ny * perpOffset;
   const dlx1 = x1 + ox, dly1 = y1 + oy;
@@ -32,7 +33,6 @@ export const DimLine = ({
   const absPerp = Math.abs(perpOffset);
   const enx = nx * perpSign, eny = ny * perpSign;
 
-  // All sizes in screen-pixels / scale = world units that render at constant px size
   const S = scale;
   const ARROW_L  = 12 / S;
   const ARROW_W  = 6  / S;
@@ -49,7 +49,6 @@ export const DimLine = ({
   const midX = (dlx1 + dlx2) / 2, midY = (dly1 + dly2) / 2;
   const ang = Math.atan2(dy, dx) * 180 / Math.PI;
 
-  // Label centre: 8 screen-px above dim line, away from measured segment
   const labelOffset = LABEL_GAP + PILL_H / 2;
   const lx = midX + nx * perpSign * labelOffset;
   const ly = midY + ny * perpSign * labelOffset;
@@ -82,8 +81,12 @@ export const DimLine = ({
       {/* Arrowheads */}
       <polygon points={a1} fill="#f97316" />
       <polygon points={a2} fill="#f97316" />
-      {/* Label: translucent pill, 8 px above dim line */}
-      <g transform={`translate(${lx}, ${ly}) rotate(${ang})`}>
+      {/* Label: translucent pill */}
+      <g
+        transform={`translate(${lx}, ${ly}) rotate(${ang})`}
+        onClick={onLabelClick ? (e) => { e.stopPropagation(); onLabelClick(); } : undefined}
+        style={onLabelClick ? { cursor: 'pointer' } : undefined}
+      >
         <rect
           x={-PILL_W / 2} y={-PILL_H / 2}
           width={PILL_W} height={PILL_H}

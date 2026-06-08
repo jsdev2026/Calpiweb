@@ -22,6 +22,7 @@ interface TilingDimensionLayerProps {
     startPerp: number,
     e: PointerEvent<SVGGElement>,
   ) => void;
+  onSelect?: (id: string) => void;
 }
 
 interface ProjectedDim {
@@ -69,6 +70,7 @@ export const TilingDimensionLayer = ({
   livePerpOverride,
   onContextMenu,
   onDimDragStart,
+  onSelect,
 }: TilingDimensionLayerProps) => {
   return (
     <g>
@@ -121,6 +123,7 @@ export const TilingDimensionLayer = ({
               const sny =  (x2 - x1) / segLen;
               onDimDragStart(dim.id, snx, sny, effectivePerp, e);
             }}
+            onLabelClick={onSelect ? () => onSelect(dim.id) : undefined}
           />
         );
       })}

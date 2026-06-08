@@ -80,11 +80,13 @@ export interface ProjectState {
   addWallExcludedZone: (points: Point[]) => void;
   removeWallExcludedZone: (id: string) => void;
   splitWall: (wallId: string, newNode: WallNode) => void;
+  connectNodeToWall: (wallId: string, nodeId: string, newPos: Point) => void;
 
   // Tiling dimension actions
   addTilingDimension: (dim: TilingDimension) => void;
   removeTilingDimension: (id: string) => void;
   updateTilingDimensionPerpOffset: (id: string, perpOffset: number) => void;
+  updateTilingDimension: (id: string, patch: Partial<TilingDimension>) => void;
 }
 
 /** Pure helper — splits a wall at newNode, returns new wallEngine state. */
@@ -101,6 +103,28 @@ export function splitWallInEngine(
     ...we,
     nodes: [...we.nodes, newNode],
     walls:  [...we.walls.filter(w => w.id !== wallId), wall1, wall2],
+  };
+}
+
+/** Pure helper — connects an existing node to a wall by moving it and splitting the wall, returns new wallEngine state. */
+export function connectNodeToWallInEngine(
+  we: { nodes: WallNode[]; walls: Wall[]; excludedZones: WallExcludedZone[] },
+  wallId: string,
+  nodeId: string,
+  newPos: Point,
+): { nodes: WallNode[]; walls: Wall[]; excludedZones: WallExcludedZone[] } {
+  const wall = we.walls.find(w => w.id === wallId);
+  if (!wall) return we;
+  const node = we.nodes.find(n => n.id === nodeId);
+  if (!node) return we;
+
+  const wall1: Wall = { ...wall, id: generateId(), node1Id: wall.node1Id, node2Id: nodeId };
+  const wall2: Wall = { ...wall, id: generateId(), node1Id: nodeId,       node2Id: wall.node2Id };
+
+  return {
+    ...we,
+    nodes: we.nodes.map(n => n.id === nodeId ? { ...n, x: newPos.x, y: newPos.y } : n),
+    walls: [...we.walls.filter(w => w.id !== wallId), wall1, wall2],
   };
 }
 
@@ -510,6 +534,13 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     });
   },
 
+  connectNodeToWall: (wallId, nodeId, newPos) => {
+    get().updateActive((p) => {
+      if (!p.wallEngine) return p;
+      return { ...p, wallEngine: connectNodeToWallInEngine(p.wallEngine, wallId, nodeId, newPos) };
+    });
+  },
+
   addTilingDimension: (dim) => get().updateActive((p) => ({
     ...p,
     tilingDimensions: [...(p.tilingDimensions ?? []), dim],
@@ -524,6 +555,13 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     ...p,
     tilingDimensions: (p.tilingDimensions ?? []).map((d) =>
       d.id === id ? { ...d, perpOffset } : d,
+    ),
+  })),
+
+  updateTilingDimension: (id, patch) => get().updateActive((p) => ({
+    ...p,
+    tilingDimensions: (p.tilingDimensions ?? []).map((d) =>
+      d.id === id ? { ...d, ...patch } : d,
     ),
   })),
 }));

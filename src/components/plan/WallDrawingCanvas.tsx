@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
-import type { Wall, WallNode, DrawingChain, SnapResult, WallExcludedZone } from '@/types/wall';
+import type { Wall, WallNode, DrawingChain, SnapResult, WallExcludedZone, AutoCotation } from '@/types/wall';
 import type { Point } from '@/types/plan';
 import { snapToWalls, perpendicularSnapForNode, adjacentAxisSnapForNode, collinearSnap, collinearSnapForNode } from '@/engine/geometry/wallSnap';
 import { computeCornerGeometry, computeJointLines } from '@/engine/geometry/wallGeometry';
@@ -10,6 +10,7 @@ import { computeAutoCotations } from '@/engine/geometry/wallCotation';
 import { wallsToRooms } from '@/engine/geometry/wallFaces';
 import { generateId } from '@/utils/id';
 import { WallEdgeEditor } from './WallEdgeEditor';
+import { AutoCotationPanel } from './AutoCotationPanel';
 
 type PlanTool = 'WALL' | 'SELECT' | 'DELETE' | 'DOOR' | 'EXCLUDE';
 
@@ -46,6 +47,9 @@ interface WallDrawingCanvasProps {
   onAddExcludedZone: (points: Point[]) => void;
   onRemoveExcludedZone: (id: string) => void;
   onSplitWall: (wallId: string, newNode: WallNode) => void;
+  onConnectNodeToWall: (wallId: string, nodeId: string, newPos: Point) => void;
+  wallRoomNames?: Record<string, string>;
+  onRenameRoom?: (id: string, name: string) => void;
 }
 
 function screenToWorld(pt: Point, pan: Point, scale: number): Point {
@@ -64,6 +68,8 @@ export const WallDrawingCanvas = ({
   wallThickness,
   excludedZones, onAddExcludedZone, onRemoveExcludedZone: _onRemoveExcludedZone,
   onSplitWall,
+  onConnectNodeToWall,
+  wallRoomNames, onRenameRoom,
 }: WallDrawingCanvasProps) => {
   const svgRef = useRef<SVGSVGElement | null>(null);
   // Refs mutable pour wheel/touch — évitent les stale closures
@@ -88,6 +94,9 @@ export const WallDrawingCanvas = ({
   const [selectedWallId, setSelectedWallId] = useState<string | null>(null);
   const [editingWallId,  setEditingWallId]  = useState<string | null>(null);
   const [editThickness,  setEditThickness]  = useState('');
+  const [selectedCot, setSelectedCot] = useState<{ wallId: string; side: AutoCotation['side']; screenX: number; screenY: number } | null>(null);
+  const [renamingRoom, setRenamingRoom] = useState<{ id: string; screenX: number; screenY: number } | null>(null);
+  const [renameValue,  setRenameValue]  = useState('');
 
   // Node drag state
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
@@ -106,6 +115,8 @@ export const WallDrawingCanvas = ({
     setEditingWallId(null);
     setChain(null);
     setExcludePoints([]);
+    setSelectedCot(null);
+    setRenamingRoom(null);
   }, [tool]);
 
   const tryCloseChain = useCallback(() => {
@@ -133,6 +144,8 @@ export const WallDrawingCanvas = ({
         setSelectedWallId(null);
         setEditingWallId(null);
         setExcludePoints([]);
+        setSelectedCot(null);
+        setRenamingRoom(null);
       }
       if (e.key === 'Enter') {
         tryCloseChain();
@@ -251,7 +264,8 @@ export const WallDrawingCanvas = ({
     const baseSnap = isCtrlPressed
       ? null
       : snapToWalls(world, walls, nodes, scale, ENDPOINT_RADIUS_PX, FACE_RADIUS_PX, HV_SNAP_PX);
-    const snap = (isCtrlPressed || baseSnap?.type === 'endpoint')
+    // face snap (cursor on wall segment) takes priority over collinear snap (infinite line extension)
+    const snap = (isCtrlPressed || baseSnap?.type === 'endpoint' || baseSnap?.type === 'face')
       ? baseSnap
       : (collinearSnap(world, walls, nodes, scale, COLLINEAR_SNAP_PX) ?? baseSnap);
     const pt = snap?.point ?? world;
@@ -313,7 +327,13 @@ export const WallDrawingCanvas = ({
         }
 
         const startId = chain.nodeIds[0]!;
-        if (targetNodeId === startId) {
+        // Also auto-close when the split of a wall creates an edge to the chain's start node.
+        // e.g. chain starts at B, user snaps to wall B→C at P → split creates B→P;
+        // the room B-…-P is now closed via the B→P edge.
+        const splitConnectsToStart =
+          !!snapWallObj &&
+          (snapWallObj.node1Id === startId || snapWallObj.node2Id === startId);
+        if (targetNodeId === startId || splitConnectsToStart) {
           setChain(null);
         } else {
           setChain({ ...chain, nodeIds: [...chain.nodeIds, targetNodeId] });
@@ -481,7 +501,8 @@ export const WallDrawingCanvas = ({
     const baseSnap = isCtrlPressed
       ? null
       : snapToWalls(world, walls, nodes, scale, ENDPOINT_RADIUS_PX, FACE_RADIUS_PX, HV_SNAP_PX);
-    const snap = (isCtrlPressed || baseSnap?.type === 'endpoint')
+    // face snap (cursor on wall segment) takes priority over collinear snap (infinite line extension)
+    const snap = (isCtrlPressed || baseSnap?.type === 'endpoint' || baseSnap?.type === 'face')
       ? baseSnap
       : (collinearSnap(world, walls, nodes, scale, COLLINEAR_SNAP_PX) ?? baseSnap);
     setCursor(snap?.point ?? world);
@@ -501,6 +522,14 @@ export const WallDrawingCanvas = ({
       if (snap?.type === 'endpoint' && snap.nodeId && snap.nodeId !== draggingNodeId) {
         onPushHistory();
         onMergeNodes(snap.nodeId, draggingNodeId);
+      } else if (snap?.type === 'face' && snap.wallId) {
+        const degree = walls.filter(w => w.node1Id === draggingNodeId || w.node2Id === draggingNodeId).length;
+        if (degree === 1) {
+          onPushHistory();
+          onConnectNodeToWall(snap.wallId, draggingNodeId, snap.point);
+        } else {
+          onPushHistory();
+        }
       } else {
         onPushHistory();
       }
@@ -572,8 +601,20 @@ export const WallDrawingCanvas = ({
 
   const handleTouchEnd = () => { touchRef.current = null; };
 
+  const submitRename = () => {
+    if (renamingRoom && onRenameRoom) {
+      const trimmed = renameValue.trim();
+      if (trimmed) onRenameRoom(renamingRoom.id, trimmed);
+    }
+    setRenamingRoom(null);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<SVGSVGElement>) => {
-    if (e.key === 'Escape') setChain(null);
+    if (e.key === 'Escape') {
+      setChain(null);
+      setSelectedCot(null);
+      setRenamingRoom(null);
+    }
   };
 
   // ── WallEdgeEditor ─────────────────────────────────────────────────────────
@@ -659,16 +700,23 @@ export const WallDrawingCanvas = ({
           const cx = room.points.reduce((s, p) => s + p.x, 0) / room.points.length;
           const cy = room.points.reduce((s, p) => s + p.y, 0) / room.points.length;
           const sc = worldToScreen({ x: cx, y: cy });
+          const displayName = wallRoomNames?.[room.id] ?? room.name ?? '';
           return (
-            <g key={`room-fill-${room.id}`} className="pointer-events-none">
-              <polygon points={screenPts} fill="var(--canvas-poly-active)" />
+            <g key={`room-fill-${room.id}`}>
+              <polygon points={screenPts} fill="var(--canvas-poly-active)" className="pointer-events-none" />
               <text
                 x={sc.x} y={sc.y}
                 textAnchor="middle" dominantBaseline="middle"
                 fontSize={11} fill="var(--canvas-name-active)"
-                style={{ fontFamily: 'system-ui', userSelect: 'none' }}
+                style={{ fontFamily: 'system-ui', userSelect: 'none', cursor: 'text', pointerEvents: 'auto' }}
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setRenamingRoom({ id: room.id, screenX: sc.x, screenY: sc.y });
+                  setRenameValue(displayName);
+                }}
               >
-                {room.name ?? ''}
+                {displayName}
               </text>
             </g>
           );
@@ -741,16 +789,17 @@ export const WallDrawingCanvas = ({
         {autoCotations.map((c, i) => {
           const sa1 = worldToScreen(c.anchor1);
           const sa2 = worldToScreen(c.anchor2);
-          // Offset en coordonnées écran
           const ox = c.normal.x * c.offset * scale;
           const oy = c.normal.y * c.offset * scale;
           const sl1 = { x: sa1.x + ox, y: sa1.y + oy };
           const sl2 = { x: sa2.x + ox, y: sa2.y + oy };
           const smid = { x: (sl1.x + sl2.x) / 2, y: (sl1.y + sl2.y) / 2 };
+          const isSelected = selectedCot?.wallId === c.wallId && selectedCot?.side === c.side;
           const color =
+            isSelected ? '#f97316' :
             c.side === 'exterior' ? '#22c55e' :
             c.side === 'interior' ? '#3b82f6' : '#f97316';
-          const tick = 5; // px
+          const tick = 5;
           return (
             <g key={`cot-${i}`} className="pointer-events-none">
               {/* Lignes témoins pointillées */}
@@ -761,7 +810,7 @@ export const WallDrawingCanvas = ({
               {/* Ligne de cote */}
               <line x1={sl1.x} y1={sl1.y} x2={sl2.x} y2={sl2.y}
                 stroke={color} strokeWidth={1} />
-              {/* Ticks perpendiculaires (le long de la normale) */}
+              {/* Ticks perpendiculaires */}
               <line
                 x1={sl1.x - c.normal.x * tick} y1={sl1.y - c.normal.y * tick}
                 x2={sl1.x + c.normal.x * tick} y2={sl1.y + c.normal.y * tick}
@@ -770,15 +819,21 @@ export const WallDrawingCanvas = ({
                 x1={sl2.x - c.normal.x * tick} y1={sl2.y - c.normal.y * tick}
                 x2={sl2.x + c.normal.x * tick} y2={sl2.y + c.normal.y * tick}
                 stroke={color} strokeWidth={1.5} />
-              {/* Label */}
-              <text
-                x={smid.x + c.normal.x * 12} y={smid.y + c.normal.y * 12}
-                textAnchor="middle" dominantBaseline="middle"
-                fontSize={11} fill={color}
-                style={{ fontFamily: 'monospace', userSelect: 'none' }}
+              {/* Label cliquable — pointer-events réactivés sur ce groupe uniquement */}
+              <g
+                style={{ cursor: 'pointer', pointerEvents: 'auto' }}
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => { e.stopPropagation(); setSelectedCot({ wallId: c.wallId, side: c.side, screenX: smid.x + c.normal.x * 12, screenY: smid.y + c.normal.y * 12 }); }}
               >
-                {c.label}
-              </text>
+                <text
+                  x={smid.x + c.normal.x * 12} y={smid.y + c.normal.y * 12}
+                  textAnchor="middle" dominantBaseline="middle"
+                  fontSize={11} fill={color} fontWeight={isSelected ? 'bold' : 'normal'}
+                  style={{ fontFamily: 'monospace', userSelect: 'none' }}
+                >
+                  {c.label}
+                </text>
+              </g>
             </g>
           );
         })}
@@ -895,6 +950,51 @@ export const WallDrawingCanvas = ({
           onSubmit={submitThickness}
           onCancel={() => setEditingWallId(null)}
         />
+      )}
+
+      {/* AutoCotationPanel */}
+      {selectedCot && (() => {
+        const cot = autoCotations.find(
+          (ac) => ac.wallId === selectedCot.wallId && ac.side === selectedCot.side,
+        );
+        const wall = walls.find((w) => w.id === selectedCot.wallId);
+        return cot && wall ? (
+          <AutoCotationPanel
+            key={`${selectedCot.wallId}-${selectedCot.side}`}
+            cot={cot}
+            wall={wall}
+            nodes={nodes}
+            screenX={selectedCot.screenX}
+            screenY={selectedCot.screenY}
+            onApply={(nodeId, newPos) => {
+              onPushHistory();
+              onUpdateNode(nodeId, newPos);
+            }}
+            onClose={() => setSelectedCot(null)}
+          />
+        ) : null;
+      })()}
+
+      {/* Rename room input */}
+      {renamingRoom && (
+        <div
+          className="absolute z-30"
+          style={{ left: renamingRoom.screenX, top: renamingRoom.screenY, transform: 'translate(-50%, -50%)' }}
+        >
+          <input
+            type="text"
+            autoFocus
+            value={renameValue}
+            onChange={(e) => setRenameValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') submitRename();
+              if (e.key === 'Escape') setRenamingRoom(null);
+            }}
+            onBlur={submitRename}
+            className="rounded border border-orange-500 bg-zinc-900/95 px-2 py-1 text-center text-xs font-bold text-white shadow-xl outline-none"
+            style={{ minWidth: '6rem' }}
+          />
+        </div>
       )}
 
       {/* Panel raccourcis — desktop uniquement */}

@@ -9,4 +9,5 @@ export interface TilingDimension {
   direction: DimDirection;
   parallelAngle?: number;
   perpOffset: number;
+  p2NodeId?: string;
 }
