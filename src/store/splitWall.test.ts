@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { splitWallInEngine, connectNodeToWallInEngine } from './projectStore';
-import type { Wall, WallNode } from '@/types/wall';
+import { splitWallInEngine, connectNodeToWallInEngine, updateExcludeZoneNodeInEngine } from './projectStore';
+import type { Wall, WallNode, ExcludeNode, WallExcludedZone } from '@/types/wall';
 
 function nd(id: string, x: number, y: number): WallNode { return { id, x, y }; }
 
@@ -107,5 +107,44 @@ describe('connectNodeToWallInEngine', () => {
     const doorWe = { nodes, walls: [doorWall], excludedZones: [] };
     const result = connectNodeToWallInEngine(doorWe, 'dw', 'free', { x: 100, y: 0 });
     result.walls.forEach(w => expect(w.isDoor).toBe(true));
+  });
+});
+
+describe('updateExcludeZoneNodeInEngine', () => {
+  const zone: WallExcludedZone = {
+    id: 'z1',
+    nodes: [
+      { id: 'n1', x: 0, y: 0 },
+      { id: 'n2', x: 100, y: 0 },
+      { id: 'n3', x: 100, y: 100 },
+    ],
+  };
+  const we = { nodes: [], walls: [], excludedZones: [zone] };
+
+  it('met à jour la position du nœud ciblé', () => {
+    const result = updateExcludeZoneNodeInEngine(we, 'z1', 'n2', { x: 150, y: 50 });
+    const updated = result.excludedZones.find(z => z.id === 'z1')!;
+    const n2 = updated.nodes.find(n => n.id === 'n2')!;
+    expect(n2.x).toBe(150);
+    expect(n2.y).toBe(50);
+  });
+
+  it('ne modifie pas les autres nœuds', () => {
+    const result = updateExcludeZoneNodeInEngine(we, 'z1', 'n2', { x: 150, y: 50 });
+    const updated = result.excludedZones.find(z => z.id === 'z1')!;
+    expect(updated.nodes.find(n => n.id === 'n1')).toMatchObject({ x: 0, y: 0 });
+    expect(updated.nodes.find(n => n.id === 'n3')).toMatchObject({ x: 100, y: 100 });
+  });
+
+  it('ne modifie pas les autres zones', () => {
+    const zone2: WallExcludedZone = { id: 'z2', nodes: [{ id: 'a', x: 0, y: 0 }] };
+    const we2 = { nodes: [], walls: [], excludedZones: [zone, zone2] };
+    const result = updateExcludeZoneNodeInEngine(we2, 'z1', 'n1', { x: 99, y: 99 });
+    expect(result.excludedZones.find(z => z.id === 'z2')).toBe(zone2);
+  });
+
+  it('retourne we inchangé si zoneId introuvable', () => {
+    const result = updateExcludeZoneNodeInEngine(we, 'MISSING', 'n1', { x: 1, y: 1 });
+    expect(result).toBe(we);
   });
 });

@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import type { Project, Room, EdgeType, ProjectStatus, ClientInfo, Constraint, ProjectNote, TilingDimension } from '@/types/project';
 import type { Plan, Point } from '@/types/plan';
 import type { TilingConfig } from '@/types/tiling';
-import type { Wall, WallNode, WallExcludedZone, DoorOpening } from '@/types/wall';
+import type { Wall, WallNode, WallExcludedZone, ExcludeNode, DoorOpening } from '@/types/wall';
 import { supabaseDb } from '@/lib/supabase/db';
 import { wallsToRooms } from '@/engine/geometry/wallFaces';
 import { generateId } from '@/utils/id';
@@ -77,7 +77,8 @@ export interface ProjectState {
   updateWall: (id: string, patch: Partial<Wall>) => void;
   setWalls: (walls: Wall[]) => void;
   initWallEngine: () => void;
-  addWallExcludedZone: (points: Point[]) => void;
+  addWallExcludedZone: (nodes: ExcludeNode[]) => void;
+  updateExcludeZoneNode: (zoneId: string, nodeId: string, pos: Point) => void;
   removeWallExcludedZone: (id: string) => void;
   splitWall: (wallId: string, newNode: WallNode) => void;
   connectNodeToWall: (wallId: string, nodeId: string, newPos: Point) => void;
@@ -125,6 +126,26 @@ export function connectNodeToWallInEngine(
     ...we,
     nodes: we.nodes.map(n => n.id === nodeId ? { ...n, x: newPos.x, y: newPos.y } : n),
     walls: [...we.walls.filter(w => w.id !== wallId), wall1, wall2],
+  };
+}
+
+/** Pure helper — met à jour la position d'un nœud dans une zone exclue. */
+export function updateExcludeZoneNodeInEngine(
+  we: { nodes: WallNode[]; walls: Wall[]; excludedZones: WallExcludedZone[] },
+  zoneId: string,
+  nodeId: string,
+  pos: Point,
+): { nodes: WallNode[]; walls: Wall[]; excludedZones: WallExcludedZone[] } {
+  const zone = we.excludedZones.find(z => z.id === zoneId);
+  if (!zone) return we;
+  return {
+    ...we,
+    excludedZones: we.excludedZones.map(z =>
+      z.id !== zoneId ? z : {
+        ...z,
+        nodes: z.nodes.map(n => n.id === nodeId ? { ...n, x: pos.x, y: pos.y } : n),
+      },
+    ),
   };
 }
 
@@ -496,7 +517,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     }));
   },
 
-  addWallExcludedZone: (points) => {
+  addWallExcludedZone: (nodes) => {
     get().updateActive((p) => {
       if (!p.wallEngine) return p;
       return {
@@ -506,9 +527,20 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
           ...p.wallEngine,
           excludedZones: [
             ...(p.wallEngine.excludedZones ?? []),
-            { id: generateId(), points },
+            { id: generateId(), nodes },
           ],
         },
+      };
+    });
+  },
+
+  updateExcludeZoneNode: (zoneId, nodeId, pos) => {
+    get().updateActive((p) => {
+      if (!p.wallEngine) return p;
+      return {
+        ...p,
+        updatedAt: Date.now(),
+        wallEngine: updateExcludeZoneNodeInEngine(p.wallEngine, zoneId, nodeId, pos),
       };
     });
   },
