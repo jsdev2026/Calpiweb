@@ -149,9 +149,9 @@ export function wallsToRooms(
   return cycles.map((cycle, idx) => {
     const facePts = cycle.nodeIds.map(id => getPos(id));
     const roomZones = excludedZones.filter(zone => {
-      if (zone.points.length < 3) return false;
-      const cx = zone.points.reduce((s, p) => s + p.x, 0) / zone.points.length;
-      const cy = zone.points.reduce((s, p) => s + p.y, 0) / zone.points.length;
+      if (zone.nodes.length < 3) return false;
+      const cx = zone.nodes.reduce((s, n) => s + n.x, 0) / zone.nodes.length;
+      const cy = zone.nodes.reduce((s, n) => s + n.y, 0) / zone.nodes.length;
       return pointInPolygon({ x: cx, y: cy }, facePts);
     });
     return {
@@ -160,7 +160,11 @@ export function wallsToRooms(
       points: facePts,
       edges: cycle.wallIds.map(wid => (wallMap.get(wid)?.isDoor ? 'DOOR' : 'WALL') as EdgeType),
       partitions: [],
-      excludedZones: roomZones,
+      excludedZones: roomZones.map(zone => ({
+        id: zone.id,
+        points: zone.nodes.map(n => ({ x: n.x, y: n.y })),
+        label: zone.label,
+      })),
     };
   });
 }

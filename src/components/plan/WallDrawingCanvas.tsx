@@ -886,8 +886,8 @@ export const WallDrawingCanvas = ({
 
         {/* Zones exclues existantes */}
         {excludedZones.map(zone => {
-          if (zone.points.length < 3) return null;
-          const pts = zone.points.map(p => worldToScreen(p));
+          if (zone.nodes.length < 3) return null;
+          const pts = zone.nodes.map(n => worldToScreen({ x: n.x, y: n.y }));
           const d = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ') + ' Z';
           return (
             <path key={zone.id} d={d}

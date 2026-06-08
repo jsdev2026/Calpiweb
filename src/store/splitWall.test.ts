@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { splitWallInEngine, connectNodeToWallInEngine, updateExcludeZoneNodeInEngine } from './projectStore';
-import type { Wall, WallNode, ExcludeNode, WallExcludedZone } from '@/types/wall';
+import type { Wall, WallNode, WallExcludedZone } from '@/types/wall';
 
 function nd(id: string, x: number, y: number): WallNode { return { id, x, y }; }
 

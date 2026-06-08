@@ -100,7 +100,7 @@ describe('wallsToRooms — excludedZones', () => {
   it('assigns zone to room when zone centroid is inside the room', () => {
     const zones: WallExcludedZone[] = [{
       id: 'z1',
-      points: [{ x: 30, y: 30 }, { x: 70, y: 30 }, { x: 70, y: 70 }, { x: 30, y: 70 }],
+      nodes: [{ id: 'n1', x: 30, y: 30 }, { id: 'n2', x: 70, y: 30 }, { id: 'n3', x: 70, y: 70 }, { id: 'n4', x: 30, y: 70 }],
     }];
     const rooms = wallsToRooms(rectWalls, rectNodes, zones);
     expect(rooms).toHaveLength(1);
@@ -111,7 +111,7 @@ describe('wallsToRooms — excludedZones', () => {
   it('ignores zone whose centroid is outside all rooms', () => {
     const zones: WallExcludedZone[] = [{
       id: 'z2',
-      points: [{ x: 200, y: 200 }, { x: 250, y: 200 }, { x: 250, y: 250 }, { x: 200, y: 250 }],
+      nodes: [{ id: 'n1', x: 200, y: 200 }, { id: 'n2', x: 250, y: 200 }, { id: 'n3', x: 250, y: 250 }, { id: 'n4', x: 200, y: 250 }],
     }];
     const rooms = wallsToRooms(rectWalls, rectNodes, zones);
     expect(rooms[0]!.excludedZones).toHaveLength(0);
