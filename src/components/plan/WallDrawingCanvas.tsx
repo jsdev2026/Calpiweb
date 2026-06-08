@@ -526,14 +526,15 @@ export const WallDrawingCanvas = ({
       let snap = null;
       if (!isCtrlPressed) {
         const wallSnap = snapToWalls(world, snapWalls, otherNodes, scale, ENDPOINT_RADIUS_PX, FACE_RADIUS_PX, HV_SNAP_DRAG_PX);
-        if (wallSnap?.type === 'endpoint') {
+        if (wallSnap?.type === 'endpoint' || wallSnap?.type === 'face') {
+          // endpoint et face prennent la priorité sur les snaps H/V géométriques
           snap = wallSnap;
         } else {
           const adjSnap = adjacentNodes.length > 0
             ? adjacentAxisSnapForNode(world, adjacentNodes, scale, HV_SNAP_DRAG_PX)
             : null;
           if (adjSnap && !adjSnap.axis) {
-            // Intersection H+V : priorité max après endpoint
+            // Intersection H+V : priorité max après endpoint/face
             snap = adjSnap;
           } else {
             const colSnap = adjacentNodes.length >= 2
