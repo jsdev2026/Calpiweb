@@ -47,6 +47,7 @@ interface WallDrawingCanvasProps {
   onAddExcludedZone: (points: Point[]) => void;
   onRemoveExcludedZone: (id: string) => void;
   onSplitWall: (wallId: string, newNode: WallNode) => void;
+  onConnectNodeToWall: (wallId: string, nodeId: string, newPos: Point) => void;
   wallRoomNames?: Record<string, string>;
   onRenameRoom?: (id: string, name: string) => void;
 }
@@ -67,6 +68,7 @@ export const WallDrawingCanvas = ({
   wallThickness,
   excludedZones, onAddExcludedZone, onRemoveExcludedZone: _onRemoveExcludedZone,
   onSplitWall,
+  onConnectNodeToWall,
   wallRoomNames, onRenameRoom,
 }: WallDrawingCanvasProps) => {
   const svgRef = useRef<SVGSVGElement | null>(null);
@@ -520,6 +522,14 @@ export const WallDrawingCanvas = ({
       if (snap?.type === 'endpoint' && snap.nodeId && snap.nodeId !== draggingNodeId) {
         onPushHistory();
         onMergeNodes(snap.nodeId, draggingNodeId);
+      } else if (snap?.type === 'face' && snap.wallId) {
+        const degree = walls.filter(w => w.node1Id === draggingNodeId || w.node2Id === draggingNodeId).length;
+        if (degree === 1) {
+          onPushHistory();
+          onConnectNodeToWall(snap.wallId, draggingNodeId, snap.point);
+        } else {
+          onPushHistory();
+        }
       } else {
         onPushHistory();
       }
