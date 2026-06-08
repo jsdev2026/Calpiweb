@@ -21,7 +21,7 @@ interface PlanToolbarProps {
 }
 
 const TOOL_TOOLTIPS = {
-  SELECT:  { label: 'Sélectionner',      description: 'Déplacer un nœud ou sélectionner un mur' },
+  SELECT:  { label: 'Sélectionner',      description: 'Déplacer un nœud ou un mur — Double-clic sur un mur pour modifier son épaisseur' },
   WALL:    { label: 'Tracer des murs',    description: 'Cliquez pour poser des points' },
   DOOR:    { label: 'Porte / Ouverture',  description: 'Cliquez sur un mur pour y insérer une ouverture' },
   EXCLUDE: { label: 'Zone non carrelée',  description: 'Délimitez la surface à exclure du carrelage' },
@@ -53,7 +53,12 @@ export const PlanToolbar = ({
           <MousePointer2 size={16} />
         </Button>
       </ToolTooltip>
-      {tutorialMode && <span className="ml-2 whitespace-nowrap text-xs" style={{ color: 'var(--text2)' }}>Sélectionner</span>}
+      {tutorialMode && (
+        <div className="ml-2">
+          <div className="whitespace-nowrap text-xs" style={{ color: 'var(--text2)' }}>Sélectionner</div>
+          <div className="whitespace-nowrap text-[9px]" style={{ color: 'var(--muted)' }}>dbl-clic = épaisseur</div>
+        </div>
+      )}
     </div>
     <div className="flex items-center">
       <ToolTooltip {...TOOL_TOOLTIPS.WALL}>

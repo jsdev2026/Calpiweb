@@ -120,7 +120,7 @@ export const WallRoomPanel = ({
                       if (e.key === 'Enter') commitRename();
                       if (e.key === 'Escape') setRenamingId(null);
                     }}
-                    className="w-full rounded bg-zinc-800 px-1 text-[11px] font-bold text-orange-400 outline-none"
+                    className="w-full rounded bg-gray-100 dark:bg-zinc-800 px-1 text-[11px] font-bold text-orange-500 dark:text-orange-400 outline-none"
                   />
                 ) : (
                   <p

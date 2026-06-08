@@ -61,6 +61,23 @@ function dist(a: Point, b: Point): number {
   return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
 }
 
+function polygonCentroid(points: Point[]): Point {
+  const n = points.length;
+  if (n < 3) return { x: points.reduce((s, p) => s + p.x, 0) / Math.max(n, 1), y: points.reduce((s, p) => s + p.y, 0) / Math.max(n, 1) };
+  let area = 0, cx = 0, cy = 0;
+  for (let i = 0; i < n; i++) {
+    const p1 = points[i]!;
+    const p2 = points[(i + 1) % n]!;
+    const c = p1.x * p2.y - p2.x * p1.y;
+    area += c;
+    cx += (p1.x + p2.x) * c;
+    cy += (p1.y + p2.y) * c;
+  }
+  area /= 2;
+  if (Math.abs(area) < 1e-10) return { x: points.reduce((s, p) => s + p.x, 0) / n, y: points.reduce((s, p) => s + p.y, 0) / n };
+  return { x: cx / (6 * area), y: cy / (6 * area) };
+}
+
 export const WallDrawingCanvas = ({
   walls, nodes, tool,
   onAddWall, onRemoveWall, onUpdateWall,
@@ -739,6 +756,26 @@ export const WallDrawingCanvas = ({
     return { sl, angle, len, halfT };
   })();
 
+  // Filter cotations: skip lines too short on screen, then skip labels that would overlap
+  const visibleCotations = (() => {
+    const placed: { x: number; y: number }[] = [];
+    return autoCotations.filter((c) => {
+      const sa1 = worldToScreen(c.anchor1);
+      const sa2 = worldToScreen(c.anchor2);
+      const ox = c.normal.x * c.offset * scale;
+      const oy = c.normal.y * c.offset * scale;
+      const sl1 = { x: sa1.x + ox, y: sa1.y + oy };
+      const sl2 = { x: sa2.x + ox, y: sa2.y + oy };
+      if (Math.hypot(sl2.x - sl1.x, sl2.y - sl1.y) < 40) return false;
+      const smid = { x: (sl1.x + sl2.x) / 2, y: (sl1.y + sl2.y) / 2 };
+      const lx = smid.x + c.normal.x * 12;
+      const ly = smid.y + c.normal.y * 12;
+      if (placed.some((p) => Math.hypot(p.x - lx, p.y - ly) < 32)) return false;
+      placed.push({ x: lx, y: ly });
+      return true;
+    });
+  })();
+
   const svgCursor = (() => {
     if (tool !== 'SELECT') return 'crosshair';
     if (draggingWallId) return 'grabbing';
@@ -795,9 +832,8 @@ export const WallDrawingCanvas = ({
             .map((p) => worldToScreen(p))
             .map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`)
             .join(' ');
-          const cx = room.points.reduce((s, p) => s + p.x, 0) / room.points.length;
-          const cy = room.points.reduce((s, p) => s + p.y, 0) / room.points.length;
-          const sc = worldToScreen({ x: cx, y: cy });
+          const centroid = polygonCentroid(room.points);
+          const sc = worldToScreen(centroid);
           const displayName = wallRoomNames?.[room.id] ?? room.name ?? '';
           return (
             <g key={`room-fill-${room.id}`}>
@@ -884,7 +920,7 @@ export const WallDrawingCanvas = ({
         })}
 
         {/* Auto-cotations */}
-        {autoCotations.map((c, i) => {
+        {visibleCotations.map((c, i) => {
           const sa1 = worldToScreen(c.anchor1);
           const sa2 = worldToScreen(c.anchor2);
           const ox = c.normal.x * c.offset * scale;
@@ -1089,7 +1125,7 @@ export const WallDrawingCanvas = ({
               if (e.key === 'Escape') setRenamingRoom(null);
             }}
             onBlur={submitRename}
-            className="rounded border border-orange-500 bg-zinc-900/95 px-2 py-1 text-center text-xs font-bold text-white shadow-xl outline-none"
+            className="rounded border border-orange-500 bg-white/95 dark:bg-zinc-900/95 px-2 py-1 text-center text-xs font-bold text-gray-900 dark:text-white shadow-xl outline-none"
             style={{ minWidth: '6rem' }}
           />
         </div>
