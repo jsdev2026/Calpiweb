@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
-import type { Wall, WallNode, DrawingChain, SnapResult, WallExcludedZone, AutoCotation } from '@/types/wall';
+import type { Wall, WallNode, DrawingChain, SnapResult, WallExcludedZone, AutoCotation, ExcludeNode } from '@/types/wall';
 import type { Point } from '@/types/plan';
 import { snapToWalls, perpendicularSnapForNode, adjacentAxisSnapForNode, collinearSnap, collinearSnapForNode } from '@/engine/geometry/wallSnap';
 import { computeCornerGeometry, computeJointLines } from '@/engine/geometry/wallGeometry';
@@ -45,8 +45,9 @@ interface WallDrawingCanvasProps {
   onPanChange: (p: Point) => void;
   wallThickness: number;
   excludedZones: WallExcludedZone[];
-  onAddExcludedZone: (points: Point[]) => void;
+  onAddExcludedZone: (nodes: ExcludeNode[]) => void;
   onRemoveExcludedZone: (id: string) => void;
+  onUpdateExcludeZoneNode: (zoneId: string, nodeId: string, pos: Point) => void;
   onSplitWall: (wallId: string, newNode: WallNode) => void;
   onConnectNodeToWall: (wallId: string, nodeId: string, newPos: Point) => void;
   wallRoomNames?: Record<string, string>;
@@ -84,7 +85,7 @@ export const WallDrawingCanvas = ({
   onAddNode, onUpdateNode, onMergeNodes, onPushHistory,
   scale, pan, onScaleChange, onPanChange,
   wallThickness,
-  excludedZones, onAddExcludedZone, onRemoveExcludedZone: _onRemoveExcludedZone,
+  excludedZones, onAddExcludedZone, onRemoveExcludedZone: _onRemoveExcludedZone, onUpdateExcludeZoneNode: _onUpdateExcludeZoneNode,
   onSplitWall,
   onConnectNodeToWall,
   wallRoomNames, onRenameRoom,
@@ -132,9 +133,9 @@ export const WallDrawingCanvas = ({
   const [hoveredWallId, setHoveredWallId] = useState<string | null>(null);
   const lastWallClickRef = useRef<{ time: number; wallId: string } | null>(null);
 
-  const [excludePoints, setExcludePoints] = useState<Point[]>([]);
-  const excludePointsRef = useRef<Point[]>([]);
-  excludePointsRef.current = excludePoints;
+  const [excludeChain, setExcludeChain] = useState<ExcludeNode[]>([]);
+  const excludeChainRef = useRef<ExcludeNode[]>([]);
+  excludeChainRef.current = excludeChain;
   const lastClickRef = useRef<{ time: number; x: number; y: number }>({ time: 0, x: 0, y: 0 });
 
   const [isShiftPressed, setIsShiftPressed] = useState(false);
@@ -144,7 +145,7 @@ export const WallDrawingCanvas = ({
     setSelectedWallId(null);
     setEditingWallId(null);
     setChain(null);
-    setExcludePoints([]);
+    setExcludeChain([]);
     setSelectedCot(null);
     setRenamingRoom(null);
     setDraggingWallId(null);
@@ -176,17 +177,21 @@ export const WallDrawingCanvas = ({
         setChain(null);
         setSelectedWallId(null);
         setEditingWallId(null);
-        setExcludePoints([]);
+        setExcludeChain([]);
         setSelectedCot(null);
         setRenamingRoom(null);
       }
       if (e.key === 'Enter') {
         tryCloseChain();
-        if (excludePointsRef.current.length >= 3) {
+        if (excludeChainRef.current.length >= 3) {
           onPushHistory();
-          onAddExcludedZone([...excludePointsRef.current]);
-          setExcludePoints([]);
+          onAddExcludedZone([...excludeChainRef.current]);
+          setExcludeChain([]);
         }
+      }
+      if (e.key === 'Backspace' && tool === 'EXCLUDE') {
+        setExcludeChain((prev) => prev.slice(0, -1));
+        return;
       }
     };
     const up = (e: globalThis.KeyboardEvent) => {
@@ -199,7 +204,7 @@ export const WallDrawingCanvas = ({
       window.removeEventListener('keydown', down);
       window.removeEventListener('keyup',   up);
     };
-  }, [tryCloseChain]);
+  }, [tryCloseChain, tool, onPushHistory, onAddExcludedZone]);
 
   const getSvgPos = useCallback((e: ReactPointerEvent<SVGSVGElement>): Point => {
     const svg = svgRef.current;
@@ -376,21 +381,44 @@ export const WallDrawingCanvas = ({
     }
 
     if (tool === 'EXCLUDE') {
+      // Recalculate snap with EXCLUDE node pool (excludedZone nodes included)
+      const excludeSnapPool: WallNode[] = [
+        ...nodes,
+        ...excludedZones.flatMap(z => z.nodes.map(n => ({ id: n.id, x: n.x, y: n.y }))),
+      ];
+      const excludeSnap = isCtrlPressed
+        ? null
+        : snapToWalls(world, walls, excludeSnapPool, scale, ENDPOINT_RADIUS_PX, FACE_RADIUS_PX, HV_SNAP_PX);
+      const excludePt = excludeSnap?.point ?? world;
+
+      // Clic sur le 1er nœud → fermer la zone
+      if (excludeChain.length >= 3) {
+        const first = excludeChain[0]!;
+        const firstS = worldToScreen({ x: first.x, y: first.y });
+        const excludePtS = worldToScreen(excludePt);
+        if (Math.hypot(excludePtS.x - firstS.x, excludePtS.y - firstS.y) < ENDPOINT_RADIUS_PX) {
+          onPushHistory();
+          onAddExcludedZone([...excludeChain]);
+          setExcludeChain([]);
+          return;
+        }
+      }
+
+      // Double-clic → fermer si ≥ 3 nœuds
       const now = Date.now();
       const last = lastClickRef.current;
       const isDouble = now - last.time < 350 && dist(world, { x: last.x, y: last.y }) < 30 / scale;
       lastClickRef.current = { time: now, x: world.x, y: world.y };
-
       if (isDouble) {
-        if (excludePoints.length >= 3) {
+        if (excludeChain.length >= 3) {
           onPushHistory();
-          onAddExcludedZone([...excludePoints]);
-          setExcludePoints([]);
+          onAddExcludedZone([...excludeChain]);
+          setExcludeChain([]);
         }
         return;
       }
 
-      setExcludePoints((prev) => [...prev, world]);
+      setExcludeChain((prev) => [...prev, { id: generateId(), x: excludePt.x, y: excludePt.y }]);
       return;
     }
 
@@ -562,9 +590,20 @@ export const WallDrawingCanvas = ({
       if (lastNode) world = applyOrtho(world, { x: lastNode.x, y: lastNode.y });
     }
 
+    if (isShiftPressed && tool === 'EXCLUDE' && excludeChainRef.current.length > 0) {
+      const last = excludeChainRef.current[excludeChainRef.current.length - 1]!;
+      world = applyOrtho(world, { x: last.x, y: last.y });
+    }
+
+    const snapNodePool: WallNode[] = tool === 'EXCLUDE'
+      ? [
+          ...nodes,
+          ...excludedZones.flatMap(z => z.nodes.map(n => ({ id: n.id, x: n.x, y: n.y }))),
+        ]
+      : nodes;
     const baseSnap = isCtrlPressed
       ? null
-      : snapToWalls(world, walls, nodes, scale, ENDPOINT_RADIUS_PX, FACE_RADIUS_PX, HV_SNAP_PX);
+      : snapToWalls(world, walls, snapNodePool, scale, ENDPOINT_RADIUS_PX, FACE_RADIUS_PX, HV_SNAP_PX);
     // face snap (cursor on wall segment) takes priority over collinear snap (infinite line extension)
     const snap = (isCtrlPressed || baseSnap?.type === 'endpoint' || baseSnap?.type === 'face')
       ? baseSnap
@@ -898,14 +937,26 @@ export const WallDrawingCanvas = ({
         })}
 
         {/* Zone en cours de tracé */}
-        {tool === 'EXCLUDE' && excludePoints.length >= 1 && cursor && (() => {
-          const pts = [...excludePoints, cursor].map(p => worldToScreen(p));
+        {tool === 'EXCLUDE' && excludeChain.length >= 1 && cursor && (() => {
+          const pts = [...excludeChain.map(n => ({ x: n.x, y: n.y })), cursor].map(p => worldToScreen(p));
           const d = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
           return (
             <path d={d}
               fill="none"
               stroke="#f59e0b" strokeWidth={1.5} strokeDasharray="5,3"
             />
+          );
+        })()}
+
+        {/* Ring indicateur fermeture zone */}
+        {tool === 'EXCLUDE' && excludeChain.length >= 3 && cursor && (() => {
+          const first = excludeChain[0]!;
+          const firstS = worldToScreen({ x: first.x, y: first.y });
+          const curS = worldToScreen(cursor);
+          if (Math.hypot(curS.x - firstS.x, curS.y - firstS.y) >= ENDPOINT_RADIUS_PX) return null;
+          return (
+            <circle cx={firstS.x} cy={firstS.y} r={ENDPOINT_RADIUS_PX + 4}
+              fill="none" stroke="#f59e0b" strokeWidth={1.5} strokeDasharray="4,2" opacity={0.7} />
           );
         })()}
 
