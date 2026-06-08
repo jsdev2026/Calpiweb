@@ -11,7 +11,7 @@ export function computeWallNormal(wall: Wall, nodes: WallNode[]): Point | null {
   if (!n1 || !n2) return null;
   const dx = n2.x - n1.x;
   const dy = n2.y - n1.y;
-  const len = Math.sqrt(dx * dx + dy * dy);
+  const len = Math.hypot(dx, dy);
   if (len < 1e-10) return null;
   return { x: -dy / len, y: dx / len };
 }

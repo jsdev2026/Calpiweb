@@ -89,4 +89,11 @@ describe('computeWallPerpMove', () => {
     expect(r.node2Target.x).toBeCloseTo(90);
     expect(r.node2Target.y).toBeCloseTo(110);
   });
+
+  it('déplacement négatif — nœuds se déplacent dans le sens opposé à la normale', () => {
+    // cursor moved 30mm in -normal direction (downward for horizontal wall)
+    const r = computeWallPerpMove(n1Start, n2Start, pStart, { x: 100, y: -30 }, normal, noSnap, scale, snapPx);
+    expect(r.node1Target.y).toBeCloseTo(-30);
+    expect(r.node2Target.y).toBeCloseTo(-30);
+  });
 });
