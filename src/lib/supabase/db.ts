@@ -1,5 +1,5 @@
 import type { Project, Room, EdgeType, ProjectStatus, ClientInfo, Constraint, ProjectNote, Partition, ExcludedZone, TilingDimension } from '@/types/project';
-import type { Wall, WallNode, WallExcludedZone } from '@/types/wall';
+import type { Wall, WallNode, WallExcludedZone, ExcludeNode } from '@/types/wall';
 import type { MyRole, ShareRole } from '@/types/sharing';
 import type { Point } from '@/types/plan';
 import type { TilingConfig } from '@/types/tiling';
@@ -54,12 +54,33 @@ function migrateProject(raw: unknown): Project {
     notes: (p.notes as ProjectNote[] | undefined) ?? [],
     tilingDimensions: p.tilingDimensions as TilingDimension[] | undefined,
     wallEngine: (() => {
-      // New format: { nodes: WallNode[], walls: Wall[] }
       if (p.wallEngine && typeof p.wallEngine === 'object' && !Array.isArray(p.wallEngine)) {
-        const we = p.wallEngine as { nodes: WallNode[]; walls: Wall[]; excludedZones?: WallExcludedZone[]; wallRoomNames?: Record<string, string> };
-        return { nodes: we.nodes, walls: we.walls, excludedZones: we.excludedZones ?? [], wallRoomNames: we.wallRoomNames };
+        const we = p.wallEngine as {
+          nodes: WallNode[];
+          walls: Wall[];
+          excludedZones?: (WallExcludedZone | { id: string; points: Point[]; label?: string })[];
+          wallRoomNames?: Record<string, string>;
+        };
+        const migratedZones: WallExcludedZone[] = (we.excludedZones ?? []).map((z) => {
+          if ('nodes' in z && Array.isArray((z as WallExcludedZone).nodes)) {
+            return z as WallExcludedZone;
+          }
+          const legacy = z as { id: string; points: Point[]; label?: string };
+          return {
+            id: legacy.id,
+            label: legacy.label,
+            nodes: (legacy.points ?? []).map(
+              (pt): ExcludeNode => ({ id: generateId(), x: pt.x, y: pt.y }),
+            ),
+          };
+        });
+        return {
+          nodes: we.nodes,
+          walls: we.walls,
+          excludedZones: migratedZones,
+          wallRoomNames: we.wallRoomNames,
+        };
       }
-      // Old format (p1/p2 arrays) or absent → table rase, treat as not initialized
       return undefined;
     })(),
   };

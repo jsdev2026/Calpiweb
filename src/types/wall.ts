@@ -15,9 +15,15 @@ export interface Wall {
   isDoor?: boolean;
 }
 
+export interface ExcludeNode {
+  id: string;
+  x: number;
+  y: number;
+}
+
 export interface WallExcludedZone {
   id: string;
-  points: Point[];
+  nodes: ExcludeNode[];
   label?: string;
 }
 
