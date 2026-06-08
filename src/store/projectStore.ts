@@ -80,6 +80,7 @@ export interface ProjectState {
   addWallExcludedZone: (points: Point[]) => void;
   removeWallExcludedZone: (id: string) => void;
   splitWall: (wallId: string, newNode: WallNode) => void;
+  connectNodeToWall: (wallId: string, nodeId: string, newPos: Point) => void;
 
   // Tiling dimension actions
   addTilingDimension: (dim: TilingDimension) => void;
@@ -530,6 +531,13 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     get().updateActive((p) => {
       if (!p.wallEngine) return p;
       return { ...p, wallEngine: splitWallInEngine(p.wallEngine, wallId, newNode) };
+    });
+  },
+
+  connectNodeToWall: (wallId, nodeId, newPos) => {
+    get().updateActive((p) => {
+      if (!p.wallEngine) return p;
+      return { ...p, wallEngine: connectNodeToWallInEngine(p.wallEngine, wallId, nodeId, newPos) };
     });
   },
 
