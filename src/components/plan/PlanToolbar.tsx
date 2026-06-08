@@ -53,12 +53,7 @@ export const PlanToolbar = ({
           <MousePointer2 size={16} />
         </Button>
       </ToolTooltip>
-      {tutorialMode && (
-        <div className="ml-2">
-          <div className="whitespace-nowrap text-xs" style={{ color: 'var(--text2)' }}>Sélectionner</div>
-          <div className="whitespace-nowrap text-[9px]" style={{ color: 'var(--muted)' }}>dbl-clic = épaisseur</div>
-        </div>
-      )}
+      {tutorialMode && <span className="ml-2 whitespace-nowrap text-xs" style={{ color: 'var(--text2)' }}>Sélectionner</span>}
     </div>
     <div className="flex items-center">
       <ToolTooltip {...TOOL_TOOLTIPS.WALL}>
@@ -105,7 +100,15 @@ export const PlanToolbar = ({
     </ToolTooltip>
 
     <div className="mx-auto h-px w-6" style={{ background: 'var(--bdr)' }} />
-    <WallThicknessControl wallThickness={wallThickness} onChange={onWallThicknessChange} />
+    <div className="flex items-center">
+      <WallThicknessControl wallThickness={wallThickness} onChange={onWallThicknessChange} />
+      {tutorialMode && (
+        <div className="ml-2">
+          <div className="whitespace-nowrap text-xs" style={{ color: 'var(--text2)' }}>Épaisseur</div>
+          <div className="whitespace-nowrap text-[9px]" style={{ color: 'var(--muted)' }}>dbl-clic sur mur</div>
+        </div>
+      )}
+    </div>
   </div>
 
   <div
