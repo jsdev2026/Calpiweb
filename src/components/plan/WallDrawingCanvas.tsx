@@ -85,7 +85,7 @@ export const WallDrawingCanvas = ({
   onAddNode, onUpdateNode, onMergeNodes, onPushHistory,
   scale, pan, onScaleChange, onPanChange,
   wallThickness,
-  excludedZones, onAddExcludedZone, onRemoveExcludedZone: _onRemoveExcludedZone, onUpdateExcludeZoneNode: _onUpdateExcludeZoneNode,
+  excludedZones, onAddExcludedZone, onRemoveExcludedZone: _onRemoveExcludedZone, onUpdateExcludeZoneNode,
   onSplitWall,
   onConnectNodeToWall,
   wallRoomNames, onRenameRoom,
@@ -119,6 +119,7 @@ export const WallDrawingCanvas = ({
 
   // Node drag state
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
+  const [draggingZoneNode, setDraggingZoneNode] = useState<{ zoneId: string; nodeId: string } | null>(null);
   const dragSnapRef = useRef<SnapResult | null>(null);
 
   // Wall segment drag state
@@ -151,6 +152,7 @@ export const WallDrawingCanvas = ({
     setDraggingWallId(null);
     wallDragRef.current = null;
     setHoveredWallId(null);
+    setDraggingZoneNode(null);
   }, [tool]);
 
   const tryCloseChain = useCallback(() => {
@@ -467,6 +469,18 @@ export const WallDrawingCanvas = ({
     }
 
     if (tool === 'SELECT') {
+      // Hit test nœuds de zone (même priorité que nœuds de murs)
+      const r = NODE_HANDLE_RADIUS_PX / scale;
+      for (const zone of excludedZones) {
+        for (const zn of zone.nodes) {
+          if (dist(world, { x: zn.x, y: zn.y }) < r) {
+            setDraggingZoneNode({ zoneId: zone.id, nodeId: zn.id });
+            dragSnapRef.current = null;
+            (e.currentTarget as SVGSVGElement).setPointerCapture(e.pointerId);
+            return;
+          }
+        }
+      }
       const hitNode = hitTestNode(world);
       if (hitNode) {
         setDraggingNodeId(hitNode.id);
@@ -535,6 +549,22 @@ export const WallDrawingCanvas = ({
         onUpdateNode(wall.node1Id, result.node1Target);
         onUpdateNode(wall.node2Id, result.node2Target);
       }
+      return;
+    }
+
+    if (draggingZoneNode) {
+      const allZoneNodes = excludedZones.flatMap(z => z.nodes.map(n => ({ id: n.id, x: n.x, y: n.y })));
+      const otherNodes: WallNode[] = [
+        ...nodes,
+        ...allZoneNodes.filter(n => n.id !== draggingZoneNode.nodeId),
+      ];
+      const snap = isCtrlPressed
+        ? null
+        : snapToWalls(world, walls, otherNodes, scale, ENDPOINT_RADIUS_PX, FACE_RADIUS_PX, HV_SNAP_DRAG_PX);
+      const pt = snap?.point ?? world;
+      dragSnapRef.current = snap;
+      setSnapResult(snap);
+      onUpdateExcludeZoneNode(draggingZoneNode.zoneId, draggingZoneNode.nodeId, pt);
       return;
     }
 
@@ -647,6 +677,14 @@ export const WallDrawingCanvas = ({
       setDraggingWallId(null);
       wallDragRef.current = null;
       setHoveredWallId(null);
+      (e.currentTarget as SVGSVGElement).releasePointerCapture(e.pointerId);
+      return;
+    }
+
+    if (draggingZoneNode) {
+      onPushHistory();
+      setDraggingZoneNode(null);
+      dragSnapRef.current = null;
       (e.currentTarget as SVGSVGElement).releasePointerCapture(e.pointerId);
       return;
     }
@@ -1121,6 +1159,25 @@ export const WallDrawingCanvas = ({
             />
           );
         })}
+
+        {/* Zone node handles (SELECT mode) */}
+        {tool === 'SELECT' && excludedZones.flatMap((zone) =>
+          zone.nodes.map((zn) => {
+            const sp = worldToScreen({ x: zn.x, y: zn.y });
+            const isDragging =
+              draggingZoneNode?.nodeId === zn.id && draggingZoneNode?.zoneId === zone.id;
+            return (
+              <circle
+                key={`zn-${zone.id}-${zn.id}`}
+                cx={sp.x} cy={sp.y} r={5}
+                fill={isDragging ? '#f59e0b' : 'none'}
+                stroke="#f59e0b"
+                strokeWidth={isDragging ? 2 : 1.5}
+                style={{ cursor: 'grab' }}
+              />
+            );
+          }),
+        )}
       </svg>
 
       {/* WallEdgeEditor popup */}
