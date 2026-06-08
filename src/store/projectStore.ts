@@ -105,6 +105,28 @@ export function splitWallInEngine(
   };
 }
 
+/** Pure helper — connects an existing node to a wall by moving it and splitting the wall, returns new wallEngine state. */
+export function connectNodeToWallInEngine(
+  we: { nodes: WallNode[]; walls: Wall[]; excludedZones: WallExcludedZone[] },
+  wallId: string,
+  nodeId: string,
+  newPos: Point,
+): { nodes: WallNode[]; walls: Wall[]; excludedZones: WallExcludedZone[] } {
+  const wall = we.walls.find(w => w.id === wallId);
+  if (!wall) return we;
+  const node = we.nodes.find(n => n.id === nodeId);
+  if (!node) return we;
+
+  const wall1: Wall = { ...wall, id: generateId(), node1Id: wall.node1Id, node2Id: nodeId };
+  const wall2: Wall = { ...wall, id: generateId(), node1Id: nodeId, node2Id: wall.node2Id };
+
+  return {
+    ...we,
+    nodes: we.nodes.map(n => n.id === nodeId ? { ...n, x: newPos.x, y: newPos.y } : n),
+    walls: [...we.walls.filter(w => w.id !== wallId), wall1, wall2],
+  };
+}
+
 const sortByUpdatedDesc = (a: Project, b: Project) => b.updatedAt - a.updatedAt;
 
 export const useProjectStore = create<ProjectState>((set, get) => ({
