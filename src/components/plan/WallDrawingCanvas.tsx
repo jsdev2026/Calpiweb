@@ -8,6 +8,7 @@ import { snapToWalls, perpendicularSnapForNode, adjacentAxisSnapForNode, colline
 import { computeCornerGeometry, computeJointLines } from '@/engine/geometry/wallGeometry';
 import { computeAutoCotations } from '@/engine/geometry/wallCotation';
 import { wallsToRooms } from '@/engine/geometry/wallFaces';
+import { computeWallNormal, computeWallPerpMove } from '@/engine/geometry/wallDrag';
 import { generateId } from '@/utils/id';
 import { WallEdgeEditor } from './WallEdgeEditor';
 import { AutoCotationPanel } from './AutoCotationPanel';
@@ -102,6 +103,18 @@ export const WallDrawingCanvas = ({
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
   const dragSnapRef = useRef<SnapResult | null>(null);
 
+  // Wall segment drag state
+  const [draggingWallId, setDraggingWallId] = useState<string | null>(null);
+  const wallDragRef = useRef<{
+    node1Start: Point;
+    node2Start: Point;
+    pointerStart: Point;
+    normal: Point;
+    hasMoved: boolean;
+  } | null>(null);
+  const [hoveredWallId, setHoveredWallId] = useState<string | null>(null);
+  const lastWallClickRef = useRef<{ time: number; wallId: string } | null>(null);
+
   const [excludePoints, setExcludePoints] = useState<Point[]>([]);
   const excludePointsRef = useRef<Point[]>([]);
   excludePointsRef.current = excludePoints;
@@ -117,6 +130,9 @@ export const WallDrawingCanvas = ({
     setExcludePoints([]);
     setSelectedCot(null);
     setRenamingRoom(null);
+    setDraggingWallId(null);
+    wallDragRef.current = null;
+    setHoveredWallId(null);
   }, [tool]);
 
   const tryCloseChain = useCallback(() => {
@@ -416,8 +432,20 @@ export const WallDrawingCanvas = ({
       const hit = hitTestWall(world);
       setSelectedWallId(hit?.id ?? null);
       if (hit) {
-        setEditingWallId(hit.id);
-        setEditThickness((hit.thickness / 10).toFixed(0)); // afficher en cm
+        const n1 = nodes.find((n) => n.id === hit.node1Id);
+        const n2 = nodes.find((n) => n.id === hit.node2Id);
+        const normal = computeWallNormal(hit, nodes);
+        if (n1 && n2 && normal) {
+          wallDragRef.current = {
+            node1Start:   { x: n1.x, y: n1.y },
+            node2Start:   { x: n2.x, y: n2.y },
+            pointerStart: world,
+            normal,
+            hasMoved: false,
+          };
+          setDraggingWallId(hit.id);
+          (e.currentTarget as SVGSVGElement).setPointerCapture(e.pointerId);
+        }
       } else {
         setEditingWallId(null);
         // Clic gauche sur zone vide → pan
@@ -446,6 +474,24 @@ export const WallDrawingCanvas = ({
     }
 
     let world = getWorldPos(e);
+
+    if (draggingWallId && wallDragRef.current) {
+      const ref = wallDragRef.current;
+      const wall = walls.find((w) => w.id === draggingWallId);
+      if (wall) {
+        const otherNodes = nodes.filter((n) => n.id !== wall.node1Id && n.id !== wall.node2Id);
+        const result = computeWallPerpMove(
+          ref.node1Start, ref.node2Start, ref.pointerStart, world,
+          ref.normal, otherNodes, scale, HV_SNAP_DRAG_PX,
+        );
+        const dx = (world.x - ref.pointerStart.x) * scale;
+        const dy = (world.y - ref.pointerStart.y) * scale;
+        if (Math.sqrt(dx * dx + dy * dy) > 4) ref.hasMoved = true;
+        onUpdateNode(wall.node1Id, result.node1Target);
+        onUpdateNode(wall.node2Id, result.node2Target);
+      }
+      return;
+    }
 
     if (draggingNodeId) {
       const otherNodes = nodes.filter((n) => n.id !== draggingNodeId);
@@ -507,12 +553,43 @@ export const WallDrawingCanvas = ({
       : (collinearSnap(world, walls, nodes, scale, COLLINEAR_SNAP_PX) ?? baseSnap);
     setCursor(snap?.point ?? world);
     setSnapResult(snap);
+
+    if (tool === 'SELECT' && !draggingNodeId && !draggingWallId) {
+      const hitNode = hitTestNode(world);
+      setHoveredWallId(hitNode ? null : (hitTestWall(world)?.id ?? null));
+    }
   };
 
   const handlePointerUp = (e: ReactPointerEvent<SVGSVGElement>) => {
     if (isPanning) {
       setIsPanning(false);
       panStart.current = null;
+      (e.currentTarget as SVGSVGElement).releasePointerCapture(e.pointerId);
+      return;
+    }
+
+    if (draggingWallId) {
+      const ref = wallDragRef.current;
+      if (ref?.hasMoved) {
+        onPushHistory();
+      } else {
+        // No movement — check for double-click to open thickness editor
+        const now = Date.now();
+        const last = lastWallClickRef.current;
+        if (last && last.wallId === draggingWallId && now - last.time < 300) {
+          const wall = walls.find((w) => w.id === draggingWallId);
+          if (wall) {
+            setEditingWallId(wall.id);
+            setEditThickness((wall.thickness / 10).toFixed(0));
+          }
+          lastWallClickRef.current = null;
+        } else {
+          lastWallClickRef.current = { time: now, wallId: draggingWallId };
+        }
+      }
+      setDraggingWallId(null);
+      wallDragRef.current = null;
+      setHoveredWallId(null);
       (e.currentTarget as SVGSVGElement).releasePointerCapture(e.pointerId);
       return;
     }
@@ -662,6 +739,26 @@ export const WallDrawingCanvas = ({
     return { sl, angle, len, halfT };
   })();
 
+  const svgCursor = (() => {
+    if (tool !== 'SELECT') return 'crosshair';
+    if (draggingWallId) return 'grabbing';
+    if (hoveredWallId) {
+      const w = walls.find((wl) => wl.id === hoveredWallId);
+      if (w) {
+        const n1 = nodes.find((n) => n.id === w.node1Id);
+        const n2 = nodes.find((n) => n.id === w.node2Id);
+        if (n1 && n2) {
+          const adx = Math.abs(n2.x - n1.x);
+          const ady = Math.abs(n2.y - n1.y);
+          if (ady < adx * 0.1) return 'ns-resize';
+          if (adx < ady * 0.1) return 'ew-resize';
+          return 'move';
+        }
+      }
+    }
+    return 'crosshair';
+  })();
+
   return (
     <div
       className="relative h-full w-full overflow-hidden"
@@ -673,7 +770,8 @@ export const WallDrawingCanvas = ({
     >
       <svg
         ref={svgRef}
-        className="h-full w-full cursor-crosshair select-none"
+        className="h-full w-full select-none"
+        style={{ cursor: svgCursor }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
