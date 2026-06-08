@@ -118,7 +118,7 @@ export function connectNodeToWallInEngine(
   if (!node) return we;
 
   const wall1: Wall = { ...wall, id: generateId(), node1Id: wall.node1Id, node2Id: nodeId };
-  const wall2: Wall = { ...wall, id: generateId(), node1Id: nodeId, node2Id: wall.node2Id };
+  const wall2: Wall = { ...wall, id: generateId(), node1Id: nodeId,       node2Id: wall.node2Id };
 
   return {
     ...we,

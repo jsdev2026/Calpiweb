@@ -87,6 +87,11 @@ describe('connectNodeToWallInEngine', () => {
     result.walls.forEach(w => expect(w.thickness).toBe(100));
   });
 
+  it('préserve excludedZones inchangé', () => {
+    const result = connectNodeToWallInEngine(we, 'w1', 'free', { x: 100, y: 0 });
+    expect(result.excludedZones).toEqual([]);
+  });
+
   it('retourne le même objet si wallId introuvable', () => {
     const result = connectNodeToWallInEngine(we, 'missing', 'free', { x: 100, y: 0 });
     expect(result).toBe(we);
