@@ -187,7 +187,7 @@ export const QuantitiesPanel = () => {
         data-testid="bandeaux-wrapper"
         inert={collapsed ? ('' as unknown as boolean) : undefined}
         style={{
-          maxHeight: collapsed ? 0 : 400,
+          maxHeight: collapsed ? 0 : consumablesOpen ? 1000 : 400,
           opacity: collapsed ? 0 : 1,
           overflow: 'hidden',
           flexShrink: 0,
