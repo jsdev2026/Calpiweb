@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import type { ConsumableParams } from '@/types/tiling';
 import { selectActiveProject, selectDoorOpenings, selectRooms, useProjectStore } from '@/store/projectStore';
 import { useShallow } from 'zustand/react/shallow';
 import { analyzeQuantities } from '@/engine/quantities/quantityEngine';
@@ -33,6 +34,74 @@ const PinButton = ({ inBar, pinned, onPin }: PinButtonProps) => (
   </button>
 );
 
+interface ConsumableCardProps {
+  label: string;
+  unit: string;
+  bags: number;
+  bagSize: number;
+  bagUnit: string;
+  rendement: number;
+  rendementUnit: string;
+  totalKg: number;
+  onRendementChange: ((v: number) => void) | null;
+  onBagSizeChange: (v: number) => void;
+  color: 'blue' | 'violet';
+}
+
+const ConsumableCard = ({
+  label, unit, bags, bagSize, bagUnit, rendement, rendementUnit,
+  totalKg, onRendementChange, onBagSizeChange, color,
+}: ConsumableCardProps) => {
+  const accent = color === 'blue' ? 'text-blue-500' : 'text-violet-500';
+  const border = color === 'blue' ? 'border-blue-500/30' : 'border-violet-500/30';
+  const bg = color === 'blue' ? 'bg-blue-500/5' : 'bg-violet-500/5';
+
+  return (
+    <div className={`rounded-xl border ${border} ${bg} px-4 py-3`}>
+      <div className={`text-[10px] font-bold uppercase tracking-wider ${accent} mb-2`}>{label}</div>
+      <div className="flex items-end gap-1 mb-2">
+        <span className="text-2xl font-black tabular-nums text-gray-900 dark:text-zinc-100">{bags}</span>
+        <span className="text-xs text-gray-400 dark:text-zinc-500 mb-0.5">{unit}</span>
+      </div>
+      <div className="space-y-1 text-[11px] text-gray-400 dark:text-zinc-500">
+        <div className="flex items-center gap-1">
+          <span>Cdt :</span>
+          <input
+            type="number"
+            min="1"
+            step="1"
+            defaultValue={bagSize}
+            onBlur={(e) => {
+              const v = parseFloat(e.target.value);
+              if (!isNaN(v) && v > 0) onBagSizeChange(v);
+            }}
+            className="w-14 rounded border border-gray-300 dark:border-zinc-600 bg-transparent px-1 text-center text-gray-700 dark:text-zinc-300 outline-none focus:border-blue-400"
+          />
+          <span>{bagUnit}/{unit.slice(0, -1)}</span>
+        </div>
+        {onRendementChange !== null && (
+          <div className="flex items-center gap-1">
+            <span>Rdmt :</span>
+            <input
+              type="number"
+              min="0.1"
+              step="0.1"
+              defaultValue={parseFloat(rendement.toFixed(3))}
+              onBlur={(e) => {
+                const v = parseFloat(e.target.value);
+                if (!isNaN(v) && v > 0) onRendementChange(v);
+              }}
+              className="w-14 rounded border border-gray-300 dark:border-zinc-600 bg-transparent px-1 text-center text-gray-700 dark:text-zinc-300 outline-none focus:border-blue-400"
+            />
+            <span>{rendementUnit}</span>
+          </div>
+        )}
+        <div className="text-[10px]">{totalKg.toFixed(1)} {bagUnit} total</div>
+      </div>
+    </div>
+  );
+};
+
 export const QuantitiesPanel = () => {
   const project = useProjectStore(selectActiveProject);
   const rooms = useProjectStore(selectRooms);
@@ -52,6 +121,11 @@ export const QuantitiesPanel = () => {
     () => (result ? mergeSimilarCutGroups(result.cutGroups) : []),
     [result],
   );
+
+  const setConfig = useProjectStore((s) => s.setConfig);
+  const [consumablesOpen, setConsumablesOpen] = useState(false);
+  const [editingMargin, setEditingMargin] = useState(false);
+  const [marginInput, setMarginInput] = useState('');
 
   if (!project || !result) return null;
 
@@ -76,6 +150,33 @@ export const QuantitiesPanel = () => {
     const next = !pinned;
     setPinned(next);
     if (next) setCollapsed(false); // épingler = toujours montrer
+  };
+
+  const marginPct = Math.round(result.margin * 100);
+
+  const handleMarginEdit = () => {
+    setMarginInput(String(marginPct));
+    setEditingMargin(true);
+  };
+
+  const handleMarginCommit = () => {
+    const val = parseFloat(marginInput);
+    if (!isNaN(val) && val >= 0 && val <= 100) {
+      setConfig({ ...project.config, marginOverride: val / 100 });
+    }
+    setEditingMargin(false);
+  };
+
+  const handleMarginReset = () => {
+    setConfig({ ...project.config, marginOverride: undefined });
+    setEditingMargin(false);
+  };
+
+  const updateConsumableParam = (patch: Partial<ConsumableParams>) => {
+    setConfig({
+      ...project.config,
+      consumableParams: { ...(project.config.consumableParams ?? {}), ...patch },
+    });
   };
 
   return (
@@ -139,8 +240,43 @@ export const QuantitiesPanel = () => {
             <div className="flex items-center justify-between rounded-xl border border-orange-500/20 bg-orange-500/5 px-4 py-2">
               <div>
                 <div className="text-[10px] font-bold uppercase tracking-wider text-orange-500/80">Total à commander</div>
-                <div className="mt-0.5 text-[11px] text-gray-400 dark:text-zinc-500">
-                  {result.wholeCount} + ({result.cuts.length}−{result.totalReuseCount}) = {result.totalTiles} × 1.10
+                <div className="mt-0.5 flex items-center gap-1 text-[11px] text-gray-400 dark:text-zinc-500">
+                  <span>
+                    {result.wholeCount} + ({result.cuts.length}−{result.totalReuseCount}) = {result.totalTiles}
+                  </span>
+                  {editingMargin ? (
+                    <span className="flex items-center gap-1">
+                      ×&nbsp;
+                      <input
+                        autoFocus
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="1"
+                        value={marginInput}
+                        onChange={(e) => setMarginInput(e.target.value)}
+                        onBlur={handleMarginCommit}
+                        onKeyDown={(e) => { if (e.key === 'Enter') handleMarginCommit(); if (e.key === 'Escape') setEditingMargin(false); }}
+                        className="w-12 rounded border border-orange-400 bg-transparent px-1 text-orange-400 outline-none"
+                      />
+                      %
+                      {project.config.marginOverride !== undefined && (
+                        <button type="button" onClick={handleMarginReset} className="text-[9px] text-gray-400 underline hover:text-gray-600">auto</button>
+                      )}
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleMarginEdit}
+                      className="flex items-center gap-0.5 text-orange-400 hover:text-orange-500"
+                      title="Modifier la marge de sécurité"
+                    >
+                      × {marginPct}%
+                      {project.config.marginOverride !== undefined && (
+                        <span className="text-[9px] text-yellow-500">✎</span>
+                      )}
+                    </button>
+                  )}
                 </div>
                 <div className="text-[11px] text-orange-400/70">{formatM2(result.toOrder * result.tileW * result.tileH)}</div>
               </div>
@@ -150,6 +286,85 @@ export const QuantitiesPanel = () => {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Bloc consommables */}
+        <div className="border-t border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+          <button
+            type="button"
+            onClick={() => setConsumablesOpen((o) => !o)}
+            className="flex w-full items-center justify-between px-5 md:px-8 py-2.5 text-left text-xs font-bold uppercase tracking-wider text-blue-500 hover:bg-gray-50 dark:hover:bg-zinc-800/60 transition-colors"
+          >
+            <span>Consommables de pose</span>
+            <span className="text-gray-400">{consumablesOpen ? '▲' : '▼'}</span>
+          </button>
+
+          {consumablesOpen && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 px-5 md:px-8 pb-4 pt-1">
+              {/* Épaisseur carreau (commune à tout) */}
+              <div className="md:col-span-3 flex items-center gap-2 text-xs text-gray-400 dark:text-zinc-500">
+                <span>Épaisseur carreau :</span>
+                <input
+                  type="number"
+                  min="1"
+                  max="30"
+                  step="1"
+                  defaultValue={(project.config.consumableParams?.tileThickness ?? 10)}
+                  onBlur={(e) => {
+                    const v = parseFloat(e.target.value);
+                    if (!isNaN(v) && v > 0) updateConsumableParam({ tileThickness: v });
+                  }}
+                  className="w-14 rounded border border-gray-300 dark:border-zinc-600 bg-transparent px-1 text-center text-gray-700 dark:text-zinc-300 outline-none focus:border-blue-400"
+                />
+                <span>mm</span>
+              </div>
+
+              {/* Colle */}
+              <ConsumableCard
+                label="Colle"
+                unit="sacs"
+                bags={result.consumables.colle.bags}
+                bagSize={result.consumables.colle.bagSize}
+                bagUnit="kg"
+                rendement={result.consumables.colle.rendement}
+                rendementUnit="kg/m²"
+                totalKg={result.consumables.colle.total}
+                onRendementChange={(v) => updateConsumableParam({ colleRendement: v })}
+                onBagSizeChange={(v) => updateConsumableParam({ colleBagSize: v })}
+                color="blue"
+              />
+
+              {/* Joint */}
+              <ConsumableCard
+                label="Joint"
+                unit="sacs"
+                bags={result.consumables.joint.bags}
+                bagSize={result.consumables.joint.bagSize}
+                bagUnit="kg"
+                rendement={result.consumables.joint.rendement}
+                rendementUnit="kg/m²"
+                totalKg={result.consumables.joint.total}
+                onRendementChange={(v) => updateConsumableParam({ jointRendement: v })}
+                onBagSizeChange={(v) => updateConsumableParam({ jointBagSize: v })}
+                color="blue"
+              />
+
+              {/* Croisillons */}
+              <ConsumableCard
+                label="Croisillons"
+                unit="sachets"
+                bags={result.consumables.croisillons.bags}
+                bagSize={result.consumables.croisillons.bagSize}
+                bagUnit="unités"
+                rendement={result.consumables.croisillons.rendement}
+                rendementUnit="×/carreau"
+                totalKg={result.consumables.croisillons.total}
+                onRendementChange={null}
+                onBagSizeChange={(v) => updateConsumableParam({ croisillonsBagSize: v })}
+                color="violet"
+              />
+            </div>
+          )}
         </div>
       </div>
 
