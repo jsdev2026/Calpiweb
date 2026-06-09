@@ -4,7 +4,7 @@ import { analyzeQuantities } from '@/engine/quantities/quantityEngine';
 import type { QuantityResult } from '@/engine/quantities/quantityEngine';
 import type { Room } from '@/types/project';
 import type { TilingConfig } from '@/types/tiling';
-import { ORDER_MARGIN_RATIO } from '@/constants/businessRules';
+import { MARGIN_STRAIGHT, MARGIN_DIAGONAL, MARGIN_CHEVRON } from '@/constants/businessRules';
 
 const JOINT = 2;
 
@@ -25,7 +25,7 @@ function makeRoom(w: number, h: number): Room {
 
 function checkInvariants(result: QuantityResult): void {
   const { wholeCount, cuts, cutGroups, totalReuseCount,
-          tilesForCuts, totalTiles, toOrder, tileW, tileH } = result;
+          tilesForCuts, totalTiles, toOrder, tileW, tileH, margin } = result;
 
   expect(totalTiles, 'I1: totalTiles = wholeCount + tilesForCuts').toBe(wholeCount + tilesForCuts);
   expect(tilesForCuts, 'I2: tilesForCuts = cuts.length - totalReuseCount').toBe(cuts.length - totalReuseCount);
@@ -43,8 +43,9 @@ function checkInvariants(result: QuantityResult): void {
   for (const g of cutGroups) {
     expect(g.netTiles, 'I6: netTiles = totalCount - reuseCount').toBe(g.totalCount - g.reuseCount);
   }
-  expect(toOrder, 'I7: toOrder = ceil(totalTiles × (1 + ORDER_MARGIN_RATIO))').toBe(
-    Math.ceil(totalTiles * (1 + ORDER_MARGIN_RATIO)),
+  // I7 updated: use result.margin instead of hardcoded ORDER_MARGIN_RATIO
+  expect(toOrder, 'I7: toOrder = ceil(totalTiles × (1 + margin))').toBe(
+    Math.ceil(totalTiles * (1 + margin)),
   );
   const cutById = new Map(cuts.map((c) => [c.id, c]));
   for (const cut of cuts) {
@@ -129,5 +130,39 @@ describe('quantityEngine — scénarios de référence', () => {
     // Grid aligns to inset bbox. Exact count verified against engine output.
     const resultWithWall = analyzeQuantities([room], config, 100);
     expect(resultWithWall.wholeCount).toBe(9);
+  });
+});
+
+describe('quantityEngine — marge auto-calibrée', () => {
+  it('STRAIGHT angle=0 → marge 5%', () => {
+    const result = analyzeQuantities([makeRoom(306, 204)], { ...BASE_CONFIG, layout: 'STRAIGHT', angle: 0 });
+    expect(result.margin).toBe(MARGIN_STRAIGHT);
+    expect(result.toOrder).toBe(Math.ceil(result.totalTiles * (1 + MARGIN_STRAIGHT)));
+  });
+
+  it('angle=45 → marge 10%', () => {
+    const result = analyzeQuantities([makeRoom(306, 204)], { ...BASE_CONFIG, angle: 45 });
+    expect(result.margin).toBe(MARGIN_DIAGONAL);
+    expect(result.toOrder).toBe(Math.ceil(result.totalTiles * (1 + MARGIN_DIAGONAL)));
+  });
+
+  it('CHEVRON → marge 15%', () => {
+    const result = analyzeQuantities([makeRoom(306, 204)], { ...BASE_CONFIG, layout: 'CHEVRON', angle: 0 });
+    expect(result.margin).toBe(MARGIN_CHEVRON);
+    expect(result.toOrder).toBe(Math.ceil(result.totalTiles * (1 + MARGIN_CHEVRON)));
+  });
+
+  it('HERRINGBONE → marge 15%', () => {
+    const result = analyzeQuantities([makeRoom(306, 204)], { ...BASE_CONFIG, layout: 'HERRINGBONE', angle: 0 });
+    expect(result.margin).toBe(MARGIN_CHEVRON);
+  });
+
+  it('marginOverride écrase la marge auto', () => {
+    const result = analyzeQuantities(
+      [makeRoom(306, 204)],
+      { ...BASE_CONFIG, layout: 'STRAIGHT', marginOverride: 0.20 },
+    );
+    expect(result.margin).toBe(0.20);
+    expect(result.toOrder).toBe(Math.ceil(result.totalTiles * 1.20));
   });
 });
