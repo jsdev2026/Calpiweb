@@ -143,7 +143,7 @@ describe('canReuseFor — tolérance 10mm', () => {
   it('chute 6mm plus petite que le besoin est réutilisable', () => {
     const BOTTOM_CUT: PieceEdges = { left: 'factory', right: 'factory', top: 'factory', bottom: 'cut' };
     // chute 14×200, besoin 20×180 → diff de 6mm en largeur
-    // échoue avec tolérance 5mm (14 < 20−5=15), passe avec 10mm (14 >= 20−10=10)
+    // échoue avec tolérance 5mm (14 < 20−5=15), passe avec REUSE_TOLERANCE_MM=10mm (14 >= 20−10=10)
     expect(canReuseFor(14, 200, FACTORY, 20, 180, BOTTOM_CUT)).toBe(true);
   });
 
