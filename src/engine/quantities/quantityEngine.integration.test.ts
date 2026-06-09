@@ -155,6 +155,7 @@ describe('quantityEngine — marge auto-calibrée', () => {
   it('HERRINGBONE → marge 15%', () => {
     const result = analyzeQuantities([makeRoom(306, 204)], { ...BASE_CONFIG, layout: 'HERRINGBONE', angle: 0 });
     expect(result.margin).toBe(MARGIN_CHEVRON);
+    expect(result.toOrder).toBe(Math.ceil(result.totalTiles * (1 + MARGIN_CHEVRON)));
   });
 
   it('marginOverride écrase la marge auto', () => {
