@@ -167,3 +167,51 @@ describe('quantityEngine — marge auto-calibrée', () => {
     expect(result.toOrder).toBe(Math.ceil(result.totalTiles * 1.20));
   });
 });
+
+describe('quantityEngine — consommables', () => {
+  it('colle : 4 kg/m² par défaut, arrondi en sacs de 25kg', () => {
+    const result = analyzeQuantities([makeRoom(3060, 2040)], BASE_CONFIG);
+    expect(result.consumables.colle.rendement).toBe(4);
+    expect(result.consumables.colle.bagSize).toBe(25);
+    expect(result.consumables.colle.bags).toBeGreaterThanOrEqual(1);
+    expect(result.consumables.colle.total).toBeCloseTo(result.roomArea / 1_000_000 * 4, 1);
+  });
+
+  it('joint : formule ISO 13007 (100×100mm, joint 2mm, épaisseur 10mm)', () => {
+    // rendement = ((100+100)/(100×100)) × 2 × 10 × 1.6 × 1.05
+    //           = (200/10000) × 33.6 = 0.672 kg/m²
+    const result = analyzeQuantities([makeRoom(3060, 2040)], BASE_CONFIG);
+    const expected = ((100 + 100) / (100 * 100)) * 2 * 10 * 1.6 * 1.05;
+    expect(result.consumables.joint.rendement).toBeCloseTo(expected, 4);
+    expect(result.consumables.joint.bagSize).toBe(5);
+  });
+
+  it('croisillons : ceil(totalTiles × 1.2), sachets de 200', () => {
+    const result = analyzeQuantities([makeRoom(306, 204)], BASE_CONFIG);
+    expect(result.consumables.croisillons.total).toBe(Math.ceil(result.totalTiles * 1.2));
+    expect(result.consumables.croisillons.bagSize).toBe(200);
+    expect(result.consumables.croisillons.bags).toBe(
+      Math.ceil(Math.ceil(result.totalTiles * 1.2) / 200),
+    );
+  });
+
+  it('consumableParams.colleRendement override', () => {
+    const config: TilingConfig = {
+      ...BASE_CONFIG,
+      consumableParams: { colleRendement: 6, colleBagSize: 20 },
+    };
+    const result = analyzeQuantities([makeRoom(3060, 2040)], config);
+    expect(result.consumables.colle.rendement).toBe(6);
+    expect(result.consumables.colle.bagSize).toBe(20);
+    expect(result.consumables.colle.total).toBeCloseTo(result.roomArea / 1_000_000 * 6, 1);
+  });
+
+  it('consumableParams.jointRendement override remplace ISO', () => {
+    const config: TilingConfig = {
+      ...BASE_CONFIG,
+      consumableParams: { jointRendement: 1.5 },
+    };
+    const result = analyzeQuantities([makeRoom(3060, 2040)], config);
+    expect(result.consumables.joint.rendement).toBe(1.5);
+  });
+});
