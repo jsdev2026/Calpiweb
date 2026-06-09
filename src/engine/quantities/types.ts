@@ -45,6 +45,19 @@ export interface CutGroup {
   netTiles: number;
 }
 
+export interface ConsumableItem {
+  total: number;       // quantité totale (kg pour colle/joint, unités pour croisillons)
+  bags: number;        // nombre de conditionnements, arrondi au-dessus
+  bagSize: number;     // taille d'un conditionnement (kg ou unités)
+  rendement: number;   // rendement unitaire (kg/m² ou unités/carreau)
+}
+
+export interface Consumables {
+  colle: ConsumableItem;
+  joint: ConsumableItem;
+  croisillons: ConsumableItem;
+}
+
 export interface QuantityResult {
   tileW: number;
   tileH: number;
@@ -56,6 +69,8 @@ export interface QuantityResult {
   tilesForCuts: number;
   totalTiles: number;
   toOrder: number;
+  margin: number;          // marge appliquée, ex. 0.05 pour 5%
   roomArea: number;
   tiles: Tile[];
+  consumables: Consumables;
 }
