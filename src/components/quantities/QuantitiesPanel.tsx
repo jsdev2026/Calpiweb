@@ -67,6 +67,7 @@ const ConsumableCard = ({
         <div className="flex items-center gap-1">
           <span>Cdt :</span>
           <input
+            key={bagSize}
             type="number"
             min="1"
             step="1"
@@ -83,6 +84,7 @@ const ConsumableCard = ({
           <div className="flex items-center gap-1">
             <span>Rdmt :</span>
             <input
+              key={rendement.toFixed(3)}
               type="number"
               min="0.1"
               step="0.1"
@@ -305,6 +307,7 @@ export const QuantitiesPanel = () => {
               <div className="md:col-span-3 flex items-center gap-2 text-xs text-gray-400 dark:text-zinc-500">
                 <span>Épaisseur carreau :</span>
                 <input
+                  key={project.config.consumableParams?.tileThickness ?? 10}
                   type="number"
                   min="1"
                   max="30"
