@@ -64,6 +64,9 @@ export const QuantitiesPrintView = ({ project, rooms: roomsProp, doorOpenings = 
     }))
     .filter(({ result }) => result.totalTiles > 0);
 
+  // Analyse globale pour les consommables et les totaux chantier
+  const globalResult = analyzeQuantities(validRooms, config, wallThickness, doorOpenings);
+
   return (
     <div style={{ fontFamily: 'system-ui, -apple-system, sans-serif', color: '#111827', background: '#fff' }}>
 
@@ -80,7 +83,73 @@ export const QuantitiesPrintView = ({ project, rooms: roomsProp, doorOpenings = 
         </div>
       </div>
 
-      {/* ② Infos client (omis si absent) */}
+      {/* ② Récapitulatif chantier */}
+      {globalResult.totalTiles > 0 && (
+        <div style={{ margin: '16px 24px', border: '2px solid #f97316', borderRadius: 10, overflow: 'hidden' }}>
+          <div style={{ background: '#fff7ed', padding: '8px 16px', borderBottom: '1px solid #fed7aa' }}>
+            <div style={{ fontWeight: 800, fontSize: 13, color: '#ea580c', letterSpacing: '-0.2px' }}>
+              Récapitulatif chantier
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0 }}>
+            {/* Surface */}
+            <div style={{ padding: '10px 16px', borderRight: '1px solid #fed7aa', borderBottom: '1px solid #fed7aa' }}>
+              <div style={{ fontSize: 10, color: '#9ca3af', textTransform: 'uppercase' as const, marginBottom: 3 }}>Surface totale</div>
+              <div style={{ fontSize: 18, fontWeight: 900, color: '#111827' }}>{formatM2(globalResult.roomArea)}</div>
+            </div>
+            {/* Carreaux */}
+            <div style={{ padding: '10px 16px', borderRight: '1px solid #fed7aa', borderBottom: '1px solid #fed7aa' }}>
+              <div style={{ fontSize: 10, color: '#9ca3af', textTransform: 'uppercase' as const, marginBottom: 3 }}>
+                Carreaux à commander
+              </div>
+              <div style={{ fontSize: 18, fontWeight: 900, color: '#f97316' }}>{globalResult.toOrder}</div>
+              <div style={{ fontSize: 9, color: '#9ca3af' }}>
+                {globalResult.totalTiles} + marge {Math.round(globalResult.margin * 100)}%
+              </div>
+            </div>
+            {/* Colle */}
+            <div style={{ padding: '10px 16px', borderBottom: '1px solid #fed7aa' }}>
+              <div style={{ fontSize: 10, color: '#9ca3af', textTransform: 'uppercase' as const, marginBottom: 3 }}>Colle</div>
+              <div style={{ fontSize: 18, fontWeight: 900, color: '#3b82f6' }}>
+                {globalResult.consumables.colle.bags} sacs
+              </div>
+              <div style={{ fontSize: 9, color: '#9ca3af' }}>
+                × {globalResult.consumables.colle.bagSize} kg — {globalResult.consumables.colle.rendement.toFixed(1)} kg/m²
+              </div>
+            </div>
+            {/* Joint */}
+            <div style={{ padding: '10px 16px', borderRight: '1px solid #fed7aa' }}>
+              <div style={{ fontSize: 10, color: '#9ca3af', textTransform: 'uppercase' as const, marginBottom: 3 }}>Joint</div>
+              <div style={{ fontSize: 18, fontWeight: 900, color: '#3b82f6' }}>
+                {globalResult.consumables.joint.bags} sacs
+              </div>
+              <div style={{ fontSize: 9, color: '#9ca3af' }}>
+                × {globalResult.consumables.joint.bagSize} kg — {globalResult.consumables.joint.rendement.toFixed(3)} kg/m²
+              </div>
+            </div>
+            {/* Croisillons */}
+            <div style={{ padding: '10px 16px', borderRight: '1px solid #fed7aa' }}>
+              <div style={{ fontSize: 10, color: '#9ca3af', textTransform: 'uppercase' as const, marginBottom: 3 }}>Croisillons</div>
+              <div style={{ fontSize: 18, fontWeight: 900, color: '#8b5cf6' }}>
+                {globalResult.consumables.croisillons.bags} sachets
+              </div>
+              <div style={{ fontSize: 9, color: '#9ca3af' }}>
+                × {globalResult.consumables.croisillons.bagSize} unités — {globalResult.consumables.croisillons.total} pcs
+              </div>
+            </div>
+            {/* Format pose */}
+            <div style={{ padding: '10px 16px' }}>
+              <div style={{ fontSize: 10, color: '#9ca3af', textTransform: 'uppercase' as const, marginBottom: 3 }}>Format pose</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>
+                {formatCm(globalResult.tileW)} × {formatCm(globalResult.tileH)}
+              </div>
+              <div style={{ fontSize: 9, color: '#9ca3af' }}>joint {globalResult.joint} mm</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ③ Infos client (omis si absent) */}
       {client && (
         <div style={{ padding: '12px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', gap: 32, flexWrap: 'wrap' as const }}>
           <div style={{ minWidth: 160 }}>
@@ -110,11 +179,11 @@ export const QuantitiesPrintView = ({ project, rooms: roomsProp, doorOpenings = 
         </div>
       )}
 
-      {/* ③→⑥ Sections par pièce */}
+      {/* ④→⑦ Sections par pièce */}
       {roomResults.map(({ room, result }, idx) => (
         <div key={room.id} style={{ breakAfter: idx < roomResults.length - 1 ? 'page' : 'auto' }}>
 
-          {/* ③ En-tête pièce */}
+          {/* ④ En-tête pièce */}
           <div style={{
             background: '#f8fafc',
             borderTop: '2px solid #e2e8f0',
@@ -139,7 +208,7 @@ export const QuantitiesPrintView = ({ project, rooms: roomsProp, doorOpenings = 
             </div>
           </div>
 
-          {/* ④ Plan SVG annoté */}
+          {/* ⑤ Plan SVG annoté */}
           <div style={{ padding: '12px 24px', background: '#f8fafc', borderBottom: '1px solid #f1f5f9' }}>
             <QuantityPlanSvg
               result={result}
@@ -162,7 +231,7 @@ export const QuantitiesPrintView = ({ project, rooms: roomsProp, doorOpenings = 
             </div>
           </div>
 
-          {/* ⑤ Statistiques */}
+          {/* ⑥ Statistiques */}
           <div style={{ padding: '12px 24px', borderBottom: '1px solid #f1f5f9', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12 }}>
             <StatCard label="Total posés"       value={result.totalTiles}    color="#374151" borderColor="#e5e7eb" bg="#fff" />
             <StatCard label="Carreaux entiers"  value={result.wholeCount}    color="#3b82f6" borderColor="#dbeafe" bg="#eff6ff" />
@@ -170,7 +239,7 @@ export const QuantitiesPrintView = ({ project, rooms: roomsProp, doorOpenings = 
             <StatCard label="À commander"       value={result.toOrder}       color="#16a34a" borderColor="#bbf7d0" bg="#f0fdf4" />
           </div>
 
-          {/* ⑥ Tableau des coupes */}
+          {/* ⑦ Tableau des coupes */}
           {result.cutGroups.length > 0 && (
             <div style={{ padding: '12px 24px 0' }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase' as const, letterSpacing: '0.05em', marginBottom: 8 }}>
@@ -218,7 +287,7 @@ export const QuantitiesPrintView = ({ project, rooms: roomsProp, doorOpenings = 
         </div>
       ))}
 
-      {/* ⑦ Footer filigrane */}
+      {/* ⑧ Footer filigrane */}
       <div style={{ marginTop: 24, background: '#f8fafc', borderTop: '2px solid #e2e8f0', padding: '8px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <CalePlanLogo size={14} opacity={0.4} />

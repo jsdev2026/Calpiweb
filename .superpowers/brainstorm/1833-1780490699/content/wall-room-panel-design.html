@@ -1,0 +1,113 @@
+<h2>SP4 — Design WallRoomPanel</h2>
+<p class="subtitle">Même conteneur visuel que RoomPanel (backdrop blur, border, shadow) — affichage seul : Nom + Surface.</p>
+
+<style>
+  .preview-wrap {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin: 20px 0;
+  }
+  .panel-demo {
+    background: var(--surf, #1a1c24);
+    border: 1px solid var(--bdr, #374151);
+    border-radius: 18px;
+    padding: 6px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    backdrop-filter: blur(12px);
+    display: inline-flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 140px;
+  }
+  .room-entry {
+    border-radius: 12px;
+    padding: 6px 12px;
+    cursor: default;
+  }
+  .room-name {
+    font-size: 11px;
+    font-weight: 700;
+    color: #f97316;
+  }
+  .room-area {
+    font-size: 10px;
+    color: #9ca3af;
+    margin-top: 1px;
+  }
+  .room-entry.active {
+    background: rgba(249,115,22,0.15);
+  }
+  .room-entry:not(.active):hover {
+    background: rgba(255,255,255,0.04);
+  }
+  .divider {
+    height: 1px;
+    background: #374151;
+    margin: 2px 6px;
+  }
+  .empty-msg {
+    font-size: 11px;
+    color: #6b7280;
+    padding: 8px 12px;
+    font-style: italic;
+  }
+  .label-tag {
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #6b7280;
+    padding: 4px 12px 2px;
+  }
+</style>
+
+<div class="preview-wrap">
+
+  <!-- Version 2 pièces -->
+  <div>
+    <p style="font-size:12px;color:#9ca3af;margin-bottom:8px">Plan avec 2 pièces fermées</p>
+    <div class="panel-demo">
+      <div class="label-tag">Pièces</div>
+      <div class="divider"></div>
+      <div class="room-entry active">
+        <div class="room-name">Pièce 1</div>
+        <div class="room-area">24.5 m²</div>
+      </div>
+      <div class="room-entry">
+        <div class="room-name">Pièce 2</div>
+        <div class="room-area">12.3 m²</div>
+      </div>
+    </div>
+    <p style="font-size:10px;color:#6b7280;margin-top:8px">
+      Noms auto-générés. Panel draggable (poignée GripVertical au hover).
+    </p>
+  </div>
+
+  <!-- Version 0 pièces -->
+  <div>
+    <p style="font-size:12px;color:#9ca3af;margin-bottom:8px">Aucun contour fermé</p>
+    <div class="panel-demo">
+      <div class="label-tag">Pièces</div>
+      <div class="divider"></div>
+      <div class="empty-msg">Aucune pièce fermée</div>
+    </div>
+    <p style="font-size:10px;color:#6b7280;margin-top:8px">
+      Affiché quand wallsToRooms retourne [].
+    </p>
+  </div>
+
+</div>
+
+<div class="section" style="margin-top:16px">
+  <h3>Fonctionnement</h3>
+  <ul style="font-size:12px;color:#d1d5db;line-height:1.8">
+    <li><strong>Composant :</strong> <code>src/components/plan/WallRoomPanel.tsx</code> (nouveau)</li>
+    <li><strong>Données :</strong> <code>selectRooms(state)</code> — rooms auto-détectées</li>
+    <li><strong>Surface :</strong> <code>getPolygonArea(room.points) / 1_000_000</code> → m²</li>
+    <li><strong>Draggable :</strong> même <code>useDraggableSnap</code> que RoomPanel</li>
+    <li><strong>Position :</strong> même logique <code>getPanelStyle(zone, tutorialMode)</code></li>
+    <li><strong>Dans PlanEditor :</strong> affiché à la place de RoomPanel quand <code>wallEngine !== undefined</code></li>
+    <li><strong>Aucune interaction :</strong> pas de sélection, pas de rename, pas d'add/delete</li>
+  </ul>
+</div>

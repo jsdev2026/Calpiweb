@@ -1,0 +1,108 @@
+<h2>Bug angles aigus — 3 approches de correction</h2>
+<p class="subtitle">Le bug actuel : <code>jointParam</code> retourne une extension <em>unique</em> appliquée symétriquement aux deux coins → overlap massif aux angles aigus. Laquelle de ces corrections te convient ?</p>
+
+<style>
+  .diagrams { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 24px 0; }
+  .diagram-box { background: #1a1a2e; border-radius: 10px; padding: 16px; }
+  .diagram-box h4 { margin: 0 0 8px 0; color: #e2e8f0; font-size: 14px; }
+  .diagram-box svg { display: block; margin: 0 auto; }
+  .bug-label { color: #fc8181; font-size: 12px; text-align: center; margin-top: 8px; }
+  .note { font-size: 12px; color: #a0aec0; margin-top: 6px; text-align: center; }
+</style>
+
+<!-- BUG ACTUEL -->
+<div style="background:#2d1515;border-radius:10px;padding:16px;margin-bottom:20px;">
+  <h3 style="color:#fc8181;margin:0 0 8px 0">⚠ Comportement actuel (bugué)</h3>
+  <p class="note" style="text-align:left">Les deux murs s'étendent très loin au-delà du nœud de jonction, créant un amas de géométrie au sommet aigu.</p>
+  <svg width="400" height="140" viewBox="0 0 400 140">
+    <!-- Mur A (horizontal) étendu trop loin -->
+    <polygon points="20,55 280,43 280,97 20,85" fill="#4a90d9" opacity="0.5" stroke="#4a90d9" stroke-width="1"/>
+    <!-- Mur B (diagonal, angle aigu) étendu trop loin -->
+    <polygon points="280,43 310,10 350,25 280,97" fill="#e67e22" opacity="0.5" stroke="#e67e22" stroke-width="1"/>
+    <!-- Zone de superposition -->
+    <polygon points="280,43 310,10 310,70 280,97" fill="#9b59b6" opacity="0.6"/>
+    <!-- Nœud de jonction -->
+    <circle cx="280" cy="70" r="4" fill="white"/>
+    <text x="285" y="74" fill="white" font-size="10">P</text>
+    <!-- Labels -->
+    <text x="100" y="75" fill="#4a90d9" font-size="11" text-anchor="middle">Mur A</text>
+    <text x="335" y="30" fill="#e67e22" font-size="11">Mur B</text>
+    <text x="300" y="58" fill="#d9b3ff" font-size="10" text-anchor="middle">overlap</text>
+    <!-- Flèches extension excessive -->
+    <line x1="250" y1="40" x2="278" y2="40" stroke="#fc8181" stroke-width="1.5" stroke-dasharray="3"/>
+    <text x="255" y="36" fill="#fc8181" font-size="9">extension excessive</text>
+  </svg>
+</div>
+
+<!-- 3 APPROCHES -->
+<div class="diagrams">
+
+  <!-- APPROCHE A -->
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Onglet correct par coin</h3>
+      <p>Calcul de deux extensions indépendantes : <strong>t_intérieur</strong> (coin concave) et <strong>t_extérieur</strong> (coin convexe). Donne une coupe diagonale nette. + Miter limit pour les angles &lt; ~20°.</p>
+      <svg width="260" height="130" viewBox="0 0 260 130" style="margin:10px auto;display:block">
+        <!-- Mur A : coupe diagonale correcte -->
+        <polygon points="10,45 185,38 200,92 10,85" fill="#4a90d9" opacity="0.7" stroke="#4a90d9" stroke-width="1"/>
+        <!-- Mur B : coupe diagonale correcte -->
+        <polygon points="185,38 220,5 255,20 200,92" fill="#e67e22" opacity="0.7" stroke="#e67e22" stroke-width="1"/>
+        <!-- Ligne de joint -->
+        <line x1="185" y1="38" x2="200" y2="92" stroke="white" stroke-width="2" stroke-dasharray="4"/>
+        <circle cx="192" cy="65" r="3" fill="white"/>
+        <text x="195" y="70" fill="white" font-size="9">P</text>
+        <text x="80" y="70" fill="#a0d9ff" font-size="10" text-anchor="middle">Mur A</text>
+        <text x="238" y="22" fill="#ffc07a" font-size="10">Mur B</text>
+      </svg>
+      <p class="note">✓ Onglet parfait · ✓ Pas d'overlap · ⚠ Mise à jour des tests requis</p>
+    </div>
+  </div>
+
+  <!-- APPROCHE B -->
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Union de polygones</h3>
+      <p>Chaque mur = simple rectangle. L'union est calculée à l'affichage (Sutherland-Hodgman). Aucune logique d'extension — la forme finale est toujours correcte.</p>
+      <svg width="260" height="130" viewBox="0 0 260 130" style="margin:10px auto;display:block">
+        <!-- Union des deux rectangles -->
+        <polygon points="10,45 192,45 220,5 255,20 200,92 10,85" fill="#27ae60" opacity="0.75" stroke="#27ae60" stroke-width="1"/>
+        <circle cx="192" cy="65" r="3" fill="white"/>
+        <text x="197" y="70" fill="white" font-size="9">P</text>
+        <text x="80" y="70" fill="#a0ffb8" font-size="10" text-anchor="middle">Union</text>
+        <text x="238" y="22" fill="#a0ffb8" font-size="10">Mur B</text>
+        <!-- Ligne de joint (optionnelle) -->
+        <line x1="192" y1="45" x2="200" y2="92" stroke="white" stroke-width="1.5" stroke-dasharray="3" opacity="0.6"/>
+      </svg>
+      <p class="note">✓ Toujours correct · ⚠ Plus complexe · ⚠ Performance (~15 murs)</p>
+    </div>
+  </div>
+
+  <!-- APPROCHE C -->
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Miter limit + bevel fallback</h3>
+      <p>Garder la formule actuelle mais <strong>clamper</strong> l'extension à <code>N × épaisseur</code>. Au-delà du seuil, biseau plat au lieu d'un onglet.</p>
+      <svg width="260" height="130" viewBox="0 0 260 130" style="margin:10px auto;display:block">
+        <!-- Mur A : extension clampée -->
+        <polygon points="10,45 195,45 195,90 10,85" fill="#4a90d9" opacity="0.7" stroke="#4a90d9" stroke-width="1"/>
+        <!-- Mur B : extension clampée -->
+        <polygon points="195,45 220,5 255,20 205,90" fill="#e67e22" opacity="0.7" stroke="#e67e22" stroke-width="1"/>
+        <!-- Biseau visible (gap) -->
+        <line x1="195" y1="45" x2="205" y2="90" stroke="#fc8181" stroke-width="2"/>
+        <circle cx="200" cy="67" r="3" fill="white"/>
+        <text x="185" y="65" fill="#fc8181" font-size="9">bevel</text>
+        <text x="80" y="70" fill="#a0d9ff" font-size="10" text-anchor="middle">Mur A</text>
+        <text x="238" y="22" fill="#ffc07a" font-size="10">Mur B</text>
+      </svg>
+      <p class="note">✓ Simple · ✓ Stable · ⚠ Biseau visible aux angles aigus</p>
+    </div>
+  </div>
+
+</div>
+
+<p style="color:#a0aec0;font-size:13px;margin-top:8px">
+  <strong>Contexte :</strong> Le bug survient car <code>jointParam</code> calcule un seul paramètre <em>t</em> appliqué aux deux coins → coupe perpendiculaire identique au lieu d'une coupe diagonale. Aux angles aigus (&lt;60° intérieur), <em>t</em> devient très grand (~18 px pour un angle de 30°, épaisseur 10), ce qui crée deux longs rectangles qui se superposent massivement.
+</p>

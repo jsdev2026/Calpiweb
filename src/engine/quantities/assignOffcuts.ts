@@ -1,6 +1,6 @@
 // src/engine/quantities/assignOffcuts.ts
 import type { CutRecord, PieceEdges, TileEdgeSide } from './types';
-import { CUT_TOLERANCE_MM } from './constants';
+import { REUSE_TOLERANCE_MM } from './constants';
 
 export function canReuseFor(
   cw: number, ch: number, ce: PieceEdges,
@@ -11,7 +11,7 @@ export function canReuseFor(
   let et: TileEdgeSide = ce.top,   eb: TileEdgeSide = ce.bottom;
 
   for (let r = 0; r < 4; r++) {
-    if (ew >= nw - CUT_TOLERANCE_MM && eh >= nh - CUT_TOLERANCE_MM) {
+    if (ew >= nw - REUSE_TOLERANCE_MM && eh >= nh - REUSE_TOLERANCE_MM) {
       const ok =
         (ne.left   === 'factory' ? el === 'factory' : true) &&
         (ne.right  === 'factory' ? er === 'factory' : true) &&
@@ -38,7 +38,7 @@ function computeResidual(
   let et: TileEdgeSide = ce.top,  eb: TileEdgeSide = ce.bottom;
 
   for (let r = 0; r < 4; r++) {
-    if (ew >= nw - CUT_TOLERANCE_MM && eh >= nh - CUT_TOLERANCE_MM) {
+    if (ew >= nw - REUSE_TOLERANCE_MM && eh >= nh - REUSE_TOLERANCE_MM) {
       const ok =
         (ne.left   === 'factory' ? el === 'factory' : true) &&
         (ne.right  === 'factory' ? er === 'factory' : true) &&
@@ -51,12 +51,12 @@ function computeResidual(
         const rW = ew - nw, rH = eh;
         const bW = nw,      bH = eh - nh;
 
-        if (rW * rH >= bW * bH && rW > CUT_TOLERANCE_MM) {
+        if (rW * rH >= bW * bH && rW > REUSE_TOLERANCE_MM) {
           return { w: rW, h: rH, edges: { left: 'cut', right: er, top: et, bottom: eb } };
         }
-        if (bW > CUT_TOLERANCE_MM && bH > CUT_TOLERANCE_MM) {
+        if (bW > REUSE_TOLERANCE_MM && bH > REUSE_TOLERANCE_MM) {
           // If no vertical cut was needed (rW ≈ 0), right edge is the chute's original right edge.
-          const rightEdge: TileEdgeSide = rW > CUT_TOLERANCE_MM ? 'cut' : er;
+          const rightEdge: TileEdgeSide = rW > REUSE_TOLERANCE_MM ? 'cut' : er;
           return { w: bW, h: bH, edges: { left: el, right: rightEdge, top: 'cut', bottom: eb } };
         }
         return null;

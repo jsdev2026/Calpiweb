@@ -1,0 +1,92 @@
+<h2>Modifier la valeur d'une côte → que se passe-t-il ?</h2>
+<p class="subtitle">La pièce doit changer — mais dans quelle mesure ?</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="a1" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#1e293b;padding:20px;font-family:monospace;font-size:13px;color:#94a3b8;">
+      <div style="display:flex;gap:20px;align-items:flex-start;">
+        <!-- Plan editor -->
+        <div style="flex:1;text-align:center;">
+          <div style="font-size:10px;color:#f97316;font-weight:700;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;">Plan</div>
+          <svg width="120" height="90" style="display:block;margin:auto;">
+            <rect x="10" y="10" width="100" height="70" fill="none" stroke="#64748b" stroke-width="3"/>
+            <rect x="10" y="10" width="100" height="70" fill="rgba(100,116,139,0.15)"/>
+            <text x="60" y="60" text-anchor="middle" fill="#94a3b8" font-size="10">280 cm</text>
+            <!-- Dashed new position -->
+            <rect x="10" y="10" width="120" height="70" fill="none" stroke="#f97316" stroke-width="1.5" stroke-dasharray="4,3"/>
+            <text x="70" y="90" text-anchor="middle" fill="#f97316" font-size="9">→ 300 cm</text>
+          </svg>
+        </div>
+        <div style="color:#f97316;font-size:20px;align-self:center;">⇆</div>
+        <!-- Tiling -->
+        <div style="flex:1;text-align:center;">
+          <div style="font-size:10px;color:#f97316;font-weight:700;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;">Calepinage</div>
+          <svg width="120" height="90" style="display:block;margin:auto;">
+            <rect x="10" y="10" width="120" height="70" fill="rgba(249,115,22,0.12)"/>
+            <line x1="30" y1="10" x2="30" y2="80" stroke="#f97316" stroke-width="0.8" opacity="0.4"/>
+            <line x1="50" y1="10" x2="50" y2="80" stroke="#f97316" stroke-width="0.8" opacity="0.4"/>
+            <line x1="70" y1="10" x2="70" y2="80" stroke="#f97316" stroke-width="0.8" opacity="0.4"/>
+            <line x1="90" y1="10" x2="90" y2="80" stroke="#f97316" stroke-width="0.8" opacity="0.4"/>
+            <line x1="110" y1="10" x2="110" y2="80" stroke="#f97316" stroke-width="0.8" opacity="0.4"/>
+            <line x1="10" y1="30" x2="130" y2="30" stroke="#f97316" stroke-width="0.8" opacity="0.4"/>
+            <line x1="10" y1="50" x2="130" y2="50" stroke="#f97316" stroke-width="0.8" opacity="0.4"/>
+            <line x1="10" y1="70" x2="130" y2="70" stroke="#f97316" stroke-width="0.8" opacity="0.4"/>
+            <text x="70" y="90" text-anchor="middle" fill="#f97316" font-size="9">300 cm</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A1 — Redimensionnement physique</h3>
+      <p>Les nœuds du plan bougent réellement. La modification se reflète dans l'éditeur de plan <strong>ET</strong> dans le calepinage. La quantité de carreaux est recalculée.</p>
+      <div class="pros-cons" style="margin-top:10px;">
+        <div class="pros"><h4>Pour</h4><ul><li>Modification permanente</li><li>Plan et calepinage toujours cohérents</li></ul></div>
+        <div class="cons"><h4>Contre</h4><ul><li>Complexe : quel bord bouge ?</li><li>Risque de casser le plan</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" data-choice="a2" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#1e293b;padding:20px;font-family:monospace;font-size:13px;color:#94a3b8;">
+      <div style="display:flex;gap:20px;align-items:flex-start;">
+        <!-- Plan editor -->
+        <div style="flex:1;text-align:center;">
+          <div style="font-size:10px;color:#64748b;font-weight:700;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;">Plan</div>
+          <svg width="120" height="90" style="display:block;margin:auto;">
+            <rect x="10" y="10" width="100" height="70" fill="none" stroke="#64748b" stroke-width="3"/>
+            <rect x="10" y="10" width="100" height="70" fill="rgba(100,116,139,0.15)"/>
+            <text x="60" y="55" text-anchor="middle" fill="#64748b" font-size="10">280 cm</text>
+            <text x="60" y="80" text-anchor="middle" fill="#64748b" font-size="8">(inchangé)</text>
+          </svg>
+        </div>
+        <div style="color:#64748b;font-size:20px;align-self:center;">≠</div>
+        <!-- Tiling -->
+        <div style="flex:1;text-align:center;">
+          <div style="font-size:10px;color:#f97316;font-weight:700;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;">Calepinage</div>
+          <svg width="120" height="90" style="display:block;margin:auto;">
+            <rect x="10" y="10" width="120" height="70" fill="rgba(249,115,22,0.12)"/>
+            <line x1="30" y1="10" x2="30" y2="80" stroke="#f97316" stroke-width="0.8" opacity="0.4"/>
+            <line x1="50" y1="10" x2="50" y2="80" stroke="#f97316" stroke-width="0.8" opacity="0.4"/>
+            <line x1="70" y1="10" x2="70" y2="80" stroke="#f97316" stroke-width="0.8" opacity="0.4"/>
+            <line x1="90" y1="10" x2="90" y2="80" stroke="#f97316" stroke-width="0.8" opacity="0.4"/>
+            <line x1="110" y1="10" x2="110" y2="80" stroke="#f97316" stroke-width="0.8" opacity="0.4"/>
+            <line x1="10" y1="30" x2="130" y2="30" stroke="#f97316" stroke-width="0.8" opacity="0.4"/>
+            <line x1="10" y1="50" x2="130" y2="50" stroke="#f97316" stroke-width="0.8" opacity="0.4"/>
+            <line x1="10" y1="70" x2="130" y2="70" stroke="#f97316" stroke-width="0.8" opacity="0.4"/>
+            <text x="70" y="90" text-anchor="middle" fill="#f97316" font-size="9">300 cm ✱</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A2 — Simulation dans le calepinage uniquement</h3>
+      <p>Le plan reste intact (280 cm). Dans le calepinage, la pièce est simulée à 300 cm pour calculer la quantité de carreaux. Utile pour devis prévisionnels.</p>
+      <div class="pros-cons" style="margin-top:10px;">
+        <div class="pros"><h4>Pour</h4><ul><li>Plan protégé</li><li>Idéal pour simulation / devis</li></ul></div>
+        <div class="cons"><h4>Contre</h4><ul><li>Plan et calepinage désynchronisés</li><li>Besoin d'indiquer visuellement l'écart</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+</div>

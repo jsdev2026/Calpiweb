@@ -1,0 +1,113 @@
+<h2>Bug angles aigus — 3 approches de correction</h2>
+<p class="subtitle">Deux murs formant une pointe en V (angle intérieur ~25°). Le problème : chaque mur s'étend bien au-delà du sommet, créant un amas geometrique.</p>
+
+<style>
+  .dia-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 16px 0; }
+  .dia-title { font-size: 12px; color: #a0aec0; text-align: center; margin-top: 6px; }
+  .bug-box { background: #2d1515; border-radius: 10px; padding: 14px; margin-bottom: 18px; }
+  .bug-box h3 { color: #fc8181; margin: 0 0 8px; font-size: 15px; }
+</style>
+
+<!-- BUG ACTUEL -->
+<div class="bug-box">
+  <h3>⚠ Comportement actuel (angle aigu ~25°)</h3>
+  <svg width="100%" viewBox="0 0 420 160" style="display:block">
+    <!-- Wall A (bleu) : s'étend loin au-delà du sommet P -->
+    <polygon points="10,42 310,88 295,108 10,62" fill="#3b82f6" opacity="0.6" stroke="#3b82f6" stroke-width="1.2"/>
+    <!-- Wall B (orange) : s'étend aussi loin au-delà de P -->
+    <polygon points="10,98 295,92 310,112 10,118" fill="#f97316" opacity="0.6" stroke="#f97316" stroke-width="1.2"/>
+    <!-- Zone de superposition (mauve) -->
+    <polygon points="245,95 310,88 310,112 245,105" fill="#a855f7" opacity="0.75"/>
+    <!-- Nœud de jonction "vrai" -->
+    <circle cx="220" cy="100" r="4" fill="white"/>
+    <text x="210" y="94" fill="white" font-size="10">P</text>
+    <!-- Flèche : extension excessive -->
+    <line x1="222" y1="100" x2="305" y2="100" stroke="#fc8181" stroke-width="1.5" marker-end="url(#arr)"/>
+    <defs><marker id="arr" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#fc8181"/></marker></defs>
+    <text x="230" y="96" fill="#fc8181" font-size="9">extension ~55px (≫ épaisseur)</text>
+    <!-- Labels murs -->
+    <text x="90" y="60" fill="#93c5fd" font-size="11">Mur A</text>
+    <text x="90" y="118" fill="#fdba74" font-size="11">Mur B</text>
+    <text x="270" y="103" fill="#d8b4fe" font-size="10">overlap</text>
+  </svg>
+  <p style="color:#a0aec0;font-size:12px;margin:4px 0 0">
+    Cause : <code>jointParam</code> retourne <em>t ≈ 55px</em> pour 25° — chaque mur s'étend massivement, les deux polygones se superposent au niveau de la pointe.
+  </p>
+</div>
+
+<!-- 3 APPROCHES -->
+<div class="dia-grid">
+
+  <!-- APPROCHE A -->
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Onglet correct par coin</h3>
+      <p>Calculer <strong>deux extensions distinctes</strong> : t_concave (coin intérieur) et t_convexe (coin extérieur). Le mur se termine par une coupe diagonale nette. Miter limit pour les angles &lt; ~15°.</p>
+      <svg width="100%" viewBox="0 0 260 140" style="display:block;margin:8px auto">
+        <!-- Wall A avec coupe diagonale correcte -->
+        <polygon points="10,35 190,72 175,98 10,58" fill="#3b82f6" opacity="0.75" stroke="#3b82f6" stroke-width="1"/>
+        <!-- Wall B avec coupe diagonale correcte -->
+        <polygon points="10,82 175,98 190,72 10,105" fill="#f97316" opacity="0.75" stroke="#f97316" stroke-width="1"/>
+        <!-- Ligne de joint (diagonale) -->
+        <line x1="190" y1="72" x2="175" y2="98" stroke="white" stroke-width="2.5"/>
+        <circle cx="183" cy="85" r="3.5" fill="white"/>
+        <text x="195" y="89" fill="white" font-size="9">P</text>
+        <text x="60" y="53" fill="#93c5fd" font-size="10">Mur A</text>
+        <text x="60" y="102" fill="#fdba74" font-size="10">Mur B</text>
+      </svg>
+      <p class="dia-title">✓ Onglet propre · ✓ Zéro overlap · ⚠ Tests à mettre à jour</p>
+    </div>
+  </div>
+
+  <!-- APPROCHE B -->
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Union de polygones</h3>
+      <p>Chaque mur = rectangle simple. L'union (Sutherland-Hodgman) est calculée avant rendu. Aucune logique d'extension — toujours correct pour tout angle.</p>
+      <svg width="100%" viewBox="0 0 260 140" style="display:block;margin:8px auto">
+        <!-- Union des deux murs : forme en V remplie proprement -->
+        <polygon points="10,35 190,72 175,98 10,105 10,82 10,58" fill="#22c55e" opacity="0.0"/>
+        <!-- Dessin de la forme unifiée -->
+        <polygon points="10,35 190,72 175,98 10,105" fill="#22c55e" opacity="0.75" stroke="#22c55e" stroke-width="1"/>
+        <polygon points="10,58 190,72 175,98 10,82" fill="#22c55e" opacity="0.3"/>
+        <!-- Contour global de l'union -->
+        <polyline points="10,35 190,72 175,98 10,105" fill="none" stroke="#86efac" stroke-width="1.5"/>
+        <circle cx="183" cy="85" r="3.5" fill="white"/>
+        <text x="195" y="89" fill="white" font-size="9">P</text>
+        <text x="60" y="75" fill="#86efac" font-size="10">Forme unifiée</text>
+      </svg>
+      <p class="dia-title">✓ Toujours correct · ⚠ Complexe · ⚠ Perf sur beaucoup de murs</p>
+    </div>
+  </div>
+
+  <!-- APPROCHE C -->
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Miter limit + bevel</h3>
+      <p>Clamper l'extension à <code>N × épaisseur/2</code>. Au-delà du seuil : biseau plat perpendiculaire à la bissectrice, pas d'onglet pointu.</p>
+      <svg width="100%" viewBox="0 0 260 140" style="display:block;margin:8px auto">
+        <!-- Wall A avec cap plat -->
+        <polygon points="10,35 168,68 168,88 10,58" fill="#3b82f6" opacity="0.75" stroke="#3b82f6" stroke-width="1"/>
+        <!-- Wall B avec cap plat -->
+        <polygon points="10,82 168,92 168,112 10,105" fill="#f97316" opacity="0.75" stroke="#f97316" stroke-width="1"/>
+        <!-- Biseau visible -->
+        <line x1="168" y1="68" x2="168" y2="88" stroke="#22c55e" stroke-width="2.5"/>
+        <line x1="168" y1="92" x2="168" y2="112" stroke="#22c55e" stroke-width="2.5"/>
+        <!-- Gap entre les deux caps -->
+        <rect x="164" y="88" width="8" height="4" fill="#1a1a2e"/>
+        <text x="174" y="103" fill="#fc8181" font-size="9">gap visible</text>
+        <text x="60" y="53" fill="#93c5fd" font-size="10">Mur A</text>
+        <text x="60" y="102" fill="#fdba74" font-size="10">Mur B</text>
+      </svg>
+      <p class="dia-title">✓ Simple · ✓ Stable · ⚠ Biseau/gap visible aux angles aigus</p>
+    </div>
+  </div>
+
+</div>
+
+<p style="color:#718096;font-size:12px;margin-top:8px">
+  Ma recommandation : <strong>Approche A</strong> — c'est le seul correctif mathématiquement exact. Il s'agit d'utiliser <em>t</em> direct (non négé) pour le coin concave, et <em>−t</em> pour le coin convexe, au lieu du même <em>−t</em> pour les deux. Les tests existants seront mis à jour pour refléter le comportement correct.
+</p>

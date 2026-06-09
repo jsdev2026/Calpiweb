@@ -1,0 +1,162 @@
+<h2>Bug miter — angle aigu (~44° intérieur)</h2>
+<p class="subtitle">Vue de dessus. Deux murs formant une pointe en V. P = nœud de jonction. Seul le coin intérieur (côté concave) est mal placé dans le code actuel.</p>
+
+<style>
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 16px 0; }
+  .panel { background: #1a1a2e; border-radius: 10px; padding: 16px; }
+  .panel h3 { margin: 0 0 10px; font-size: 14px; }
+  .bad { color: #fc8181; }
+  .good { color: #86efac; }
+  svg text { font-family: monospace; }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 10px; font-size: 11px; color: #a0aec0; }
+  .legend span { display: flex; align-items: center; gap: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+</style>
+
+<div class="split">
+
+  <!-- === BUG === -->
+  <div class="panel">
+    <h3 class="bad">⚠ Code actuel (bugué)</h3>
+    <svg viewBox="0 0 400 240" width="100%">
+      <!-- Grille légère -->
+      <line x1="280" y1="0" x2="280" y2="240" stroke="#333" stroke-width="0.5" stroke-dasharray="3"/>
+      <line x1="0" y1="120" x2="400" y2="120" stroke="#333" stroke-width="0.5" stroke-dasharray="3"/>
+
+      <!-- Mur A (bleu) : coin intérieur mal placé à (295,147) au lieu de (240,120) -->
+      <polygon points="20,45 295,147 320,120 30,20" fill="#3b82f6" opacity="0.7" stroke="#60a5fa" stroke-width="1.5"/>
+
+      <!-- Mur B (orange) : coin intérieur mal placé à (295,93) au lieu de (240,120) -->
+      <polygon points="20,195 320,120 295,93 30,220" fill="#f97316" opacity="0.7" stroke="#fb923c" stroke-width="1.5"/>
+
+      <!-- Zone de superposition (mauve) -->
+      <polygon points="240,120 295,93 320,120 295,147" fill="#a855f7" opacity="0.5"/>
+
+      <!-- Nœud P -->
+      <circle cx="280" cy="120" r="5" fill="white"/>
+      <text x="285" y="116" fill="white" font-size="11">P</text>
+
+      <!-- Coin extérieur correct (partagé) -->
+      <circle cx="320" cy="120" r="5" fill="#86efac"/>
+      <text x="325" y="116" fill="#86efac" font-size="10">ext ✓</text>
+
+      <!-- Coin intérieur BUGUÉ Mur A -->
+      <circle cx="295" cy="147" r="4" fill="#fc8181"/>
+      <text x="300" y="157" fill="#fc8181" font-size="9">int A ✗</text>
+
+      <!-- Coin intérieur BUGUÉ Mur B -->
+      <circle cx="295" cy="93" r="4" fill="#fc8181"/>
+      <text x="300" y="90" fill="#fc8181" font-size="9">int B ✗</text>
+
+      <!-- Position correcte du coin intérieur (pour référence) -->
+      <circle cx="240" cy="120" r="3" fill="#facc15" opacity="0.6" stroke-dasharray="2"/>
+      <text x="195" y="116" fill="#facc15" font-size="9" opacity="0.8">int correct</text>
+
+      <!-- Overlap label -->
+      <text x="262" y="123" fill="#d8b4fe" font-size="9" text-anchor="middle">overlap</text>
+
+      <!-- Labels murs -->
+      <text x="80" y="55" fill="#93c5fd" font-size="11">Mur A</text>
+      <text x="80" y="200" fill="#fdba74" font-size="11">Mur B</text>
+    </svg>
+    <p style="color:#a0aec0;font-size:11px;margin:4px 0 0">
+      Les deux coins intérieurs sont décalés vers la droite (même extension que l'extérieur).
+      La zone mauve = superposition des deux murs.
+    </p>
+  </div>
+
+  <!-- === FIX === -->
+  <div class="panel">
+    <h3 class="good">✓ Après correction</h3>
+    <svg viewBox="0 0 400 240" width="100%">
+      <!-- Grille légère -->
+      <line x1="280" y1="0" x2="280" y2="240" stroke="#333" stroke-width="0.5" stroke-dasharray="3"/>
+      <line x1="0" y1="120" x2="400" y2="120" stroke="#333" stroke-width="0.5" stroke-dasharray="3"/>
+
+      <!-- Mur A (bleu) : coin intérieur correct à (240,120) -->
+      <polygon points="20,45 240,120 320,120 30,20" fill="#3b82f6" opacity="0.75" stroke="#60a5fa" stroke-width="1.5"/>
+
+      <!-- Mur B (orange) : coin intérieur correct à (240,120) -->
+      <polygon points="20,195 320,120 240,120 30,220" fill="#f97316" opacity="0.75" stroke="#fb923c" stroke-width="1.5"/>
+
+      <!-- Ligne de joint (bord commun des deux murs) -->
+      <line x1="240" y1="120" x2="320" y2="120" stroke="white" stroke-width="2.5" stroke-dasharray="5,3"/>
+
+      <!-- Nœud P -->
+      <circle cx="280" cy="120" r="5" fill="white"/>
+      <text x="285" y="116" fill="white" font-size="11">P</text>
+
+      <!-- Coin extérieur vif = pointe de l'onglet -->
+      <circle cx="320" cy="120" r="6" fill="#86efac" stroke="white" stroke-width="1.5"/>
+      <text x="326" y="115" fill="#86efac" font-size="10" font-weight="bold">pointe vive</text>
+      <!-- Flèche indiquant le prolongement des bords -->
+      <line x1="30" y1="20" x2="320" y2="120" stroke="#60a5fa" stroke-width="0.8" stroke-dasharray="4,2" opacity="0.5"/>
+      <line x1="30" y1="220" x2="320" y2="120" stroke="#fb923c" stroke-width="0.8" stroke-dasharray="4,2" opacity="0.5"/>
+
+      <!-- Coin intérieur correct -->
+      <circle cx="240" cy="120" r="4" fill="#facc15"/>
+      <text x="175" y="116" fill="#facc15" font-size="9">int miter</text>
+
+      <!-- Labels murs -->
+      <text x="80" y="55" fill="#93c5fd" font-size="11">Mur A</text>
+      <text x="80" y="200" fill="#fdba74" font-size="11">Mur B</text>
+
+      <!-- Annotations bords extérieurs prolongés -->
+      <text x="130" y="30" fill="#60a5fa" font-size="9" opacity="0.8">bord ext. Mur A →</text>
+      <text x="125" y="218" fill="#fb923c" font-size="9" opacity="0.8">bord ext. Mur B →</text>
+    </svg>
+    <p style="color:#a0aec0;font-size:11px;margin:4px 0 0">
+      Les deux bords extérieurs (tirets) se prolongent jusqu'à la <strong>même pointe vive</strong>.
+      Zéro superposition. Ligne de joint = trait blanc pointillé.
+    </p>
+  </div>
+</div>
+
+<!-- Angle encore plus aigu -->
+<div class="panel" style="margin-top:16px">
+  <h3 style="color:#e2e8f0;margin:0 0 10px">Angle très aigu (~20° intérieur) — l'overlap du bug est massif</h3>
+  <svg viewBox="0 0 500 200" width="100%">
+    <!-- BUG : murs qui s'étendent très loin -->
+    <text x="10" y="20" fill="#fc8181" font-size="11">BUG</text>
+    <!-- Mur A étendu (bleu, très long) -->
+    <polygon points="10,60 430,100 430,115 10,75" fill="#3b82f6" opacity="0.55" stroke="#60a5fa" stroke-width="1"/>
+    <!-- Mur B étendu (orange, très long) -->
+    <polygon points="10,125 430,85 430,100 10,140" fill="#f97316" opacity="0.55" stroke="#fb923c" stroke-width="1"/>
+    <!-- Overlap (mauve) : massif -->
+    <polygon points="240,100 430,85 430,115 240,100" fill="#a855f7" opacity="0.6"/>
+    <!-- P -->
+    <circle cx="240" cy="100" r="4" fill="white"/>
+    <text x="244" y="97" fill="white" font-size="10">P</text>
+    <!-- Pointe correcte -->
+    <circle cx="430" cy="100" r="5" fill="#86efac"/>
+    <text x="435" y="97" fill="#86efac" font-size="9">correct</text>
+    <!-- Extension label -->
+    <line x1="242" y1="100" x2="428" y2="100" stroke="#fc8181" stroke-width="1" stroke-dasharray="3"/>
+    <text x="320" y="95" fill="#fc8181" font-size="9" text-anchor="middle">~190px d'extension excessive</text>
+
+    <!-- FIX à droite : compact -->
+    <text x="10" y="175" fill="#86efac" font-size="11">FIX</text>
+    <polygon points="10,155 90,166 430,100 90,155 10,170" fill="none"/>
+    <!-- Schéma simplifié FIX -->
+    <polygon points="10,152 90,163 430,100 95,152" fill="#3b82f6" opacity="0.6" stroke="#60a5fa" stroke-width="1"/>
+    <polygon points="10,170 95,148 430,100 90,170" fill="#f97316" opacity="0.6" stroke="#fb923c" stroke-width="1"/>
+    <circle cx="430" cy="100" r="5" fill="#86efac"/>
+    <circle cx="90" cy="157" r="4" fill="#facc15"/>
+    <line x1="90" y1="157" x2="430" y2="100" stroke="white" stroke-width="1.5" stroke-dasharray="4"/>
+    <text x="240" y="145" fill="#86efac" font-size="9" text-anchor="middle">propre — pointe vive</text>
+  </svg>
+</div>
+
+<div class="legend" style="margin-top:12px">
+  <span><span class="dot" style="background:#3b82f6"></span>Mur A</span>
+  <span><span class="dot" style="background:#f97316"></span>Mur B</span>
+  <span><span class="dot" style="background:#a855f7"></span>Overlap (bug)</span>
+  <span><span class="dot" style="background:#86efac"></span>Pointe vive extérieure</span>
+  <span><span class="dot" style="background:#facc15"></span>Coin intérieur (miter)</span>
+</div>
+
+<p style="color:#718096;font-size:12px;margin-top:12px">
+  <strong>Le fix :</strong> dans <code>wallGeometry.ts:94-99</code>, inverser le signe du composante <code>dir</code>
+  pour les deux coins <em>intérieurs</em> (+n) — une ligne par extrémité (node1 et node2).
+  Les coins extérieurs (-n) sont déjà corrects.
+</p>

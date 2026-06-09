@@ -1,0 +1,210 @@
+<h2>Redesign canvas — WallDrawingCanvas</h2>
+<p class="subtitle">Comparaison : état actuel (dark only) vs 3 propositions cohérentes avec le reste du logiciel.</p>
+
+<style>
+  .row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin: 18px 0; }
+  .canvas-mock {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #374151;
+    position: relative;
+  }
+  .canvas-title {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .1em; padding: 6px 10px 4px;
+    background: #1e2130; color: #9ca3af;
+    border-bottom: 1px solid #374151;
+  }
+  .canvas-body { padding: 0; position: relative; }
+  svg { display: block; }
+
+  /* Légende */
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 8px; font-size: 10px; color: #9ca3af; }
+  .dot { width: 10px; height: 10px; border-radius: 2px; display: inline-block; margin-right: 4px; }
+
+  /* Section labels */
+  .mode-label { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .12em; color: #6b7280; margin: 14px 0 6px; }
+</style>
+
+<!-- LIGHT MODE -->
+<p class="mode-label">☀ Mode clair</p>
+<div class="row">
+
+  <!-- 0. Actuel -->
+  <div>
+    <div class="canvas-mock">
+      <div class="canvas-title">État actuel</div>
+      <div class="canvas-body">
+        <svg width="100%" viewBox="0 0 200 160">
+          <!-- Dark bg -->
+          <rect width="200" height="160" fill="#1a1c24"/>
+          <!-- dots -->
+          <pattern id="d0" width="12" height="12" patternUnits="userSpaceOnUse"><circle cx="6" cy="6" r=".8" fill="#272b38"/></pattern>
+          <rect width="200" height="160" fill="url(#d0)"/>
+          <!-- walls -->
+          <polygon points="30,40 90,40 90,50 30,50" fill="#6b6056"/>
+          <polygon points="90,40 100,40 100,120 90,120" fill="#6b6056"/>
+          <polygon points="30,110 90,120 90,110 30,100" fill="#6b6056"/>
+          <polygon points="30,40 40,40 40,110 30,110" fill="#6b6056"/>
+          <!-- joint -->
+          <line x1="90" y1="40" x2="90" y2="120" stroke="#3d3830" stroke-width="1.5"/>
+          <line x1="30" y1="110" x2="90" y2="110" stroke="#3d3830" stroke-width="1.5"/>
+          <!-- cote -->
+          <line x1="30" y1="20" x2="90" y2="20" stroke="#22c55e" stroke-width="1"/>
+          <text x="60" y="17" font-size="8" fill="#22c55e" text-anchor="middle">600 cm</text>
+          <!-- selected node -->
+          <circle cx="90" cy="40" r="4" fill="none" stroke="#e67e22" stroke-width="1.5"/>
+        </svg>
+      </div>
+    </div>
+    <p style="font-size:10px;color:#ef4444;margin-top:5px">✗ Toujours sombre, pas de light mode</p>
+  </div>
+
+  <!-- A. Flat cohérent -->
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <div class="canvas-mock">
+        <div class="canvas-title">A — Flat cohérent</div>
+        <div class="canvas-body">
+          <svg width="100%" viewBox="0 0 200 160">
+            <rect width="200" height="160" fill="#E8EBF0"/>
+            <pattern id="da" width="12" height="12" patternUnits="userSpaceOnUse"><circle cx="6" cy="6" r=".8" fill="#C4C7CC"/></pattern>
+            <rect width="200" height="160" fill="url(#da)"/>
+            <!-- walls slate -->
+            <polygon points="30,40 90,40 90,50 30,50" fill="#64748b"/>
+            <polygon points="90,40 100,40 100,120 90,120" fill="#64748b"/>
+            <polygon points="30,110 90,120 90,110 30,100" fill="#64748b"/>
+            <polygon points="30,40 40,40 40,110 30,110" fill="#64748b"/>
+            <!-- joint subtle -->
+            <line x1="90" y1="40" x2="90" y2="120" stroke="#94a3b8" stroke-width="1"/>
+            <line x1="30" y1="110" x2="90" y2="110" stroke="#94a3b8" stroke-width="1"/>
+            <!-- cote -->
+            <line x1="30" y1="20" x2="90" y2="20" stroke="#22c55e" stroke-width="1"/>
+            <text x="60" y="17" font-size="8" fill="#22c55e" text-anchor="middle">600 cm</text>
+            <circle cx="90" cy="40" r="4" fill="none" stroke="#E8671A" stroke-width="1.5"/>
+          </svg>
+        </div>
+      </div>
+      <p style="font-size:10px;color:#9ca3af;margin-top:5px">Murs slate gris, grille CSS var, fond var(--canvas-bg)</p>
+    </div>
+  </div>
+
+  <!-- B. Rooms fill -->
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <div class="canvas-mock">
+        <div class="canvas-title">B — Rooms fill</div>
+        <div class="canvas-body">
+          <svg width="100%" viewBox="0 0 200 160">
+            <rect width="200" height="160" fill="#E8EBF0"/>
+            <pattern id="db" width="12" height="12" patternUnits="userSpaceOnUse"><circle cx="6" cy="6" r=".8" fill="#C4C7CC"/></pattern>
+            <rect width="200" height="160" fill="url(#db)"/>
+            <!-- room fill -->
+            <polygon points="40,50 90,50 90,110 40,110" fill="rgba(226,232,240,0.9)" stroke="none"/>
+            <!-- walls -->
+            <polygon points="30,40 90,40 90,50 30,50" fill="#64748b"/>
+            <polygon points="90,40 100,40 100,120 90,120" fill="#64748b"/>
+            <polygon points="30,110 90,120 90,110 30,100" fill="#64748b"/>
+            <polygon points="30,40 40,40 40,110 30,110" fill="#64748b"/>
+            <!-- joint subtle -->
+            <line x1="90" y1="40" x2="90" y2="120" stroke="#94a3b8" stroke-width="1"/>
+            <line x1="30" y1="110" x2="90" y2="110" stroke="#94a3b8" stroke-width="1"/>
+            <!-- room label -->
+            <text x="65" y="82" font-size="8" fill="#6b7280" text-anchor="middle">Pièce 1</text>
+            <!-- cote -->
+            <line x1="30" y1="20" x2="90" y2="20" stroke="#22c55e" stroke-width="1"/>
+            <text x="60" y="17" font-size="8" fill="#22c55e" text-anchor="middle">600 cm</text>
+            <circle cx="90" cy="40" r="4" fill="none" stroke="#E8671A" stroke-width="1.5"/>
+          </svg>
+        </div>
+      </div>
+      <p style="font-size:10px;color:#9ca3af;margin-top:5px">+ fond clair par pièce détectée + label de pièce sur le canvas</p>
+    </div>
+  </div>
+
+  <!-- C. Outlined walls -->
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <div class="canvas-mock">
+        <div class="canvas-title">C — Outlined</div>
+        <div class="canvas-body">
+          <svg width="100%" viewBox="0 0 200 160">
+            <rect width="200" height="160" fill="#E8EBF0"/>
+            <pattern id="dc" width="12" height="12" patternUnits="userSpaceOnUse"><circle cx="6" cy="6" r=".8" fill="#C4C7CC"/></pattern>
+            <rect width="200" height="160" fill="url(#dc)"/>
+            <!-- room fill -->
+            <polygon points="40,50 90,50 90,110 40,110" fill="rgba(255,255,255,0.7)" stroke="none"/>
+            <!-- walls outlined -->
+            <polygon points="30,40 90,40 90,50 30,50" fill="#475569" stroke="#334155" stroke-width=".5"/>
+            <polygon points="90,40 100,40 100,120 90,120" fill="#475569" stroke="#334155" stroke-width=".5"/>
+            <polygon points="30,110 90,120 90,110 30,100" fill="#475569" stroke="#334155" stroke-width=".5"/>
+            <polygon points="30,40 40,40 40,110 30,110" fill="#475569" stroke="#334155" stroke-width=".5"/>
+            <!-- joint -->
+            <line x1="90" y1="40" x2="90" y2="120" stroke="#94a3b8" stroke-width="1"/>
+            <line x1="30" y1="110" x2="90" y2="110" stroke="#94a3b8" stroke-width="1"/>
+            <!-- cote -->
+            <line x1="30" y1="20" x2="90" y2="20" stroke="#22c55e" stroke-width="1"/>
+            <text x="60" y="17" font-size="8" fill="#22c55e" text-anchor="middle">600 cm</text>
+            <circle cx="90" cy="40" r="4" fill="none" stroke="#E8671A" stroke-width="1.5"/>
+          </svg>
+        </div>
+      </div>
+      <p style="font-size:10px;color:#9ca3af;margin-top:5px">Murs + contour fin, fond blanc semi-transparent dans les pièces</p>
+    </div>
+  </div>
+</div>
+
+<!-- DARK MODE -->
+<p class="mode-label">🌙 Mode sombre (même option, rendu dark)</p>
+<div class="row">
+  <div><!-- placeholder --></div>
+
+  <!-- A dark -->
+  <div class="canvas-mock" style="opacity:0.85">
+    <div class="canvas-title">A dark</div>
+    <svg width="100%" viewBox="0 0 200 140">
+      <rect width="200" height="140" fill="#09090b"/>
+      <pattern id="dad" width="12" height="12" patternUnits="userSpaceOnUse"><circle cx="6" cy="6" r=".8" fill="#27272a"/></pattern>
+      <rect width="200" height="140" fill="url(#dad)"/>
+      <polygon points="30,30 90,30 90,40 30,40" fill="#52525b"/>
+      <polygon points="90,30 100,30 100,110 90,110" fill="#52525b"/>
+      <polygon points="30,100 90,110 90,100 30,90" fill="#52525b"/>
+      <polygon points="30,30 40,30 40,100 30,100" fill="#52525b"/>
+      <line x1="90" y1="30" x2="90" y2="110" stroke="#3f3f46" stroke-width="1"/>
+      <line x1="30" y1="100" x2="90" y2="100" stroke="#3f3f46" stroke-width="1"/>
+      <line x1="30" y1="14" x2="90" y2="14" stroke="#22c55e" stroke-width="1"/>
+      <text x="60" y="11" font-size="8" fill="#22c55e" text-anchor="middle">600 cm</text>
+      <circle cx="90" cy="30" r="4" fill="none" stroke="#E8671A" stroke-width="1.5"/>
+    </svg>
+  </div>
+
+  <!-- B dark -->
+  <div class="canvas-mock" style="opacity:0.85">
+    <div class="canvas-title">B dark</div>
+    <svg width="100%" viewBox="0 0 200 140">
+      <rect width="200" height="140" fill="#09090b"/>
+      <pattern id="dbd" width="12" height="12" patternUnits="userSpaceOnUse"><circle cx="6" cy="6" r=".8" fill="#27272a"/></pattern>
+      <rect width="200" height="140" fill="url(#dbd)"/>
+      <polygon points="40,40 90,40 90,100 40,100" fill="rgba(24,24,27,0.6)" stroke="none"/>
+      <polygon points="30,30 90,30 90,40 30,40" fill="#52525b"/>
+      <polygon points="90,30 100,30 100,110 90,110" fill="#52525b"/>
+      <polygon points="30,100 90,110 90,100 30,90" fill="#52525b"/>
+      <polygon points="30,30 40,30 40,100 30,100" fill="#52525b"/>
+      <line x1="90" y1="30" x2="90" y2="110" stroke="#3f3f46" stroke-width="1"/>
+      <line x1="30" y1="100" x2="90" y2="100" stroke="#3f3f46" stroke-width="1"/>
+      <text x="65" y="72" font-size="8" fill="#52525b" text-anchor="middle">Pièce 1</text>
+      <line x1="30" y1="14" x2="90" y2="14" stroke="#22c55e" stroke-width="1"/>
+      <text x="60" y="11" font-size="8" fill="#22c55e" text-anchor="middle">600 cm</text>
+      <circle cx="90" cy="30" r="4" fill="none" stroke="#E8671A" stroke-width="1.5"/>
+    </svg>
+  </div>
+
+  <div><!-- placeholder --></div>
+</div>
+
+<div style="margin-top:12px;padding:10px 14px;border:1px solid #374151;border-radius:8px;font-size:11px;color:#d1d5db">
+  <strong>Commun à toutes les options :</strong> fond = <code>var(--canvas-bg)</code>, grille = <code>var(--canvas-dot)</code>, sélection = <code>var(--accent)</code> orange, auto-cotations verte/bleue/orange inchangées, zones exclues ambre inchangées, portes pointillés orange inchangés.
+</div>

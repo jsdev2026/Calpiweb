@@ -1,0 +1,103 @@
+<h2>Section 3 — Interface du panneau Quantitatifs</h2>
+<p class="subtitle">Comment intégrer la marge ajustable et les consommables dans le panneau existant ?</p>
+
+<div class="cards">
+
+  <!-- Option A -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:16px;background:#1a1a2e;border-radius:6px;font-family:monospace;font-size:11px;color:#ccc;">
+      <div style="background:#2a2a3e;border-radius:4px;padding:8px;margin-bottom:6px;display:flex;gap:12px;flex-wrap:wrap;">
+        <div style="text-align:center"><div style="color:#f97316;font-size:15px;font-weight:bold">142</div><div style="font-size:9px;color:#888">carreaux</div></div>
+        <div style="text-align:center"><div style="color:#f97316;font-size:15px;font-weight:bold">12,4 m²</div><div style="font-size:9px;color:#888">surface</div></div>
+        <div style="text-align:center"><div style="color:#facc15;font-size:13px;font-weight:bold">+5% ✏️</div><div style="font-size:9px;color:#888">marge</div></div>
+      </div>
+      <div style="background:#2a2a3e;border-radius:4px;padding:8px;margin-bottom:6px;">
+        <div style="color:#60a5fa;font-size:10px;margin-bottom:5px;font-weight:bold">▼ CONSOMMABLES</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <div style="background:#1e3a5f;border-radius:3px;padding:5px 8px">
+            <div style="color:#93c5fd;font-size:9px">Colle C2</div>
+            <div style="color:#fff;font-size:12px;font-weight:bold">3 sacs</div>
+            <div style="color:#666;font-size:8px">4 kg/m² ✏️</div>
+          </div>
+          <div style="background:#1e3a5f;border-radius:3px;padding:5px 8px">
+            <div style="color:#93c5fd;font-size:9px">Joint 3mm</div>
+            <div style="color:#fff;font-size:12px;font-weight:bold">2 sacs</div>
+            <div style="color:#666;font-size:8px">0,8 kg/m² ✏️</div>
+          </div>
+          <div style="background:#1e3a5f;border-radius:3px;padding:5px 8px">
+            <div style="color:#93c5fd;font-size:9px">Croisillons</div>
+            <div style="color:#fff;font-size:12px;font-weight:bold">2 sachets</div>
+            <div style="color:#666;font-size:8px">×200 ✏️</div>
+          </div>
+        </div>
+      </div>
+      <div style="background:#2a2a3e;border-radius:4px;padding:6px;font-size:9px;color:#888">[ Vue plan + groupes de coupe existants... ]</div>
+    </div>
+    <div class="card-body">
+      <h3>A — Bloc consommables sous le résumé</h3>
+      <p>Résumé en haut (carreaux + marge éditable), puis un bloc "Consommables" plié/déplié, puis la vue plan et les groupes de coupe en dessous. Tout dans le même défilement.</p>
+    </div>
+  </div>
+
+  <!-- Option B -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:16px;background:#1a1a2e;border-radius:6px;font-family:monospace;font-size:11px;color:#ccc;">
+      <div style="display:flex;gap:0;margin-bottom:8px;border-bottom:2px solid #333">
+        <div style="padding:6px 14px;background:#f97316;color:#fff;font-size:10px;font-weight:bold;border-radius:4px 4px 0 0">🪨 Carreaux</div>
+        <div style="padding:6px 14px;color:#888;font-size:10px;border-radius:4px 4px 0 0">🧴 Consommables</div>
+      </div>
+      <div style="background:#2a2a3e;border-radius:4px;padding:8px;margin-bottom:6px;display:flex;gap:12px;flex-wrap:wrap;">
+        <div style="text-align:center"><div style="color:#f97316;font-size:15px;font-weight:bold">142</div><div style="font-size:9px;color:#888">à commander</div></div>
+        <div style="text-align:center"><div style="color:#f97316;font-size:15px;font-weight:bold">12,4 m²</div><div style="font-size:9px;color:#888">surface</div></div>
+        <div style="text-align:center"><div style="color:#facc15;font-size:13px">Marge : <b>5%</b> ✏️</div></div>
+      </div>
+      <div style="background:#2a2a3e;border-radius:4px;padding:6px;margin-bottom:4px;font-size:9px;color:#888">[ Vue plan SVG ]</div>
+      <div style="background:#2a2a3e;border-radius:4px;padding:6px;font-size:9px;color:#888">[ Groupes de coupe ]</div>
+    </div>
+    <div class="card-body">
+      <h3>B — Deux onglets (Carreaux | Consommables)</h3>
+      <p>Le panneau actuel reste intact dans l'onglet "Carreaux". Un deuxième onglet dédié aux consommables avec rendements éditables. Séparation nette mais un clic supplémentaire.</p>
+    </div>
+  </div>
+
+  <!-- Option C -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:16px;background:#1a1a2e;border-radius:6px;font-family:monospace;font-size:11px;color:#ccc;">
+      <div style="background:linear-gradient(135deg,#1e3a1e,#2a2a3e);border-radius:6px;padding:10px;margin-bottom:6px;">
+        <div style="color:#4ade80;font-size:9px;margin-bottom:6px;font-weight:bold;letter-spacing:1px">RÉCAPITULATIF CHANTIER</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
+          <div style="background:#0f2a0f;border-radius:4px;padding:6px;text-align:center">
+            <div style="color:#f97316;font-size:16px;font-weight:bold">142</div>
+            <div style="font-size:8px;color:#888">carreaux <span style="color:#facc15">+5%✏️</span></div>
+          </div>
+          <div style="background:#0f2a0f;border-radius:4px;padding:6px;text-align:center">
+            <div style="color:#60a5fa;font-size:16px;font-weight:bold">3</div>
+            <div style="font-size:8px;color:#888">sacs colle ✏️</div>
+          </div>
+          <div style="background:#0f2a0f;border-radius:4px;padding:6px;text-align:center">
+            <div style="color:#60a5fa;font-size:16px;font-weight:bold">2</div>
+            <div style="font-size:8px;color:#888">sacs joint ✏️</div>
+          </div>
+          <div style="background:#0f2a0f;border-radius:4px;padding:6px;text-align:center">
+            <div style="color:#a78bfa;font-size:16px;font-weight:bold">2</div>
+            <div style="font-size:8px;color:#888">sachets croisil. ✏️</div>
+          </div>
+          <div style="background:#0f2a0f;border-radius:4px;padding:6px;text-align:center">
+            <div style="color:#fff;font-size:14px;font-weight:bold">12,4 m²</div>
+            <div style="font-size:8px;color:#888">surface totale</div>
+          </div>
+          <div style="background:#0f2a0f;border-radius:4px;padding:6px;text-align:center">
+            <div style="color:#f97316;font-size:12px;font-weight:bold">10mm ✏️</div>
+            <div style="font-size:8px;color:#888">épaisseur carreau</div>
+          </div>
+        </div>
+      </div>
+      <div style="background:#2a2a3e;border-radius:4px;padding:6px;font-size:9px;color:#888">[ Vue plan + groupes de coupe en dessous ]</div>
+    </div>
+    <div class="card-body">
+      <h3>C — Récapitulatif chantier unifié en haut</h3>
+      <p>Un seul bloc "Récapitulatif chantier" avec toutes les données en une grille : carreaux, colle, joint, croisillons, épaisseur. Tout visible sans défilement. Les détails (plan, coupes) restent en dessous.</p>
+    </div>
+  </div>
+
+</div>

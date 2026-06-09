@@ -20,6 +20,12 @@ const { mockResult } = vi.hoisted(() => {
     }],
     totalReuseCount: 0, tilesForCuts: 12, totalTiles: 60, toOrder: 66,
     roomArea: 8_500_000, tiles: [],
+    margin: 0.05,
+    consumables: {
+      colle: { total: 34, bags: 2, bagSize: 25, rendement: 4 },
+      joint: { total: 0.05, bags: 1, bagSize: 5, rendement: 0.006 },
+      croisillons: { total: 72, bags: 1, bagSize: 200, rendement: 1.2 },
+    },
   };
   return { mockResult };
 });
@@ -118,8 +124,8 @@ describe('QuantitiesPrintView', () => {
   it('renders stat cards with correct values', () => {
     render(<QuantitiesPrintView project={baseProject} />);
     // toOrder = 66, wholeCount = 48, cuts.length = 12, totalTiles = 60
-    // '12' appears in both the stat card AND the cuts table (netTiles column) — use getAllByText
-    expect(screen.getByText('66')).toBeDefined();
+    // '66' now appears in both the Récapitulatif chantier section AND the stat card — use getAllByText
+    expect(screen.getAllByText('66').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('48')).toBeDefined();
     expect(screen.getAllByText('12').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('60')).toBeDefined();

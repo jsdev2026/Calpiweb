@@ -14,6 +14,12 @@ const makeResult = (overrides: Partial<QuantityResult> = {}): QuantityResult => 
   toOrder: 15,
   roomArea: 9_500_000,
   tiles: [],
+  margin: 0.05,
+  consumables: {
+    colle: { total: 0, bags: 0, bagSize: 25, rendement: 4 },
+    joint: { total: 0, bags: 0, bagSize: 5, rendement: 0 },
+    croisillons: { total: 0, bags: 0, bagSize: 200, rendement: 1.2 },
+  },
   ...overrides,
 });
 

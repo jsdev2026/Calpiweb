@@ -4,7 +4,7 @@ import { analyzeQuantities } from '@/engine/quantities/quantityEngine';
 import type { QuantityResult } from '@/engine/quantities/quantityEngine';
 import type { Room } from '@/types/project';
 import type { TilingConfig } from '@/types/tiling';
-import { ORDER_MARGIN_RATIO } from '@/constants/businessRules';
+import { MARGIN_STRAIGHT, MARGIN_DIAGONAL, MARGIN_CHEVRON } from '@/constants/businessRules';
 
 const JOINT = 2;
 
@@ -25,7 +25,7 @@ function makeRoom(w: number, h: number): Room {
 
 function checkInvariants(result: QuantityResult): void {
   const { wholeCount, cuts, cutGroups, totalReuseCount,
-          tilesForCuts, totalTiles, toOrder, tileW, tileH } = result;
+          tilesForCuts, totalTiles, toOrder, tileW, tileH, margin } = result;
 
   expect(totalTiles, 'I1: totalTiles = wholeCount + tilesForCuts').toBe(wholeCount + tilesForCuts);
   expect(tilesForCuts, 'I2: tilesForCuts = cuts.length - totalReuseCount').toBe(cuts.length - totalReuseCount);
@@ -43,8 +43,9 @@ function checkInvariants(result: QuantityResult): void {
   for (const g of cutGroups) {
     expect(g.netTiles, 'I6: netTiles = totalCount - reuseCount').toBe(g.totalCount - g.reuseCount);
   }
-  expect(toOrder, 'I7: toOrder = ceil(totalTiles × (1 + ORDER_MARGIN_RATIO))').toBe(
-    Math.ceil(totalTiles * (1 + ORDER_MARGIN_RATIO)),
+  // I7 updated: use result.margin instead of hardcoded ORDER_MARGIN_RATIO
+  expect(toOrder, 'I7: toOrder = ceil(totalTiles × (1 + margin))').toBe(
+    Math.ceil(totalTiles * (1 + margin)),
   );
   const cutById = new Map(cuts.map((c) => [c.id, c]));
   for (const cut of cuts) {
@@ -129,5 +130,88 @@ describe('quantityEngine — scénarios de référence', () => {
     // Grid aligns to inset bbox. Exact count verified against engine output.
     const resultWithWall = analyzeQuantities([room], config, 100);
     expect(resultWithWall.wholeCount).toBe(9);
+  });
+});
+
+describe('quantityEngine — marge auto-calibrée', () => {
+  it('STRAIGHT angle=0 → marge 5%', () => {
+    const result = analyzeQuantities([makeRoom(306, 204)], { ...BASE_CONFIG, layout: 'STRAIGHT', angle: 0 });
+    expect(result.margin).toBe(MARGIN_STRAIGHT);
+    expect(result.toOrder).toBe(Math.ceil(result.totalTiles * (1 + MARGIN_STRAIGHT)));
+  });
+
+  it('angle=45 → marge 10%', () => {
+    const result = analyzeQuantities([makeRoom(306, 204)], { ...BASE_CONFIG, angle: 45 });
+    expect(result.margin).toBe(MARGIN_DIAGONAL);
+    expect(result.toOrder).toBe(Math.ceil(result.totalTiles * (1 + MARGIN_DIAGONAL)));
+  });
+
+  it('CHEVRON → marge 15%', () => {
+    const result = analyzeQuantities([makeRoom(306, 204)], { ...BASE_CONFIG, layout: 'CHEVRON', angle: 0 });
+    expect(result.margin).toBe(MARGIN_CHEVRON);
+    expect(result.toOrder).toBe(Math.ceil(result.totalTiles * (1 + MARGIN_CHEVRON)));
+  });
+
+  it('HERRINGBONE → marge 15%', () => {
+    const result = analyzeQuantities([makeRoom(306, 204)], { ...BASE_CONFIG, layout: 'HERRINGBONE', angle: 0 });
+    expect(result.margin).toBe(MARGIN_CHEVRON);
+    expect(result.toOrder).toBe(Math.ceil(result.totalTiles * (1 + MARGIN_CHEVRON)));
+  });
+
+  it('marginOverride écrase la marge auto', () => {
+    const result = analyzeQuantities(
+      [makeRoom(306, 204)],
+      { ...BASE_CONFIG, layout: 'STRAIGHT', marginOverride: 0.20 },
+    );
+    expect(result.margin).toBe(0.20);
+    expect(result.toOrder).toBe(Math.ceil(result.totalTiles * 1.20));
+  });
+});
+
+describe('quantityEngine — consommables', () => {
+  it('colle : 4 kg/m² par défaut, arrondi en sacs de 25kg', () => {
+    const result = analyzeQuantities([makeRoom(3060, 2040)], BASE_CONFIG);
+    expect(result.consumables.colle.rendement).toBe(4);
+    expect(result.consumables.colle.bagSize).toBe(25);
+    expect(result.consumables.colle.bags).toBeGreaterThanOrEqual(1);
+    expect(result.consumables.colle.total).toBeCloseTo(result.roomArea / 1_000_000 * 4, 1);
+  });
+
+  it('joint : formule ISO 13007 (100×100mm, joint 2mm, épaisseur 10mm)', () => {
+    // rendement = ((100+100)/(100×100)) × 2 × 10 × 1.6 × 1.05
+    //           = (200/10000) × 33.6 = 0.672 kg/m²
+    const result = analyzeQuantities([makeRoom(3060, 2040)], BASE_CONFIG);
+    const expected = ((100 + 100) / (100 * 100)) * 2 * 10 * 1.6 * 1.05;
+    expect(result.consumables.joint.rendement).toBeCloseTo(expected, 4);
+    expect(result.consumables.joint.bagSize).toBe(5);
+  });
+
+  it('croisillons : ceil(totalTiles × 1.2), sachets de 200', () => {
+    const result = analyzeQuantities([makeRoom(306, 204)], BASE_CONFIG);
+    expect(result.consumables.croisillons.total).toBe(Math.ceil(result.totalTiles * 1.2));
+    expect(result.consumables.croisillons.bagSize).toBe(200);
+    expect(result.consumables.croisillons.bags).toBe(
+      Math.ceil(Math.ceil(result.totalTiles * 1.2) / 200),
+    );
+  });
+
+  it('consumableParams.colleRendement override', () => {
+    const config: TilingConfig = {
+      ...BASE_CONFIG,
+      consumableParams: { colleRendement: 6, colleBagSize: 20 },
+    };
+    const result = analyzeQuantities([makeRoom(3060, 2040)], config);
+    expect(result.consumables.colle.rendement).toBe(6);
+    expect(result.consumables.colle.bagSize).toBe(20);
+    expect(result.consumables.colle.total).toBeCloseTo(result.roomArea / 1_000_000 * 6, 1);
+  });
+
+  it('consumableParams.jointRendement override remplace ISO', () => {
+    const config: TilingConfig = {
+      ...BASE_CONFIG,
+      consumableParams: { jointRendement: 1.5 },
+    };
+    const result = analyzeQuantities([makeRoom(3060, 2040)], config);
+    expect(result.consumables.joint.rendement).toBe(1.5);
   });
 });
