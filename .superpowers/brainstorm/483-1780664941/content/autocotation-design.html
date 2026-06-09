@@ -1,0 +1,191 @@
+<h2>Édition des AutoCotations — Design proposé</h2>
+<p class="subtitle">Clic sur un label de côte → panneau flottant d'édition. Mêmes décisions que la session précédente : redimensionnement physique, panneau latéral.</p>
+
+<div class="mockup">
+  <div class="mockup-header">Éditeur de plan — côte extérieure sélectionnée</div>
+  <div class="mockup-body" style="display:flex;height:460px;background:#0f172a;border-radius:8px;overflow:hidden;position:relative;">
+
+    <!-- Canvas SVG -->
+    <svg width="100%" height="100%" viewBox="0 0 680 460" style="display:block;position:absolute;inset:0;">
+
+      <!-- Grid background -->
+      <defs>
+        <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+          <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#1e293b" stroke-width="0.5"/>
+        </pattern>
+      </defs>
+      <rect width="680" height="460" fill="url(#grid)"/>
+
+      <!-- Room shape -->
+      <rect x="160" y="100" width="280" height="200" fill="rgba(100,116,139,0.15)" stroke="#475569" stroke-width="3"/>
+
+      <!-- Wall thickness lines (inner/outer) -->
+      <rect x="154" y="94" width="292" height="212" fill="none" stroke="#64748b" stroke-width="1" stroke-dasharray="2,3" opacity="0.4"/>
+      <rect x="166" y="106" width="268" height="188" fill="none" stroke="#64748b" stroke-width="1" stroke-dasharray="2,3" opacity="0.4"/>
+
+      <!-- ── CÔTE EXTÉRIEURE (haut) — SÉLECTIONNÉE ── -->
+      <!-- Dashed witness lines -->
+      <line x1="154" y1="94" x2="154" y2="64" stroke="#f97316" stroke-width="1" stroke-dasharray="3,3"/>
+      <line x1="446" y1="94" x2="446" y2="64" stroke="#f97316" stroke-width="1" stroke-dasharray="3,3"/>
+      <!-- Dim line -->
+      <line x1="154" y1="70" x2="446" y2="70" stroke="#f97316" stroke-width="2"/>
+      <!-- Ticks -->
+      <line x1="154" y1="62" x2="154" y2="78" stroke="#f97316" stroke-width="2"/>
+      <line x1="446" y1="62" x2="446" y2="78" stroke="#f97316" stroke-width="2"/>
+      <!-- Label pill SELECTED (orange, solid) with hover ring -->
+      <rect x="272" y="62" width="58" height="16" rx="8" fill="#f97316"/>
+      <text x="301" y="73" text-anchor="middle" font-size="10" fill="white" font-weight="700" font-family="monospace">32.0 cm</text>
+      <!-- Selection ring -->
+      <rect x="148" y="64" width="304" height="8" rx="4" fill="none" stroke="#f97316" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
+
+      <!-- ── CÔTE INTÉRIEURE (haut) — NON SÉLECTIONNÉE ── -->
+      <line x1="166" y1="106" x2="166" y2="120" stroke="#3b82f6" stroke-width="0.8" stroke-dasharray="3,3" opacity="0.6"/>
+      <line x1="434" y1="106" x2="434" y2="120" stroke="#3b82f6" stroke-width="0.8" stroke-dasharray="3,3" opacity="0.6"/>
+      <line x1="166" y1="114" x2="434" y2="114" stroke="#3b82f6" stroke-width="1.2" opacity="0.6"/>
+      <line x1="166" y1="109" x2="166" y2="119" stroke="#3b82f6" stroke-width="1.5" opacity="0.6"/>
+      <line x1="434" y1="109" x2="434" y2="119" stroke="#3b82f6" stroke-width="1.5" opacity="0.6"/>
+      <rect x="279" y="108" width="44" height="12" rx="6" fill="rgba(59,130,246,0.7)"/>
+      <text x="301" y="117" text-anchor="middle" font-size="8" fill="white" font-weight="700" font-family="monospace">30.0 cm</text>
+
+      <!-- ── CÔTE EXTÉRIEURE (gauche) — NON SÉLECTIONNÉE ── -->
+      <line x1="154" y1="94" x2="118" y2="94" stroke="#22c55e" stroke-width="0.8" stroke-dasharray="3,3" opacity="0.6"/>
+      <line x1="154" y1="306" x2="118" y2="306" stroke="#22c55e" stroke-width="0.8" stroke-dasharray="3,3" opacity="0.6"/>
+      <line x1="124" y1="94" x2="124" y2="306" stroke="#22c55e" stroke-width="1.2" opacity="0.6"/>
+      <line x1="118" y1="94" x2="130" y2="94" stroke="#22c55e" stroke-width="1.5" opacity="0.6"/>
+      <line x1="118" y1="306" x2="130" y2="306" stroke="#22c55e" stroke-width="1.5" opacity="0.6"/>
+      <rect x="108" y="192" width="32" height="12" rx="6" fill="rgba(34,197,94,0.7)"/>
+      <text x="124" y="201" text-anchor="middle" font-size="8" fill="white" font-weight="700" font-family="monospace">22.0 cm</text>
+
+      <!-- ── CÔTE EXTÉRIEURE (bas) ── -->
+      <line x1="154" y1="306" x2="154" y2="340" stroke="#22c55e" stroke-width="0.8" stroke-dasharray="3,3" opacity="0.6"/>
+      <line x1="446" y1="306" x2="446" y2="340" stroke="#22c55e" stroke-width="0.8" stroke-dasharray="3,3" opacity="0.6"/>
+      <line x1="154" y1="334" x2="446" y2="334" stroke="#22c55e" stroke-width="1.2" opacity="0.6"/>
+      <line x1="154" y1="328" x2="154" y2="340" stroke="#22c55e" stroke-width="1.5" opacity="0.6"/>
+      <line x1="446" y1="328" x2="446" y2="340" stroke="#22c55e" stroke-width="1.5" opacity="0.6"/>
+      <rect x="272" y="328" width="58" height="12" rx="6" fill="rgba(34,197,94,0.7)" style="cursor:pointer;"/>
+      <text x="301" y="337" text-anchor="middle" font-size="8" fill="white" font-weight="700" font-family="monospace">32.0 cm</text>
+
+      <!-- ── CÔTE EXTÉRIEURE (droite) ── -->
+      <line x1="446" y1="94" x2="480" y2="94" stroke="#22c55e" stroke-width="0.8" stroke-dasharray="3,3" opacity="0.6"/>
+      <line x1="446" y1="306" x2="480" y2="306" stroke="#22c55e" stroke-width="0.8" stroke-dasharray="3,3" opacity="0.6"/>
+      <line x1="474" y1="94" x2="474" y2="306" stroke="#22c55e" stroke-width="1.2" opacity="0.6"/>
+      <line x1="468" y1="94" x2="480" y2="94" stroke="#22c55e" stroke-width="1.5" opacity="0.6"/>
+      <line x1="468" y1="306" x2="480" y2="306" stroke="#22c55e" stroke-width="1.5" opacity="0.6"/>
+      <rect x="460" y="192" width="32" height="12" rx="6" fill="rgba(34,197,94,0.7)"/>
+      <text x="476" y="201" text-anchor="middle" font-size="8" fill="white" font-weight="700" font-family="monospace">22.0 cm</text>
+
+      <!-- Nodes (wall corners) -->
+      <circle cx="160" cy="100" r="5" fill="#e2e8f0" stroke="#0f172a" stroke-width="1"/>
+      <circle cx="440" cy="100" r="5" fill="#e2e8f0" stroke="#0f172a" stroke-width="1"/>
+      <circle cx="440" cy="300" r="5" fill="#e2e8f0" stroke="#0f172a" stroke-width="1"/>
+      <circle cx="160" cy="300" r="5" fill="#e2e8f0" stroke="#0f172a" stroke-width="1"/>
+
+      <!-- ── PANNEAU D'ÉDITION FLOTTANT — ancré coin supérieur droit ── -->
+      <rect x="510" y="80" width="155" height="155" rx="10" fill="#1e293b" stroke="#f97316" stroke-width="1.5"/>
+
+      <!-- Header -->
+      <text x="520" y="100" font-size="9" fill="#f97316" font-weight="900" font-family="sans-serif" letter-spacing="1">CÔTE SÉLECTIONNÉE</text>
+      <line x1="510" y1="108" x2="665" y2="108" stroke="#334155" stroke-width="0.8"/>
+      <text x="655" y="100" text-anchor="middle" font-size="12" fill="#475569" font-family="sans-serif" style="cursor:pointer;">✕</text>
+
+      <!-- Type indicator -->
+      <rect x="519" y="112" width="44" height="14" rx="4" fill="rgba(34,197,94,0.2)" stroke="#22c55e" stroke-width="1"/>
+      <text x="541" y="121" text-anchor="middle" font-size="8" fill="#22c55e" font-weight="700" font-family="sans-serif">EXT</text>
+      <text x="575" y="121" font-size="8" fill="#64748b" font-family="sans-serif">Mur nord</text>
+
+      <!-- Length field label -->
+      <text x="519" y="140" font-size="9" fill="#64748b" font-family="sans-serif">Longueur</text>
+
+      <!-- Input field (orange border = focused) -->
+      <rect x="519" y="145" width="70" height="22" rx="5" fill="#0f172a" stroke="#f97316" stroke-width="1.5"/>
+      <text x="554" y="159" text-anchor="middle" font-size="11" fill="white" font-weight="700" font-family="monospace">32.0</text>
+      <!-- Cursor blink -->
+      <line x1="572" y1="149" x2="572" y2="163" stroke="#f97316" stroke-width="1.2" opacity="0.8"/>
+      <text x="596" y="159" font-size="10" fill="#64748b" font-family="sans-serif">cm</text>
+
+      <!-- Apply button -->
+      <rect x="519" y="175" width="136" height="26" rx="7" fill="#f97316"/>
+      <text x="587" y="190" text-anchor="middle" font-size="11" fill="white" font-weight="700" font-family="sans-serif">Appliquer ↵</text>
+
+      <!-- Fixed anchor note -->
+      <text x="519" y="218" font-size="8" fill="#64748b" font-family="sans-serif">Ancre fixe : nœud gauche</text>
+      <text x="519" y="229" font-size="8" fill="#64748b" font-family="sans-serif">Déplace : nœud droit</text>
+
+      <!-- Arrow from panel to selected cotation -->
+      <line x1="510" y1="115" x2="460" y2="70" stroke="#f97316" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
+      <circle cx="460" cy="70" r="3" fill="#f97316" opacity="0.5"/>
+
+      <!-- Legend bottom -->
+      <rect x="20" y="400" width="8" height="2" fill="#22c55e"/>
+      <text x="32" y="410" font-size="9" fill="#22c55e" font-family="sans-serif">Extérieur (clic → éditable)</text>
+      <rect x="160" y="400" width="8" height="2" fill="#3b82f6"/>
+      <text x="172" y="410" font-size="9" fill="#3b82f6" font-family="sans-serif">Intérieur (clic → éditable)</text>
+      <rect x="300" y="400" width="8" height="2" fill="#f97316"/>
+      <text x="312" y="410" font-size="9" fill="#f97316" font-family="sans-serif">Sélectionnée</text>
+
+    </svg>
+  </div>
+</div>
+
+<div class="section" style="margin-top:24px;">
+  <h3>Ce qui change vs. la session précédente</h3>
+  <table style="width:100%;border-collapse:collapse;color:var(--text2);font-size:13px;">
+    <thead>
+      <tr style="border-bottom:1px solid var(--border);">
+        <th style="text-align:left;padding:8px;color:var(--text1);">Paramètre</th>
+        <th style="text-align:left;padding:8px;color:var(--text1);">Ancien (TilingDimension)</th>
+        <th style="text-align:left;padding:8px;color:var(--text1);">Nouveau (AutoCotation)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid #1e293b;">
+        <td style="padding:8px;"><strong>Vue</strong></td>
+        <td style="padding:8px;">Calepinage (tiling)</td>
+        <td style="padding:8px;">Éditeur de plan</td>
+      </tr>
+      <tr style="border-bottom:1px solid #1e293b;">
+        <td style="padding:8px;"><strong>Placement</strong></td>
+        <td style="padding:8px;">Manuel (l'utilisateur place)</td>
+        <td style="padding:8px;">Automatique (périmètre ext + int)</td>
+      </tr>
+      <tr style="border-bottom:1px solid #1e293b;">
+        <td style="padding:8px;"><strong>Quel nœud bouge</strong></td>
+        <td style="padding:8px;">p2NodeId — snappé lors du placement</td>
+        <td style="padding:8px;"><strong>wall.node2Id</strong> (toujours connu)</td>
+      </tr>
+      <tr style="border-bottom:1px solid #1e293b;">
+        <td style="padding:8px;"><strong>Valeur éditée</strong></td>
+        <td style="padding:8px;">Distance anchor1→anchor2</td>
+        <td style="padding:8px;">Idem — mais conversion ext/int/isolé pour trouver node_dist</td>
+      </tr>
+      <tr style="border-bottom:1px solid #1e293b;">
+        <td style="padding:8px;"><strong>Formule</strong></td>
+        <td style="padding:8px;">H/V/parallel direct</td>
+        <td style="padding:8px;">Ext: node_dist = val − t<br>Int: node_dist = val + t<br>Isolé: node_dist = val</td>
+      </tr>
+      <tr>
+        <td style="padding:8px;"><strong>UI</strong></td>
+        <td style="padding:8px;">Panneau sidebar tiling (option C)</td>
+        <td style="padding:8px;">Panneau flottant coin sup. droit canvas plan</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="section" style="margin-top:24px;">
+  <h3>Ancien système — sort proposé</h3>
+  <div style="display:flex;gap:16px;flex-wrap:wrap;">
+    <div style="flex:1;min-width:200px;background:#1e293b;border-radius:8px;padding:16px;border:1px solid #334155;">
+      <div style="font-size:11px;font-weight:700;color:#f97316;margin-bottom:8px;">ABANDON UI</div>
+      <p style="font-size:12px;color:#94a3b8;line-height:1.6;">Supprimer le bouton "Côtes" dans TilingEditor. Le code <code>TilingDimension</code> reste en place (archive). Les données existantes dans les projets sont ignorées.</p>
+      <div style="margin-top:8px;font-size:11px;color:#22c55e;">✓ Aucune migration de données</div>
+      <div style="margin-top:4px;font-size:11px;color:#22c55e;">✓ Réversible si besoin</div>
+    </div>
+    <div style="flex:1;min-width:200px;background:#1e293b;border-radius:8px;padding:16px;border:1px solid #334155;">
+      <div style="font-size:11px;font-weight:700;color:#f97316;margin-bottom:8px;">SUPPRESSION COMPLÈTE</div>
+      <p style="font-size:12px;color:#94a3b8;line-height:1.6;">Supprimer tous les fichiers TilingDimension (type, hook, composants DimLine, TilingDimensionLayer, DimPropertiesPanel). Plus propre mais irréversible.</p>
+      <div style="margin-top:8px;font-size:11px;color:#f97316;">⚠ Supprime le travail de la session précédente</div>
+      <div style="margin-top:4px;font-size:11px;color:#64748b;">Envisageable après validation du nouveau système</div>
+    </div>
+  </div>
+</div>

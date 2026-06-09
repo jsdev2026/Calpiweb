@@ -1,0 +1,124 @@
+<h2>Design — Bridge données (Approche A · Option 1)</h2>
+<p class="subtitle">Section 1/2 : Architecture — comment wallsToRooms() s'intègre dans le projet</p>
+
+<style>
+.flow-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 8px 0; }
+.box { padding: 7px 13px; border-radius: 8px; font-size: 11px; font-weight: 600; text-align: center; }
+.box-wall   { background: #1e3a5f; color: #93c5fd; border: 1px solid #3b82f6; }
+.box-store  { background: #1c1f26; color: #cbd5e1; border: 1px solid #475569; }
+.box-sel    { background: #2a1e3a; color: #d8b4fe; border: 1px solid #a855f7; }
+.box-room   { background: #1e3a1e; color: #86efac; border: 1px solid #22c55e; }
+.box-engine { background: #3a2a1e; color: #fdba74; border: 1px solid #f97316; }
+.box-new    { background: #1e2a3a; color: #7dd3fc; border: 1px solid #38bdf8; }
+.arrow { color: #6b7280; font-size: 16px; font-weight: bold; }
+.label-new { font-size: 9px; background: #38bdf8; color: #0f172a; border-radius: 3px; padding: 1px 5px; font-weight: 700; vertical-align: middle; margin-left: 4px; }
+.label-unchanged { font-size: 9px; background: #475569; color: #e2e8f0; border-radius: 3px; padding: 1px 5px; font-weight: 700; vertical-align: middle; margin-left: 4px; }
+.subtitle-sm { font-size: 10px; color: #9ca3af; font-weight: 400; display: block; margin-top: 2px; }
+.section-block { background: #111827; border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; }
+.section-block h3 { margin: 0 0 12px; font-size: 13px; color: #e2e8f0; }
+</style>
+
+<!-- Clé de lecture -->
+<div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;font-size:10px;color:#9ca3af">
+  <span><span class="label-new">NEW</span> nouveau code</span>
+  <span><span class="label-unchanged">UNCHANGED</span> inchangé</span>
+</div>
+
+<!-- Store selector -->
+<div class="section-block">
+  <h3>1 — Nouveau sélecteur dans le store</h3>
+  <div class="flow-row">
+    <div class="box box-store">
+      <code style="font-size:10px">projectStore</code>
+      <span class="subtitle-sm">wallEngine? + rooms</span>
+    </div>
+    <div class="arrow">→</div>
+    <div class="box box-sel">
+      <code style="font-size:10px">selectRooms(state)</code> <span class="label-new">NEW</span>
+      <span class="subtitle-sm">si wallEngine actif → wallsToRooms()<br>sinon → project.rooms</span>
+    </div>
+    <div class="arrow">→</div>
+    <div class="box box-room">
+      <code style="font-size:10px">Room[]</code>
+      <span class="subtitle-sm">même interface partout</span>
+    </div>
+  </div>
+  <p style="font-size:11px;color:#9ca3af;margin:10px 0 0">
+    Le sélecteur est la seule pièce consciente du mode actif. Tous les consommateurs
+    appellent <code>selectRooms</code> — ils ne savent pas si les pièces viennent du moteur legacy ou du bridge.
+  </p>
+</div>
+
+<!-- wallsToRooms -->
+<div class="section-block">
+  <h3>2 — Nouvelle fonction pure : wallsToRooms()</h3>
+  <div class="flow-row">
+    <div class="box box-wall">
+      <code style="font-size:10px">Wall[] + WallNode[]</code>
+      <span class="subtitle-sm">project.wallEngine</span>
+    </div>
+    <div class="arrow">→</div>
+    <div class="box box-new">
+      <code style="font-size:10px">wallsToRooms()</code> <span class="label-new">NEW</span>
+      <span class="subtitle-sm">src/engine/geometry/wallFaces.ts</span>
+    </div>
+    <div class="arrow">→</div>
+    <div class="box box-room">
+      <code style="font-size:10px">Room[]</code>
+      <span class="subtitle-sm">calculé à la volée<br>non persisté</span>
+    </div>
+  </div>
+  <p style="font-size:11px;color:#9ca3af;margin:10px 0 0">
+    Fonction pure. Appelée dans <code>selectRooms</code> uniquement — aucun effet de bord,
+    aucun accès au store. Testable indépendamment.
+  </p>
+</div>
+
+<!-- Consommateurs inchangés -->
+<div class="section-block">
+  <h3>3 — Consommateurs (inchangés)</h3>
+  <div class="flow-row">
+    <div class="box box-room"><code style="font-size:10px">Room[]</code></div>
+    <div class="arrow">→</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div class="flow-row" style="margin:0">
+        <div class="box box-engine"><code style="font-size:10px">QuantitiesPanel</code> <span class="label-unchanged">UNCHANGED</span></div>
+        <div class="arrow">→</div>
+        <div class="box box-engine"><code style="font-size:10px">quantityEngine</code> <span class="label-unchanged">UNCHANGED</span></div>
+      </div>
+      <div class="flow-row" style="margin:0">
+        <div class="box box-engine"><code style="font-size:10px">TilingEditor</code> <span class="label-unchanged">UNCHANGED</span></div>
+        <div class="arrow">→</div>
+        <div class="box box-engine"><code style="font-size:10px">tilingEngine</code> <span class="label-unchanged">UNCHANGED</span></div>
+      </div>
+      <div class="flow-row" style="margin:0">
+        <div class="box box-engine"><code style="font-size:10px">QuantityPlanSvg</code> <span class="label-unchanged">UNCHANGED</span></div>
+      </div>
+    </div>
+  </div>
+  <p style="font-size:11px;color:#9ca3af;margin:10px 0 0">
+    Zéro modification dans les moteurs de calepinage et de quantitatif.
+    Ils reçoivent des <code>Room[]</code> valides — peu importe leur origine.
+  </p>
+</div>
+
+<!-- Résumé fichiers -->
+<div style="border:1px solid #374151;border-radius:10px;padding:12px 16px">
+  <p style="font-size:11px;color:#d1d5db;margin:0 0 8px;font-weight:700">Fichiers touchés</p>
+  <table style="width:100%;font-size:11px;border-collapse:collapse">
+    <tr style="color:#9ca3af;border-bottom:1px solid #374151">
+      <td style="padding:4px 8px">Fichier</td><td style="padding:4px 8px">Action</td>
+    </tr>
+    <tr><td style="padding:4px 8px;color:#7dd3fc"><code>src/engine/geometry/wallFaces.ts</code></td><td style="padding:4px 8px;color:#86efac">Créer — <code>wallsToRooms()</code></td></tr>
+    <tr><td style="padding:4px 8px;color:#7dd3fc"><code>src/store/projectStore.ts</code></td><td style="padding:4px 8px;color:#fbbf24">Modifier — ajouter <code>selectRooms()</code></td></tr>
+    <tr><td style="padding:4px 8px;color:#7dd3fc"><code>src/components/quantities/QuantitiesPanel.tsx</code></td><td style="padding:4px 8px;color:#fbbf24">Modifier — utiliser <code>selectRooms</code></td></tr>
+    <tr><td style="padding:4px 8px;color:#7dd3fc"><code>src/components/tiling/TilingEditor.tsx</code></td><td style="padding:4px 8px;color:#fbbf24">Modifier — utiliser <code>selectRooms</code></td></tr>
+    <tr><td style="padding:4px 8px;color:#7dd3fc"><code>src/components/quantities/QuantityPlanSvg.tsx</code></td><td style="padding:4px 8px;color:#fbbf24">Modifier — utiliser <code>selectRooms</code></td></tr>
+    <tr><td style="padding:4px 8px;color:#94a3b8"><code>src/engine/quantities/*</code></td><td style="padding:4px 8px;color:#6b7280">Inchangés</td></tr>
+    <tr><td style="padding:4px 8px;color:#94a3b8"><code>src/engine/tiling/*</code></td><td style="padding:4px 8px;color:#6b7280">Inchangés</td></tr>
+  </table>
+</div>
+
+<p style="color:#6b7280;font-size:11px;margin-top:14px">
+  Section 2/2 à suivre dans le terminal : algorithme de détection des faces planes (half-edge traversal).
+</p>

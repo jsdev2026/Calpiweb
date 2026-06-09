@@ -33,6 +33,12 @@ export function analyzeQuantities(rooms: Room[], config: TilingConfig, wallThick
       wholeCount: 0, cuts: [], cutGroups: [],
       totalReuseCount: 0, tilesForCuts: 0, totalTiles: 0, toOrder: 0, roomArea: 0,
       tiles: [],
+      margin: ORDER_MARGIN_RATIO,
+      consumables: {
+        colle: { total: 0, bags: 0, bagSize: 25, rendement: 4 },
+        joint: { total: 0, bags: 0, bagSize: 5, rendement: 0 },
+        croisillons: { total: 0, bags: 0, bagSize: 200, rendement: 1.2 },
+      },
     };
   }
 
@@ -64,5 +70,11 @@ export function analyzeQuantities(rooms: Room[], config: TilingConfig, wallThick
     toOrder,
     roomArea: stats.roomArea,
     tiles,
+    margin: ORDER_MARGIN_RATIO,
+    consumables: {
+      colle: { total: 0, bags: 0, bagSize: 25, rendement: 4 },
+      joint: { total: 0, bags: 0, bagSize: 5, rendement: 0 },
+      croisillons: { total: 0, bags: 0, bagSize: 200, rendement: 1.2 },
+    },
   };
 }

@@ -141,7 +141,6 @@ describe('canReuseFor', () => {
 
 describe('canReuseFor — tolérance 10mm', () => {
   it('chute 6mm plus petite que le besoin est réutilisable', () => {
-    const FACTORY: PieceEdges = { left: 'factory', right: 'factory', top: 'factory', bottom: 'factory' };
     const BOTTOM_CUT: PieceEdges = { left: 'factory', right: 'factory', top: 'factory', bottom: 'cut' };
     // chute 14×200, besoin 20×180 → diff de 6mm en largeur
     // échoue avec tolérance 5mm (14 < 20−5=15), passe avec 10mm (14 >= 20−10=10)
@@ -149,7 +148,6 @@ describe('canReuseFor — tolérance 10mm', () => {
   });
 
   it('assignOffcuts : réemploie une chute 6mm plus petite que le besoin', () => {
-    const FACTORY: PieceEdges = { left: 'factory', right: 'factory', top: 'factory', bottom: 'factory' };
     const BOTTOM_CUT: PieceEdges = { left: 'factory', right: 'factory', top: 'factory', bottom: 'cut' };
     // src génère une chute 14×200 ; target a besoin de 20×180
     const src = makeRecord('src', 186, 200, 14, 200, { left: 'factory', right: 'cut', top: 'factory', bottom: 'factory' }, FACTORY);
