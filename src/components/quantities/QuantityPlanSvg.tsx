@@ -129,17 +129,28 @@ export const QuantityPlanSvg = ({
                   filter: isHighlighted && groupColor ? `drop-shadow(0 0 8px ${groupColor}88)` : undefined,
                 }}
               >
-                <rect
-                  x={tile.rect.x}
-                  y={tile.rect.y}
-                  width={tile.rect.w}
-                  height={tile.rect.h}
-                  fill={fill}
-                  fillOpacity={fillOpacity}
-                  stroke={printMode ? '#ffffff' : undefined}
-                  strokeWidth={printMode ? 1 : undefined}
-                  vectorEffect={printMode ? 'non-scaling-stroke' : undefined}
-                />
+                {tile.points ? (
+                  <polygon
+                    points={tile.points.map((p) => `${p.x},${p.y}`).join(' ')}
+                    fill={fill}
+                    fillOpacity={fillOpacity}
+                    stroke={printMode ? '#ffffff' : undefined}
+                    strokeWidth={printMode ? 1 : undefined}
+                    vectorEffect={printMode ? 'non-scaling-stroke' : undefined}
+                  />
+                ) : (
+                  <rect
+                    x={tile.rect.x}
+                    y={tile.rect.y}
+                    width={tile.rect.w}
+                    height={tile.rect.h}
+                    fill={fill}
+                    fillOpacity={fillOpacity}
+                    stroke={printMode ? '#ffffff' : undefined}
+                    strokeWidth={printMode ? 1 : undefined}
+                    vectorEffect={printMode ? 'non-scaling-stroke' : undefined}
+                  />
+                )}
                 {cut && groupInfo && (
                   <>
                     <circle cx={cut.clipCx} cy={cut.clipCy} r={labelSize * 0.62} fill="rgba(0,0,0,0.50)" />

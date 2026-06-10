@@ -79,4 +79,23 @@ describe('QuantityPlanSvg', () => {
     const vb = container.querySelector('svg')!.getAttribute('viewBox')!;
     expect(vb).toBe('-100 -100 1200 1200');
   });
+
+  it('renders CHEVRON tiles (tile.points) as polygons, not bbox rects', () => {
+    const chevronTile = {
+      id: 'tch1',
+      type: 'WHOLE' as const,
+      rect: { x: 0, y: 0, w: 424.26, h: 724.26 },
+      points: [
+        { x: 0, y: 0 },
+        { x: 424.26, y: 424.26 },
+        { x: 424.26, y: 724.26 },
+        { x: 0, y: 300 },
+      ],
+    };
+    const { container } = render(
+      <QuantityPlanSvg result={makeResult({ tiles: [chevronTile] })} config={config} rooms={[room]} />,
+    );
+    const polygon = container.querySelector('polygon[points="0,0 424.26,424.26 424.26,724.26 0,300"]');
+    expect(polygon).not.toBeNull();
+  });
 });
