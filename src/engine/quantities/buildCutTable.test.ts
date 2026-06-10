@@ -10,6 +10,12 @@ const ROOM: Point[] = [
   { x: 200, y: 200 }, { x: 0, y: 200 },
 ];
 
+// Pièce 300x1000 en CCW — pour les tuiles CHEVRON (mur vertical à x=300)
+const ROOM_CHEVRON: Point[] = [
+  { x: 0, y: 0 }, { x: 300, y: 0 },
+  { x: 300, y: 1000 }, { x: 0, y: 1000 },
+];
+
 describe('buildCutTable', () => {
   it('filtre les tuiles WHOLE et retourne uniquement les CUT', () => {
     const tiles: Tile[] = [
@@ -61,23 +67,34 @@ describe('buildCutTable', () => {
     expect(rec!.chuteArea).toBeGreaterThan(0);
   });
 
-  it('tuile chevron avec tile.points : clipping sur le parallélogramme réel', () => {
-    // Parallélogramme qui dépasse la pièce à droite (x > 200)
+  it('tuile chevron 300x600 a 45 degres coupee par un mur vertical (x=300) : repere local', () => {
+    // Carreau CHEVRON : eW = points[3]-points[0] = (0,300) -> Wlen=300 (Largeur)
+    //                   eH = points[1]-points[0] -> Hlen=600 (Longueur), angle=45deg
+    const span = 600 * Math.cos(Math.PI / 4);
+    const dy = 600 * Math.sin(Math.PI / 4);
     const pts: Point[] = [
-      { x: 160, y: 50 },
-      { x: 210, y: 50 },
-      { x: 210, y: 110 },
-      { x: 160, y: 110 },
+      { x: 0, y: 0 },
+      { x: span, y: dy },
+      { x: span, y: dy + 300 },
+      { x: 0, y: 300 },
     ];
     const tile: Tile = {
-      id: 't5',
-      rect: { x: 160, y: 50, w: 50, h: 60 },
+      id: 'tch1',
+      rect: { x: 0, y: 0, w: span, h: dy + 300 },
       type: 'CUT',
       points: pts,
     };
-    const [rec] = buildCutTable([tile], [ROOM], ['r1']);
-    expect(rec!.pieceEdges.right).toBe('cut');
-    expect(rec!.usedW).toBeLessThan(50);
+    const [rec] = buildCutTable([tile], [ROOM_CHEVRON], ['r1']);
+    expect(rec!.tileW).toBeCloseTo(300, 6);
+    expect(rec!.tileH).toBeCloseTo(600, 6);
+    expect(rec!.usedW).toBe(300);
+    expect(rec!.usedH).toBe(424);
+    expect(rec!.chuteW).toBe(300);
+    expect(rec!.chuteH).toBeCloseTo(176, 0);
+    expect(rec!.pieceEdges.left).toBe('factory');
+    expect(rec!.pieceEdges.right).toBe('factory');
+    expect(rec!.pieceEdges.top).toBe('factory');
+    expect(rec!.pieceEdges.bottom).toBe('cut');
   });
 
   it('tuile HERRINGBONE H×W : tileW=90, tileH=45 stockés correctement', () => {
