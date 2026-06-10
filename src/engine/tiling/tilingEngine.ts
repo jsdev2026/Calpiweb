@@ -219,12 +219,18 @@ export const computeTiling = (
   }
 
   // CHEVRON
+  // side = config.width (Largeur) = vertical edge length, fixed regardless of angle
+  // span/dy = horizontal/vertical projections of the oblique edge, whose length is
+  //           config.height (Longueur), also fixed regardless of angle
   const rotatedBbox = getBoundingBox(testPlan);
-  const tanB = Math.tan(config.chevronAngle * Math.PI / 180);
-  const dy = height * tanB;
-  const colStepX = height + joint;
-  const rowStepY = width + joint;
-  const margin = Math.max(width, height) * 2;
+  const cosB = Math.cos(config.chevronAngle * Math.PI / 180);
+  const sinB = Math.sin(config.chevronAngle * Math.PI / 180);
+  const side = width;              // vertical edge length
+  const span = height * cosB;      // horizontal projection of the oblique edge
+  const dy = height * sinB;        // vertical projection of the oblique edge
+  const colStepX = span + joint;
+  const rowStepY = side + joint;
+  const margin = Math.max(span, side) * 2;
   const cRange = Math.ceil((rotatedBbox.maxX - rotatedBbox.minX + margin * 2) / colStepX) + 2;
   const rRange = Math.ceil((rotatedBbox.maxY - rotatedBbox.minY + margin * 2 + dy * 2) / rowStepY) + 2;
 
@@ -239,16 +245,16 @@ export const computeTiling = (
       if (isEven) {
         pts = [
           { x: xBase,          y: yBase },
-          { x: xBase + height, y: yBase + dy },
-          { x: xBase + height, y: yBase + dy + width },
-          { x: xBase,          y: yBase + width },
+          { x: xBase + span,   y: yBase + dy },
+          { x: xBase + span,   y: yBase + dy + side },
+          { x: xBase,          y: yBase + side },
         ];
       } else {
         pts = [
           { x: xBase,          y: yBase + dy },
-          { x: xBase + height, y: yBase },
-          { x: xBase + height, y: yBase + width },
-          { x: xBase,          y: yBase + dy + width },
+          { x: xBase + span,   y: yBase },
+          { x: xBase + span,   y: yBase + side },
+          { x: xBase,          y: yBase + dy + side },
         ];
       }
       const type = classifyPolygonTile(pts, testPlan);
@@ -378,13 +384,19 @@ export const computeTilingMultiRoom = (rooms: Room[], config: TilingConfig, wall
     }
   } else {
     // CHEVRON
+    // side = config.width (Largeur) = vertical edge length, fixed regardless of angle
+    // span/dy = horizontal/vertical projections of the oblique edge, whose length is
+    //           config.height (Longueur), also fixed regardless of angle
     const rotatedAllPoints = testRooms.flatMap((r) => r.testPoints);
     const rotatedBbox = getBoundingBox(rotatedAllPoints);
-    const tanB = Math.tan(config.chevronAngle * Math.PI / 180);
-    const dy = height * tanB;
-    const colStepX = height + joint;
-    const rowStepY = width + joint;
-    const margin = Math.max(width, height) * 2;
+    const cosB = Math.cos(config.chevronAngle * Math.PI / 180);
+    const sinB = Math.sin(config.chevronAngle * Math.PI / 180);
+    const side = width;              // vertical edge length
+    const span = height * cosB;      // horizontal projection of the oblique edge
+    const dy = height * sinB;        // vertical projection of the oblique edge
+    const colStepX = span + joint;
+    const rowStepY = side + joint;
+    const margin = Math.max(span, side) * 2;
     const cRange = Math.ceil((rotatedBbox.maxX - rotatedBbox.minX + margin * 2) / colStepX) + 2;
     const rRange = Math.ceil((rotatedBbox.maxY - rotatedBbox.minY + margin * 2 + dy * 2) / rowStepY) + 2;
 
@@ -397,16 +409,16 @@ export const computeTilingMultiRoom = (rooms: Room[], config: TilingConfig, wall
         if (isEven) {
           pts = [
             { x: xBase,          y: yBase },
-            { x: xBase + height, y: yBase + dy },
-            { x: xBase + height, y: yBase + dy + width },
-            { x: xBase,          y: yBase + width },
+            { x: xBase + span,   y: yBase + dy },
+            { x: xBase + span,   y: yBase + dy + side },
+            { x: xBase,          y: yBase + side },
           ];
         } else {
           pts = [
             { x: xBase,          y: yBase + dy },
-            { x: xBase + height, y: yBase },
-            { x: xBase + height, y: yBase + width },
-            { x: xBase,          y: yBase + dy + width },
+            { x: xBase + span,   y: yBase },
+            { x: xBase + span,   y: yBase + side },
+            { x: xBase,          y: yBase + dy + side },
           ];
         }
 

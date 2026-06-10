@@ -215,3 +215,33 @@ describe('quantityEngine — consommables', () => {
     expect(result.consumables.joint.rendement).toBe(1.5);
   });
 });
+
+describe('quantityEngine — CHEVRON (repère local du carreau)', () => {
+  it('pose CHEVRON 300x600 a 45 degres : invariants respectes, pas de NaN', () => {
+    const config: TilingConfig = {
+      ...BASE_CONFIG,
+      width: 300, height: 600, joint: 3,
+      chevronAngle: 45, layout: 'CHEVRON',
+    };
+    const result = analyzeQuantities([makeRoom(2000, 2000)], config);
+    checkInvariants(result);
+
+    expect(result.tileW).toBe(300);
+    expect(result.tileH).toBe(600);
+    expect(Number.isNaN(result.totalTiles)).toBe(false);
+    expect(result.totalTiles).toBeGreaterThan(0);
+    expect(result.toOrder).toBeGreaterThanOrEqual(result.totalTiles);
+    expect(result.totalReuseCount).toBeGreaterThanOrEqual(0);
+    expect(result.tilesForCuts).toBe(result.cuts.length - result.totalReuseCount);
+
+    // Toutes les chutes (si presentes) restent dans les bornes du carreau
+    for (const g of result.cutGroups) {
+      expect(g.chuteW).toBeGreaterThanOrEqual(0);
+      expect(g.chuteH).toBeGreaterThanOrEqual(0);
+      // Tolérance flottante : cos/sin(45°) introduisent une erreur ~1e-13
+      expect(g.chuteW).toBeLessThanOrEqual(300 + 1e-6);
+      expect(g.chuteH).toBeLessThanOrEqual(600 + 1e-6);
+      expect(Number.isNaN(g.chuteW * g.chuteH)).toBe(false);
+    }
+  });
+});
