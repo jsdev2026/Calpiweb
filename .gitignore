@@ -39,3 +39,6 @@ next-env.d.ts
 !.vscode/extensions.json
 !.vscode/settings.json
 .idea
+
+# git worktrees (superpowers)
+/.worktrees/
