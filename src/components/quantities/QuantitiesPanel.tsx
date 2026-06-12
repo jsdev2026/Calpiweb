@@ -117,6 +117,8 @@ export const QuantitiesPanel = () => {
                   tileH={result.tileH}
                   tileColor={color}
                   onHighlight={(n) => setHighlightGroup(
+                    // Plan highlighting is keyed by the original (pre-merge) cutGroups
+                    // index, not the merged display index `i` — use originalIndices[0].
                     n === null ? null : group.originalIndices[0]! + 1,
                   )}
                 />
