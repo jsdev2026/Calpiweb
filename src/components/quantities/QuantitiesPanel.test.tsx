@@ -89,20 +89,29 @@ describe('QuantitiesPanel', () => {
     expect(screen.getByText('Récupérées')).toBeDefined();
   });
 
-  it('renders the cuts band with merged cut groups', () => {
+  it('renders the cuts band header collapsed by default', () => {
     render(<QuantitiesPanel />);
-    expect(screen.getByTestId('cuts-band')).toBeDefined();
-    expect(screen.getByText('Groupes de coupes (1)')).toBeDefined();
+    const cutsBand = screen.getByTestId('cuts-band');
+    expect(cutsBand.textContent).toContain('Groupes de coupes (1)');
+    expect(cutsBand.textContent).toContain('0 carreaux à couper, 0 récupérées');
+    expect(screen.queryByRole('table')).toBeNull();
   });
 
-  it('hovering a compact cut card sets the plan highlight', () => {
-    const { container } = render(<QuantitiesPanel />);
-    const cutsBand = screen.getByTestId('cuts-band');
-    const card = cutsBand.querySelector('div[style*="border-top-color"]') as Element;
-    fireEvent.mouseEnter(card);
+  it('expands the cuts table when the header is clicked', () => {
+    render(<QuantitiesPanel />);
+    const toggle = screen.getByRole('button', { name: /Groupes de coupes/ });
+    fireEvent.click(toggle);
+    expect(screen.getByRole('table')).toBeDefined();
+  });
+
+  it('hovering a cut row sets the plan highlight', () => {
+    render(<QuantitiesPanel />);
+    const toggle = screen.getByRole('button', { name: /Groupes de coupes/ });
+    fireEvent.click(toggle);
+    const row = screen.getAllByRole('row')[1]!;
+    fireEvent.mouseEnter(row);
     // No visible assertion on QuantityPlanView (mocked); ensure no crash and plan section still renders
     expect(screen.getByTestId('plan-section')).toBeDefined();
-    expect(container).toBeDefined();
   });
 
   it('renders the header with format, joint and surface', () => {

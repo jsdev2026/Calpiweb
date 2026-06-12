@@ -9,8 +9,7 @@ import { analyzeQuantities } from '@/engine/quantities/quantityEngine';
 import { mergeSimilarCutGroups } from '@/engine/quantities/mergeSimilarCutGroups';
 import { formatCm, formatM2 } from '@/utils/formatters';
 import { QuantityPlanView } from './QuantityPlanView';
-import { CutGroupCardCompact } from './CutGroupCardCompact';
-import { GROUP_COLORS } from './CutGroupCard';
+import { CutGroupsTable } from './CutGroupsTable';
 import { QuantitiesRecapColumn } from './QuantitiesRecapColumn';
 
 export const QuantitiesPanel = () => {
@@ -19,6 +18,7 @@ export const QuantitiesPanel = () => {
   const doorOpenings = useProjectStore(useShallow(selectDoorOpenings));
   const setConfig = useProjectStore((s) => s.setConfig);
   const [highlightGroup, setHighlightGroup] = useState<number | null>(null);
+  const [cutsOpen, setCutsOpen] = useState(false);
 
   const result = useMemo(() => {
     if (!project) return null;
@@ -102,28 +102,29 @@ export const QuantitiesPanel = () => {
             />
           </div>
 
-          <div data-testid="cuts-band" className="flex shrink-0 flex-col gap-2">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 dark:text-zinc-500">
-              Groupes de coupes ({mergedCutGroups.length})
-            </h3>
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {mergedCutGroups.map((group, i) => (
-                <CutGroupCardCompact
-                  key={group.originalIndices.join(',')}
-                  group={group}
-                  groupIndex={i}
-                  groupColor={GROUP_COLORS[i % GROUP_COLORS.length]!}
+          <div data-testid="cuts-band" className="flex shrink-0 flex-col gap-2 overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setCutsOpen((o) => !o)}
+              className="flex shrink-0 items-center gap-1 text-left text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 dark:text-zinc-500"
+            >
+              <span>{cutsOpen ? '▾' : '▸'}</span>
+              <span>
+                Groupes de coupes ({mergedCutGroups.length}) — {result.cuts.length} carreaux à couper, {result.totalReuseCount} récupérées
+              </span>
+            </button>
+
+            {cutsOpen && (
+              <div className="max-h-[30vh] overflow-y-auto">
+                <CutGroupsTable
+                  groups={mergedCutGroups}
                   tileW={result.tileW}
                   tileH={result.tileH}
                   tileColor={color}
-                  onHighlight={(n) => setHighlightGroup(
-                    // Plan highlighting is keyed by the original (pre-merge) cutGroups
-                    // index, not the merged display index `i` — use originalIndices[0].
-                    n === null ? null : group.originalIndices[0]! + 1,
-                  )}
+                  onHighlight={setHighlightGroup}
                 />
-              ))}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
