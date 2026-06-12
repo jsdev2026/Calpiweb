@@ -120,7 +120,7 @@ export const QuantitiesRecapColumn = ({
   return (
     <div
       data-testid="recap-column"
-      className="order-1 flex w-full shrink-0 flex-col gap-3 border-b border-gray-200 p-4 dark:border-zinc-800 md:order-2 md:w-[230px] md:border-b-0 md:border-l"
+      className="order-1 flex max-h-[45vh] w-full shrink-0 flex-col gap-3 overflow-y-auto border-b border-gray-200 p-4 dark:border-zinc-800 md:order-2 md:max-h-full md:w-[230px] md:border-b-0 md:border-l"
     >
       {/* Hero — Total à commander */}
       <div className="rounded-xl bg-orange-500 px-4 py-3 text-center text-white">
