@@ -9,111 +9,16 @@ import { analyzeQuantities } from '@/engine/quantities/quantityEngine';
 import { mergeSimilarCutGroups } from '@/engine/quantities/mergeSimilarCutGroups';
 import { formatCm, formatM2 } from '@/utils/formatters';
 import { QuantityPlanView } from './QuantityPlanView';
-import { CutGroupCard, GROUP_COLORS } from './CutGroupCard';
-
-interface PinButtonProps {
-  inBar: boolean;
-  pinned: boolean;
-  onPin: () => void;
-}
-
-const PinButton = ({ inBar, pinned, onPin }: PinButtonProps) => (
-  <button
-    type="button"
-    aria-label={pinned ? 'Désépingler les statistiques' : 'Épingler les statistiques'}
-    title={pinned ? 'Statistiques épinglées — cliquer pour désépingler' : 'Épingler pour garder les statistiques visibles'}
-    onClick={onPin}
-    className={`shrink-0 rounded p-1 text-sm leading-none transition-colors ${
-      inBar ? '' : 'mt-0.5'
-    } ${
-      pinned
-        ? 'text-orange-500 hover:text-orange-600'
-        : 'text-gray-300 hover:text-gray-500 dark:text-zinc-600 dark:hover:text-zinc-400'
-    }`}
-  >
-    📌
-  </button>
-);
-
-interface ConsumableCardProps {
-  label: string;
-  unit: string;
-  bags: number;
-  bagSize: number;
-  bagUnit: string;
-  rendement: number;
-  rendementUnit: string;
-  totalKg: number;
-  onRendementChange: ((v: number) => void) | null;
-  onBagSizeChange: (v: number) => void;
-  color: 'blue' | 'violet';
-}
-
-const ConsumableCard = ({
-  label, unit, bags, bagSize, bagUnit, rendement, rendementUnit,
-  totalKg, onRendementChange, onBagSizeChange, color,
-}: ConsumableCardProps) => {
-  const accent = color === 'blue' ? 'text-blue-500' : 'text-violet-500';
-  const border = color === 'blue' ? 'border-blue-500/30' : 'border-violet-500/30';
-  const bg = color === 'blue' ? 'bg-blue-500/5' : 'bg-violet-500/5';
-
-  return (
-    <div className={`rounded-xl border ${border} ${bg} px-4 py-3`}>
-      <div className={`text-[10px] font-bold uppercase tracking-wider ${accent} mb-2`}>{label}</div>
-      <div className="flex items-end gap-1 mb-2">
-        <span className="text-2xl font-black tabular-nums text-gray-900 dark:text-zinc-100">{bags}</span>
-        <span className="text-xs text-gray-400 dark:text-zinc-500 mb-0.5">{unit}</span>
-      </div>
-      <div className="space-y-1 text-[11px] text-gray-400 dark:text-zinc-500">
-        <div className="flex items-center gap-1">
-          <span>Cdt :</span>
-          <input
-            key={bagSize}
-            type="number"
-            min="1"
-            step="1"
-            defaultValue={bagSize}
-            onBlur={(e) => {
-              const v = parseFloat(e.target.value);
-              if (!isNaN(v) && v > 0) onBagSizeChange(v);
-            }}
-            className="w-14 rounded border border-gray-300 dark:border-zinc-600 bg-transparent px-1 text-center text-gray-700 dark:text-zinc-300 outline-none focus:border-blue-400"
-          />
-          <span>{bagUnit}/{unit.slice(0, -1)}</span>
-        </div>
-        {onRendementChange !== null && (
-          <div className="flex items-center gap-1">
-            <span>Rdmt :</span>
-            <input
-              key={rendement.toFixed(3)}
-              type="number"
-              min="0.1"
-              step="0.1"
-              defaultValue={parseFloat(rendement.toFixed(3))}
-              onBlur={(e) => {
-                const v = parseFloat(e.target.value);
-                if (!isNaN(v) && v > 0) onRendementChange(v);
-              }}
-              className="w-14 rounded border border-gray-300 dark:border-zinc-600 bg-transparent px-1 text-center text-gray-700 dark:text-zinc-300 outline-none focus:border-blue-400"
-            />
-            <span>{rendementUnit}</span>
-          </div>
-        )}
-        <div className="text-[10px]">{totalKg.toFixed(1)} {bagUnit} total</div>
-      </div>
-    </div>
-  );
-};
+import { CutGroupCardCompact } from './CutGroupCardCompact';
+import { GROUP_COLORS } from './CutGroupCard';
+import { QuantitiesRecapColumn } from './QuantitiesRecapColumn';
 
 export const QuantitiesPanel = () => {
   const project = useProjectStore(selectActiveProject);
   const rooms = useProjectStore(selectRooms);
   const doorOpenings = useProjectStore(useShallow(selectDoorOpenings));
+  const setConfig = useProjectStore((s) => s.setConfig);
   const [highlightGroup, setHighlightGroup] = useState<number | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [mobileTab, setMobileTab] = useState<'plan' | 'coupes'>('plan');
-  const [collapsed, setCollapsed] = useState(false);
-  const [pinned, setPinned] = useState(false);
 
   const result = useMemo(() => {
     if (!project) return null;
@@ -131,11 +36,6 @@ export const QuantitiesPanel = () => {
     [result],
   );
 
-  const setConfig = useProjectStore((s) => s.setConfig);
-  const [consumablesOpen, setConsumablesOpen] = useState(false);
-  const [editingMargin, setEditingMargin] = useState(false);
-  const [marginInput, setMarginInput] = useState('');
-
   if (!project || !result) return null;
 
   if (result.totalTiles === 0) {
@@ -148,37 +48,13 @@ export const QuantitiesPanel = () => {
 
   const tileLabel = `${formatCm(result.tileW)} × ${formatCm(result.tileH)}`;
   const color = project.config.color;
-  const totalCutArea = result.cuts.reduce((sum, c) => sum + c.usedW * c.usedH, 0);
 
-  const handleCoupesScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    if (pinned) return;
-    setCollapsed(e.currentTarget.scrollTop > 20);
-  };
-
-  const handlePin = () => {
-    const next = !pinned;
-    setPinned(next);
-    if (next) setCollapsed(false); // épingler = toujours montrer
-  };
-
-  const marginPct = Math.round(result.margin * 100);
-
-  const handleMarginEdit = () => {
-    setMarginInput(String(marginPct));
-    setEditingMargin(true);
-  };
-
-  const handleMarginCommit = () => {
-    const val = parseFloat(marginInput);
-    if (!isNaN(val) && val >= 0 && val <= 100) {
-      setConfig({ ...project.config, marginOverride: val / 100 });
-    }
-    setEditingMargin(false);
+  const handleMarginCommit = (pct: number) => {
+    setConfig({ ...project.config, marginOverride: pct / 100 });
   };
 
   const handleMarginReset = () => {
     setConfig({ ...project.config, marginOverride: undefined });
-    setEditingMargin(false);
   };
 
   const updateConsumableParam = (patch: Partial<ConsumableParams>) => {
@@ -190,243 +66,29 @@ export const QuantitiesPanel = () => {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden bg-gray-50 dark:bg-zinc-950">
-
-      {/* ── Bandeaux repliables ── */}
-      <div
-        data-testid="bandeaux-wrapper"
-        inert={collapsed ? ('' as unknown as boolean) : undefined}
-        style={{
-          maxHeight: collapsed ? 0 : consumablesOpen ? 1000 : 400,
-          opacity: collapsed ? 0 : 1,
-          overflow: 'hidden',
-          flexShrink: 0,
-          transition: 'max-height 0.25s ease, opacity 0.2s ease',
-        }}
-      >
-        {/* Header */}
-        <div className="border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-5 md:px-8 py-4 md:py-5">
-          <div className="flex items-start justify-between gap-2">
-            <div>
-              <h2 className="text-lg font-black text-gray-900 dark:text-zinc-100">Tableau des quantités</h2>
-              <div className="mt-0.5 flex flex-col gap-0.5 md:flex-row text-xs text-gray-400 dark:text-zinc-500">
-                <span>Format&nbsp;: <span className="font-bold text-gray-700 dark:text-zinc-300">{tileLabel}</span></span>
-                <span className="hidden md:inline mx-1">—</span>
-                <span>Joint&nbsp;: <span className="font-bold text-gray-700 dark:text-zinc-300">{result.joint}&nbsp;mm</span></span>
-                <span className="hidden md:inline mx-1">—</span>
-                <span>Surface&nbsp;: <span className="font-bold text-gray-700 dark:text-zinc-300">{formatM2(result.roomArea)}</span></span>
-              </div>
-            </div>
-            <PinButton inBar={false} pinned={pinned} onPin={handlePin} />
-          </div>
-        </div>
-
-        {/* Stat strip */}
-        <div className="border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-5 md:px-8 py-3">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-            {/* Carreaux entiers */}
-            <div className="rounded-xl border-l-[3px] border-blue-500 bg-gray-50 dark:bg-zinc-800/60 px-4 py-2">
-              <div className="text-xl font-black tabular-nums text-gray-900 dark:text-zinc-100">{result.wholeCount}</div>
-              <div className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">Carreaux entiers</div>
-              <div className="mt-0.5 text-[11px] text-gray-400 dark:text-zinc-500">{formatM2(result.wholeCount * result.tileW * result.tileH)}</div>
-            </div>
-            {/* Carreaux à couper */}
-            <div className="rounded-xl border-l-[3px] border-orange-500 bg-gray-50 dark:bg-zinc-800/60 px-4 py-2">
-              <div className="text-xl font-black tabular-nums text-gray-900 dark:text-zinc-100">{result.cuts.length}</div>
-              <div className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">Carreaux à couper</div>
-              <div className="mt-0.5 text-[11px] text-gray-400 dark:text-zinc-500">{formatM2(totalCutArea)} posés</div>
-            </div>
-            {/* Récupérées */}
-            <div className="rounded-xl border-l-[3px] border-emerald-500 bg-gray-50 dark:bg-zinc-800/60 px-4 py-2">
-              <div className={`text-xl font-black tabular-nums ${result.totalReuseCount > 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-gray-400 dark:text-zinc-600'}`}>
-                {result.totalReuseCount}
-              </div>
-              <div className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">Récupérées</div>
-              <div className="mt-0.5 text-[11px] text-gray-400 dark:text-zinc-500">
-                {result.totalReuseCount > 0 ? 'dans une chute' : '—'}
-              </div>
-            </div>
-            {/* Total à commander */}
-            <div className="flex items-center justify-between rounded-xl border border-orange-500/20 bg-orange-500/5 px-4 py-2">
-              <div>
-                <div className="text-[10px] font-bold uppercase tracking-wider text-orange-500/80">Total à commander</div>
-                <div className="mt-0.5 flex items-center gap-1 text-[11px] text-gray-400 dark:text-zinc-500">
-                  <span>
-                    {result.wholeCount} + ({result.cuts.length}−{result.totalReuseCount}) = {result.totalTiles}
-                  </span>
-                  {editingMargin ? (
-                    <span className="flex items-center gap-1">
-                      ×&nbsp;
-                      <input
-                        autoFocus
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="1"
-                        value={marginInput}
-                        onChange={(e) => setMarginInput(e.target.value)}
-                        onBlur={handleMarginCommit}
-                        onKeyDown={(e) => { if (e.key === 'Enter') handleMarginCommit(); if (e.key === 'Escape') setEditingMargin(false); }}
-                        className="w-12 rounded border border-orange-400 bg-transparent px-1 text-orange-400 outline-none"
-                      />
-                      %
-                      {project.config.marginOverride !== undefined && (
-                        <button type="button" onClick={handleMarginReset} className="text-[9px] text-gray-400 underline hover:text-gray-600">auto</button>
-                      )}
-                    </span>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={handleMarginEdit}
-                      className="flex items-center gap-0.5 text-orange-400 hover:text-orange-500"
-                      title="Modifier la marge de sécurité"
-                    >
-                      × {marginPct}%
-                      {project.config.marginOverride !== undefined && (
-                        <span className="text-[9px] text-yellow-500">✎</span>
-                      )}
-                    </button>
-                  )}
-                </div>
-                <div className="text-[11px] text-orange-400/70">{formatM2(result.toOrder * result.tileW * result.tileH)}</div>
-              </div>
-              <div className="shrink-0 text-right">
-                <div className="text-2xl font-black tabular-nums text-orange-400">{result.toOrder}</div>
-                <div className="text-[10px] font-bold text-orange-500/60">carreaux</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Bloc consommables */}
-        <div className="border-t border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-          <button
-            type="button"
-            onClick={() => setConsumablesOpen((o) => !o)}
-            className="flex w-full items-center justify-between px-5 md:px-8 py-2.5 text-left text-xs font-bold uppercase tracking-wider text-blue-500 hover:bg-gray-50 dark:hover:bg-zinc-800/60 transition-colors"
-          >
-            <span>Consommables de pose</span>
-            <span className="text-gray-400">{consumablesOpen ? '▲' : '▼'}</span>
-          </button>
-
-          {consumablesOpen && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 px-5 md:px-8 pb-4 pt-1">
-              {/* Épaisseur carreau (commune à tout) */}
-              <div className="md:col-span-3 flex items-center gap-2 text-xs text-gray-400 dark:text-zinc-500">
-                <span>Épaisseur carreau :</span>
-                <input
-                  key={project.config.consumableParams?.tileThickness ?? 10}
-                  type="number"
-                  min="1"
-                  max="30"
-                  step="1"
-                  defaultValue={(project.config.consumableParams?.tileThickness ?? 10)}
-                  onBlur={(e) => {
-                    const v = parseFloat(e.target.value);
-                    if (!isNaN(v) && v > 0) updateConsumableParam({ tileThickness: v });
-                  }}
-                  className="w-14 rounded border border-gray-300 dark:border-zinc-600 bg-transparent px-1 text-center text-gray-700 dark:text-zinc-300 outline-none focus:border-blue-400"
-                />
-                <span>mm</span>
-              </div>
-
-              {/* Colle */}
-              <ConsumableCard
-                label="Colle"
-                unit="sacs"
-                bags={result.consumables.colle.bags}
-                bagSize={result.consumables.colle.bagSize}
-                bagUnit="kg"
-                rendement={result.consumables.colle.rendement}
-                rendementUnit="kg/m²"
-                totalKg={result.consumables.colle.total}
-                onRendementChange={(v) => updateConsumableParam({ colleRendement: v })}
-                onBagSizeChange={(v) => updateConsumableParam({ colleBagSize: v })}
-                color="blue"
-              />
-
-              {/* Joint */}
-              <ConsumableCard
-                label="Joint"
-                unit="sacs"
-                bags={result.consumables.joint.bags}
-                bagSize={result.consumables.joint.bagSize}
-                bagUnit="kg"
-                rendement={result.consumables.joint.rendement}
-                rendementUnit="kg/m²"
-                totalKg={result.consumables.joint.total}
-                onRendementChange={(v) => updateConsumableParam({ jointRendement: v })}
-                onBagSizeChange={(v) => updateConsumableParam({ jointBagSize: v })}
-                color="blue"
-              />
-
-              {/* Croisillons */}
-              <ConsumableCard
-                label="Croisillons"
-                unit="sachets"
-                bags={result.consumables.croisillons.bags}
-                bagSize={result.consumables.croisillons.bagSize}
-                bagUnit="unités"
-                rendement={result.consumables.croisillons.rendement}
-                rendementUnit="×/carreau"
-                totalKg={result.consumables.croisillons.total}
-                onRendementChange={null}
-                onBagSizeChange={(v) => updateConsumableParam({ croisillonsBagSize: v })}
-                color="violet"
-              />
-            </div>
-          )}
+      {/* Header */}
+      <div className="flex shrink-0 flex-wrap items-baseline justify-between gap-2 border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-5 md:px-8 py-3">
+        <h2 className="text-lg font-black text-gray-900 dark:text-zinc-100">Tableau des quantités</h2>
+        <div className="flex flex-wrap gap-x-3 text-xs text-gray-400 dark:text-zinc-500">
+          <span>Format&nbsp;: <span className="font-bold text-gray-700 dark:text-zinc-300">{tileLabel}</span></span>
+          <span>Joint&nbsp;: <span className="font-bold text-gray-700 dark:text-zinc-300">{result.joint}&nbsp;mm</span></span>
+          <span>Surface&nbsp;: <span className="font-bold text-gray-700 dark:text-zinc-300">{formatM2(result.roomArea)}</span></span>
         </div>
       </div>
 
-      {/* ── Bandeau résiduel (visible uniquement quand collapsed) ── */}
-      {collapsed && (
-        <div
-          data-testid="collapsed-bar"
-          className="flex shrink-0 items-center gap-2 border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-5 py-1.5"
-        >
-          <span className="flex-1 truncate text-xs font-semibold text-gray-400 dark:text-zinc-500">
-            Tableau des quantités
-          </span>
-          <button
-            type="button"
-            aria-label="Afficher les statistiques"
-            onClick={() => setCollapsed(false)}
-            className="shrink-0 rounded px-2 py-0.5 text-xs text-gray-500 hover:bg-gray-100 hover:text-gray-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
-          >
-            ▲ Afficher
-          </button>
-          <PinButton inBar={true} pinned={pinned} onPin={handlePin} />
-        </div>
-      )}
+      <div className="flex flex-1 flex-col overflow-hidden md:flex-row">
+        <QuantitiesRecapColumn
+          result={result}
+          marginOverride={project.config.marginOverride}
+          onMarginCommit={handleMarginCommit}
+          onMarginReset={handleMarginReset}
+          consumableParams={project.config.consumableParams}
+          onConsumableParamChange={updateConsumableParam}
+        />
 
-      {/* ── Mobile tab bar ── */}
-      <div role="tablist" className="flex shrink-0 border-b border-gray-200 dark:border-zinc-800 md:hidden" style={{ background: 'var(--surf, #fff)' }}>
-        {(['plan', 'coupes'] as const).map((tab) => (
-          <button
-            key={tab}
-            type="button"
-            role="tab"
-            aria-selected={mobileTab === tab}
-            onClick={() => setMobileTab(tab)}
-            className="flex-1 py-2.5 text-[13px] font-semibold transition-colors"
-            style={mobileTab === tab
-              ? { borderBottom: '2px solid var(--accent, #f97316)', color: 'var(--accent, #f97316)' }
-              : { borderBottom: '2px solid transparent', color: 'var(--text2, #6b7280)' }
-            }
-          >
-            {tab === 'plan' ? 'Plan' : 'Coupes'}
-          </button>
-        ))}
-      </div>
-
-      {/* ── Corps deux colonnes ── */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Gauche — plan annoté */}
-        <div
-          data-testid="plan-section"
-          className={`flex-1 border-r border-gray-200 dark:border-zinc-800 ${mobileTab === 'coupes' ? 'hidden md:block' : 'block'}`}
-        >
-          <div className="flex h-full flex-col gap-3 overflow-hidden p-5">
+        {/* Main area — plan + cuts band */}
+        <div className="order-2 flex flex-1 flex-col gap-3 overflow-hidden p-5 md:order-1">
+          <div data-testid="plan-section" className="flex flex-1 flex-col gap-2 overflow-hidden">
             <h3 className="shrink-0 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 dark:text-zinc-500">
               Plan de calepinage annoté
             </h3>
@@ -439,30 +101,14 @@ export const QuantitiesPanel = () => {
               doorOpenings={doorOpenings}
             />
           </div>
-        </div>
 
-        {/* Droite — groupes de coupes */}
-        {sidebarOpen ? (
-          <div
-            data-testid="coupes-section"
-            onScroll={handleCoupesScroll}
-            className={`${mobileTab === 'plan' ? 'hidden md:flex' : 'flex'} w-full md:w-[360px] shrink-0 flex-col gap-4 overflow-y-auto p-5`}
-          >
-            <div className="flex items-center justify-between">
-              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 dark:text-zinc-500">
-                Groupes de coupes
-              </h3>
-              <button
-                className="hidden md:flex h-5 w-5 items-center justify-center rounded text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
-                onClick={() => setSidebarOpen(false)}
-                aria-label="Masquer le panneau"
-              >
-                ›
-              </button>
-            </div>
-            <div className="flex flex-col gap-2">
+          <div data-testid="cuts-band" className="flex shrink-0 flex-col gap-2">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 dark:text-zinc-500">
+              Groupes de coupes ({mergedCutGroups.length})
+            </h3>
+            <div className="flex gap-2 overflow-x-auto pb-1">
               {mergedCutGroups.map((group, i) => (
-                <CutGroupCard
+                <CutGroupCardCompact
                   key={group.originalIndices.join(',')}
                   group={group}
                   groupIndex={i}
@@ -476,22 +122,8 @@ export const QuantitiesPanel = () => {
                 />
               ))}
             </div>
-            <div className="flex items-center justify-between border-t border-gray-200 dark:border-zinc-800 pt-3 text-xs">
-              <span className="text-gray-400 dark:text-zinc-500">Carreaux nets pour coupes</span>
-              <span className="font-mono font-black text-gray-900 dark:text-zinc-100">{result.tilesForCuts} carreaux</span>
-            </div>
           </div>
-        ) : (
-          <div className="hidden md:flex w-8 shrink-0 items-center justify-center border-l border-gray-200 dark:border-zinc-800">
-            <button
-              className="flex h-5 w-5 items-center justify-center rounded text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
-              onClick={() => setSidebarOpen(true)}
-              aria-label="Afficher le panneau"
-            >
-              ‹
-            </button>
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );

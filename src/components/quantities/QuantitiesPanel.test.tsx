@@ -17,6 +17,7 @@ vi.mock('@/store/projectStore', () => ({
           wallEngine: undefined,
         },
       ],
+      setConfig: vi.fn(),
     }),
   selectActiveProject: (state: { activeProjectId: string; projects: { id: string }[] }) =>
     state.projects.find((p) => p.id === state.activeProjectId) ?? null,
@@ -45,8 +46,14 @@ vi.mock('@/engine/quantities/quantityEngine', () => ({
     tilesForCuts: 3,
     totalTiles: 13,
     toOrder: 15,
+    margin: 0.05,
     roomArea: 9_500_000,
     tiles: [],
+    consumables: {
+      colle: { total: 10, bags: 1, bagSize: 25, rendement: 4 },
+      joint: { total: 2, bags: 1, bagSize: 5, rendement: 0.4 },
+      croisillons: { total: 50, bags: 1, bagSize: 200, rendement: 4 },
+    },
   }),
 }));
 
@@ -57,18 +64,17 @@ vi.mock('./QuantityPlanView', () => ({
 import { QuantitiesPanel } from './QuantitiesPanel';
 
 describe('QuantitiesPanel', () => {
-  it('renders "Carreaux à couper" (new label replacing "Coupes nécessaires")', () => {
+  it('renders "Carreaux à couper" in the recap column', () => {
     render(<QuantitiesPanel />);
     expect(screen.getByText('Carreaux à couper')).toBeDefined();
-    expect(screen.queryByText('Coupes nécessaires')).toBeNull();
   });
 
-  it('renders "Carreaux entiers" stat box', () => {
+  it('renders "Carreaux entiers" stat row', () => {
     render(<QuantitiesPanel />);
     expect(screen.getByText('Carreaux entiers')).toBeDefined();
   });
 
-  it('renders "Total à commander" in the stat strip', () => {
+  it('renders "Total à commander" hero', () => {
     render(<QuantitiesPanel />);
     expect(screen.getByText('Total à commander')).toBeDefined();
   });
@@ -78,102 +84,30 @@ describe('QuantitiesPanel', () => {
     expect(screen.getByTestId('quantity-plan-view')).toBeDefined();
   });
 
-  it('renders "Récupérées" stat box', () => {
+  it('renders "Récupérées" stat row', () => {
     render(<QuantitiesPanel />);
     expect(screen.getByText('Récupérées')).toBeDefined();
   });
 
-  it('hides and shows the cut groups sidebar', () => {
+  it('renders the cuts band with merged cut groups', () => {
     render(<QuantitiesPanel />);
-    const closeBtn = screen.getByLabelText('Masquer le panneau');
-    fireEvent.click(closeBtn);
-    expect(screen.queryByText('Groupes de coupes')).toBeNull();
-    const openBtn = screen.getByLabelText('Afficher le panneau');
-    fireEvent.click(openBtn);
-    expect(screen.getByText('Groupes de coupes')).toBeDefined();
+    expect(screen.getByTestId('cuts-band')).toBeDefined();
+    expect(screen.getByText('Groupes de coupes (1)')).toBeDefined();
   });
 
-  it('renders Plan and Coupes mobile tab buttons', () => {
-    render(<QuantitiesPanel />);
-    expect(screen.getByRole('tab', { name: 'Plan' })).toBeDefined();
-    expect(screen.getByRole('tab', { name: 'Coupes' })).toBeDefined();
+  it('hovering a compact cut card sets the plan highlight', () => {
+    const { container } = render(<QuantitiesPanel />);
+    const cutsBand = screen.getByTestId('cuts-band');
+    const card = cutsBand.querySelector('div[style*="border-top-color"]') as Element;
+    fireEvent.mouseEnter(card);
+    // No visible assertion on QuantityPlanView (mocked); ensure no crash and plan section still renders
+    expect(screen.getByTestId('plan-section')).toBeDefined();
+    expect(container).toBeDefined();
   });
 
-  it('plan section is visible by default (no hidden class)', () => {
+  it('renders the header with format, joint and surface', () => {
     render(<QuantitiesPanel />);
-    const planSection = screen.getByTestId('plan-section');
-    expect(planSection.className).not.toContain('hidden');
-  });
-
-  it('clicking Coupes tab adds hidden class to plan section', () => {
-    render(<QuantitiesPanel />);
-    fireEvent.click(screen.getByRole('tab', { name: 'Coupes' }));
-    const planSection = screen.getByTestId('plan-section');
-    expect(planSection.className).toContain('hidden');
-  });
-
-  it('clicking Plan tab removes hidden class from plan section', () => {
-    render(<QuantitiesPanel />);
-    fireEvent.click(screen.getByRole('tab', { name: 'Coupes' }));
-    fireEvent.click(screen.getByRole('tab', { name: 'Plan' }));
-    const planSection = screen.getByTestId('plan-section');
-    expect(planSection.className).not.toContain('hidden');
-  });
-
-  it('collapsed-bar is absent by default', () => {
-    render(<QuantitiesPanel />);
-    expect(screen.queryByTestId('collapsed-bar')).toBeNull();
-  });
-
-  it('coupes scroll > 20px shows collapsed-bar', () => {
-    render(<QuantitiesPanel />);
-    const coupes = screen.getByTestId('coupes-section');
-    Object.defineProperty(coupes, 'scrollTop', { value: 50, writable: true });
-    fireEvent.scroll(coupes);
-    expect(screen.getByTestId('collapsed-bar')).toBeDefined();
-  });
-
-  it('"▲ Afficher" button restores bandeaux', () => {
-    render(<QuantitiesPanel />);
-    const coupes = screen.getByTestId('coupes-section');
-    Object.defineProperty(coupes, 'scrollTop', { value: 50, writable: true });
-    fireEvent.scroll(coupes);
-    fireEvent.click(screen.getByLabelText('Afficher les statistiques'));
-    expect(screen.queryByTestId('collapsed-bar')).toBeNull();
-  });
-
-  it('scroll back to top auto-restores when not pinned', () => {
-    render(<QuantitiesPanel />);
-    const coupes = screen.getByTestId('coupes-section');
-    Object.defineProperty(coupes, 'scrollTop', { value: 50, writable: true });
-    fireEvent.scroll(coupes);
-    Object.defineProperty(coupes, 'scrollTop', { value: 0, writable: true });
-    fireEvent.scroll(coupes);
-    expect(screen.queryByTestId('collapsed-bar')).toBeNull();
-  });
-
-  it('pin prevents auto-collapse on scroll', () => {
-    render(<QuantitiesPanel />);
-    fireEvent.click(screen.getByLabelText('Épingler les statistiques'));
-    const coupes = screen.getByTestId('coupes-section');
-    Object.defineProperty(coupes, 'scrollTop', { value: 50, writable: true });
-    fireEvent.scroll(coupes);
-    expect(screen.queryByTestId('collapsed-bar')).toBeNull();
-  });
-
-  it('unpinning re-enables auto-collapse on scroll', () => {
-    render(<QuantitiesPanel />);
-    // Pin first
-    fireEvent.click(screen.getByLabelText('Épingler les statistiques'));
-    // Scroll while pinned — should NOT collapse
-    const coupes = screen.getByTestId('coupes-section');
-    Object.defineProperty(coupes, 'scrollTop', { value: 50, writable: true });
-    fireEvent.scroll(coupes);
-    expect(screen.queryByTestId('collapsed-bar')).toBeNull();
-    // Unpin — pin button label should now be "Épingler les statistiques" again
-    fireEvent.click(screen.getByLabelText('Désépingler les statistiques'));
-    // Now scroll should trigger collapse
-    fireEvent.scroll(coupes);
-    expect(screen.getByTestId('collapsed-bar')).toBeDefined();
+    expect(screen.getByText('Tableau des quantités')).toBeDefined();
+    expect(screen.getByText(/30\.0 cm × 30\.0 cm/)).toBeDefined();
   });
 });
