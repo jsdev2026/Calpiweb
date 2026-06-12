@@ -82,7 +82,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
 
   const [scale, setScale]   = useState(0.1);
   const [pan,   setPan]     = useState<Point>({ x: 0, y: 0 });
-  const [tool,  setTool]    = useState<PlanTool>('WALL');
+  const [tool,  setTool]    = useState<PlanTool>('SELECT');
   const [tutorialMode, setTutorialMode] = useState(false);
   const [past,   setPast]   = useState<WallHistoryEntry[]>([]);
   const [future, setFuture] = useState<WallHistoryEntry[]>([]);

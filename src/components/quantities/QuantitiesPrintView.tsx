@@ -1,6 +1,7 @@
 'use client';
 import type { Project, Room } from '@/types/project';
 import type { DoorOpening } from '@/types/wall';
+import { computeCornerGeometry } from '@/engine/geometry/wallGeometry';
 import { analyzeQuantities } from '@/engine/quantities/quantityEngine';
 import { mergeSimilarCutGroups } from '@/engine/quantities/mergeSimilarCutGroups';
 import { formatCm, formatM2 } from '@/utils/formatters';
@@ -48,6 +49,11 @@ export interface QuantitiesPrintViewProps {
 export const QuantitiesPrintView = ({ project, rooms: roomsProp, doorOpenings = [] }: QuantitiesPrintViewProps) => {
   const { config, wallThickness, client, name, description } = project;
   const rooms = roomsProp ?? project.rooms;
+  const wallEngine = project.wallEngine;
+  const wallPolygons = computeCornerGeometry(
+    (wallEngine?.walls ?? []).filter((w) => !w.isDoor),
+    wallEngine?.nodes ?? [],
+  );
 
   const generatedDate = new Date().toLocaleDateString('fr-FR', {
     day: 'numeric',
@@ -217,6 +223,8 @@ export const QuantitiesPrintView = ({ project, rooms: roomsProp, doorOpenings = 
               printMode={true}
               style={{ width: '100%', height: 'auto', maxHeight: 280 }}
               className=""
+              wallPolygons={wallPolygons}
+              doorOpenings={doorOpenings}
             />
             {/* Légende */}
             <div style={{ display: 'flex', gap: 16, marginTop: 6 }}>

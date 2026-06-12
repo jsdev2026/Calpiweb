@@ -3,8 +3,24 @@ import { useId } from 'react';
 import type { QuantityResult, CutRecord } from '@/engine/quantities/quantityEngine';
 import type { Room } from '@/types/project';
 import type { TilingConfig } from '@/types/tiling';
+import type { DoorOpening } from '@/types/wall';
+import type { WallPolygon } from '@/engine/geometry/wallGeometry';
 import { getBoundingBox } from '@/engine/geometry/polygon';
 import { GROUP_COLORS } from './CutGroupCard';
+
+function doorRectPath(door: DoorOpening): string {
+  const dx = door.to.x - door.from.x, dy = door.to.y - door.from.y;
+  const L = Math.sqrt(dx * dx + dy * dy);
+  if (L < 1) return '';
+  const px = (-dy / L) * (door.thickness / 2), py = (dx / L) * (door.thickness / 2);
+  const pts = [
+    { x: door.from.x + px, y: door.from.y + py },
+    { x: door.to.x   + px, y: door.to.y   + py },
+    { x: door.to.x   - px, y: door.to.y   - py },
+    { x: door.from.x - px, y: door.from.y - py },
+  ];
+  return `M ${pts.map((p) => `${p.x},${p.y}`).join(' L ')} Z`;
+}
 
 export interface QuantityPlanSvgProps {
   result: QuantityResult;
@@ -20,6 +36,10 @@ export interface QuantityPlanSvgProps {
    * false (défaut) = utilise les CSS vars --tile-joint / --tile-cut-bg (suit le thème).
    */
   printMode?: boolean;
+  /** Murs (géométrie de coin) — même rendu que les pages Plan/Calepinage. */
+  wallPolygons?: WallPolygon[];
+  /** Ouvertures de porte — même rendu que les pages Plan/Calepinage. */
+  doorOpenings?: DoorOpening[];
 }
 
 export const QuantityPlanSvg = ({
@@ -31,6 +51,8 @@ export const QuantityPlanSvg = ({
   className = 'h-full w-full',
   style,
   printMode = false,
+  wallPolygons = [],
+  doorOpenings = [],
 }: QuantityPlanSvgProps) => {
   const uid = useId().replace(/:/g, '');
   const clipId = `qty-svg-clip-${uid}`;
@@ -56,6 +78,7 @@ export const QuantityPlanSvg = ({
   // Couleurs : CSS vars en mode interactif, hex fixes pour l'impression
   const jointColor = printMode ? '#94a3b8' : 'var(--tile-joint)';
   const cutBgColor = printMode ? '#cbd5e1' : 'var(--tile-cut-bg)';
+  const wallColor = printMode ? '#64748b' : 'var(--canvas-wall)';
 
   const cutMap = new Map<string, CutRecord>(result.cuts.map((c) => [c.id, c]));
   const groupMap = new Map(
@@ -174,24 +197,24 @@ export const QuantityPlanSvg = ({
         </g>
       </g>
 
-      {/* Contours des pièces (murs et portes) */}
-      {validRooms.map((room) =>
-        room.points.map((p, i) => {
-          const nextP = room.points[(i + 1) % room.points.length]!;
-          const isDoor = (room.edges[i] ?? 'WALL') === 'DOOR';
-          return (
-            <line
-              key={`edge-${room.id}-${i}`}
-              x1={p.x} y1={p.y}
-              x2={nextP.x} y2={nextP.y}
-              stroke={isDoor ? '#f97316' : '#ea580c'}
-              strokeWidth={isDoor ? 50 : 80}
-              strokeLinecap="round"
-              strokeDasharray={isDoor ? '120,80' : undefined}
-            />
-          );
-        }),
-      )}
+      {/* Murs — même géométrie que les pages Plan/Calepinage */}
+      {wallPolygons.map((poly) => {
+        if (!poly.points.length) return null;
+        return (
+          <polygon
+            key={`wall-${poly.wallId}`}
+            points={poly.points.map((p) => `${p.x},${p.y}`).join(' ')}
+            fill={wallColor}
+          />
+        );
+      })}
+
+      {/* Portes */}
+      {doorOpenings.map((door, i) => {
+        const path = doorRectPath(door);
+        if (!path) return null;
+        return <path key={`door-${i}`} d={path} fill={jointColor} />;
+      })}
     </svg>
   );
 };

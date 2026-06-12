@@ -92,7 +92,9 @@ export const WallRoomPanel = ({
         </div>
 
         <div
-          className="flex flex-col gap-1 rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 p-1.5 shadow-2xl backdrop-blur-md"
+          className={`flex gap-1 rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 p-1.5 shadow-2xl backdrop-blur-md ${
+            zone === 'SIDE' ? 'flex-col' : 'flex-row flex-wrap items-center'
+          }`}
           style={{ minWidth: 140 }}
         >
           <p
@@ -101,7 +103,7 @@ export const WallRoomPanel = ({
           >
             Pièces
           </p>
-          <div className="mx-2 h-px bg-gray-200 dark:bg-zinc-700" />
+          {zone === 'SIDE' && <div className="mx-2 h-px bg-gray-200 dark:bg-zinc-700" />}
 
           {rooms.length === 0 ? (
             <p className="px-3 py-2 text-[11px] italic" style={{ color: 'var(--muted)' }}>

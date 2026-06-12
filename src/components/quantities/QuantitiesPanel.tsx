@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import type { ConsumableParams } from '@/types/tiling';
 import { selectActiveProject, selectDoorOpenings, selectRooms, useProjectStore } from '@/store/projectStore';
 import { useShallow } from 'zustand/react/shallow';
+import { computeCornerGeometry } from '@/engine/geometry/wallGeometry';
 import { analyzeQuantities } from '@/engine/quantities/quantityEngine';
 import { mergeSimilarCutGroups } from '@/engine/quantities/mergeSimilarCutGroups';
 import { formatCm, formatM2 } from '@/utils/formatters';
@@ -118,6 +119,12 @@ export const QuantitiesPanel = () => {
     if (!project) return null;
     return analyzeQuantities(rooms, project.config, project.wallThickness, doorOpenings);
   }, [project, rooms, doorOpenings]);
+
+  const wallEngine = project?.wallEngine;
+  const wallPolygons = useMemo(
+    () => computeCornerGeometry((wallEngine?.walls ?? []).filter((w) => !w.isDoor), wallEngine?.nodes ?? []),
+    [wallEngine],
+  );
 
   const mergedCutGroups = useMemo(
     () => (result ? mergeSimilarCutGroups(result.cutGroups) : []),
@@ -428,6 +435,8 @@ export const QuantitiesPanel = () => {
               config={project.config}
               rooms={rooms}
               highlightGroup={highlightGroup}
+              wallPolygons={wallPolygons}
+              doorOpenings={doorOpenings}
             />
           </div>
         </div>

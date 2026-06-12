@@ -3,6 +3,8 @@ import { useRef, useState, useEffect } from 'react';
 import type { QuantityResult } from '@/engine/quantities/quantityEngine';
 import type { Room } from '@/types/project';
 import type { TilingConfig } from '@/types/tiling';
+import type { DoorOpening } from '@/types/wall';
+import type { WallPolygon } from '@/engine/geometry/wallGeometry';
 import { getBoundingBox } from '@/engine/geometry/polygon';
 import { QuantityPlanSvg } from './QuantityPlanSvg';
 
@@ -11,9 +13,11 @@ export interface QuantityPlanViewProps {
   config: TilingConfig;
   rooms: Room[];
   highlightGroup: number | null;
+  wallPolygons?: WallPolygon[];
+  doorOpenings?: DoorOpening[];
 }
 
-export const QuantityPlanView = ({ result, config, rooms, highlightGroup }: QuantityPlanViewProps) => {
+export const QuantityPlanView = ({ result, config, rooms, highlightGroup, wallPolygons, doorOpenings }: QuantityPlanViewProps) => {
   const validRooms = rooms.filter((r) => r.points.length >= 3);
   const allPoints = validRooms.flatMap((r) => r.points);
 
@@ -199,6 +203,8 @@ export const QuantityPlanView = ({ result, config, rooms, highlightGroup }: Quan
           highlightGroup={highlightGroup}
           viewBox={`${vb.x} ${vb.y} ${vb.w} ${vb.h}`}
           className="h-full w-full"
+          wallPolygons={wallPolygons}
+          doorOpenings={doorOpenings}
         />
 
         {/* ── Bouton reset zoom (visible seulement si zoom/pan actif) ── */}
