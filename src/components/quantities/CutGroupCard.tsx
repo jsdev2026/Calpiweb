@@ -17,7 +17,7 @@ interface ThumbnailProps {
   reused?: boolean;
 }
 
-const TileThumbnail = ({ tileW, tileH, usedW, usedH, pieceEdges, color, reused }: ThumbnailProps) => {
+export const TileThumbnail = ({ tileW, tileH, usedW, usedH, pieceEdges, color, reused }: ThumbnailProps) => {
   const maxDim = 18;
   const scale = Math.min(maxDim / tileW, maxDim / tileH);
   const tw = tileW * scale;
