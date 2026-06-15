@@ -10,6 +10,7 @@ import { computeAutoCotations } from '@/engine/geometry/wallCotation';
 import { wallsToRooms } from '@/engine/geometry/wallFaces';
 import { computeWallNormal, computeWallPerpMove } from '@/engine/geometry/wallDrag';
 import { generateId } from '@/utils/id';
+import { formatCm } from '@/utils/formatters';
 import { pointInPolygon } from '@/engine/geometry/polygon';
 import { WallEdgeEditor } from './WallEdgeEditor';
 import { AutoCotationPanel } from './AutoCotationPanel';
@@ -857,6 +858,30 @@ export const WallDrawingCanvas = ({
     return { sl, angle, len, halfT };
   })();
 
+  // ── Chain length label ─────────────────────────────────────────────────────
+
+  const chainLengthLabel = (() => {
+    if (!chain || !cursor) return null;
+    const lastId = chain.nodeIds[chain.nodeIds.length - 1]!;
+    const lastNode = nodes.find((n) => n.id === lastId);
+    if (!lastNode) return null;
+    const sl = worldToScreen({ x: lastNode.x, y: lastNode.y });
+    const sc = worldToScreen(cursor);
+    const dx = sc.x - sl.x, dy = sc.y - sl.y;
+    const screenLen = Math.sqrt(dx * dx + dy * dy);
+    if (screenLen < 0.5) return null;
+    const worldLen = dist({ x: lastNode.x, y: lastNode.y }, cursor);
+    const mid = { x: (sl.x + sc.x) / 2, y: (sl.y + sc.y) / 2 };
+    const nx = -dy / screenLen, ny = dx / screenLen;
+    const OFFSET = 14;
+    const text = formatCm(worldLen);
+    return {
+      x: mid.x + nx * OFFSET,
+      y: mid.y + ny * OFFSET,
+      text,
+    };
+  })();
+
   // Filter cotations: skip lines too short on screen, then skip labels that would overlap
   const visibleCotations = (() => {
     const placed: { x: number; y: number }[] = [];
@@ -1092,6 +1117,40 @@ export const WallDrawingCanvas = ({
               fill={WALL_COLOR} stroke="#e67e22" strokeWidth={1} strokeDasharray="6,3" rx={1} />
           </g>
         )}
+
+        {/* Chain length label */}
+        {chainLengthLabel && (() => {
+          const padX = 5;
+          const charW = 6.2;
+          const h = 16;
+          const w = chainLengthLabel.text.length * charW + padX * 2;
+          return (
+            <g className="pointer-events-none">
+              <rect
+                x={chainLengthLabel.x - w / 2}
+                y={chainLengthLabel.y - h / 2}
+                width={w}
+                height={h}
+                rx={3}
+                fill="var(--surf)"
+                stroke="var(--bdr)"
+                strokeWidth={1}
+              />
+              <text
+                x={chainLengthLabel.x}
+                y={chainLengthLabel.y}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                fontSize={11}
+                fontWeight="bold"
+                fill="#e67e22"
+                style={{ fontFamily: 'monospace', userSelect: 'none' }}
+              >
+                {chainLengthLabel.text}
+              </text>
+            </g>
+          );
+        })()}
 
         {/* Snap colinéaire — ligne pointillée violette dans la direction du mur */}
         {snapResult?.type === 'collinear' && snapResult.dir && cursor && (() => {
