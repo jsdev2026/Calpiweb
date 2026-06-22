@@ -38,7 +38,7 @@ interface WallDrawingCanvasProps {
   onRemoveWall: (id: string) => void;
   onUpdateWall: (id: string, patch: Partial<Wall>) => void;
   onAddNode: (node: WallNode) => void;
-  onUpdateNode: (id: string, patch: { x?: number; y?: number }) => void;
+  onUpdateNode: (id: string, patch: { x?: number; y?: number; locked?: boolean }) => void;
   onMergeNodes: (keepId: string, dropId: string) => void;
   onPushHistory: () => void;
   scale: number;

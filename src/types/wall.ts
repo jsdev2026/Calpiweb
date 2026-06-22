@@ -5,6 +5,7 @@ export interface WallNode {
   id: string;
   x: number;
   y: number;
+  locked?: boolean;
 }
 
 export interface Wall {

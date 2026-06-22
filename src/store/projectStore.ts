@@ -67,7 +67,7 @@ export interface ProjectState {
 
   // Wall engine — node actions
   addNode: (node: WallNode) => void;
-  updateNode: (id: string, patch: Partial<Pick<WallNode, 'x' | 'y'>>) => void;
+  updateNode: (id: string, patch: Partial<Pick<WallNode, 'x' | 'y' | 'locked'>>) => void;
   removeNode: (id: string) => void;
   setNodes: (nodes: WallNode[]) => void;
   mergeNodes: (keepId: string, dropId: string) => void;
