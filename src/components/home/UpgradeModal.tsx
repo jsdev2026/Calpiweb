@@ -47,35 +47,44 @@ export function UpgradeModal({ onClose }: UpgradeModalProps) {
         </button>
 
         <h2 id="upgrade-modal-title" style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>
-          Passez au plan Pro
+          Limite atteinte
         </h2>
 
         <p style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 20 }}>
-          Vous avez atteint la limite du plan gratuit (1 projet).
+          Vous avez utilisé votre projet inclus. Comment continuer ?
         </p>
 
-        <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {['Projets illimités', 'Sauvegarde cloud automatique', 'Accès depuis tous vos appareils'].map((feat) => (
-            <li key={feat} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13.5, color: 'var(--text)' }}>
-              <span style={{ color: 'var(--accent)', fontWeight: 700, fontSize: 16 }}>✓</span>
-              {feat}
-            </li>
-          ))}
-        </ul>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
+          <div style={{ background: 'var(--surf2)', border: '1px solid var(--bdr)', borderRadius: 10, padding: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <span style={{ fontSize: 22 }}>📄</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>+1 projet</span>
+            <span style={{ fontSize: 11.5, color: 'var(--text2)', lineHeight: 1.4 }}>Un crédit projet, sans engagement.</span>
+            <button
+              type="button"
+              onClick={handleUpgrade}
+              style={{ marginTop: 'auto', padding: '7px 10px', background: 'transparent', border: '1px solid var(--bdr)', borderRadius: 7, color: 'var(--text)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+            >
+              Acheter →
+            </button>
+          </div>
 
-        <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent)', marginBottom: 20 }}>
-          9 €/mois — annulation à tout moment
-        </p>
-
-        <button
-          type="button"
-          onClick={handleUpgrade}
-          autoFocus
-          className="btn-primary w-full py-3 text-[14px] font-semibold"
-          style={{ marginBottom: 12 }}
-        >
-          Voir les offres Pro →
-        </button>
+          <div style={{ background: 'var(--surf2)', border: '1.5px solid var(--accent)', borderRadius: 10, padding: 14, display: 'flex', flexDirection: 'column', gap: 8, position: 'relative' }}>
+            <span style={{ position: 'absolute', top: -1, right: 8, background: 'var(--accent)', color: '#fff', fontSize: 8, fontWeight: 700, padding: '2px 6px', borderRadius: '0 0 4px 4px', letterSpacing: '0.5px' }}>
+              RECOMMANDÉ
+            </span>
+            <span style={{ fontSize: 22 }}>♾️</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>Illimité</span>
+            <span style={{ fontSize: 11.5, color: 'var(--text2)', lineHeight: 1.4 }}>Abonnement — projets, cloud, tous appareils.</span>
+            <button
+              type="button"
+              onClick={handleUpgrade}
+              className="btn-primary"
+              style={{ marginTop: 'auto', padding: '7px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+            >
+              S'abonner →
+            </button>
+          </div>
+        </div>
 
         <button
           type="button"

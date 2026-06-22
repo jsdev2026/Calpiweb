@@ -14,13 +14,12 @@ describe('UpgradeModal', () => {
 
   beforeEach(() => vi.clearAllMocks());
 
-  it('renders title and feature list', () => {
+  it('renders title and both options', () => {
     render(<UpgradeModal onClose={onClose} />);
-    expect(screen.getByText('Passez au plan Pro')).toBeDefined();
-    expect(screen.getByText('Projets illimités')).toBeDefined();
-    expect(screen.getByText('Sauvegarde cloud automatique')).toBeDefined();
-    expect(screen.getByText('Accès depuis tous vos appareils')).toBeDefined();
-    expect(screen.getByText('9 €/mois — annulation à tout moment')).toBeDefined();
+    expect(screen.getByText('Limite atteinte')).toBeDefined();
+    expect(screen.getByText('+1 projet')).toBeDefined();
+    expect(screen.getByText('Illimité')).toBeDefined();
+    expect(screen.queryByText(/9 €/)).toBeNull();
   });
 
   it('calls onClose when backdrop is clicked', () => {
@@ -35,9 +34,16 @@ describe('UpgradeModal', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it('navigates to /account and calls onClose when CTA is clicked', () => {
+  it('navigates to /account and calls onClose when Acheter is clicked', () => {
     render(<UpgradeModal onClose={onClose} />);
-    fireEvent.click(screen.getByText('Voir les offres Pro →'));
+    fireEvent.click(screen.getByText('Acheter →'));
+    expect(mockPush).toHaveBeenCalledWith('/account');
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("navigates to /account and calls onClose when S'abonner is clicked", () => {
+    render(<UpgradeModal onClose={onClose} />);
+    fireEvent.click(screen.getByText("S'abonner →"));
     expect(mockPush).toHaveBeenCalledWith('/account');
     expect(onClose).toHaveBeenCalledTimes(1);
   });
