@@ -88,7 +88,7 @@ export const PlanToolbar = ({
     <div className="flex items-center">
       <ToolTooltip {...TOOL_TOOLTIPS.LOCK}>
         <button type="button" onClick={() => onChangeTool('LOCK')}
-          className={`flex h-8 w-8 items-center justify-center rounded-xl transition-all ${tool === 'LOCK' ? 'text-white shadow-md' : `${TB_CARD} hover:text-green-600 dark:hover:text-green-300`}`}
+          className={`flex h-8 w-8 items-center justify-center rounded-xl transition-all ${tool === 'LOCK' ? 'text-white shadow-md' : `${TB_CARD} hover:bg-green-100 dark:hover:bg-green-900/30 hover:text-green-600 dark:hover:text-green-300`}`}
           style={tool === 'LOCK' ? { background: '#27ae60', boxShadow: '0 4px 10px rgba(39,174,96,0.3)' } : { color: 'var(--text2)' }}>
           <Lock size={16} />
         </button>
@@ -141,7 +141,7 @@ export const PlanToolbar = ({
       style={tool !== 'EXCLUDE' ? { color: 'var(--text2)' } : {}}><Square size={18} /></button>
     <button type="button" aria-label="Verrouiller" onClick={() => onChangeTool('LOCK')}
       className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${tool === 'LOCK' ? 'text-white shadow-md' : TB_CARD}`}
-      style={tool === 'LOCK' ? { background: '#27ae60' } : { color: 'var(--text2)' }}><Lock size={18} /></button>
+      style={tool === 'LOCK' ? { background: '#27ae60', boxShadow: '0 4px 10px rgba(39,174,96,0.3)' } : { color: 'var(--text2)' }}><Lock size={18} /></button>
     <div className="ml-auto mx-1 h-6 w-px shrink-0 bg-gray-200 dark:bg-zinc-700" />
     <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0" onClick={onUndo} disabled={!canUndo}><Undo size={18} /></Button>
     <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0" onClick={onRedo} disabled={!canRedo}><Redo2 size={18} /></Button>
