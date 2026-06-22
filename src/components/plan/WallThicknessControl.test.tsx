@@ -63,11 +63,13 @@ describe('WallThicknessControl compact', () => {
     expect(onChange).toHaveBeenCalledWith(95);
   });
 
-  it('clic "−" ne descend pas en dessous de 50mm', () => {
+  it('clic "−" est désactivé à 50mm (minimum)', () => {
     const onChange = vi.fn();
     render(<WallThicknessControl wallThickness={50} onChange={onChange} compact />);
-    fireEvent.click(screen.getByRole('button', { name: 'Réduire l\'épaisseur' }));
-    expect(onChange).toHaveBeenCalledWith(50);
+    const btn = screen.getByRole('button', { name: 'Réduire l\'épaisseur' });
+    expect(btn).toBeDisabled();
+    fireEvent.click(btn);
+    expect(onChange).not.toHaveBeenCalled();
   });
 
   it('le mode compact ne rend pas d\'input number (pas de clavier)', () => {

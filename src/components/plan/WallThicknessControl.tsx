@@ -6,7 +6,9 @@ interface WallThicknessControlProps {
   compact?: boolean;
 }
 
-const BTN = 'flex h-8 w-8 items-center justify-center rounded-xl text-sm font-bold bg-gray-50 border border-gray-200 dark:bg-zinc-900 dark:border-zinc-800 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors';
+const MIN_THICKNESS_MM = 50;
+
+const BTN = 'flex h-8 w-8 items-center justify-center rounded-xl text-sm font-bold bg-gray-50 border border-gray-200 dark:bg-zinc-900 dark:border-zinc-800 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
 
 export const WallThicknessControl = ({ wallThickness, onChange, compact = false }: WallThicknessControlProps) => {
   const cm = Math.round(wallThickness / 10);
@@ -17,7 +19,8 @@ export const WallThicknessControl = ({ wallThickness, onChange, compact = false 
         <button
           type="button"
           aria-label="Réduire l'épaisseur"
-          onClick={() => onChange(Math.max(50, wallThickness - 5))}
+          disabled={wallThickness <= MIN_THICKNESS_MM}
+          onClick={() => onChange(wallThickness - 5)}
           className={BTN}
           style={{ color: 'var(--text2)' }}
         >
@@ -41,7 +44,7 @@ export const WallThicknessControl = ({ wallThickness, onChange, compact = false 
 
   const commit = (raw: string) => {
     const v = parseFloat(raw);
-    if (!isNaN(v) && v >= 5) onChange(Math.round(v * 10));
+    if (!isNaN(v) && v >= MIN_THICKNESS_MM / 10) onChange(Math.round(v * 10));
   };
 
   return (
