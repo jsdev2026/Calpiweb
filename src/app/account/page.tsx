@@ -56,15 +56,29 @@ export default function AccountPage() {
           </div>
           <p className="mb-5 text-[13px]" style={{ color: 'var(--text2)' }}>{planDesc}</p>
           {user?.plan !== 'pro' && (
-            <div className="rounded-xl border p-4" style={{ background: 'var(--accent-l)', borderColor: 'var(--accent)' }}>
-              <p className="mb-3 text-[13px] font-semibold" style={{ color: 'var(--accent)' }}>
-                Passez Pro — 9 €/mois
-              </p>
-              <p className="mb-4 text-[12.5px]" style={{ color: 'var(--accent)' }}>
-                Projets illimités + sauvegarde cloud. Annulation à tout moment.
-              </p>
-              <p className="text-[12px]" style={{ color: 'var(--muted)' }}>
-                Paiement disponible prochainement. Contactez-nous pour un accès anticipé.
+            <div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div className="rounded-xl border p-4" style={{ borderColor: 'var(--bdr)' }}>
+                  <p className="mb-2 text-[13px] font-semibold" style={{ color: 'var(--text)' }}>+1 projet</p>
+                  <p className="mb-3 text-[12px]" style={{ color: 'var(--text2)', lineHeight: 1.4 }}>
+                    Achetez un crédit pour débloquer un projet supplémentaire.
+                  </p>
+                  <p className="text-[11px]" style={{ color: 'var(--muted)', fontStyle: 'italic' }}>
+                    Disponible prochainement
+                  </p>
+                </div>
+                <div className="rounded-xl border p-4" style={{ borderColor: 'var(--accent)', background: 'var(--accent-l)' }}>
+                  <p className="mb-2 text-[13px] font-semibold" style={{ color: 'var(--text)' }}>Projets illimités</p>
+                  <p className="mb-3 text-[12px]" style={{ color: 'var(--text2)', lineHeight: 1.4 }}>
+                    Abonnement — accès illimité, sauvegarde cloud, tous appareils.
+                  </p>
+                  <p className="text-[11px]" style={{ color: 'var(--muted)', fontStyle: 'italic' }}>
+                    Disponible prochainement
+                  </p>
+                </div>
+              </div>
+              <p className="mt-3 text-center text-[11px]" style={{ color: 'var(--muted)' }}>
+                Contactez-nous pour un accès anticipé.
               </p>
             </div>
           )}

@@ -697,7 +697,7 @@ export default function DashboardPage() {
           <div className="mb-5 flex items-center justify-between rounded-xl border px-5 py-3" style={{ background: 'var(--accent-l)', borderColor: 'var(--accent)' }}>
             <div>
               <p className="text-[13px] font-semibold" style={{ color: 'var(--accent)' }}>Limite du plan gratuit atteinte</p>
-              <p className="text-[12px]" style={{ color: 'var(--accent)' }}>Passez Pro pour créer des projets illimités — 9 €/mois</p>
+              <p className="text-[12px]" style={{ color: 'var(--accent)' }}>Passez à la formule supérieure pour des projets illimités</p>
             </div>
             <a href="/account" className="btn-primary shrink-0 px-4 py-2 text-[12px]">Passer Pro →</a>
           </div>
