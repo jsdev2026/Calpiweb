@@ -1040,11 +1040,23 @@ export const WallDrawingCanvas = ({
           if (!poly.points.length) return null;
           const isSelected = poly.wallId === selectedWallId;
           const color = isSelected ? WALL_SELECTED_COLOR : WALL_COLOR;
+          const wall = walls.find((w) => w.id === poly.wallId);
+          const wn1 = wall ? nodes.find((n) => n.id === wall.node1Id) : undefined;
+          const wn2 = wall ? nodes.find((n) => n.id === wall.node2Id) : undefined;
+          const wallLocked = !!(wn1?.locked && wn2?.locked);
           const screenPts = poly.points
             .map((p) => worldToScreen(p))
             .map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`)
             .join(' ');
-          return <polygon key={poly.wallId} points={screenPts} fill={color} />;
+          return (
+            <polygon
+              key={poly.wallId}
+              points={screenPts}
+              fill={color}
+              stroke={wallLocked && !isSelected ? '#27ae60' : undefined}
+              strokeWidth={wallLocked && !isSelected ? 1.5 : undefined}
+            />
+          );
         })}
 
         {/* Ouvertures (murs isDoor) — ligne dashed orange */}
@@ -1284,13 +1296,73 @@ export const WallDrawingCanvas = ({
         {tool === 'SELECT' && nodes.map((n) => {
           const sp = worldToScreen({ x: n.x, y: n.y });
           const isDragging = n.id === draggingNodeId;
+          if (n.locked) {
+            return (
+              <g key={n.id}>
+                <circle
+                  cx={sp.x} cy={sp.y} r={5}
+                  fill="#eafaf1"
+                  stroke="#27ae60"
+                  strokeWidth={1.5}
+                  style={{ cursor: 'not-allowed' }}
+                />
+                <g
+                  transform={`translate(${sp.x - 4.5}, ${sp.y - 16})`}
+                  pointerEvents="none"
+                >
+                  <rect x="1" y="5" width="8" height="6" rx="1" fill="#27ae60" />
+                  <path
+                    d="M2 5 V3.5 a2.5 2.5 0 0 1 5 0 V5"
+                    fill="none"
+                    stroke="#27ae60"
+                    strokeWidth="1.2"
+                  />
+                </g>
+              </g>
+            );
+          }
           return (
             <circle key={n.id}
               cx={sp.x} cy={sp.y} r={5}
               fill={isDragging ? '#e67e22' : 'none'}
               stroke="#e67e22"
               strokeWidth={isDragging ? 2 : 1.5}
-              style={{ cursor: n.locked ? 'not-allowed' : 'grab' }}
+              style={{ cursor: 'grab' }}
+            />
+          );
+        })}
+
+        {/* Node handles (LOCK mode) */}
+        {tool === 'LOCK' && nodes.map((n) => {
+          const sp = worldToScreen({ x: n.x, y: n.y });
+          if (n.locked) {
+            return (
+              <g key={n.id} pointerEvents="none">
+                <circle
+                  cx={sp.x} cy={sp.y} r={5}
+                  fill="#eafaf1"
+                  stroke="#27ae60"
+                  strokeWidth={1.5}
+                />
+                <g transform={`translate(${sp.x - 4.5}, ${sp.y - 16})`}>
+                  <rect x="1" y="5" width="8" height="6" rx="1" fill="#27ae60" />
+                  <path
+                    d="M2 5 V3.5 a2.5 2.5 0 0 1 5 0 V5"
+                    fill="none"
+                    stroke="#27ae60"
+                    strokeWidth="1.2"
+                  />
+                </g>
+              </g>
+            );
+          }
+          return (
+            <circle key={n.id}
+              cx={sp.x} cy={sp.y} r={5}
+              fill="none"
+              stroke="#e67e22"
+              strokeWidth={1.5}
+              pointerEvents="none"
             />
           );
         })}

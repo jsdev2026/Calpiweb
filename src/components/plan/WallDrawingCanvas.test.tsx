@@ -215,6 +215,30 @@ describe('WallDrawingCanvas — double-click node to toggle lock', () => {
   });
 });
 
+describe('WallDrawingCanvas — visual rendering of locked nodes', () => {
+  it('renders a locked node with green stroke', () => {
+    const node: WallNode = { id: 'n1', x: 200, y: 200, locked: true };
+    renderWithState([node], [], 'SELECT');
+    const circles = document.querySelectorAll('circle');
+    const nodeCircle = Array.from(circles).find(
+      (c) => c.getAttribute('cx') === '200' && c.getAttribute('cy') === '200',
+    );
+    expect(nodeCircle).toBeTruthy();
+    expect(nodeCircle!.getAttribute('stroke')).toBe('#27ae60');
+  });
+
+  it('renders a free node with default (non-green) stroke', () => {
+    const node: WallNode = { id: 'n1', x: 200, y: 200 };
+    renderWithState([node], [], 'SELECT');
+    const circles = document.querySelectorAll('circle');
+    const nodeCircle = Array.from(circles).find(
+      (c) => c.getAttribute('cx') === '200' && c.getAttribute('cy') === '200',
+    );
+    expect(nodeCircle).toBeTruthy();
+    expect(nodeCircle!.getAttribute('stroke')).not.toBe('#27ae60');
+  });
+});
+
 describe('WallDrawingCanvas — drag guards on locked nodes', () => {
   it('does not start dragging a locked node', () => {
     const node: WallNode = { id: 'n1', x: 200, y: 200, locked: true };
