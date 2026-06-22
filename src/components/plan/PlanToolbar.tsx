@@ -1,11 +1,11 @@
 'use client';
 
-import { DoorOpen, HelpCircle, MousePointer2, PenTool, Redo2, Square, Trash2, Undo } from 'lucide-react';
+import { DoorOpen, HelpCircle, Lock, MousePointer2, PenTool, Redo2, Square, Trash2, Undo } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { ToolTooltip } from './ToolTooltip';
 import { WallThicknessControl } from './WallThicknessControl';
 
-export type PlanTool = 'SELECT' | 'WALL' | 'DOOR' | 'EXCLUDE' | 'DELETE';
+export type PlanTool = 'SELECT' | 'WALL' | 'DOOR' | 'EXCLUDE' | 'DELETE' | 'LOCK';
 
 interface PlanToolbarProps {
   tool: PlanTool;
@@ -28,6 +28,7 @@ const TOOL_TOOLTIPS = {
   undo:    { label: 'Annuler',            description: "Ctrl+Z — revenir à l'état précédent" },
   redo:    { label: 'Rétablir',           description: "Ctrl+Y — rétablir l'action annulée" },
   DELETE:  { label: 'Mode suppression',   description: 'Cliquez un élément pour le supprimer — Échap pour quitter' },
+  LOCK:    { label: 'Verrouiller',         description: 'Cliquer un nœud ou un mur pour verrouiller / libérer sa position' },
 } as const;
 
 const TB_CARD = 'bg-gray-50 border border-gray-200 dark:bg-zinc-900 dark:border-zinc-800';
@@ -84,6 +85,16 @@ export const PlanToolbar = ({
       </ToolTooltip>
       {tutorialMode && <span className="ml-2 whitespace-nowrap text-xs" style={{ color: 'var(--text2)' }}>Zone non carrelée</span>}
     </div>
+    <div className="flex items-center">
+      <ToolTooltip {...TOOL_TOOLTIPS.LOCK}>
+        <button type="button" onClick={() => onChangeTool('LOCK')}
+          className={`flex h-8 w-8 items-center justify-center rounded-xl transition-all ${tool === 'LOCK' ? 'text-white shadow-md' : `${TB_CARD} hover:text-green-600 dark:hover:text-green-300`}`}
+          style={tool === 'LOCK' ? { background: '#27ae60', boxShadow: '0 4px 10px rgba(39,174,96,0.3)' } : { color: 'var(--text2)' }}>
+          <Lock size={16} />
+        </button>
+      </ToolTooltip>
+      {tutorialMode && <span className="ml-2 whitespace-nowrap text-xs" style={{ color: 'var(--text2)' }}>Verrouiller</span>}
+    </div>
 
     <div className="mx-auto h-px w-6" style={{ background: 'var(--bdr)' }} />
 
@@ -128,6 +139,9 @@ export const PlanToolbar = ({
     <button type="button" aria-label="Zone non carrelée" onClick={() => onChangeTool('EXCLUDE')}
       className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${tool === 'EXCLUDE' ? 'bg-amber-500 text-white shadow-md shadow-amber-500/30' : TB_CARD}`}
       style={tool !== 'EXCLUDE' ? { color: 'var(--text2)' } : {}}><Square size={18} /></button>
+    <button type="button" aria-label="Verrouiller" onClick={() => onChangeTool('LOCK')}
+      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${tool === 'LOCK' ? 'text-white shadow-md' : TB_CARD}`}
+      style={tool === 'LOCK' ? { background: '#27ae60' } : { color: 'var(--text2)' }}><Lock size={18} /></button>
     <div className="ml-auto mx-1 h-6 w-px shrink-0 bg-gray-200 dark:bg-zinc-700" />
     <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0" onClick={onUndo} disabled={!canUndo}><Undo size={18} /></Button>
     <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0" onClick={onRedo} disabled={!canRedo}><Redo2 size={18} /></Button>

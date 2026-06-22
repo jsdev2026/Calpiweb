@@ -15,7 +15,7 @@ import { pointInPolygon } from '@/engine/geometry/polygon';
 import { WallEdgeEditor } from './WallEdgeEditor';
 import { AutoCotationPanel } from './AutoCotationPanel';
 
-type PlanTool = 'WALL' | 'SELECT' | 'DELETE' | 'DOOR' | 'EXCLUDE';
+type PlanTool = 'WALL' | 'SELECT' | 'DELETE' | 'DOOR' | 'EXCLUDE' | 'LOCK';
 
 const ENDPOINT_RADIUS_PX  = 12;
 const FACE_RADIUS_PX      = 8;

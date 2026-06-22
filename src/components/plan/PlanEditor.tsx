@@ -200,7 +200,7 @@ export const PlanEditor = ({ onNavigateBack }: { onNavigateBack?: () => void }) 
         <WallDrawingCanvas
           walls={wallEngine?.walls ?? []}
           nodes={wallEngine?.nodes ?? []}
-          tool={tool as 'WALL' | 'SELECT' | 'DELETE' | 'DOOR' | 'EXCLUDE'}
+          tool={tool as 'WALL' | 'SELECT' | 'DELETE' | 'DOOR' | 'EXCLUDE' | 'LOCK'}
           scale={scale}
           pan={pan}
           onScaleChange={setScale}
