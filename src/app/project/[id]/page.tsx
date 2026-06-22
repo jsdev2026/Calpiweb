@@ -388,27 +388,31 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
           />
         </div>
 
-        <div className="hidden md:block mouse:block mx-3 h-4 w-px" style={{ background: 'var(--bdr)' }} />
 
-        {/* Status badge */}
-        <button
-          type="button"
-          onClick={() => setStatus(STATUS_CYCLE[activeProject.status])}
-          title="Cliquer pour changer le statut"
-          className={`hidden md:inline-flex mouse:inline-flex shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold transition-opacity hover:opacity-75 ${STATUS_CLASS[activeProject.status]}`}
-        >
-          {STATUS_LABELS[activeProject.status]}
+        <button type="button" className="hidden md:flex mouse:flex btn-icon disabled:opacity-40 disabled:cursor-not-allowed" aria-label="Paramètres" title={isReadOnly ? 'Lecture seule' : 'Paramètres du projet'} onClick={() => setShowSettings(true)} disabled={isReadOnly}>
+          <Settings size={14} />
         </button>
 
-        {/* Client */}
-        {activeProject.client?.name && (
-          <div className="hidden md:flex mouse:flex shrink min-w-0 mx-3 items-center gap-1.5 text-[12px]" style={{ color: 'var(--muted)' }}>
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="shrink-0"><circle cx="6" cy="4" r="2.5" stroke="currentColor" strokeWidth="1.2"/><path d="M1.5 10c0-2 2-3.5 4.5-3.5S10.5 8 10.5 10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
-            <span className="truncate">{activeProject.client.name}</span>
-            <span className="shrink-0" style={{ opacity: 0.4 }}>·</span>
-            <span className="shrink-0">{new Date(activeProject.updatedAt).toLocaleDateString('fr-FR')}</span>
-          </div>
-        )}
+        {/* Client + status */}
+        <div className="hidden md:flex mouse:flex shrink min-w-0 mx-3 items-center gap-1.5 text-[12px]" style={{ color: 'var(--muted)' }}>
+          {activeProject.client?.name && (
+            <>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="shrink-0"><circle cx="6" cy="4" r="2.5" stroke="currentColor" strokeWidth="1.2"/><path d="M1.5 10c0-2 2-3.5 4.5-3.5S10.5 8 10.5 10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
+              <span className="truncate">{activeProject.client.name}</span>
+              <span className="shrink-0" style={{ opacity: 0.4 }}>·</span>
+            </>
+          )}
+          <span className="shrink-0">{new Date(activeProject.updatedAt).toLocaleDateString('fr-FR')}</span>
+          <span className="shrink-0" style={{ opacity: 0.4 }}>·</span>
+          <button
+            type="button"
+            onClick={() => setStatus(STATUS_CYCLE[activeProject.status])}
+            title="Cliquer pour changer le statut"
+            className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold transition-opacity hover:opacity-75 ${STATUS_CLASS[activeProject.status]}`}
+          >
+            {STATUS_LABELS[activeProject.status]}
+          </button>
+        </div>
 
         {/* Actions */}
         <div className="ml-auto shrink-0 flex items-center gap-2">
@@ -423,9 +427,7 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
           >
             <FileDown size={13} /> PDF
           </button>
-          <button type="button" className="btn-icon disabled:opacity-40 disabled:cursor-not-allowed" aria-label="Paramètres" title={isReadOnly ? 'Lecture seule' : 'Paramètres du projet'} onClick={() => setShowSettings(true)} disabled={isReadOnly}>
-            <Settings size={14} />
-          </button>
+
 
           {/* User menu */}
           <div className="relative" ref={userMenuRef}>
