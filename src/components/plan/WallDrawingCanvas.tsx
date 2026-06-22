@@ -134,6 +134,7 @@ export const WallDrawingCanvas = ({
     hasMoved: boolean;
   } | null>(null);
   const [hoveredWallId, setHoveredWallId] = useState<string | null>(null);
+  const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const lastWallClickRef = useRef<{ time: number; wallId: string } | null>(null);
   const lastNodeClickRef = useRef<{ nodeId: string; time: number } | null>(null);
 
@@ -155,6 +156,7 @@ export const WallDrawingCanvas = ({
     setDraggingWallId(null);
     wallDragRef.current = null;
     setHoveredWallId(null);
+    setHoveredNodeId(null);
     setDraggingZoneNode(null);
   }, [tool]);
 
@@ -531,7 +533,7 @@ export const WallDrawingCanvas = ({
         const n1 = nodes.find((n) => n.id === hit.node1Id);
         const n2 = nodes.find((n) => n.id === hit.node2Id);
         const normal = computeWallNormal(hit, nodes);
-        if (n1 && n2 && normal) {
+        if (n1 && n2 && normal && !n1.locked && !n2.locked) {
           wallDragRef.current = {
             node1Start:   { x: n1.x, y: n1.y },
             node2Start:   { x: n2.x, y: n2.y },
@@ -703,6 +705,7 @@ export const WallDrawingCanvas = ({
 
     if (tool === 'SELECT' && !draggingNodeId && !draggingWallId) {
       const hitNode = hitTestNode(world);
+      setHoveredNodeId(hitNode?.id ?? null);
       setHoveredWallId(hitNode ? null : (hitTestWall(world)?.id ?? null));
     }
   };
@@ -751,9 +754,15 @@ export const WallDrawingCanvas = ({
 
     if (draggingNodeId) {
       const snap = dragSnapRef.current;
+      const draggingNode = nodes.find((n) => n.id === draggingNodeId);
       if (snap?.type === 'endpoint' && snap.nodeId && snap.nodeId !== draggingNodeId) {
-        onPushHistory();
-        onMergeNodes(snap.nodeId, draggingNodeId);
+        const targetNode = nodes.find((n) => n.id === snap.nodeId);
+        if (!draggingNode?.locked && !targetNode?.locked) {
+          onPushHistory();
+          onMergeNodes(snap.nodeId, draggingNodeId);
+        } else {
+          onPushHistory();
+        }
       } else if (snap?.type === 'face' && snap.wallId) {
         const degree = walls.filter(w => w.node1Id === draggingNodeId || w.node2Id === draggingNodeId).length;
         if (degree === 1) {
@@ -939,14 +948,22 @@ export const WallDrawingCanvas = ({
   })();
 
   const svgCursor = (() => {
+    if (tool === 'LOCK') return 'pointer';
     if (tool !== 'SELECT') return 'crosshair';
     if (draggingWallId) return 'grabbing';
+    if (draggingNodeId) return 'grabbing';
+    if (hoveredNodeId) {
+      const hn = nodes.find((n) => n.id === hoveredNodeId);
+      if (hn?.locked) return 'not-allowed';
+      return 'grab';
+    }
     if (hoveredWallId) {
       const w = walls.find((wl) => wl.id === hoveredWallId);
       if (w) {
         const n1 = nodes.find((n) => n.id === w.node1Id);
         const n2 = nodes.find((n) => n.id === w.node2Id);
         if (n1 && n2) {
+          if (n1.locked && n2.locked) return 'not-allowed';
           const adx = Math.abs(n2.x - n1.x);
           const ady = Math.abs(n2.y - n1.y);
           if (ady < adx * 0.1) return 'ns-resize';
@@ -1273,7 +1290,7 @@ export const WallDrawingCanvas = ({
               fill={isDragging ? '#e67e22' : 'none'}
               stroke="#e67e22"
               strokeWidth={isDragging ? 2 : 1.5}
-              style={{ cursor: 'grab' }}
+              style={{ cursor: n.locked ? 'not-allowed' : 'grab' }}
             />
           );
         })}

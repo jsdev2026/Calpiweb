@@ -214,3 +214,50 @@ describe('WallDrawingCanvas — double-click node to toggle lock', () => {
     expect(onUpdateNode).toHaveBeenCalledWith('n1', { locked: false });
   });
 });
+
+describe('WallDrawingCanvas — drag guards on locked nodes', () => {
+  it('does not start dragging a locked node', () => {
+    const node: WallNode = { id: 'n1', x: 200, y: 200, locked: true };
+    const { onUpdateNode } = renderWithState([node], [], 'SELECT');
+    const svg = document.querySelector('svg')!;
+    fireEvent.pointerDown(svg, { button: 0, clientX: 200, clientY: 200 });
+    fireEvent.pointerMove(svg, { clientX: 250, clientY: 250 });
+    expect(onUpdateNode).not.toHaveBeenCalledWith('n1', expect.objectContaining({ x: expect.any(Number) }));
+  });
+
+  it('does not merge a locked node on release', () => {
+    const n1: WallNode = { id: 'n1', x: 100, y: 100 };
+    const n2: WallNode = { id: 'n2', x: 200, y: 200, locked: true };
+    const onMergeNodes = vi.fn();
+    render(
+      <WallDrawingCanvas
+        walls={[]}
+        nodes={[n1, n2]}
+        tool="SELECT"
+        onAddWall={() => {}}
+        onRemoveWall={() => {}}
+        onUpdateWall={() => {}}
+        onAddNode={() => {}}
+        onUpdateNode={() => {}}
+        onMergeNodes={onMergeNodes}
+        onPushHistory={() => {}}
+        scale={1}
+        pan={{ x: 0, y: 0 }}
+        onScaleChange={() => {}}
+        onPanChange={() => {}}
+        wallThickness={100}
+        excludedZones={[]}
+        onAddExcludedZone={() => {}}
+        onRemoveExcludedZone={() => {}}
+        onUpdateExcludeZoneNode={() => {}}
+        onSplitWall={() => {}}
+        onConnectNodeToWall={() => {}}
+      />,
+    );
+    const svg = document.querySelector('svg')!;
+    fireEvent.pointerDown(svg, { button: 0, clientX: 100, clientY: 100 });
+    fireEvent.pointerMove(svg, { clientX: 200, clientY: 200 });
+    fireEvent.pointerUp(svg, { button: 0, clientX: 200, clientY: 200 });
+    expect(onMergeNodes).not.toHaveBeenCalled();
+  });
+});
