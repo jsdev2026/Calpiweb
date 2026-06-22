@@ -10,6 +10,7 @@ import { NewProjectModal } from '@/components/NewProjectModal';
 import { SharePanel } from '@/components/home/SharePanel';
 import { UpgradeModal } from '@/components/home/UpgradeModal';
 import type { ClientInfo } from '@/types/project';
+import { wallsToRooms } from '@/engine/geometry/wallFaces';
 
 const STATUS_LABELS: Record<ProjectStatus, string> = { new: 'Nouveau', wip: 'En cours', done: 'Terminé' };
 const STATUS_CLASS: Record<ProjectStatus, string> = { new: 'tag-new', wip: 'tag-wip', done: 'tag-ok' };
@@ -25,7 +26,11 @@ const FILTERS: { id: Filter; label: string }[] = [
 // ── Plan miniature ────────────────────────────────────────────────────────────
 
 const PlanMiniature = ({ project, size = 140 }: { project: Project; size?: number }) => {
-  const allPoints = project.rooms.flatMap((r) => r.points);
+  const we = project.wallEngine;
+  const rooms = we
+    ? wallsToRooms(we.walls, we.nodes, we.excludedZones ?? [])
+    : project.rooms;
+  const allPoints = rooms.flatMap((r) => r.points);
   if (allPoints.length < 3) {
     return (
       <div className="flex h-full items-center justify-center" style={{ background: 'var(--surf2)' }}>
@@ -51,7 +56,7 @@ const PlanMiniature = ({ project, size = 140 }: { project: Project; size?: numbe
 
   return (
     <svg width="100%" height="100%" viewBox={`0 0 ${size} ${size}`} preserveAspectRatio="xMidYMid meet" style={{ display: 'block', background: 'var(--surf2)' }}>
-      {project.rooms.map((room) => {
+      {rooms.map((room) => {
         if (room.points.length < 3) return null;
         const pts = room.points.map((p) => `${p.x * s + ox},${p.y * s + oy}`).join(' ');
         return (
