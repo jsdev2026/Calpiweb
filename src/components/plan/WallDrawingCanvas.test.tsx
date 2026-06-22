@@ -4,6 +4,37 @@ import { useState } from 'react';
 import { WallDrawingCanvas } from './WallDrawingCanvas';
 import type { Wall, WallNode } from '@/types/wall';
 
+// Helper to render canvas with pre-existing nodes and walls
+function renderWithState(nodes: WallNode[], walls: Wall[], tool: string = 'SELECT') {
+  const onUpdateNode = vi.fn();
+  render(
+    <WallDrawingCanvas
+      walls={walls}
+      nodes={nodes}
+      tool={tool as 'LOCK' | 'SELECT'}
+      onAddWall={() => {}}
+      onRemoveWall={() => {}}
+      onUpdateWall={() => {}}
+      onAddNode={() => {}}
+      onUpdateNode={onUpdateNode}
+      onMergeNodes={() => {}}
+      onPushHistory={() => {}}
+      scale={1}
+      pan={{ x: 0, y: 0 }}
+      onScaleChange={() => {}}
+      onPanChange={() => {}}
+      wallThickness={100}
+      excludedZones={[]}
+      onAddExcludedZone={() => {}}
+      onRemoveExcludedZone={() => {}}
+      onUpdateExcludeZoneNode={() => {}}
+      onSplitWall={() => {}}
+      onConnectNodeToWall={() => {}}
+    />,
+  );
+  return { onUpdateNode };
+}
+
 function Harness() {
   const [nodes, setNodes] = useState<WallNode[]>([]);
   const [walls, setWalls] = useState<Wall[]>([]);
@@ -129,5 +160,57 @@ describe('WallDrawingCanvas — first node auto-lock', () => {
         expect(call[0]).not.toMatchObject({ locked: true });
       });
     }
+  });
+});
+
+describe('WallDrawingCanvas — LOCK tool', () => {
+  it('LOCK tool click on a node toggles its locked state (free → locked)', () => {
+    const node: WallNode = { id: 'n1', x: 200, y: 200 };
+    const { onUpdateNode } = renderWithState([node], [], 'LOCK');
+    const svg = document.querySelector('svg')!;
+    fireEvent.pointerDown(svg, { button: 0, clientX: 200, clientY: 200 });
+    expect(onUpdateNode).toHaveBeenCalledWith('n1', { locked: true });
+  });
+
+  it('LOCK tool click on a node toggles (locked → free)', () => {
+    const node: WallNode = { id: 'n1', x: 200, y: 200, locked: true };
+    const { onUpdateNode } = renderWithState([node], [], 'LOCK');
+    const svg = document.querySelector('svg')!;
+    fireEvent.pointerDown(svg, { button: 0, clientX: 200, clientY: 200 });
+    expect(onUpdateNode).toHaveBeenCalledWith('n1', { locked: false });
+  });
+
+  it('LOCK tool click on a wall segment locks both endpoint nodes', () => {
+    const n1: WallNode = { id: 'n1', x: 100, y: 200 };
+    const n2: WallNode = { id: 'n2', x: 300, y: 200 };
+    const wall: Wall = { id: 'w1', node1Id: 'n1', node2Id: 'n2', thickness: 100 };
+    const { onUpdateNode } = renderWithState([n1, n2], [wall], 'LOCK');
+    const svg = document.querySelector('svg')!;
+    // Click midpoint of wall at (200, 200)
+    fireEvent.pointerDown(svg, { button: 0, clientX: 200, clientY: 200 });
+    expect(onUpdateNode).toHaveBeenCalledWith('n1', { locked: true });
+    expect(onUpdateNode).toHaveBeenCalledWith('n2', { locked: true });
+  });
+});
+
+describe('WallDrawingCanvas — double-click node to toggle lock', () => {
+  it('double-click on a free node in SELECT mode locks it', () => {
+    const node: WallNode = { id: 'n1', x: 200, y: 200 };
+    const { onUpdateNode } = renderWithState([node], [], 'SELECT');
+    const svg = document.querySelector('svg')!;
+    fireEvent.pointerDown(svg, { button: 0, clientX: 200, clientY: 200 });
+    fireEvent.pointerUp(svg, { button: 0, clientX: 200, clientY: 200 });
+    fireEvent.pointerDown(svg, { button: 0, clientX: 200, clientY: 200 });
+    expect(onUpdateNode).toHaveBeenCalledWith('n1', { locked: true });
+  });
+
+  it('double-click on a locked node in SELECT mode unlocks it', () => {
+    const node: WallNode = { id: 'n1', x: 200, y: 200, locked: true };
+    const { onUpdateNode } = renderWithState([node], [], 'SELECT');
+    const svg = document.querySelector('svg')!;
+    fireEvent.pointerDown(svg, { button: 0, clientX: 200, clientY: 200 });
+    fireEvent.pointerUp(svg, { button: 0, clientX: 200, clientY: 200 });
+    fireEvent.pointerDown(svg, { button: 0, clientX: 200, clientY: 200 });
+    expect(onUpdateNode).toHaveBeenCalledWith('n1', { locked: false });
   });
 });

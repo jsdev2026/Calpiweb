@@ -135,6 +135,7 @@ export const WallDrawingCanvas = ({
   } | null>(null);
   const [hoveredWallId, setHoveredWallId] = useState<string | null>(null);
   const lastWallClickRef = useRef<{ time: number; wallId: string } | null>(null);
+  const lastNodeClickRef = useRef<{ nodeId: string; time: number } | null>(null);
 
   const [excludeChain, setExcludeChain] = useState<ExcludeNode[]>([]);
   const excludeChainRef = useRef<ExcludeNode[]>([]);
@@ -312,6 +313,27 @@ export const WallDrawingCanvas = ({
       : (collinearSnap(world, walls, nodes, scale, COLLINEAR_SNAP_PX) ?? baseSnap);
     const pt = snap?.point ?? world;
 
+    if (tool === 'LOCK') {
+      const hitNode = hitTestNode(world);
+      if (hitNode) {
+        onPushHistory();
+        onUpdateNode(hitNode.id, { locked: !hitNode.locked });
+        return;
+      }
+      const hitWall = hitTestWall(world);
+      if (hitWall) {
+        const wn1 = nodes.find((n) => n.id === hitWall.node1Id);
+        const wn2 = nodes.find((n) => n.id === hitWall.node2Id);
+        if (wn1 && wn2) {
+          const newLocked = !(wn1.locked && wn2.locked);
+          onPushHistory();
+          onUpdateNode(hitWall.node1Id, { locked: newLocked });
+          onUpdateNode(hitWall.node2Id, { locked: newLocked });
+        }
+      }
+      return;
+    }
+
     if (tool === 'WALL') {
       if (!chain) {
         let nodeId: string;
@@ -486,9 +508,22 @@ export const WallDrawingCanvas = ({
       }
       const hitNode = hitTestNode(world);
       if (hitNode) {
-        setDraggingNodeId(hitNode.id);
-        dragSnapRef.current = null;
-        (e.currentTarget as SVGSVGElement).setPointerCapture(e.pointerId);
+        const now = Date.now();
+        const last = lastNodeClickRef.current;
+        if (last && last.nodeId === hitNode.id && now - last.time < 300) {
+          // Double-click: toggle lock
+          onPushHistory();
+          onUpdateNode(hitNode.id, { locked: !hitNode.locked });
+          lastNodeClickRef.current = null;
+          (e.currentTarget as SVGSVGElement).setPointerCapture(e.pointerId);
+          return;
+        }
+        lastNodeClickRef.current = { nodeId: hitNode.id, time: now };
+        if (!hitNode.locked) {
+          setDraggingNodeId(hitNode.id);
+          dragSnapRef.current = null;
+          (e.currentTarget as SVGSVGElement).setPointerCapture(e.pointerId);
+        }
         return;
       }
       const hit = hitTestWall(world);
@@ -594,6 +629,7 @@ export const WallDrawingCanvas = ({
     }
 
     if (draggingNodeId) {
+      lastNodeClickRef.current = null; // drag invalidates double-click window
       const otherNodes = nodes.filter((n) => n.id !== draggingNodeId);
       const snapWalls  = walls.filter((w) => w.node1Id !== draggingNodeId && w.node2Id !== draggingNodeId);
 
