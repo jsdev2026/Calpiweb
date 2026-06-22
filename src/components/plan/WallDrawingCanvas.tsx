@@ -515,7 +515,6 @@ export const WallDrawingCanvas = ({
           onPushHistory();
           onUpdateNode(hitNode.id, { locked: !hitNode.locked });
           lastNodeClickRef.current = null;
-          (e.currentTarget as SVGSVGElement).setPointerCapture(e.pointerId);
           return;
         }
         lastNodeClickRef.current = { nodeId: hitNode.id, time: now };
