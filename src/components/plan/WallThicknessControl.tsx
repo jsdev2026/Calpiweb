@@ -3,14 +3,45 @@
 interface WallThicknessControlProps {
   wallThickness: number;
   onChange: (mm: number) => void;
+  compact?: boolean;
 }
 
-export const WallThicknessControl = ({ wallThickness, onChange }: WallThicknessControlProps) => {
-  const defaultCm = Math.round(wallThickness / 10);
+const BTN = 'flex h-8 w-8 items-center justify-center rounded-xl text-sm font-bold bg-gray-50 border border-gray-200 dark:bg-zinc-900 dark:border-zinc-800 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors';
+
+export const WallThicknessControl = ({ wallThickness, onChange, compact = false }: WallThicknessControlProps) => {
+  const cm = Math.round(wallThickness / 10);
+
+  if (compact) {
+    return (
+      <div className="flex items-center gap-1">
+        <button
+          type="button"
+          aria-label="Réduire l'épaisseur"
+          onClick={() => onChange(Math.max(50, wallThickness - 5))}
+          className={BTN}
+          style={{ color: 'var(--text2)' }}
+        >
+          −
+        </button>
+        <span className="w-10 text-center text-[12px] font-bold select-none" style={{ color: 'var(--text2)' }}>
+          {cm}cm
+        </span>
+        <button
+          type="button"
+          aria-label="Augmenter l'épaisseur"
+          onClick={() => onChange(wallThickness + 5)}
+          className={BTN}
+          style={{ color: 'var(--text2)' }}
+        >
+          +
+        </button>
+      </div>
+    );
+  }
 
   const commit = (raw: string) => {
-    const cm = parseFloat(raw);
-    if (!isNaN(cm) && cm >= 5) onChange(Math.round(cm * 10));
+    const v = parseFloat(raw);
+    if (!isNaN(v) && v >= 5) onChange(Math.round(v * 10));
   };
 
   return (
@@ -23,7 +54,7 @@ export const WallThicknessControl = ({ wallThickness, onChange }: WallThicknessC
         type="number"
         step="0.5"
         min="5"
-        defaultValue={defaultCm}
+        defaultValue={cm}
         onBlur={(e) => commit(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && commit((e.target as HTMLInputElement).value)}
         className="h-8 w-8 rounded-xl text-center text-[11px] font-bold outline-none transition-colors bg-gray-50 border border-gray-200 dark:bg-zinc-900 dark:border-zinc-800 hover:bg-gray-100 dark:hover:bg-zinc-800"
