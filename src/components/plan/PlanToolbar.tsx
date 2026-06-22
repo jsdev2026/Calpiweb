@@ -4,6 +4,7 @@ import { DoorOpen, HelpCircle, Lock, MousePointer2, PenTool, Redo2, Square, Tras
 import { Button } from '@/components/ui/Button';
 import { ToolTooltip } from './ToolTooltip';
 import { WallThicknessControl } from './WallThicknessControl';
+import { TOOL_STATUS_TEXTS } from './ToolStatusBar';
 
 export type PlanTool = 'SELECT' | 'WALL' | 'DOOR' | 'EXCLUDE' | 'DELETE' | 'LOCK';
 
@@ -124,30 +125,42 @@ export const PlanToolbar = ({
 
   <div
     data-testid="plan-toolbar-mobile"
-    className="absolute bottom-20 md:bottom-0 left-0 right-0 z-20 flex md:hidden mouse:hidden items-center gap-1 overflow-x-auto border-t border-gray-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-900/95 px-2 py-2 backdrop-blur-md"
-    style={{ scrollbarWidth: 'none' }}
+    className="absolute bottom-0 left-0 right-0 z-20 flex flex-col md:hidden mouse:hidden border-t border-gray-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md"
   >
-    <button type="button" aria-label="Sélectionner" onClick={() => onChangeTool('SELECT')}
-      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${tool === 'SELECT' ? 'bg-orange-500 text-white shadow-md' : TB_CARD}`}
-      style={tool !== 'SELECT' ? { color: 'var(--text2)' } : {}}><MousePointer2 size={18} /></button>
-    <button type="button" aria-label="Tracer des murs" onClick={() => onChangeTool('WALL')}
-      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${tool === 'WALL' ? 'bg-orange-500 text-white shadow-md' : TB_CARD}`}
-      style={tool !== 'WALL' ? { color: 'var(--text2)' } : {}}><PenTool size={18} /></button>
-    <button type="button" aria-label="Porte" onClick={() => onChangeTool('DOOR')}
-      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${tool === 'DOOR' ? 'bg-orange-500 text-white shadow-md' : TB_CARD}`}
-      style={tool !== 'DOOR' ? { color: 'var(--text2)' } : {}}><DoorOpen size={18} /></button>
-    <button type="button" aria-label="Zone non carrelée" onClick={() => onChangeTool('EXCLUDE')}
-      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${tool === 'EXCLUDE' ? 'bg-amber-500 text-white shadow-md shadow-amber-500/30' : TB_CARD}`}
-      style={tool !== 'EXCLUDE' ? { color: 'var(--text2)' } : {}}><Square size={18} /></button>
-    <button type="button" aria-label="Verrouiller" onClick={() => onChangeTool('LOCK')}
-      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${tool === 'LOCK' ? 'text-white shadow-md' : TB_CARD}`}
-      style={tool === 'LOCK' ? { background: '#27ae60', boxShadow: '0 4px 10px rgba(39,174,96,0.3)' } : { color: 'var(--text2)' }}><Lock size={18} /></button>
-    <div className="ml-auto mx-1 h-6 w-px shrink-0 bg-gray-200 dark:bg-zinc-700" />
-    <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0" onClick={onUndo} disabled={!canUndo}><Undo size={18} /></Button>
-    <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0" onClick={onRedo} disabled={!canRedo}><Redo2 size={18} /></Button>
-    <button type="button" aria-label="Mode suppression" onClick={() => onChangeTool('DELETE')}
-      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${tool === 'DELETE' ? 'bg-red-500 text-white shadow-md shadow-red-500/30' : TB_CARD}`}
-      style={tool !== 'DELETE' ? { color: 'var(--text2)' } : {}}><Trash2 size={18} /></button>
+    {/* Ligne 1 : outils + épaisseur */}
+    <div className="flex items-center gap-1 px-2 pt-2 pb-1">
+      <button type="button" aria-label="Sélectionner" onClick={() => onChangeTool('SELECT')}
+        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${tool === 'SELECT' ? 'bg-orange-500 text-white shadow-md' : TB_CARD}`}
+        style={tool !== 'SELECT' ? { color: 'var(--text2)' } : {}}><MousePointer2 size={18} /></button>
+      <button type="button" aria-label="Tracer des murs" onClick={() => onChangeTool('WALL')}
+        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${tool === 'WALL' ? 'bg-orange-500 text-white shadow-md' : TB_CARD}`}
+        style={tool !== 'WALL' ? { color: 'var(--text2)' } : {}}><PenTool size={18} /></button>
+      <button type="button" aria-label="Porte" onClick={() => onChangeTool('DOOR')}
+        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${tool === 'DOOR' ? 'bg-orange-500 text-white shadow-md' : TB_CARD}`}
+        style={tool !== 'DOOR' ? { color: 'var(--text2)' } : {}}><DoorOpen size={18} /></button>
+      <button type="button" aria-label="Zone non carrelée" onClick={() => onChangeTool('EXCLUDE')}
+        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${tool === 'EXCLUDE' ? 'bg-amber-500 text-white shadow-md shadow-amber-500/30' : TB_CARD}`}
+        style={tool !== 'EXCLUDE' ? { color: 'var(--text2)' } : {}}><Square size={18} /></button>
+      <button type="button" aria-label="Verrouiller" onClick={() => onChangeTool('LOCK')}
+        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${tool === 'LOCK' ? 'text-white shadow-md' : TB_CARD}`}
+        style={tool === 'LOCK' ? { background: '#27ae60', boxShadow: '0 4px 10px rgba(39,174,96,0.3)' } : { color: 'var(--text2)' }}><Lock size={18} /></button>
+      <div className="ml-auto">
+        <WallThicknessControl wallThickness={wallThickness} onChange={onWallThicknessChange} compact />
+      </div>
+    </div>
+    {/* Ligne 2 : actions + texte d'outil actif */}
+    <div className="flex items-center gap-1 px-2 pt-1" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' }}>
+      <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0" onClick={onUndo} disabled={!canUndo}><Undo size={18} /></Button>
+      <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0" onClick={onRedo} disabled={!canRedo}><Redo2 size={18} /></Button>
+      <button type="button" aria-label="Mode suppression" onClick={() => onChangeTool('DELETE')}
+        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${tool === 'DELETE' ? 'bg-red-500 text-white shadow-md shadow-red-500/30' : TB_CARD}`}
+        style={tool !== 'DELETE' ? { color: 'var(--text2)' } : {}}><Trash2 size={18} /></button>
+      {TOOL_STATUS_TEXTS[tool] && (
+        <span className="ml-2 truncate text-[11px]" style={{ color: 'var(--text2)' }}>
+          {TOOL_STATUS_TEXTS[tool]}
+        </span>
+      )}
+    </div>
   </div>
   </>
 );

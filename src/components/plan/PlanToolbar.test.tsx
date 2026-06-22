@@ -5,7 +5,9 @@ vi.mock('./ToolTooltip', () => ({
   ToolTooltip: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 vi.mock('./WallThicknessControl', () => ({
-  WallThicknessControl: () => <div data-testid="wall-thickness-control" />,
+  WallThicknessControl: ({ compact }: { compact?: boolean }) => (
+    <div data-testid="wall-thickness-control" data-compact={compact ? 'true' : 'false'} />
+  ),
 }));
 
 import { PlanToolbar } from './PlanToolbar';
@@ -72,5 +74,34 @@ describe('PlanToolbar — bouton DELETE', () => {
     const toolbar = screen.getByTestId('plan-toolbar-mobile');
     const trashBtn = toolbar.querySelector('[aria-label="Mode suppression"]') as HTMLButtonElement;
     expect(trashBtn.disabled).toBe(false);
+  });
+});
+
+describe('PlanToolbar mobile — deux lignes', () => {
+  it('toolbar mobile a la classe bottom-0 (pas bottom-20)', () => {
+    render(<PlanToolbar {...defaultProps} />);
+    const toolbar = screen.getByTestId('plan-toolbar-mobile');
+    expect(toolbar.className).toContain('bottom-0');
+    expect(toolbar.className).not.toContain('bottom-20');
+  });
+
+  it('WallThicknessControl est rendu en mode compact dans la toolbar mobile', () => {
+    render(<PlanToolbar {...defaultProps} />);
+    const toolbar = screen.getByTestId('plan-toolbar-mobile');
+    const ctrl = toolbar.querySelector('[data-testid="wall-thickness-control"]');
+    expect(ctrl).not.toBeNull();
+    expect(ctrl!.getAttribute('data-compact')).toBe('true');
+  });
+
+  it('texte d\'outil actif visible quand tool=WALL', () => {
+    render(<PlanToolbar {...defaultProps} tool="WALL" />);
+    const toolbar = screen.getByTestId('plan-toolbar-mobile');
+    expect(toolbar.textContent).toContain('Cliquez pour poser un point');
+  });
+
+  it('pas de texte d\'outil actif quand tool=SELECT', () => {
+    render(<PlanToolbar {...defaultProps} tool="SELECT" />);
+    const toolbar = screen.getByTestId('plan-toolbar-mobile');
+    expect(toolbar.textContent).not.toContain('Cliquez');
   });
 });
