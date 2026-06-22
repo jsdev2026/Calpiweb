@@ -1297,6 +1297,7 @@ export const WallDrawingCanvas = ({
           const sp = worldToScreen({ x: n.x, y: n.y });
           const isDragging = n.id === draggingNodeId;
           if (n.locked) {
+            // outer <g> intentionally receives events — double-click on circle unlocks node
             return (
               <g key={n.id}>
                 <circle
@@ -1315,7 +1316,7 @@ export const WallDrawingCanvas = ({
                     d="M2 5 V3.5 a2.5 2.5 0 0 1 5 0 V5"
                     fill="none"
                     stroke="#27ae60"
-                    strokeWidth="1.2"
+                    strokeWidth={1.2}
                   />
                 </g>
               </g>
@@ -1336,6 +1337,7 @@ export const WallDrawingCanvas = ({
         {tool === 'LOCK' && nodes.map((n) => {
           const sp = worldToScreen({ x: n.x, y: n.y });
           if (n.locked) {
+            // pointer events handled by canvas hit-test; element is decorative
             return (
               <g key={n.id} pointerEvents="none">
                 <circle
@@ -1350,7 +1352,7 @@ export const WallDrawingCanvas = ({
                     d="M2 5 V3.5 a2.5 2.5 0 0 1 5 0 V5"
                     fill="none"
                     stroke="#27ae60"
-                    strokeWidth="1.2"
+                    strokeWidth={1.2}
                   />
                 </g>
               </g>
