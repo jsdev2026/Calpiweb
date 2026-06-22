@@ -781,8 +781,8 @@ export const WallDrawingCanvas = ({
   };
 
   const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    if (e.touches.length === 2) {
+    if (e.touches.length >= 2) {
+      e.preventDefault();
       const t = e.touches;
       const dx = t[1]!.clientX - t[0]!.clientX;
       const dy = t[1]!.clientY - t[0]!.clientY;
@@ -794,23 +794,14 @@ export const WallDrawingCanvas = ({
         panX: panRef.current.x,
         panY: panRef.current.y,
       };
-    } else if (e.touches.length === 1 && tool === 'SELECT') {
-      touchRef.current = {
-        type: '1finger',
-        prevDist: 0,
-        clientX: e.touches[0]!.clientX,
-        clientY: e.touches[0]!.clientY,
-        panX: panRef.current.x,
-        panY: panRef.current.y,
-      };
     }
+    // 1 doigt : pas d'interception — les pointer events du SVG prennent le relais
   };
 
   const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
-    e.preventDefault();
     const ref = touchRef.current;
-    if (!ref) return;
-
+    if (!ref) return; // 1 doigt → ref null → pointer events gèrent
+    e.preventDefault(); // 2 doigts uniquement
     if (ref.type === '2finger' && e.touches.length === 2) {
       const t = e.touches;
       const dist2 = Math.hypot(t[1]!.clientX - t[0]!.clientX, t[1]!.clientY - t[0]!.clientY);
@@ -831,12 +822,6 @@ export const WallDrawingCanvas = ({
         onPanChange(np);
       }
       touchRef.current = { ...ref, prevDist: dist2, clientX: midX, clientY: midY };
-    } else if (ref.type === '1finger' && e.touches.length === 1) {
-      const t = e.touches[0]!;
-      onPanChange({
-        x: ref.panX + (t.clientX - ref.clientX),
-        y: ref.panY + (t.clientY - ref.clientY),
-      });
     }
   };
 
