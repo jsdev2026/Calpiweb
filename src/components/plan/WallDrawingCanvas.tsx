@@ -322,7 +322,8 @@ export const WallDrawingCanvas = ({
           onSplitWall(snap.wallId, { id: nodeId, x: pt.x, y: pt.y });
         } else {
           nodeId = generateId();
-          onAddNode({ id: nodeId, x: pt.x, y: pt.y });
+          const isFirstNode = nodes.length === 0;
+          onAddNode({ id: nodeId, x: pt.x, y: pt.y, ...(isFirstNode ? { locked: true } : {}) });
         }
         setChain({ nodeIds: [nodeId], thickness: wallThickness });
       } else {
