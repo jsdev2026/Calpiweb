@@ -81,7 +81,7 @@ export function UpgradeModal({ onClose }: UpgradeModalProps) {
               className="btn-primary"
               style={{ marginTop: 'auto', padding: '7px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
             >
-              S'abonner →
+              S&apos;abonner →
             </button>
           </div>
         </div>
