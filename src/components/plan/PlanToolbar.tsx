@@ -125,7 +125,7 @@ export const PlanToolbar = ({
 
   <div
     data-testid="plan-toolbar-mobile"
-    className="absolute bottom-0 left-0 right-0 z-20 flex flex-col md:hidden mouse:hidden border-t border-gray-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md"
+    className="fixed bottom-0 left-0 right-0 z-20 flex flex-col md:hidden mouse:hidden border-t border-gray-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md"
   >
     {/* Ligne 1 : outils + épaisseur */}
     <div className="flex items-center gap-1 px-2 pt-2 pb-1">

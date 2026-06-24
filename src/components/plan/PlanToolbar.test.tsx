@@ -104,4 +104,11 @@ describe('PlanToolbar mobile — deux lignes', () => {
     const toolbar = screen.getByTestId('plan-toolbar-mobile');
     expect(toolbar.textContent).not.toContain('Cliquez');
   });
+
+  it('toolbar mobile a la classe fixed (pas absolute)', () => {
+    render(<PlanToolbar {...defaultProps} />);
+    const toolbar = screen.getByTestId('plan-toolbar-mobile');
+    expect(toolbar.className).toContain('fixed');
+    expect(toolbar.className).not.toContain('absolute');
+  });
 });
