@@ -337,7 +337,7 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
   const planLabel: Record<string, string> = { free: 'Gratuit', pro: 'Pro', team: 'Équipe' };
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden" style={{ background: 'var(--bg)' }}>
+    <div className="flex h-screen flex-col overflow-hidden" style={{ background: 'var(--bg)', height: '100svh' }}>
 
       {/* Topbar */}
       <header className="shell-topbar px-5 gap-0">
