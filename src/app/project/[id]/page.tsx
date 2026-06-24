@@ -315,7 +315,7 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
 
   if (!hydrated) {
     return (
-      <div className="flex h-screen items-center justify-center" style={{ background: 'var(--bg)', color: 'var(--text2)' }}>
+      <div className="flex h-screen items-center justify-center" style={{ background: 'var(--bg)', color: 'var(--text2)', height: '100svh' }}>
         Chargement…
       </div>
     );
@@ -323,7 +323,7 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
 
   if (!activeProject) {
     return (
-      <div className="flex h-screen flex-col items-center justify-center gap-4" style={{ background: 'var(--bg)', color: 'var(--text2)' }}>
+      <div className="flex h-screen flex-col items-center justify-center gap-4" style={{ background: 'var(--bg)', color: 'var(--text2)', height: '100svh' }}>
         <p>Projet introuvable.</p>
         <button type="button" className="btn-secondary" onClick={() => router.push('/')}>Retour à l&apos;accueil</button>
       </div>
