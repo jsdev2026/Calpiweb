@@ -20,6 +20,10 @@ describe('classifyRoute', () => {
     expect(classifyRoute('/auth')).toBe('auth');
   });
 
+  it('marks /auth/callback as auth-only', () => {
+    expect(classifyRoute('/auth/callback')).toBe('auth');
+  });
+
   it('marks / as public', () => {
     expect(classifyRoute('/')).toBe('public');
   });

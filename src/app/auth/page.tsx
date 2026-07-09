@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
 type Step = 'login' | 'register' | 'forgot';
@@ -57,8 +57,9 @@ const BrandPanel = () => (
   </div>
 );
 
-export default function AuthPage() {
+function AuthPageInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient();
 
   const [step, setStep] = useState<Step>('login');
@@ -68,6 +69,14 @@ export default function AuthPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
+  const [confirmationSent, setConfirmationSent] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get('error') === 'confirmation_failed') {
+      setStep('login');
+      setError('Le lien de confirmation est invalide ou a expiré. Réessayez de vous inscrire.');
+    }
+  }, [searchParams]);
 
   const inputCls = 'w-full rounded-[var(--rs)] border px-[11px] py-2 text-[13.5px] outline-none transition-colors focus:border-[var(--accent)]';
   const inputStyle = { borderColor: 'var(--bdr2)', background: 'var(--surf)', color: 'var(--text)' };
@@ -90,13 +99,19 @@ export default function AuthPage() {
   const handleRegister = async () => {
     setLoading(true);
     setError(null);
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { name: name.trim() || email.split('@')[0] } },
+      options: {
+        data: { name: name.trim() || email.split('@')[0] },
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
     });
     if (error) {
       setError(error.message);
+    } else if (!data.session) {
+      // Compte créé mais confirmation email requise avant qu'une session existe.
+      setConfirmationSent(true);
     } else {
       router.push('/dashboard');
       router.refresh();
@@ -154,33 +169,41 @@ export default function AuthPage() {
 
         {step === 'register' && (
           <div className="w-full max-w-[420px] rounded-[var(--rl)] border p-6 md:p-9 shadow-[var(--sh-lg)]" style={{ background: 'var(--surf)', borderColor: 'var(--bdr)' }}>
-            <button type="button" onClick={() => { setError(null); setStep('login'); }} className="btn-ghost mb-5 -ml-2 gap-1.5 text-[12.5px]">
+            <button type="button" onClick={() => { setError(null); setConfirmationSent(false); setStep('login'); }} className="btn-ghost mb-5 -ml-2 gap-1.5 text-[12.5px]">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
               Retour
             </button>
             <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, color: 'var(--text)' }} className="mb-6">Créer un compte</h2>
-            {error && <p className="mb-4 rounded-lg p-3 text-[12.5px]" style={{ background: '#fef2f2', color: '#dc2626' }}>{error}</p>}
-            <div className="space-y-4">
-              <div>
-                <label className={labelCls} style={labelStyle}>Prénom et nom</label>
-                <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Jean Dupont" className={inputCls} style={inputStyle} />
-              </div>
-              <div>
-                <label className={labelCls} style={labelStyle}>Adresse e-mail</label>
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="vous@exemple.fr" className={inputCls} style={inputStyle} />
-              </div>
-              <div>
-                <label className={labelCls} style={labelStyle}>Mot de passe</label>
-                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="8 caractères minimum" className={inputCls} style={inputStyle}
-                  onKeyDown={(e) => e.key === 'Enter' && void handleRegister()} />
-              </div>
-            </div>
-            <button type="button" onClick={() => void handleRegister()} disabled={loading} className="btn-primary mt-6 w-full justify-center py-2.5 disabled:opacity-50">
-              {loading ? 'Création…' : 'Créer mon compte gratuit'}
-            </button>
-            <p className="mt-4 text-center text-[11.5px]" style={{ color: 'var(--muted)' }}>
-              Plan gratuit — 1 projet cloud inclus. Aucune carte requise.
-            </p>
+            {confirmationSent ? (
+              <p className="rounded-lg p-4 text-[13px]" style={{ background: '#f0fdf4', color: '#16a34a' }}>
+                Un email de confirmation a été envoyé à <strong>{email}</strong>. Cliquez sur le lien qu&apos;il contient pour activer votre compte.
+              </p>
+            ) : (
+              <>
+                {error && <p className="mb-4 rounded-lg p-3 text-[12.5px]" style={{ background: '#fef2f2', color: '#dc2626' }}>{error}</p>}
+                <div className="space-y-4">
+                  <div>
+                    <label className={labelCls} style={labelStyle}>Prénom et nom</label>
+                    <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Jean Dupont" className={inputCls} style={inputStyle} />
+                  </div>
+                  <div>
+                    <label className={labelCls} style={labelStyle}>Adresse e-mail</label>
+                    <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="vous@exemple.fr" className={inputCls} style={inputStyle} />
+                  </div>
+                  <div>
+                    <label className={labelCls} style={labelStyle}>Mot de passe</label>
+                    <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="8 caractères minimum" className={inputCls} style={inputStyle}
+                      onKeyDown={(e) => e.key === 'Enter' && void handleRegister()} />
+                  </div>
+                </div>
+                <button type="button" onClick={() => void handleRegister()} disabled={loading} className="btn-primary mt-6 w-full justify-center py-2.5 disabled:opacity-50">
+                  {loading ? 'Création…' : 'Créer mon compte gratuit'}
+                </button>
+                <p className="mt-4 text-center text-[11.5px]" style={{ color: 'var(--muted)' }}>
+                  Plan gratuit — 1 projet cloud inclus. Aucune carte requise.
+                </p>
+              </>
+            )}
           </div>
         )}
 
@@ -212,5 +235,13 @@ export default function AuthPage() {
 
       </div>
     </div>
+  );
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={null}>
+      <AuthPageInner />
+    </Suspense>
   );
 }
