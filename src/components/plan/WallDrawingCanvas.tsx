@@ -54,6 +54,13 @@ interface WallDrawingCanvasProps {
   onConnectNodeToWall: (wallId: string, nodeId: string, newPos: Point) => void;
   wallRoomNames?: Record<string, string>;
   onRenameRoom?: (id: string, name: string) => void;
+  /** Modes Calepinage / Quantitatif : murs verrouillés, un doigt = déplacer la vue (ou la pose). */
+  viewOnly?: boolean;
+  /** Couche en coordonnées monde (mm) dessinée sous les murs — ex. carreaux. */
+  worldLayer?: React.ReactNode;
+  /** Si fourni (et viewOnly), un glisser déplace la pose au lieu de la vue. dx/dy en mm. */
+  onViewDrag?: ((dx: number, dy: number) => void) | null;
+  onViewDragEnd?: () => void;
 }
 
 function screenToWorld(pt: Point, pan: Point, scale: number): Point {
@@ -91,7 +98,9 @@ export const WallDrawingCanvas = ({
   onSplitWall,
   onConnectNodeToWall,
   wallRoomNames, onRenameRoom,
+  viewOnly = false, worldLayer, onViewDrag = null, onViewDragEnd,
 }: WallDrawingCanvasProps) => {
+  const viewDragRef = useRef<Point | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
   // Refs mutable pour wheel/touch — évitent les stale closures
   const scaleRef = useRef(scale);
@@ -297,6 +306,18 @@ export const WallDrawingCanvas = ({
       return;
     }
     if (e.button !== 0) return;
+
+    if (viewOnly) {
+      try { (e.currentTarget as SVGSVGElement).setPointerCapture(e.pointerId); } catch { /* pointeur déjà relâché */ }
+      if (onViewDrag) {
+        viewDragRef.current = getWorldPos(e);
+      } else {
+        setIsPanning(true);
+        const sp = getSvgPos(e);
+        panStart.current = { panX: pan.x, panY: pan.y, clientX: sp.x, clientY: sp.y };
+      }
+      return;
+    }
 
     let world = getWorldPos(e);
 
@@ -584,6 +605,13 @@ export const WallDrawingCanvas = ({
   };
 
   const handlePointerMove = (e: ReactPointerEvent<SVGSVGElement>) => {
+    if (viewDragRef.current && onViewDrag) {
+      if (touchRef.current) return; // pincement en cours
+      const world = getWorldPos(e);
+      onViewDrag(world.x - viewDragRef.current.x, world.y - viewDragRef.current.y);
+      viewDragRef.current = world;
+      return;
+    }
     if (isPanning && panStart.current) {
       const sp = getSvgPos(e);
       onPanChange({
@@ -592,6 +620,8 @@ export const WallDrawingCanvas = ({
       });
       return;
     }
+
+    if (viewOnly) return;
 
     let world = getWorldPos(e);
 
@@ -711,6 +741,12 @@ export const WallDrawingCanvas = ({
   };
 
   const handlePointerUp = (e: ReactPointerEvent<SVGSVGElement>) => {
+    if (viewDragRef.current) {
+      viewDragRef.current = null;
+      onViewDragEnd?.();
+      try { (e.currentTarget as SVGSVGElement).releasePointerCapture(e.pointerId); } catch { /* déjà relâché */ }
+      return;
+    }
     if (isPanning) {
       setIsPanning(false);
       panStart.current = null;
@@ -783,6 +819,9 @@ export const WallDrawingCanvas = ({
   const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
     if (e.touches.length >= 2) {
       e.preventDefault();
+      // Le 2e doigt annule un glisser de pose / de vue démarré par le 1er
+      viewDragRef.current = null;
+      if (viewOnly) { setIsPanning(false); panStart.current = null; }
       const t = e.touches;
       const dx = t[1]!.clientX - t[0]!.clientX;
       const dy = t[1]!.clientY - t[0]!.clientY;
@@ -815,7 +854,11 @@ export const WallDrawingCanvas = ({
         const s  = scaleRef.current;
         const p  = panRef.current;
         const ns = Math.max(0.005, Math.min(4, s * ratio));
-        const np = { x: mx - (mx - p.x) * (ns / s), y: my - (my - p.y) * (ns / s) };
+        // Zoom autour du milieu des doigts + déplacement du milieu (pan à deux doigts)
+        const np = {
+          x: mx - (mx - p.x) * (ns / s) + (midX - ref.clientX),
+          y: my - (my - p.y) * (ns / s) + (midY - ref.clientY),
+        };
         scaleRef.current = ns;
         panRef.current   = np;
         onScaleChange(ns);
@@ -989,8 +1032,8 @@ export const WallDrawingCanvas = ({
         </defs>
         <rect width="100%" height="100%" fill="url(#wdc-grid)" />
 
-        {/* Fill des pièces détectées + label */}
-        {detectedRooms.map((room) => {
+        {/* Fill des pièces détectées + label (plan uniquement — masqué sous les carreaux) */}
+        {!worldLayer && detectedRooms.map((room) => {
           if (room.points.length < 3) return null;
           const screenPts = room.points
             .map((p) => worldToScreen(p))
@@ -1019,6 +1062,11 @@ export const WallDrawingCanvas = ({
             </g>
           );
         })}
+
+        {/* Couche monde (carreaux) — même vue que le plan */}
+        {worldLayer && (
+          <g transform={`translate(${pan.x} ${pan.y}) scale(${scale})`}>{worldLayer}</g>
+        )}
 
         {/* Wall polygons */}
         {wallPolygons.map((poly) => {
@@ -1143,7 +1191,7 @@ export const WallDrawingCanvas = ({
                 stroke={color} strokeWidth={1.5} />
               {/* Label cliquable — pointer-events réactivés sur ce groupe uniquement */}
               <g
-                style={{ cursor: 'pointer', pointerEvents: 'auto' }}
+                style={{ cursor: viewOnly ? undefined : 'pointer', pointerEvents: viewOnly ? 'none' : 'auto' }}
                 onPointerDown={(e) => e.stopPropagation()}
                 onClick={(e) => { e.stopPropagation(); setSelectedCot({ wallId: c.wallId, side: c.side, screenX: smid.x + c.normal.x * 12, screenY: smid.y + c.normal.y * 12 }); }}
               >
