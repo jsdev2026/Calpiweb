@@ -5,8 +5,6 @@ import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, FileDown, LogOut, Moon, Settings, Sun, Trash2, X } from 'lucide-react';
 import { PlanEditor } from '@/components/plan/PlanEditor';
-import { TilingEditor } from '@/components/tiling/TilingEditor';
-import { QuantitiesPanel } from '@/components/quantities/QuantitiesPanel';
 import { QuantitiesPrintView } from '@/components/quantities/QuantitiesPrintView';
 import { selectActiveProject, selectDoorOpenings, selectRooms, useProjectStore } from '@/store/projectStore';
 import { useShallow } from 'zustand/react/shallow';
@@ -228,7 +226,6 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
   const rooms = useProjectStore(selectRooms);
   const doorOpenings = useProjectStore(useShallow(selectDoorOpenings));
   const rename = useProjectStore((s) => s.rename);
-  const setConfig = useProjectStore((s) => s.setConfig);
   const setStatus = useProjectStore((s) => s.setStatus);
   const setProjectInfo = useProjectStore((s) => s.setProjectInfo);
   const addNote = useProjectStore((s) => s.addNote);
@@ -247,6 +244,12 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
   const logout = useUiStore((s) => s.logout);
 
   const [tab, setTab] = useState<WorkspaceTab>('PLAN');
+  const [tabHint, setTabHint] = useState(false);
+  useEffect(() => {
+    if (!tabHint) return;
+    const t = setTimeout(() => setTabHint(false), 3500);
+    return () => clearTimeout(t);
+  }, [tabHint]);
   const [showSettings, setShowSettings] = useState(false);
   const [printMounted, setPrintMounted] = useState(false);
   useEffect(() => { setPrintMounted(true); }, []);
@@ -496,9 +499,9 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
           <button
             key={t.id}
             type="button"
-            disabled={t.id !== 'PLAN' && !canGoTiling}
-            onClick={() => canGoTiling || t.id === 'PLAN' ? setTab(t.id) : undefined}
-            className={`shell-tab${tab === t.id ? ' active' : ''}${t.id !== 'PLAN' && !canGoTiling ? ' opacity-40 cursor-not-allowed' : ''}`}
+            aria-disabled={t.id !== 'PLAN' && !canGoTiling}
+            onClick={() => (canGoTiling || t.id === 'PLAN' ? setTab(t.id) : setTabHint(true))}
+            className={`shell-tab${tab === t.id ? ' active' : ''}${t.id !== 'PLAN' && !canGoTiling ? ' opacity-40' : ''}`}
           >
             {TAB_ICONS[t.id]}
             {t.label}
@@ -511,24 +514,21 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
         ))}
       </div>
 
-      {/* Content */}
+      {tabHint && (
+        <div role="status" className="border-b px-5 py-2 text-[12.5px]"
+          style={{ background: 'var(--surf2)', borderColor: 'var(--bdr)', color: 'var(--text2)' }}>
+          Tracez d&apos;abord une pièce fermée dans le Plan 2D pour accéder au calepinage et au quantitatif.
+        </div>
+      )}
+
+      {/* Content — un seul plan, trois modes (Plan 2D / Calepinage / Quantitatif) */}
       <main className="flex flex-1 overflow-hidden">
-        {tab === 'PLAN' && <PlanEditor onNavigateBack={() => router.push('/')} />}
-        {tab === 'QUANTITIES' && (
-          <div className="flex flex-1 overflow-hidden">
-            <QuantitiesPanel />
-          </div>
-        )}
-        {tab === 'TILING' && (
-          <div className="flex flex-1 overflow-hidden">
-            <TilingEditor
-              rooms={rooms}
-              config={activeProject.config}
-              wallThickness={activeProject.wallThickness}
-              setConfig={setConfig}
-            />
-          </div>
-        )}
+        <PlanEditor
+          mode={canGoTiling ? tab : 'PLAN'}
+          onModeChange={setTab}
+          readOnly={isReadOnly}
+          onNavigateBack={() => router.push('/')}
+        />
       </main>
 
       {/* Cible d'impression — portal sur document.body pour que @media print
