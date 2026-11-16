@@ -10,13 +10,13 @@ Permettre à un utilisateur de partager ses projets avec des collaborateurs iden
 
 ## Contraintes & décisions clés
 
-| Sujet | Décision |
-|-------|----------|
-| Rôles | `viewer` (lecture seule) et `editor` (modification), choix à l'invitation |
-| Invitation | Email uniquement — l'adresse doit correspondre à un compte existant ; sinon erreur explicite |
-| Conflits d'édition | Verrouillage pessimiste : un seul éditeur actif à la fois, les autres passent en lecture seule |
-| Découverte | Badge de notification non vu + section "Partagés avec moi" dans la liste des projets |
-| Emails transactionnels | Aucun — pas d'envoi d'email d'invitation |
+| Sujet                  | Décision                                                                                       |
+| ---------------------- | ---------------------------------------------------------------------------------------------- |
+| Rôles                  | `viewer` (lecture seule) et `editor` (modification), choix à l'invitation                      |
+| Invitation             | Email uniquement — l'adresse doit correspondre à un compte existant ; sinon erreur explicite   |
+| Conflits d'édition     | Verrouillage pessimiste : un seul éditeur actif à la fois, les autres passent en lecture seule |
+| Découverte             | Badge de notification non vu + section "Partagés avec moi" dans la liste des projets           |
+| Emails transactionnels | Aucun — pas d'envoi d'email d'invitation                                                       |
 
 ---
 
@@ -183,7 +183,7 @@ export interface ProjectShare {
   id: string;
   projectId: string;
   userId: string;
-  userEmail: string;   // jointure avec profiles au chargement
+  userEmail: string; // jointure avec profiles au chargement
   userDisplayName: string;
   role: ShareRole;
   createdAt: string;
@@ -228,6 +228,7 @@ lock: ProjectLock | null;
 ```ts
 shareProject(projectId: string, email: string, role: ShareRole): Promise<void>
 ```
+
 1. Recherche l'utilisateur par email dans `profiles` — erreur `USER_NOT_FOUND` si absent.
 2. Vérifie qu'il n'est pas déjà collaborateur — erreur `ALREADY_SHARED` si présent.
 3. Insère dans `project_shares`.
@@ -236,6 +237,7 @@ shareProject(projectId: string, email: string, role: ShareRole): Promise<void>
 ```ts
 unshareProject(projectId: string, userId: string): Promise<void>
 ```
+
 1. Supprime la ligne dans `project_shares`.
 2. Insère une `project_notification` de type `share_removed` pour l'utilisateur révoqué.
 3. Si l'utilisateur détenait le verrou, supprime le verrou.
@@ -245,16 +247,19 @@ unshareProject(projectId: string, userId: string): Promise<void>
 ```ts
 acquireLock(projectId: string): Promise<'acquired' | 'locked_by_other'>
 ```
+
 Tente un upsert dans `project_locks`. Retourne `locked_by_other` si un verrou actif d'un autre utilisateur existe.
 
 ```ts
 releaseLock(projectId: string): Promise<void>
 ```
+
 Supprime le verrou si `locked_by = auth.uid()`. Appelé au démontage du composant projet et sur l'événement `beforeunload`.
 
 ```ts
 refreshLock(projectId: string): Promise<void>
 ```
+
 Met à jour `expires_at = now() + 30min`. Appelé par un `setInterval` de 10 minutes dans le composant projet, uniquement si `myRole === 'editor'` et verrou détenu.
 
 ### Notifications
@@ -262,6 +267,7 @@ Met à jour `expires_at = now() + 30min`. Appelé par un `setInterval` de 10 min
 ```ts
 markNotificationsSeen(): Promise<void>
 ```
+
 `UPDATE project_notifications SET seen = true WHERE user_id = auth.uid() AND seen = false`.
 
 ---
@@ -275,6 +281,7 @@ Dans le header ou menu utilisateur existant : indicateur numérique rouge affich
 ### Liste des projets — section "Partagés avec moi"
 
 La liste existante est divisée en deux groupes par un séparateur visuel :
+
 - **Mes projets** — projets dont `myRole === 'owner'`
 - **Partagés avec moi** — projets dont `myRole === 'viewer' | 'editor'`
 
@@ -287,6 +294,7 @@ Chaque entrée partagée affiche : nom du projet, nom de l'owner, badge de rôle
 Accessible depuis un projet ouvert, réservé à l'owner (`myRole === 'owner'`). Implémenté comme un drawer ou panneau latéral dans l'UI existante — pas de modale.
 
 Contenu :
+
 - Champ email + sélecteur de rôle (`Lecteur` / `Éditeur`) + bouton "Inviter"
 - Feedback immédiat : "Aucun compte trouvé" si `USER_NOT_FOUND`, "Déjà collaborateur" si `ALREADY_SHARED`
 - Liste des collaborateurs actuels : nom, email, rôle, bouton de révocation (avec confirmation)

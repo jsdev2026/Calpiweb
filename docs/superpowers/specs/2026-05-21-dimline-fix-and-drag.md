@@ -26,13 +26,13 @@ Four existing files are modified, one new store action is added. No new files.
 
 ### File map
 
-| Action | File | Change |
-|--------|------|--------|
-| Modify | `src/components/plan/DrawingCanvas.tsx` | Apply fallback interior offset to room edge badge |
-| Modify | `src/components/tiling/DimLine.tsx` | Scale-invariant sizing, new label style, drag cursor |
+| Action | File                                             | Change                                                  |
+| ------ | ------------------------------------------------ | ------------------------------------------------------- |
+| Modify | `src/components/plan/DrawingCanvas.tsx`          | Apply fallback interior offset to room edge badge       |
+| Modify | `src/components/tiling/DimLine.tsx`              | Scale-invariant sizing, new label style, drag cursor    |
 | Modify | `src/components/tiling/TilingDimensionLayer.tsx` | Propagate `scale`, `onDimDragStart`, `livePerpOverride` |
-| Modify | `src/components/tiling/TilingEditor.tsx` | Drag state, pointer capture, `livePerp` commit |
-| Modify | `src/store/projectStore.ts` | New action `updateTilingDimensionPerpOffset` |
+| Modify | `src/components/tiling/TilingEditor.tsx`         | Drag state, pointer capture, `livePerp` commit          |
+| Modify | `src/store/projectStore.ts`                      | New action `updateTilingDimensionPerpOffset`            |
 
 ---
 
@@ -41,6 +41,7 @@ Four existing files are modified, one new store action is added. No new files.
 **Location:** room edge badge block, around line 412.
 
 **Current code (line 412):**
+
 ```ts
 : formatCm(edgeLen);
 ```
@@ -48,16 +49,25 @@ Four existing files are modified, one new store action is added. No new files.
 **Fix:** before the `dimVal` ternary, compute a fallback offset based on edge direction:
 
 ```ts
-const dx = np.x - p.x, dy = np.y - p.y;
+const dx = np.x - p.x,
+  dy = np.y - p.y;
 const fallbackType = Math.abs(dx) >= Math.abs(dy) ? 'H_DISTANCE' : 'V_DISTANCE';
 const fallbackOffset = constraintInteriorOffset(
-  { id: '', type: fallbackType, pts: [{ roomId: room.id, vertexIdx: i }, { roomId: room.id, vertexIdx: (i + 1) % room.points.length }] },
+  {
+    id: '',
+    type: fallbackType,
+    pts: [
+      { roomId: room.id, vertexIdx: i },
+      { roomId: room.id, vertexIdx: (i + 1) % room.points.length },
+    ],
+  },
   room,
   wallThickness,
 );
 ```
 
 Then replace the fallback line:
+
 ```ts
 : formatCm(edgeLen - fallbackOffset);
 ```
@@ -72,13 +82,15 @@ Then replace the fallback line:
 
 ```ts
 interface DimLineProps {
-  x1: number; y1: number;
-  x2: number; y2: number;
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
   label: string;
   perpOffset?: number;
-  scale?: number;                              // NEW — canvas scale, default 1
+  scale?: number; // NEW — canvas scale, default 1
   onContextMenu?: (e: MouseEvent<SVGGElement>) => void;
-  onPointerDown?: (e: PointerEvent<SVGGElement>) => void;  // NEW — drag start
+  onPointerDown?: (e: PointerEvent<SVGGElement>) => void; // NEW — drag start
 }
 ```
 
@@ -88,16 +100,17 @@ All constants expressed as **screen pixels / scale** = world units:
 
 ```ts
 const S = scale ?? 1;
-const ARROW_L  = 12 / S;   // arrowhead length
-const ARROW_W  = 6  / S;   // arrowhead half-width
-const EXT_GAP  = 6  / S;   // extension line start gap
-const EXT_OVER = 8  / S;   // extension line overshoot past dim line
-const FONT_PX  = 12 / S;   // label font size
-const PILL_H   = 20 / S;   // pill height
-const LABEL_GAP = 8 / S;   // gap between dim line and label bottom
+const ARROW_L = 12 / S; // arrowhead length
+const ARROW_W = 6 / S; // arrowhead half-width
+const EXT_GAP = 6 / S; // extension line start gap
+const EXT_OVER = 8 / S; // extension line overshoot past dim line
+const FONT_PX = 12 / S; // label font size
+const PILL_H = 20 / S; // pill height
+const LABEL_GAP = 8 / S; // gap between dim line and label bottom
 ```
 
 Pill width is dynamic based on label character count:
+
 ```ts
 const PILL_W = (label.length * 7.5 + 16) / S;
 ```
@@ -115,17 +128,25 @@ const ly = midY + ny * perpSign * labelOffsetWorld;
 ```
 
 Label SVG:
+
 ```tsx
 <g transform={`translate(${lx}, ${ly}) rotate(${ang})`}>
   <rect
-    x={-PILL_W / 2} y={-PILL_H / 2}
-    width={PILL_W} height={PILL_H}
-    fill="rgba(255,255,255,0.82)" rx={PILL_H / 2}
+    x={-PILL_W / 2}
+    y={-PILL_H / 2}
+    width={PILL_W}
+    height={PILL_H}
+    fill="rgba(255,255,255,0.82)"
+    rx={PILL_H / 2}
   />
   <text
-    x="0" y="1"
-    textAnchor="middle" dominantBaseline="middle"
-    fontSize={FONT_PX} fill="#475569" fontWeight="600"
+    x="0"
+    y="1"
+    textAnchor="middle"
+    dominantBaseline="middle"
+    fontSize={FONT_PX}
+    fill="#475569"
+    fontWeight="600"
   >
     {label}
   </text>
@@ -147,27 +168,37 @@ Label SVG:
 Replace current adaptive-cap formula with scale-invariant:
 
 ```ts
-const a1 = `${dlx1},${dly1} ${dlx1 + ARROW_L*ux + ARROW_W*nx},${dly1 + ARROW_L*uy + ARROW_W*ny} ${dlx1 + ARROW_L*ux - ARROW_W*nx},${dly1 + ARROW_L*uy - ARROW_W*ny}`;
-const a2 = `${dlx2},${dly2} ${dlx2 - ARROW_L*ux + ARROW_W*nx},${dly2 - ARROW_L*uy + ARROW_W*ny} ${dlx2 - ARROW_L*ux - ARROW_W*nx},${dly2 - ARROW_L*uy - ARROW_W*ny}`;
+const a1 = `${dlx1},${dly1} ${dlx1 + ARROW_L * ux + ARROW_W * nx},${dly1 + ARROW_L * uy + ARROW_W * ny} ${dlx1 + ARROW_L * ux - ARROW_W * nx},${dly1 + ARROW_L * uy - ARROW_W * ny}`;
+const a2 = `${dlx2},${dly2} ${dlx2 - ARROW_L * ux + ARROW_W * nx},${dly2 - ARROW_L * uy + ARROW_W * ny} ${dlx2 - ARROW_L * ux - ARROW_W * nx},${dly2 - ARROW_L * uy - ARROW_W * ny}`;
 ```
 
 Dim line between arrowhead bases (only if space remains):
+
 ```tsx
-{len > 2 * ARROW_L && (
-  <line
-    x1={dlx1 + ARROW_L * ux} y1={dly1 + ARROW_L * uy}
-    x2={dlx2 - ARROW_L * ux} y2={dly2 - ARROW_L * uy}
-    stroke="#f97316" strokeWidth={2 / S}
-  />
-)}
+{
+  len > 2 * ARROW_L && (
+    <line
+      x1={dlx1 + ARROW_L * ux}
+      y1={dly1 + ARROW_L * uy}
+      x2={dlx2 - ARROW_L * ux}
+      y2={dly2 - ARROW_L * uy}
+      stroke="#f97316"
+      strokeWidth={2 / S}
+    />
+  );
+}
 ```
 
 Extension lines:
+
 ```tsx
 <line
-  x1={x1 + enx * EXT_GAP} y1={y1 + eny * EXT_GAP}
-  x2={x1 + enx * (absPerp + EXT_OVER)} y2={y1 + eny * (absPerp + EXT_OVER)}
-  stroke="#94a3b8" strokeWidth={1 / S}
+  x1={x1 + enx * EXT_GAP}
+  y1={y1 + eny * EXT_GAP}
+  x2={x1 + enx * (absPerp + EXT_OVER)}
+  y2={y1 + eny * (absPerp + EXT_OVER)}
+  stroke="#94a3b8"
+  strokeWidth={1 / S}
 />
 ```
 
@@ -182,6 +213,7 @@ updateTilingDimensionPerpOffset: (id: string, perpOffset: number) => void;
 ```
 
 Implementation:
+
 ```ts
 updateTilingDimensionPerpOffset: (id, perpOffset) =>
   get().updateActive((p) => ({
@@ -204,12 +236,14 @@ interface TilingDimensionLayerProps {
   dimensions: TilingDimension[];
   hoverSnap: SnapResult | null;
   preview: DimPreview | null;
-  scale: number;                                          // NEW
-  livePerpOverride: { id: string; perpOffset: number } | null;  // NEW
+  scale: number; // NEW
+  livePerpOverride: { id: string; perpOffset: number } | null; // NEW
   onContextMenu: (dimId: string) => void;
-  onDimDragStart: (                                      // NEW
+  onDimDragStart: (
+    // NEW
     id: string,
-    nx: number, ny: number,
+    nx: number,
+    ny: number,
     startPerp: number,
     e: React.PointerEvent<SVGGElement>,
   ) => void;
@@ -231,17 +265,24 @@ Pass `scale` and `onPointerDown` to each placed `DimLine`:
 ```tsx
 <DimLine
   key={dim.id}
-  x1={pd.x1} y1={pd.y1} x2={pd.x2} y2={pd.y2}
+  x1={pd.x1}
+  y1={pd.y1}
+  x2={pd.x2}
+  y2={pd.y2}
   label={pd.label}
   perpOffset={effectivePerp}
   scale={scale}
-  onContextMenu={(e) => { e.preventDefault(); onContextMenu(dim.id); }}
+  onContextMenu={(e) => {
+    e.preventDefault();
+    onContextMenu(dim.id);
+  }}
   onPointerDown={(e) => {
     e.stopPropagation();
     const { x1, y1, x2, y2 } = pd;
     const len = Math.hypot(x2 - x1, y2 - y1);
     if (len < 1) return;
-    const nx = -(y2 - y1) / len, ny = (x2 - x1) / len;
+    const nx = -(y2 - y1) / len,
+      ny = (x2 - x1) / len;
     onDimDragStart(dim.id, nx, ny, effectivePerp, e);
   }}
 />
@@ -258,13 +299,16 @@ Also pass `scale` to the preview DimLine.
 ```ts
 const [dimDrag, setDimDrag] = useState<{
   id: string;
-  nx: number; ny: number;
+  nx: number;
+  ny: number;
   startPerp: number;
-  startMX: number; startMY: number;
+  startMX: number;
+  startMY: number;
 } | null>(null);
 
 const [livePerpOverride, setLivePerpOverride] = useState<{
-  id: string; perpOffset: number;
+  id: string;
+  perpOffset: number;
 } | null>(null);
 ```
 
@@ -278,7 +322,10 @@ const updateTilingDimensionPerpOffset = useProjectStore((s) => s.updateTilingDim
 
 ```ts
 const handleDimDragStart = (
-  id: string, nx: number, ny: number, startPerp: number,
+  id: string,
+  nx: number,
+  ny: number,
+  startPerp: number,
   e: React.PointerEvent<SVGGElement>,
 ) => {
   e.preventDefault();
@@ -296,8 +343,7 @@ At the top of the existing pointer-move handler (before pan and dimension tool l
 ```ts
 if (dimDrag) {
   const world = toWorld(e);
-  const delta = (world.x - dimDrag.startMX) * dimDrag.nx
-              + (world.y - dimDrag.startMY) * dimDrag.ny;
+  const delta = (world.x - dimDrag.startMX) * dimDrag.nx + (world.y - dimDrag.startMY) * dimDrag.ny;
   setLivePerpOverride({ id: dimDrag.id, perpOffset: dimDrag.startPerp + delta });
   return;
 }

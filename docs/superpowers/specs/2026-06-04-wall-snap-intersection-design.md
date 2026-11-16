@@ -37,8 +37,8 @@ Quand `snapResult.type === 'hv' && !snapResult.axis` (intersection) : afficher l
 
 ## Fichiers
 
-| Fichier | Changement |
-|---------|-----------|
-| `src/engine/geometry/wallSnap.ts` | Refactorer le bloc H/V |
-| `src/engine/geometry/wallSnap.test.ts` | Ajouter 3 tests intersection |
+| Fichier                                     | Changement                                 |
+| ------------------------------------------- | ------------------------------------------ |
+| `src/engine/geometry/wallSnap.ts`           | Refactorer le bloc H/V                     |
+| `src/engine/geometry/wallSnap.test.ts`      | Ajouter 3 tests intersection               |
 | `src/components/plan/WallDrawingCanvas.tsx` | Afficher les 2 lignes en mode intersection |

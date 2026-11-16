@@ -15,15 +15,11 @@ function projectedLengthMm(dim: TilingDimension): number {
   if (dim.direction === 'V') return Math.abs(dim.p2.y - dim.p1.y);
   const angle = dim.parallelAngle ?? 0;
   return Math.abs(
-    (dim.p2.x - dim.p1.x) * Math.cos(angle) +
-    (dim.p2.y - dim.p1.y) * Math.sin(angle),
+    (dim.p2.x - dim.p1.x) * Math.cos(angle) + (dim.p2.y - dim.p1.y) * Math.sin(angle),
   );
 }
 
-export function computeNewP2(
-  dim: TilingDimension,
-  newDistMm: number,
-): { x: number; y: number } {
+export function computeNewP2(dim: TilingDimension, newDistMm: number): { x: number; y: number } {
   if (dim.direction === 'H') {
     return {
       x: dim.p1.x + Math.sign(dim.p2.x - dim.p1.x) * newDistMm,
@@ -50,9 +46,7 @@ function dirLabel(dir: TilingDimension['direction']): string {
 }
 
 export const DimPropertiesPanel = ({ dim, onClose }: DimPropertiesPanelProps) => {
-  const [rawValue, setRawValue] = useState(
-    () => mmToCm(projectedLengthMm(dim)).toFixed(1),
-  );
+  const [rawValue, setRawValue] = useState(() => mmToCm(projectedLengthMm(dim)).toFixed(1));
   const [error, setError] = useState<string | null>(null);
 
   const updateNode = useProjectStore((s) => s.updateNode);
@@ -76,7 +70,7 @@ export const DimPropertiesPanel = ({ dim, onClose }: DimPropertiesPanelProps) =>
   };
 
   return (
-    <div className="border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3">
+    <div className="border-b border-gray-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-900">
       <div className="mb-2 flex items-center justify-between">
         <span className="text-[10px] font-bold uppercase tracking-wider text-orange-400">
           Côte sélectionnée
@@ -99,9 +93,14 @@ export const DimPropertiesPanel = ({ dim, onClose }: DimPropertiesPanelProps) =>
             min="0.1"
             value={rawValue}
             disabled={!canEdit}
-            onChange={(e) => { setRawValue(e.target.value); setError(null); }}
-            onKeyDown={(e) => { if (e.key === 'Enter') handleApply(); }}
-            className="w-20 rounded border border-orange-500 bg-gray-50 dark:bg-zinc-800 px-2 py-1 text-sm font-bold disabled:border-gray-300 dark:disabled:border-zinc-700 disabled:cursor-not-allowed disabled:text-gray-400"
+            onChange={(e) => {
+              setRawValue(e.target.value);
+              setError(null);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleApply();
+            }}
+            className="w-20 rounded border border-orange-500 bg-gray-50 px-2 py-1 text-sm font-bold disabled:cursor-not-allowed disabled:border-gray-300 disabled:text-gray-400 dark:bg-zinc-800 dark:disabled:border-zinc-700"
           />
           <span className="text-xs text-gray-500 dark:text-zinc-500">cm</span>
           {canEdit && (

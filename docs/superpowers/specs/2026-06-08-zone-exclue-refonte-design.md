@@ -24,7 +24,7 @@ interface ExcludeNode {
 ```typescript
 interface WallExcludedZone {
   id: string;
-  nodes: ExcludeNode[];   // source de vérité — remplace points: Point[]
+  nodes: ExcludeNode[]; // source de vérité — remplace points: Point[]
 }
 ```
 
@@ -32,12 +32,12 @@ interface WallExcludedZone {
 
 ### Consommateurs à mettre à jour
 
-| Fichier | Usage à migrer |
-|---|---|
-| `src/engine/geometry/wallFaces.ts` | `zone.points` → `zone.nodes.map(...)` |
-| `src/components/quantities/QuantityPlanSvg.tsx` | idem |
-| `src/components/plan/WallDrawingCanvas.tsx` | idem (rendu + hit test) |
-| `src/store/projectStore.ts` | actions store |
+| Fichier                                         | Usage à migrer                        |
+| ----------------------------------------------- | ------------------------------------- |
+| `src/engine/geometry/wallFaces.ts`              | `zone.points` → `zone.nodes.map(...)` |
+| `src/components/quantities/QuantityPlanSvg.tsx` | idem                                  |
+| `src/components/plan/WallDrawingCanvas.tsx`     | idem (rendu + hit test)               |
+| `src/store/projectStore.ts`                     | actions store                         |
 
 ### Migration rétrocompatible
 
@@ -45,11 +45,11 @@ Dans `migrateProject` (ou à l'initialisation du store), si une zone a `points` 
 
 ### Actions store
 
-| Action | Signature | Notes |
-|---|---|---|
-| `addWallExcludedZone` | `(nodes: ExcludeNode[]) => void` | Remplace l'actuelle `(points: Point[])` |
-| `updateExcludeZoneNode` | `(zoneId: string, nodeId: string, pos: Point) => void` | Nouveau |
-| `removeWallExcludedZone` | `(id: string) => void` | Inchangée |
+| Action                   | Signature                                              | Notes                                   |
+| ------------------------ | ------------------------------------------------------ | --------------------------------------- |
+| `addWallExcludedZone`    | `(nodes: ExcludeNode[]) => void`                       | Remplace l'actuelle `(points: Point[])` |
+| `updateExcludeZoneNode`  | `(zoneId: string, nodeId: string, pos: Point) => void` | Nouveau                                 |
+| `removeWallExcludedZone` | `(id: string) => void`                                 | Inchangée                               |
 
 ---
 
@@ -57,19 +57,20 @@ Dans `migrateProject` (ou à l'initialisation du store), si une zone a `points` 
 
 ### Interactions
 
-| Action | Résultat |
-|---|---|
-| Clic | Pose un nœud de zone |
-| Clic sur le 1er nœud (rayon `ENDPOINT_RADIUS_PX`) | Ferme la zone |
-| Double-clic | Ferme la zone si ≥ 3 nœuds |
-| Backspace | Supprime le dernier nœud posé |
-| Échap | Annule le tracé en cours (inchangé) |
-| Shift | Orthogonalité sur le segment en cours |
-| Ctrl | Désactive le snap |
+| Action                                            | Résultat                              |
+| ------------------------------------------------- | ------------------------------------- |
+| Clic                                              | Pose un nœud de zone                  |
+| Clic sur le 1er nœud (rayon `ENDPOINT_RADIUS_PX`) | Ferme la zone                         |
+| Double-clic                                       | Ferme la zone si ≥ 3 nœuds            |
+| Backspace                                         | Supprime le dernier nœud posé         |
+| Échap                                             | Annule le tracé en cours (inchangé)   |
+| Shift                                             | Orthogonalité sur le segment en cours |
+| Ctrl                                              | Désactive le snap                     |
 
 ### Aimantation
 
 Utilise `snapToWalls` (déjà importé dans `WallDrawingCanvas`) :
+
 - Endpoint snap sur les nœuds de murs + nœuds des autres zones existantes
 - Face snap sur les segments de murs
 - H/V snap sur tous les nœuds (murs + zones)
@@ -95,6 +96,7 @@ Les nœuds des autres zones sont passés à `snapToWalls` via le paramètre `nod
 ### Hit test
 
 Ordre de priorité (pointer down) :
+
 1. Nœud de mur dans le rayon → drag nœud de mur (comportement actuel)
 2. Nœud de zone dans le rayon → drag nœud de zone (nouveau)
 3. Mur → drag segment de mur (comportement actuel)
@@ -121,6 +123,7 @@ Rayon de hit test pour les nœuds de zone : `NODE_HANDLE_RADIUS_PX` (identique a
 ### Hit test
 
 En mode DELETE, clic sur :
+
 - **Corps de la zone** (`pointInPolygon(world, zone.nodes.map(...))`) → supprime la zone
 - **Contour de la zone** (distance au segment < `4/scale`) → supprime la zone
 
@@ -140,13 +143,13 @@ Aucun changement requis. L'historique capture le `wallEngine` complet à chaque 
 
 ## Fichiers modifiés
 
-| Fichier | Changement |
-|---|---|
-| `src/types/wall.ts` | Ajouter `ExcludeNode`, modifier `WallExcludedZone` |
-| `src/store/projectStore.ts` | Mettre à jour actions + migration |
-| `src/components/plan/WallDrawingCanvas.tsx` | Dessin + SELECT + DELETE |
-| `src/engine/geometry/wallFaces.ts` | `zone.points` → `zone.nodes.map(...)` |
-| `src/components/quantities/QuantityPlanSvg.tsx` | `zone.points` → `zone.nodes.map(...)` |
+| Fichier                                         | Changement                                         |
+| ----------------------------------------------- | -------------------------------------------------- |
+| `src/types/wall.ts`                             | Ajouter `ExcludeNode`, modifier `WallExcludedZone` |
+| `src/store/projectStore.ts`                     | Mettre à jour actions + migration                  |
+| `src/components/plan/WallDrawingCanvas.tsx`     | Dessin + SELECT + DELETE                           |
+| `src/engine/geometry/wallFaces.ts`              | `zone.points` → `zone.nodes.map(...)`              |
+| `src/components/quantities/QuantityPlanSvg.tsx` | `zone.points` → `zone.nodes.map(...)`              |
 
 ---
 

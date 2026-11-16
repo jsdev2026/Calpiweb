@@ -13,18 +13,18 @@ L'app est disponible sur [http://localhost:3000](http://localhost:3000).
 
 ## Scripts
 
-| Commande                | Rôle                                     |
-| ----------------------- | ---------------------------------------- |
-| `npm run dev`           | Serveur de développement Next.js         |
-| `npm run build`         | Build de production                      |
-| `npm run start`         | Sert le build de production              |
-| `npm run lint`          | ESLint                                   |
-| `npm run format`        | Formate le code avec Prettier            |
-| `npm run format:check`  | Vérifie le formatage                     |
-| `npm run typecheck`     | `tsc --noEmit` (TypeScript strict)       |
-| `npm run test`          | Vitest — tests du moteur + utils         |
-| `npm run test:watch`    | Vitest en watch                          |
-| `npm run test:coverage` | Couverture v8                            |
+| Commande                | Rôle                               |
+| ----------------------- | ---------------------------------- |
+| `npm run dev`           | Serveur de développement Next.js   |
+| `npm run build`         | Build de production                |
+| `npm run start`         | Sert le build de production        |
+| `npm run lint`          | ESLint                             |
+| `npm run format`        | Formate le code avec Prettier      |
+| `npm run format:check`  | Vérifie le formatage               |
+| `npm run typecheck`     | `tsc --noEmit` (TypeScript strict) |
+| `npm run test`          | Vitest — tests du moteur + utils   |
+| `npm run test:watch`    | Vitest en watch                    |
+| `npm run test:coverage` | Couverture v8                      |
 
 ## Stack
 

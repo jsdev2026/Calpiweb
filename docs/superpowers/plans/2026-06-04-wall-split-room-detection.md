@@ -12,18 +12,19 @@
 
 ## Fichiers
 
-| Fichier | Action |
-|---------|--------|
-| `src/store/projectStore.ts` | Exporter `splitWallInEngine`, ajouter interface + action `splitWall` |
-| `src/store/splitWall.test.ts` | Créer — tests unitaires de `splitWallInEngine` |
-| `src/components/plan/WallDrawingCanvas.tsx` | Ajouter prop `onSplitWall`, modifier WALL tool + `tryCloseChain` |
-| `src/components/plan/PlanEditor.tsx` | Connecter `splitWall` du store au canvas |
+| Fichier                                     | Action                                                               |
+| ------------------------------------------- | -------------------------------------------------------------------- |
+| `src/store/projectStore.ts`                 | Exporter `splitWallInEngine`, ajouter interface + action `splitWall` |
+| `src/store/splitWall.test.ts`               | Créer — tests unitaires de `splitWallInEngine`                       |
+| `src/components/plan/WallDrawingCanvas.tsx` | Ajouter prop `onSplitWall`, modifier WALL tool + `tryCloseChain`     |
+| `src/components/plan/PlanEditor.tsx`        | Connecter `splitWall` du store au canvas                             |
 
 ---
 
 ### Task 1 : Pure function `splitWallInEngine` + tests
 
 **Files:**
+
 - Modify: `src/store/projectStore.ts` (avant la ligne `export const useProjectStore`)
 - Create: `src/store/splitWall.test.ts`
 
@@ -36,7 +37,9 @@ import { describe, it, expect } from 'vitest';
 import { splitWallInEngine } from './projectStore';
 import type { Wall, WallNode } from '@/types/wall';
 
-function nd(id: string, x: number, y: number): WallNode { return { id, x, y }; }
+function nd(id: string, x: number, y: number): WallNode {
+  return { id, x, y };
+}
 
 describe('splitWallInEngine', () => {
   const nodes = [nd('a', 0, 0), nd('b', 200, 0)];
@@ -46,26 +49,26 @@ describe('splitWallInEngine', () => {
   it('ajoute le nœud de split', () => {
     const result = splitWallInEngine(we, 'w1', nd('m', 100, 0));
     expect(result.nodes).toHaveLength(3);
-    expect(result.nodes.find(n => n.id === 'm')).toEqual({ id: 'm', x: 100, y: 0 });
+    expect(result.nodes.find((n) => n.id === 'm')).toEqual({ id: 'm', x: 100, y: 0 });
   });
 
   it('supprime le mur original et ajoute deux murs', () => {
     const result = splitWallInEngine(we, 'w1', nd('m', 100, 0));
     expect(result.walls).toHaveLength(2);
-    expect(result.walls.find(w => w.id === 'w1')).toBeUndefined();
+    expect(result.walls.find((w) => w.id === 'w1')).toBeUndefined();
   });
 
   it('les deux nouveaux murs relient les extrémités via le nœud de split', () => {
     const result = splitWallInEngine(we, 'w1', nd('m', 100, 0));
-    const first  = result.walls.find(w => w.node1Id === 'a');
-    const second = result.walls.find(w => w.node1Id === 'm');
+    const first = result.walls.find((w) => w.node1Id === 'a');
+    const second = result.walls.find((w) => w.node1Id === 'm');
     expect(first?.node2Id).toBe('m');
     expect(second?.node2Id).toBe('b');
   });
 
-  it('préserve l\'épaisseur sur les deux murs', () => {
+  it("préserve l'épaisseur sur les deux murs", () => {
     const result = splitWallInEngine(we, 'w1', nd('m', 100, 0));
-    result.walls.forEach(w => expect(w.thickness).toBe(100));
+    result.walls.forEach((w) => expect(w.thickness).toBe(100));
   });
 
   it('préserve excludedZones inchangé', () => {
@@ -99,14 +102,24 @@ export function splitWallInEngine(
   wallId: string,
   newNode: WallNode,
 ): { nodes: WallNode[]; walls: Wall[]; excludedZones: WallExcludedZone[] } {
-  const wall = we.walls.find(w => w.id === wallId);
+  const wall = we.walls.find((w) => w.id === wallId);
   if (!wall) return we;
-  const wall1: Wall = { id: generateId(), node1Id: wall.node1Id, node2Id: newNode.id, thickness: wall.thickness };
-  const wall2: Wall = { id: generateId(), node1Id: newNode.id,  node2Id: wall.node2Id, thickness: wall.thickness };
+  const wall1: Wall = {
+    id: generateId(),
+    node1Id: wall.node1Id,
+    node2Id: newNode.id,
+    thickness: wall.thickness,
+  };
+  const wall2: Wall = {
+    id: generateId(),
+    node1Id: newNode.id,
+    node2Id: wall.node2Id,
+    thickness: wall.thickness,
+  };
   return {
     ...we,
     nodes: [...we.nodes, newNode],
-    walls:  [...we.walls.filter(w => w.id !== wallId), wall1, wall2],
+    walls: [...we.walls.filter((w) => w.id !== wallId), wall1, wall2],
   };
 }
 ```
@@ -131,6 +144,7 @@ git commit -m "feat(store): splitWallInEngine — pure helper + tests"
 ### Task 2 : Action `splitWall` dans le store
 
 **Files:**
+
 - Modify: `src/store/projectStore.ts`
 
 - [ ] **Step 1 : Ajouter `splitWall` à l'interface `ProjectState`**
@@ -196,6 +210,7 @@ git commit -m "feat(store): action splitWall — découpe un mur au point de sna
 ### Task 3 : Canvas — prop `onSplitWall` + face snap → split + déduplication
 
 **Files:**
+
 - Modify: `src/components/plan/WallDrawingCanvas.tsx`
 
 - [ ] **Step 1 : Ajouter le prop `onSplitWall` à l'interface**
@@ -229,7 +244,7 @@ Remplacer le `tryCloseChain` actuel (lignes 108-116) :
 const tryCloseChain = useCallback(() => {
   if (!chain || chain.nodeIds.length < 2) return;
   const firstId = chain.nodeIds[0]!;
-  const lastId  = chain.nodeIds[chain.nodeIds.length - 1]!;
+  const lastId = chain.nodeIds[chain.nodeIds.length - 1]!;
   if (firstId === lastId) return;
   onPushHistory();
   onAddWall({ id: generateId(), node1Id: lastId, node2Id: firstId, thickness: chain.thickness });
@@ -244,11 +259,12 @@ Par :
 const tryCloseChain = useCallback(() => {
   if (!chain || chain.nodeIds.length < 2) return;
   const firstId = chain.nodeIds[0]!;
-  const lastId  = chain.nodeIds[chain.nodeIds.length - 1]!;
+  const lastId = chain.nodeIds[chain.nodeIds.length - 1]!;
   if (firstId === lastId) return;
-  const alreadyConnected = walls.some(w =>
-    (w.node1Id === lastId && w.node2Id === firstId) ||
-    (w.node1Id === firstId && w.node2Id === lastId)
+  const alreadyConnected = walls.some(
+    (w) =>
+      (w.node1Id === lastId && w.node2Id === firstId) ||
+      (w.node1Id === firstId && w.node2Id === lastId),
   );
   onPushHistory();
   if (!alreadyConnected) {
@@ -390,6 +406,7 @@ git commit -m "feat(wall-canvas): face snap → splitWall + déduplication murs 
 ### Task 4 : PlanEditor — wiring `onSplitWall`
 
 **Files:**
+
 - Modify: `src/components/plan/PlanEditor.tsx`
 
 - [ ] **Step 1 : Sélectionner `splitWall` depuis le store**
@@ -397,7 +414,7 @@ git commit -m "feat(wall-canvas): face snap → splitWall + déduplication murs 
 Dans `src/components/plan/PlanEditor.tsx`, dans le bloc des sélecteurs (lignes 64-76), ajouter après `mergeNodes` :
 
 ```ts
-  const splitWall = useProjectStore((s) => s.splitWall);
+const splitWall = useProjectStore((s) => s.splitWall);
 ```
 
 - [ ] **Step 2 : Passer `onSplitWall` au canvas**

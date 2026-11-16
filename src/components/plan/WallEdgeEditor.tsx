@@ -27,8 +27,14 @@ export const WallEdgeEditor = ({
   onCancel,
 }: WallEdgeEditorProps) => {
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') { e.preventDefault(); onSubmit(); }
-    if (e.key === 'Escape') { e.preventDefault(); onCancel(); }
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      onSubmit();
+    }
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      onCancel();
+    }
   };
 
   const positioned = screenX !== undefined && screenY !== undefined;
@@ -41,15 +47,15 @@ export const WallEdgeEditor = ({
           ? {
               left: screenX,
               top: screenY,
-              transform: above
-                ? 'translate(-50%, calc(-100% - 10px))'
-                : 'translate(-50%, 10px)',
+              transform: above ? 'translate(-50%, calc(-100% - 10px))' : 'translate(-50%, 10px)',
             }
           : { left: '50%', top: '1rem', transform: 'translateX(-50%)' }
       }
     >
       {/* Header */}
-      <p className="text-[9px] font-black uppercase tracking-[0.18em] text-zinc-500 px-0.5">Mur — Épaisseur</p>
+      <p className="px-0.5 text-[9px] font-black uppercase tracking-[0.18em] text-zinc-500">
+        Mur — Épaisseur
+      </p>
 
       {/* Thickness row */}
       <div className="flex items-center gap-1">

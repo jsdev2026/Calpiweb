@@ -14,23 +14,25 @@
 
 ### 1.1 Avant / Après
 
-| Avant | Après |
-|-------|-------|
+| Avant             | Après    |
+| ----------------- | -------- |
 | `H 285.0 cm E:15` | `H E:15` |
-| `285.0 cm` | *(rien)* |
-| `H` | `H` |
-| `E:15` | `E:15` |
+| `285.0 cm`        | _(rien)_ |
+| `H`               | `H`      |
+| `E:15`            | `E:15`   |
 
 ### 1.2 Changements dans `DrawingCanvas.tsx`
 
 Dans le bloc **per-edge labels** (section `{/* ── Per-edge labels ... ──*/}`):
 
 **Supprimer** le calcul de :
+
 - `hOffset`, `vOffset` (utilisés uniquement pour `dimVal`)
 - `fallbackType`, `fallbackOffset`
 - `dimVal`
 
 **Modifier `mainLabel`** :
+
 ```typescript
 // AVANT :
 const mainLabel = `${dirIcon}${dimVal}${thickPart}`;
@@ -40,6 +42,7 @@ const mainLabel = `${dirIcon}${thickPart}`.trim();
 ```
 
 **Modifier `showLabel`** :
+
 ```typescript
 // AVANT :
 const showLabel = !hasDistC && (screenLen > 65 || isHov);
@@ -97,7 +100,7 @@ export interface Constraint {
   pts: PointRef[];
   value?: number | { x: number; y: number };
   displayOffset?: number; // mm, distance depuis le point de référence dans la direction d'offset
-                          // défaut implicite = DIM_OFFSET (500). Minimum recommandé = 100.
+  // défaut implicite = DIM_OFFSET (500). Minimum recommandé = 100.
 }
 ```
 
@@ -125,6 +128,7 @@ updateConstraintDisplayOffset: (id, offset) => {
 **Zone grabable :** uniquement la `<line>` du trait de cote (pas le label, pas les lignes d'extension).
 
 **Curseur :**
+
 - H_DISTANCE : `cursor-ns-resize`
 - V_DISTANCE : `cursor-ew-resize`
 - LENGTH : `cursor-move`
@@ -167,6 +171,7 @@ onPointerUp={() => {
 ```
 
 **State local DrawingCanvas :**
+
 ```typescript
 const [dimDrag, setDimDrag] = useState<{
   id: string;
@@ -181,11 +186,13 @@ const [dimDrag, setDimDrag] = useState<{
 ```
 
 **Offset de rendu :**
+
 ```typescript
 // Pour chaque contrainte :
-const dimOffset = (dimDrag?.id === c.id && dimDrag.liveOffset !== undefined)
-  ? dimDrag.liveOffset
-  : (c.displayOffset ?? DIM_OFFSET);
+const dimOffset =
+  dimDrag?.id === c.id && dimDrag.liveOffset !== undefined
+    ? dimDrag.liveOffset
+    : (c.displayOffset ?? DIM_OFFSET);
 
 // H_DISTANCE :  dimY = topY - dimOffset
 // V_DISTANCE :  dimX = rightX + dimOffset
@@ -195,16 +202,21 @@ const dimOffset = (dimDrag?.id === c.id && dimDrag.liveOffset !== undefined)
 ### 3.4 Prop et handler PlanEditor
 
 **Nouveau prop DrawingCanvas :**
+
 ```typescript
 onDimOffsetChange?: (constraintId: string, newOffset: number) => void;
 ```
 
 **Handler PlanEditor :**
+
 ```typescript
-const handleDimOffsetChange = useCallback((id: string, offset: number) => {
-  pushHistory();
-  updateConstraintDisplayOffset(id, offset);
-}, [pushHistory, updateConstraintDisplayOffset]);
+const handleDimOffsetChange = useCallback(
+  (id: string, offset: number) => {
+    pushHistory();
+    updateConstraintDisplayOffset(id, offset);
+  },
+  [pushHistory, updateConstraintDisplayOffset],
+);
 ```
 
 Passé à `<DrawingCanvas onDimOffsetChange={handleDimOffsetChange} ... />`.
@@ -213,12 +225,12 @@ Passé à `<DrawingCanvas onDimOffsetChange={handleDimOffsetChange} ... />`.
 
 ## 4. Fichiers touchés
 
-| Fichier | Action |
-|---------|--------|
-| `src/types/project.ts` | Ajouter `displayOffset?: number` à `Constraint` |
-| `src/store/projectStore.ts` | Ajouter `updateConstraintDisplayOffset` |
-| `src/components/plan/DrawingCanvas.tsx` | Badge, flèches, drag state, rendu `displayOffset`, prop `onDimOffsetChange` |
-| `src/components/plan/PlanEditor.tsx` | `handleDimOffsetChange`, `updateConstraintDisplayOffset` depuis store, passer prop |
+| Fichier                                 | Action                                                                             |
+| --------------------------------------- | ---------------------------------------------------------------------------------- |
+| `src/types/project.ts`                  | Ajouter `displayOffset?: number` à `Constraint`                                    |
+| `src/store/projectStore.ts`             | Ajouter `updateConstraintDisplayOffset`                                            |
+| `src/components/plan/DrawingCanvas.tsx` | Badge, flèches, drag state, rendu `displayOffset`, prop `onDimOffsetChange`        |
+| `src/components/plan/PlanEditor.tsx`    | `handleDimOffsetChange`, `updateConstraintDisplayOffset` depuis store, passer prop |
 
 ---
 

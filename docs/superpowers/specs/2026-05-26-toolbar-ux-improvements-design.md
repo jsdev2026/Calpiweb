@@ -24,8 +24,8 @@ Dans le bloc `if (e.key === 'Escape')`, ajouter `setTool('SELECT')` :
 
 ```tsx
 if (e.key === 'Escape') {
-  setTool('SELECT');                         // ← NEW
-  setTutorialMode(false);                    // ← NEW (Feature 3)
+  setTool('SELECT'); // ← NEW
+  setTutorialMode(false); // ← NEW (Feature 3)
   setEditingEdge(null);
   setEditingZoneEdge(null);
   setEditingPartition(null);
@@ -62,15 +62,15 @@ if (e.key === 'Escape') {
 
 ```ts
 const STATUS_TEXTS: Partial<Record<PlanTool, string>> = {
-  WALL:      'Cliquez pour poser un point',
-  DOOR:      'Cliquez sur un mur pour placer une porte',
+  WALL: 'Cliquez pour poser un point',
+  DOOR: 'Cliquez sur un mur pour placer une porte',
   PARTITION: 'Cliquez pour tracer une cloison',
-  EXCLUDE:   'Délimitez la zone à exclure',
-  APPLY_H:   'Cliquez sur un mur pour le verrouiller à l\'horizontale',
-  APPLY_V:   'Cliquez sur un mur pour le verrouiller à la verticale',
-  COINCIDE:  'Cliquez sur le nœud, puis sur un mur/nœud pour les joindre',
+  EXCLUDE: 'Délimitez la zone à exclure',
+  APPLY_H: "Cliquez sur un mur pour le verrouiller à l'horizontale",
+  APPLY_V: 'Cliquez sur un mur pour le verrouiller à la verticale',
+  COINCIDE: 'Cliquez sur le nœud, puis sur un mur/nœud pour les joindre',
   DIMENSION: 'Cliquez sur un premier nœud, puis sur le second',
-  ANCHOR:    'Cliquez sur un nœud pour le figer en place',
+  ANCHOR: 'Cliquez sur un nœud pour le figer en place',
 };
 ```
 
@@ -81,9 +81,7 @@ export const ToolStatusBar = ({ tool }: { tool: PlanTool }) => {
   const text = STATUS_TEXTS[tool];
   if (!text) return null;
   return (
-    <div
-      className="pointer-events-none absolute left-1/2 top-3 z-10 hidden -translate-x-1/2 md:block mouse:block"
-    >
+    <div className="pointer-events-none absolute left-1/2 top-3 z-10 hidden -translate-x-1/2 mouse:block md:block">
       <span
         className="rounded-full px-3 py-1 text-xs backdrop-blur-sm"
         style={{
@@ -188,18 +186,18 @@ Pattern pour chaque outil :
 
 Labels à afficher (dans l'ordre du toolbar) :
 
-| Outil | Label tutorial |
-|---|---|
-| SELECT | Sélectionner |
-| WALL | Tracer des murs |
-| DOOR | Placer une porte |
-| PARTITION | Cloison (pointillés) |
-| EXCLUDE | Zone non carrelée |
-| APPLY_H | Contrainte horizontale |
-| APPLY_V | Contrainte verticale |
-| COINCIDE | Coïncidence |
-| DIMENSION | Cotation |
-| ANCHOR | Ancrer un nœud |
+| Outil     | Label tutorial         |
+| --------- | ---------------------- |
+| SELECT    | Sélectionner           |
+| WALL      | Tracer des murs        |
+| DOOR      | Placer une porte       |
+| PARTITION | Cloison (pointillés)   |
+| EXCLUDE   | Zone non carrelée      |
+| APPLY_H   | Contrainte horizontale |
+| APPLY_V   | Contrainte verticale   |
+| COINCIDE  | Coïncidence            |
+| DIMENSION | Cotation               |
+| ANCHOR    | Ancrer un nœud         |
 
 Les séparateurs et les actions (Undo / Redo / Effacer) n'affichent pas de label tutorial.
 
@@ -220,6 +218,7 @@ Le mode tutorial n'affecte pas la barre mobile (déjà `aria-label` sur chaque b
 ### Principe
 
 L'outil THICKNESS disparaît du toolbar. L'édition de l'épaisseur reste accessible pour **tous les éléments** via un clic en mode SELECT :
+
 - **Mur** → `WallEdgeEditor` (existant, inchangé)
 - **Cloison** → `DimensionEditor` d'épaisseur (migré du tool THICKNESS vers SELECT)
 
@@ -249,6 +248,7 @@ Ce bloc est ajouté **à la fin** du bloc SELECT, après les détections de vert
 ### Changements — suppression THICKNESS pur
 
 **`src/components/plan/PlanToolbar.tsx`**
+
 - Retirer `'THICKNESS'` de `PlanTool` → `export type PlanTool = 'SELECT' | 'WALL' | 'DOOR' | 'APPLY_H' | 'APPLY_V' | 'COINCIDE' | 'ANCHOR' | 'PARTITION' | 'EXCLUDE' | 'DIMENSION'`
 - Supprimer `TOOL_TOOLTIPS.THICKNESS`
 - Supprimer le bouton THICKNESS du toolbar desktop
@@ -257,10 +257,12 @@ Ce bloc est ajouté **à la fin** du bloc SELECT, après les détections de vert
 **`src/components/plan/PlanEditor.tsx`**
 
 États à supprimer (spécifiques au tool THICKNESS, remplacés par le flow SELECT) :
+
 - `editingThicknessEdge` + `setEditingThicknessEdge`
 - `editThicknessEdgeValue` + `setEditThicknessEdgeValue`
 
 Blocs à supprimer :
+
 - Handler Escape : `setEditingThicknessEdge(null)`
 - Bloc complet `if (tool === 'THICKNESS') { ... }` dans `handlePointerDown` (lignes ~629–644)
 - Guards `if (tool === 'THICKNESS') return` (4 occurrences, lignes ~879, ~940, ~1000, ~1058)
@@ -268,6 +270,7 @@ Blocs à supprimer :
 - `{editingThicknessEdge !== null && <DimensionEditor .../>}` (ligne ~1521)
 
 États **conservés** (désormais alimentés par SELECT) :
+
 - `editingPartitionThickness` + `setEditingPartitionThickness`
 - `editThicknessValue` + `setEditThicknessValue`
 - Calcul `partitionThicknessEditorScreen`
@@ -277,11 +280,11 @@ Blocs à supprimer :
 
 ## Fichiers modifiés/créés
 
-| Fichier | Changement |
-|---|---|
-| `src/components/plan/ToolStatusBar.tsx` | **Créé** — composant barre de statut |
-| `src/components/plan/PlanToolbar.tsx` | Bouton `?` en tête · labels tutorial · suppression THICKNESS · type `PlanTool` mis à jour |
-| `src/components/plan/PlanEditor.tsx` | Escape → SELECT · `tutorialMode` state · `?` key handler · intégration `ToolStatusBar` · suppression THICKNESS · épaisseur cloison en SELECT |
+| Fichier                                 | Changement                                                                                                                                   |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/components/plan/ToolStatusBar.tsx` | **Créé** — composant barre de statut                                                                                                         |
+| `src/components/plan/PlanToolbar.tsx`   | Bouton `?` en tête · labels tutorial · suppression THICKNESS · type `PlanTool` mis à jour                                                    |
+| `src/components/plan/PlanEditor.tsx`    | Escape → SELECT · `tutorialMode` state · `?` key handler · intégration `ToolStatusBar` · suppression THICKNESS · épaisseur cloison en SELECT |
 
 ## Tests à couvrir
 

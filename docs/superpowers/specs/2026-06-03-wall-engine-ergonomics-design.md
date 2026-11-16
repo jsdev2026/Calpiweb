@@ -22,13 +22,15 @@
 ### 1 — Lift du viewport
 
 **Avant** — état interne indépendant :
+
 ```typescript
 // WallDrawingCanvas.tsx
 const [scale, setScale] = useState(0.5);
-const [pan, setPan]     = useState<Point>({ x: 200, y: 200 });
+const [pan, setPan] = useState<Point>({ x: 200, y: 200 });
 ```
 
 **Après** — props de PlanEditor :
+
 ```typescript
 interface WallDrawingCanvasProps {
   // props existantes inchangées
@@ -51,6 +53,7 @@ interface WallDrawingCanvasProps {
 ```
 
 **PlanEditor** passe ses propres states (déjà existants) :
+
 ```typescript
 <WallDrawingCanvas
   walls={wallEngine.walls}
@@ -108,11 +111,11 @@ Implémentation : un `touchRef` local dans `WallDrawingCanvas` (pattern identiqu
 
 ```typescript
 const [isShiftPressed, setIsShiftPressed] = useState(false);
-const [isCtrlPressed,  setIsCtrlPressed]  = useState(false);
+const [isCtrlPressed, setIsCtrlPressed] = useState(false);
 
 useEffect(() => {
   const down = (e: KeyboardEvent) => {
-    if (e.key === 'Shift')   setIsShiftPressed(true);
+    if (e.key === 'Shift') setIsShiftPressed(true);
     if (e.key === 'Control') setIsCtrlPressed(true);
     if (e.key === 'Escape') {
       setChain(null);
@@ -125,14 +128,14 @@ useEffect(() => {
     }
   };
   const up = (e: KeyboardEvent) => {
-    if (e.key === 'Shift')   setIsShiftPressed(false);
+    if (e.key === 'Shift') setIsShiftPressed(false);
     if (e.key === 'Control') setIsCtrlPressed(false);
   };
   window.addEventListener('keydown', down);
-  window.addEventListener('keyup',   up);
+  window.addEventListener('keyup', up);
   return () => {
     window.removeEventListener('keydown', down);
-    window.removeEventListener('keyup',   up);
+    window.removeEventListener('keyup', up);
   };
 }, [chain]);
 ```
@@ -151,9 +154,7 @@ function applyOrtho(cursor: Point, ref: Point): Point {
 **Ctrl = no snap** : court-circuiter l'appel à `snapToWalls` — si `isCtrlPressed`, retourner `null` directement (pas de snap) et laisser le snap grille seul :
 
 ```typescript
-const snapResult = isCtrlPressed
-  ? null
-  : snapToWalls(worldPos, walls, nodes, scale, chain);
+const snapResult = isCtrlPressed ? null : snapToWalls(worldPos, walls, nodes, scale, chain);
 ```
 
 `snapToWalls` elle-même n'est pas modifiée — son interface existante est conservée.
@@ -181,10 +182,10 @@ Même carte bottom-right que le canvas legacy, adaptée aux shortcuts du moteur 
 
 ## Fichiers concernés
 
-| Fichier | Action |
-|---------|--------|
+| Fichier                                     | Action                                                                                                  |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | `src/components/plan/WallDrawingCanvas.tsx` | **Modifier** — supprimer scale/pan internes, ajouter props + wheel + touch + keyboard + shortcuts panel |
-| `src/components/plan/PlanEditor.tsx` | **Modifier** — passer scale/pan/handlers à WallDrawingCanvas |
+| `src/components/plan/PlanEditor.tsx`        | **Modifier** — passer scale/pan/handlers à WallDrawingCanvas                                            |
 
 ---
 
@@ -194,6 +195,7 @@ Même carte bottom-right que le canvas legacy, adaptée aux shortcuts du moteur 
 - Lancer `npx vitest run` après modification pour confirmer aucune régression sur les 341 tests existants.
 
 ### Validation manuelle (checklist)
+
 1. Activer moteur de murs → wheel zoom centré sur curseur ✓
 2. Changer d'onglet (Calepinage) et revenir → viewport conservé (pan/scale inchangés) ✓
 3. Dessiner un mur → presser Shift → le segment se verrouille H ou V ✓

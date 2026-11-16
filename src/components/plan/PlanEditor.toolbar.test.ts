@@ -32,7 +32,7 @@ describe('Escape key → SELECT', () => {
 // ── ToolStatusBar ─────────────────────────────────────────────────────────────
 
 describe('ToolStatusBar — STATUS_TEXTS', () => {
-  it('SELECT n\'a pas de texte (invisible)', () => {
+  it("SELECT n'a pas de texte (invisible)", () => {
     expect(TOOL_STATUS_TEXTS['SELECT']).toBeUndefined();
   });
 
@@ -93,7 +93,7 @@ describe('mode tutorial', () => {
 // ── Suppression THICKNESS ─────────────────────────────────────────────────────
 
 describe('PlanTool type — sans THICKNESS', () => {
-  it('THICKNESS n\'est pas dans la liste des outils valides', () => {
+  it("THICKNESS n'est pas dans la liste des outils valides", () => {
     const tools: PlanTool[] = ['SELECT', 'WALL', 'DOOR', 'EXCLUDE', 'DELETE'];
     // @ts-expect-error — 'THICKNESS' was removed from PlanTool
     const thickness: PlanTool = 'THICKNESS';
@@ -146,15 +146,13 @@ describe('auto-anchor premier nœud', () => {
 
 describe('findDeleteTarget — priorité', () => {
   type Target =
-    | { type: 'wall';      priority: number }
-    | { type: 'door';      priority: number }
+    | { type: 'wall'; priority: number }
+    | { type: 'door'; priority: number }
     | { type: 'partition'; priority: number }
-    | { type: 'zone';      priority: number };
+    | { type: 'zone'; priority: number };
 
   const pick = (candidates: Target[]) =>
-    candidates.reduce((best, c) =>
-      c.priority < best.priority ? c : best
-    );
+    candidates.reduce((best, c) => (c.priority < best.priority ? c : best));
 
   it('partition gagne face à un mur à même distance', () => {
     const result = pick([
@@ -204,10 +202,10 @@ describe('deleteTarget — garde mur pièce trop petite', () => {
 describe('réouverture pièce sur suppression mur', () => {
   it('rotation correcte des points pour edge 1 sur pièce [A,B,C,D]', () => {
     const points = [
-      { x: 0,   y: 0   },   // A=0
-      { x: 100, y: 0   },   // B=1
-      { x: 100, y: 100 },   // C=2
-      { x: 0,   y: 100 },   // D=3
+      { x: 0, y: 0 }, // A=0
+      { x: 100, y: 0 }, // B=1
+      { x: 100, y: 100 }, // C=2
+      { x: 0, y: 100 }, // D=3
     ];
     const edges: EdgeType[] = ['WALL', 'WALL', 'WALL', 'WALL'];
     // Supprimer edge B→C (index 1) → rotateBy = (1+1)%4 = 2
@@ -220,14 +218,15 @@ describe('réouverture pièce sur suppression mur', () => {
 
     // Nouvel ordre : [C, D, A, B]
     expect(newPoints[0]).toEqual({ x: 100, y: 100 }); // C
-    expect(newPoints[1]).toEqual({ x: 0,   y: 100 }); // D
-    expect(newPoints[2]).toEqual({ x: 0,   y: 0   }); // A
-    expect(newPoints[3]).toEqual({ x: 100, y: 0   }); // B
+    expect(newPoints[1]).toEqual({ x: 0, y: 100 }); // D
+    expect(newPoints[2]).toEqual({ x: 0, y: 0 }); // A
+    expect(newPoints[3]).toEqual({ x: 100, y: 0 }); // B
     expect(newEdges.length).toBe(3);
   });
 
   it('rotation index contrainte : ancien vertexIdx j → (j - rotateBy + n) % n', () => {
-    const n = 4, rotateBy = 2;
+    const n = 4,
+      rotateBy = 2;
     // vertexIdx 0 → (0 - 2 + 4) % 4 = 2
     expect((0 - rotateBy + n) % n).toBe(2);
     // vertexIdx 2 → (2 - 2 + 4) % 4 = 0
@@ -262,10 +261,10 @@ describe('constraintFaceOffset', () => {
   const makeRoom = (id: string): import('@/types/project').Room => ({
     id,
     points: [
-      { x: 0,   y: 0   },
-      { x: 300, y: 0   },
+      { x: 0, y: 0 },
+      { x: 300, y: 0 },
       { x: 300, y: 300 },
-      { x: 0,   y: 300 },
+      { x: 0, y: 300 },
     ],
     edges: ['WALL', 'WALL', 'WALL', 'WALL'] as import('@/types/project').EdgeType[],
     edgeThicknesses: [20, 20, 20, 20], // 20mm → halfThick = 10mm
@@ -316,7 +315,11 @@ describe('constraintFaceOffset', () => {
 
   it('LENGTH: retourne toujours 0', async () => {
     const { constraintFaceOffset } = await import('@/engine/constraints/faceOffset');
-    const offset = constraintFaceOffset(makeConstraint('INSIDE', 'INSIDE', 'LENGTH'), makeRoom('r1'), 20);
+    const offset = constraintFaceOffset(
+      makeConstraint('INSIDE', 'INSIDE', 'LENGTH'),
+      makeRoom('r1'),
+      20,
+    );
     expect(offset).toBe(0);
   });
 });
@@ -329,7 +332,7 @@ describe('Conversion displayed ↔ stored (bug fix signe)', () => {
     // displayed correct = 3000 - 20 = 2980mm = 298.0cm
     const stored = 3000;
     const offset = 20;
-    expect((stored - offset) / 10).toBe(298);    // formule correcte
+    expect((stored - offset) / 10).toBe(298); // formule correcte
     expect((stored + offset) / 10).not.toBe(298); // le bug
   });
 
@@ -338,7 +341,7 @@ describe('Conversion displayed ↔ stored (bug fix signe)', () => {
     // stored correct = 2980 + 20 = 3000mm
     const displayedMm = 2980;
     const offset = 20;
-    expect(displayedMm + offset).toBe(3000);    // formule correcte
+    expect(displayedMm + offset).toBe(3000); // formule correcte
     expect(displayedMm - offset).not.toBe(3000); // le bug
   });
 });
@@ -348,9 +351,15 @@ describe('Conversion displayed ↔ stored (bug fix signe)', () => {
 describe('FaceSnapPoint — label mapping', () => {
   const FACE_LABEL = { INSIDE: 'I', AXIS: 'A', OUTSIDE: 'E' } as const;
 
-  it('INSIDE → "I"', () => { expect(FACE_LABEL['INSIDE']).toBe('I'); });
-  it('AXIS → "A"',   () => { expect(FACE_LABEL['AXIS']).toBe('A'); });
-  it('OUTSIDE → "E"', () => { expect(FACE_LABEL['OUTSIDE']).toBe('E'); });
+  it('INSIDE → "I"', () => {
+    expect(FACE_LABEL['INSIDE']).toBe('I');
+  });
+  it('AXIS → "A"', () => {
+    expect(FACE_LABEL['AXIS']).toBe('A');
+  });
+  it('OUTSIDE → "E"', () => {
+    expect(FACE_LABEL['OUTSIDE']).toBe('E');
+  });
 });
 
 // ── findNearestFaceSnap — sélection du candidat ───────────────────────────────
@@ -360,22 +369,22 @@ describe('findNearestFaceSnap — sélection du candidat', () => {
   type Candidate = { face: FaceType; dist: number };
 
   const pickNearest = (candidates: Candidate[]): FaceType =>
-    candidates.reduce((best, c) => c.dist < best.dist ? c : best).face;
+    candidates.reduce((best, c) => (c.dist < best.dist ? c : best)).face;
 
   it('INSIDE sélectionné quand le curseur est sur la face intérieure', () => {
     const result = pickNearest([
       { face: 'OUTSIDE', dist: 30 },
-      { face: 'AXIS',    dist: 15 },
-      { face: 'INSIDE',  dist: 5  },
+      { face: 'AXIS', dist: 15 },
+      { face: 'INSIDE', dist: 5 },
     ]);
     expect(result).toBe('INSIDE');
   });
 
-  it('AXIS sélectionné quand le curseur est sur l\'axe', () => {
+  it("AXIS sélectionné quand le curseur est sur l'axe", () => {
     const result = pickNearest([
       { face: 'OUTSIDE', dist: 20 },
-      { face: 'AXIS',    dist: 3  },
-      { face: 'INSIDE',  dist: 20 },
+      { face: 'AXIS', dist: 3 },
+      { face: 'INSIDE', dist: 20 },
     ]);
     expect(result).toBe('AXIS');
   });
@@ -391,8 +400,9 @@ describe('findNearestFaceSnap — sélection du candidat', () => {
 
 describe('updateConstraintDisplayOffset', () => {
   it('met à jour displayOffset sans toucher aux autres champs', async () => {
-    const { updateConstraintDisplayOffset } =
-      await import('@/store/projectStore').then(m => ({ updateConstraintDisplayOffset: m.useProjectStore.getState().updateConstraintDisplayOffset }));
+    const { updateConstraintDisplayOffset } = await import('@/store/projectStore').then((m) => ({
+      updateConstraintDisplayOffset: m.useProjectStore.getState().updateConstraintDisplayOffset,
+    }));
     // Test indirect via type check — l'action doit exister
     expect(typeof updateConstraintDisplayOffset).toBe('function');
   });

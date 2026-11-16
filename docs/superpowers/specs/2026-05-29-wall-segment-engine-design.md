@@ -8,16 +8,16 @@ Refonte complète du moteur de dessin du plan pour adopter un modèle de murs-se
 
 ## Décisions de conception
 
-| Sujet | Décision |
-|---|---|
-| Modèle de données | `Wall { id, p1, p2, thickness }` — store Zustand `walls[]` |
-| Composant | `WallDrawingCanvas.tsx` nouveau, isolé (DrawingCanvas.tsx non touché) |
-| Mode de dessin | Chaîne continue — chaque clic prolonge depuis le dernier point |
-| Coins | Coupe en onglet (bissectrice) sur jonctions L |
-| T-jonctions | Accrochage sur la face du mur hôte, sans scission du mur hôte |
-| Cotations | `computeAutoCotations()` fonction pure, ext. + int., non éditables |
-| Migration | Aucune — anciens projets non convertis |
-| Livraison | 3 phases ordonnées (voir ci-dessous) |
+| Sujet             | Décision                                                              |
+| ----------------- | --------------------------------------------------------------------- |
+| Modèle de données | `Wall { id, p1, p2, thickness }` — store Zustand `walls[]`            |
+| Composant         | `WallDrawingCanvas.tsx` nouveau, isolé (DrawingCanvas.tsx non touché) |
+| Mode de dessin    | Chaîne continue — chaque clic prolonge depuis le dernier point        |
+| Coins             | Coupe en onglet (bissectrice) sur jonctions L                         |
+| T-jonctions       | Accrochage sur la face du mur hôte, sans scission du mur hôte         |
+| Cotations         | `computeAutoCotations()` fonction pure, ext. + int., non éditables    |
+| Migration         | Aucune — anciens projets non convertis                                |
+| Livraison         | 3 phases ordonnées (voir ci-dessous)                                  |
 
 ---
 
@@ -28,9 +28,9 @@ Refonte complète du moteur de dessin du plan pour adopter un modèle de murs-se
 ```typescript
 interface Wall {
   id: string;
-  p1: { x: number; y: number };  // extrémité A (ligne médiane)
-  p2: { x: number; y: number };  // extrémité B (ligne médiane)
-  thickness: number;              // épaisseur en cm, défaut 20
+  p1: { x: number; y: number }; // extrémité A (ligne médiane)
+  p2: { x: number; y: number }; // extrémité B (ligne médiane)
+  thickness: number; // épaisseur en cm, défaut 20
 }
 ```
 
@@ -91,7 +91,7 @@ interface WallDrawingCanvasProps {
 
 ```typescript
 type DrawingChain = {
-  points: { x: number; y: number }[];  // points validés (≥ 1)
+  points: { x: number; y: number }[]; // points validés (≥ 1)
   thickness: number;
 } | null;
 
@@ -154,10 +154,10 @@ Pour chaque mur, on calcule son polygone SVG (4–6 points) en tenant compte des
 ```typescript
 interface WallPolygon {
   wallId: string;
-  points: { x: number; y: number }[];  // polygone SVG
+  points: { x: number; y: number }[]; // polygone SVG
 }
 
-function computeCornerGeometry(walls: Wall[]): WallPolygon[]
+function computeCornerGeometry(walls: Wall[]): WallPolygon[];
 ```
 
 ### Calcul de l'onglet
@@ -199,14 +199,14 @@ Fonction pure appelée à chaque render — aucun state, aucune mutation.
 
 ```typescript
 interface CotationLine {
-  p1: { x: number; y: number };   // extrémité A de la face
-  p2: { x: number; y: number };   // extrémité B de la face
-  offset: number;                  // distance perpendiculaire (défaut 80px)
-  valueCm: number;                 // longueur en cm
+  p1: { x: number; y: number }; // extrémité A de la face
+  p2: { x: number; y: number }; // extrémité B de la face
+  offset: number; // distance perpendiculaire (défaut 80px)
+  valueCm: number; // longueur en cm
   side: 'ext' | 'int';
 }
 
-function computeAutoCotations(walls: Wall[]): CotationLine[]
+function computeAutoCotations(walls: Wall[]): CotationLine[];
 ```
 
 ### Algorithme
@@ -223,6 +223,7 @@ Chaque face exposée produit une `CotationLine`. La valeur en cm est calculée d
 ### Rendu
 
 Les cotations sont rendues avec :
+
 - Ligne principale perpendiculaire à la face, décalée de `offset`
 - Lignes d'extension en tirets (de la face à la ligne principale)
 - Flèches aux extrémités
@@ -273,11 +274,11 @@ Les cotations automatiques ne sont **pas éditables** en phase 1 — elles sont 
 
 ## Fichiers créés / modifiés
 
-| Fichier | Action |
-|---|---|
-| `src/store/useProjectStore.ts` | Ajouter slice `walls[]` avec actions |
-| `src/components/plan/WallDrawingCanvas.tsx` | Créer (nouveau) |
-| `src/lib/geometry/cornerGeometry.ts` | Créer — `computeCornerGeometry()` |
-| `src/lib/geometry/autoCotations.ts` | Créer — `computeAutoCotations()` |
-| `src/components/plan/PlanEditor.tsx` | Brancher `<WallDrawingCanvas />` |
-| `src/types/wall.ts` | Créer — type `Wall`, `WallPolygon`, `CotationLine` |
+| Fichier                                     | Action                                             |
+| ------------------------------------------- | -------------------------------------------------- |
+| `src/store/useProjectStore.ts`              | Ajouter slice `walls[]` avec actions               |
+| `src/components/plan/WallDrawingCanvas.tsx` | Créer (nouveau)                                    |
+| `src/lib/geometry/cornerGeometry.ts`        | Créer — `computeCornerGeometry()`                  |
+| `src/lib/geometry/autoCotations.ts`         | Créer — `computeAutoCotations()`                   |
+| `src/components/plan/PlanEditor.tsx`        | Brancher `<WallDrawingCanvas />`                   |
+| `src/types/wall.ts`                         | Créer — type `Wall`, `WallPolygon`, `CotationLine` |

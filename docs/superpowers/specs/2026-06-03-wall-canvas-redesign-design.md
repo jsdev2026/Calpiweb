@@ -13,15 +13,16 @@
 
 ```css
 /* :root (light) */
---canvas-wall:       #64748b;
+--canvas-wall: #64748b;
 --canvas-wall-joint: #94a3b8;
 
 /* [data-dark="true"] */
---canvas-wall:       #52525b;
+--canvas-wall: #52525b;
 --canvas-wall-joint: #3f3f46;
 ```
 
 Vars existantes réutilisées sans modification :
+
 - `--canvas-bg` : fond canvas
 - `--canvas-dot` : points de grille
 - `--canvas-poly-active` : fill semi-transparent des pièces (`rgba(226,232,240,0.95)` light / `#18181b` dark)
@@ -66,10 +67,10 @@ const WALL_COLOR = 'var(--canvas-wall)';
 
 ```typescript
 // AVANT
-stroke="#3d3830"
+stroke = '#3d3830';
 
 // APRÈS
-stroke="var(--canvas-wall-joint)"
+stroke = 'var(--canvas-wall-joint)';
 ```
 
 #### 2.5 Fill des pièces détectées (NOUVEAU)
@@ -82,39 +83,43 @@ import { wallsToRooms } from '@/engine/geometry/wallFaces';
 import type { Room } from '@/types/project';
 
 // useMemo — après les useMemos de wallPolygons/jointLines
-const detectedRooms: Room[] = useMemo(
-  () => wallsToRooms(walls, nodes),
-  [walls, nodes],
-);
+const detectedRooms: Room[] = useMemo(() => wallsToRooms(walls, nodes), [walls, nodes]);
 ```
 
 Rendu dans le SVG (AVANT `{wallPolygons.map(...)}`) :
 
 ```tsx
-{/* Fill semi-transparent des pièces détectées */}
-{detectedRooms.map((room) => {
-  if (room.points.length < 3) return null;
-  const pts = room.points
-    .map((p) => worldToScreen(p))
-    .map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`)
-    .join(' ');
-  const cx = room.points.reduce((s, p) => s + p.x, 0) / room.points.length;
-  const cy = room.points.reduce((s, p) => s + p.y, 0) / room.points.length;
-  const sc = worldToScreen({ x: cx, y: cy });
-  return (
-    <g key={`room-${room.id}`} className="pointer-events-none">
-      <polygon points={pts} fill="var(--canvas-poly-active)" />
-      <text
-        x={sc.x} y={sc.y}
-        textAnchor="middle" dominantBaseline="middle"
-        fontSize={11} fill="var(--canvas-name-active)"
-        style={{ fontFamily: 'system-ui', userSelect: 'none' }}
-      >
-        {room.name ?? ''}
-      </text>
-    </g>
-  );
-})}
+{
+  /* Fill semi-transparent des pièces détectées */
+}
+{
+  detectedRooms.map((room) => {
+    if (room.points.length < 3) return null;
+    const pts = room.points
+      .map((p) => worldToScreen(p))
+      .map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`)
+      .join(' ');
+    const cx = room.points.reduce((s, p) => s + p.x, 0) / room.points.length;
+    const cy = room.points.reduce((s, p) => s + p.y, 0) / room.points.length;
+    const sc = worldToScreen({ x: cx, y: cy });
+    return (
+      <g key={`room-${room.id}`} className="pointer-events-none">
+        <polygon points={pts} fill="var(--canvas-poly-active)" />
+        <text
+          x={sc.x}
+          y={sc.y}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          fontSize={11}
+          fill="var(--canvas-name-active)"
+          style={{ fontFamily: 'system-ui', userSelect: 'none' }}
+        >
+          {room.name ?? ''}
+        </text>
+      </g>
+    );
+  });
+}
 ```
 
 #### 2.6 Couleur de l'aperçu de chaîne

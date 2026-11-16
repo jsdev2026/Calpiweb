@@ -34,14 +34,14 @@ export interface Room {
 // ── Constraint system ──────────────────────────────────────────────────────
 
 export type ConstraintType =
-  | 'FIX'           // anchor a vertex at a fixed position
-  | 'COINCIDENT'    // two vertices must occupy the same point
-  | 'HORIZONTAL'    // two vertices share the same Y
-  | 'VERTICAL'      // two vertices share the same X
-  | 'LENGTH'        // fixed Euclidean distance between two vertices
-  | 'H_DISTANCE'    // fixed horizontal distance |x2 - x1|
-  | 'V_DISTANCE'    // fixed vertical distance |y2 - y1|
-  | 'POINT_ON_LINE' // vertex projected onto a line (defined by two other vertices)
+  | 'FIX' // anchor a vertex at a fixed position
+  | 'COINCIDENT' // two vertices must occupy the same point
+  | 'HORIZONTAL' // two vertices share the same Y
+  | 'VERTICAL' // two vertices share the same X
+  | 'LENGTH' // fixed Euclidean distance between two vertices
+  | 'H_DISTANCE' // fixed horizontal distance |x2 - x1|
+  | 'V_DISTANCE' // fixed vertical distance |y2 - y1|
+  | 'POINT_ON_LINE'; // vertex projected onto a line (defined by two other vertices)
 
 /** Face reference for a PointRef — which side of a wall a constraint endpoint is anchored to. */
 export type PointFace = 'INSIDE' | 'AXIS' | 'OUTSIDE';

@@ -48,11 +48,12 @@ export function selectRooms(s: ProjectState): Room[] {
 Fichier : `src/engine/geometry/wallFaces.ts`
 
 ```typescript
-export function wallsToRooms(walls: Wall[], nodes: WallNode[]): Room[]
+export function wallsToRooms(walls: Wall[], nodes: WallNode[]): Room[];
 ```
 
 Entrée : `Wall[]` + `WallNode[]` (le graphe du moteur de murs).
 Sortie : `Room[]` avec pour chaque face intérieure fermée :
+
 - `id` : généré de façon stable depuis les IDs de nœuds de la face — trier les nodeIds lexicographiquement, les joindre par `-`, hacher avec une fonction simple (ex. djb2) → même graphe = mêmes IDs de rooms à chaque appel
 - `points` : polygone ordonné passant par les **centres des nœuds** (lignes axiales des murs)
 - `edges` : tableau de `'WALL'` (longueur = nombre de côtés)
@@ -79,7 +80,7 @@ L'algorithme trouve toutes les faces intérieures fermées d'un graphe planaire,
 
 2. **Calculer le `next` de chaque demi-arête**
    Pour la demi-arête `u→v`, le `next` est la demi-arête qui sort de `v` en faisant le **virage le plus à droite** (angle le plus petit dans le sens horaire) par rapport à la direction d'arrivée `u→v`.
-   
+
    En pratique : lister toutes les arêtes sortantes de `v`, les trier par angle polaire relatif à la direction inverse `v→u`, prendre celle à l'angle le plus faible (sens horaire = coordonnées SVG, Y vers le bas).
 
 3. **Traverser les cycles**
@@ -99,19 +100,19 @@ Les murs ne se croisent pas sans nœud à leur intersection. Si deux murs se cro
 
 ## Intégration — Consommateurs à modifier
 
-| Fichier | Modification |
-|---------|-------------|
-| `src/store/projectStore.ts` | Ajouter `selectRooms` (ou `src/store/selectors.ts`) |
-| `src/components/quantities/QuantitiesPanel.tsx` | Remplacer `project.rooms` par `selectRooms(s)` |
-| `src/components/quantities/QuantityPlanSvg.tsx` | Idem |
-| `src/components/quantities/QuantityPlanView.tsx` | Idem si applicable |
-| `src/components/tiling/TilingEditor.tsx` | Idem |
+| Fichier                                          | Modification                                        |
+| ------------------------------------------------ | --------------------------------------------------- |
+| `src/store/projectStore.ts`                      | Ajouter `selectRooms` (ou `src/store/selectors.ts`) |
+| `src/components/quantities/QuantitiesPanel.tsx`  | Remplacer `project.rooms` par `selectRooms(s)`      |
+| `src/components/quantities/QuantityPlanSvg.tsx`  | Idem                                                |
+| `src/components/quantities/QuantityPlanView.tsx` | Idem si applicable                                  |
+| `src/components/tiling/TilingEditor.tsx`         | Idem                                                |
 
-| Fichier | Statut |
-|---------|--------|
-| `src/engine/quantities/quantityEngine.ts` | **Inchangé** |
-| `src/engine/tiling/tilingEngine.ts` | **Inchangé** |
-| `src/engine/geometry/wallCotation.ts` | **Inchangé** (`detectClosedPolygons` reste dédié aux cotations) |
+| Fichier                                   | Statut                                                          |
+| ----------------------------------------- | --------------------------------------------------------------- |
+| `src/engine/quantities/quantityEngine.ts` | **Inchangé**                                                    |
+| `src/engine/tiling/tilingEngine.ts`       | **Inchangé**                                                    |
+| `src/engine/geometry/wallCotation.ts`     | **Inchangé** (`detectClosedPolygons` reste dédié aux cotations) |
 
 ---
 

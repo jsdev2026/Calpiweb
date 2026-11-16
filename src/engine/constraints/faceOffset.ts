@@ -73,7 +73,7 @@ export function constraintFaceOffset(
 
   const faceOffset = (face: 'INSIDE' | 'AXIS' | 'OUTSIDE' | undefined, half: number): number => {
     const f = face ?? 'INSIDE';
-    if (f === 'INSIDE')  return +half;
+    if (f === 'INSIDE') return +half;
     if (f === 'OUTSIDE') return -half;
     return 0; // AXIS
   };

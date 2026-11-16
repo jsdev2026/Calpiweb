@@ -5,9 +5,9 @@ import { formatCm } from '@/utils/formatters';
 import { wallFaceCycles } from './wallFaces';
 
 // ── Constantes ────────────────────────────────────────────────────────────
-const COTE_OFFSET_EXT = 50;  // mm depuis la face extérieure
-const COTE_OFFSET_INT = 50;  // mm depuis la face intérieure, vers l'intérieur
-const COTE_OFFSET_ISO = 50;  // mm depuis l'axe, mur isolé
+const COTE_OFFSET_EXT = 50; // mm depuis la face extérieure
+const COTE_OFFSET_INT = 50; // mm depuis la face intérieure, vers l'intérieur
+const COTE_OFFSET_ISO = 50; // mm depuis l'axe, mur isolé
 
 // ── Helpers géométriques ──────────────────────────────────────────────────
 
@@ -27,7 +27,8 @@ function nodePos(id: string, nodes: WallNode[]): Point {
 function wallDir(wall: Wall, nodes: WallNode[]): Point {
   const p1 = nodePos(wall.node1Id, nodes);
   const p2 = nodePos(wall.node2Id, nodes);
-  const dx = p2.x - p1.x, dy = p2.y - p1.y;
+  const dx = p2.x - p1.x,
+    dy = p2.y - p1.y;
   const len = Math.sqrt(dx * dx + dy * dy);
   return len < 1e-10 ? { x: 1, y: 0 } : { x: dx / len, y: dy / len };
 }
@@ -35,14 +36,15 @@ function wallDir(wall: Wall, nodes: WallNode[]): Point {
 // ── Helpers internes pour computeAutoCotations ────────────────────────────
 
 /** Détermine si plus est intérieur (côté le plus proche du centroïde). */
-function plusIsInterior(
-  poly: { points: Point[] },
-  centroid: Point,
-): boolean {
-  const midPlus:  Point = { x: (poly.points[0]!.x + poly.points[1]!.x) / 2,
-                             y: (poly.points[0]!.y + poly.points[1]!.y) / 2 };
-  const midMinus: Point = { x: (poly.points[2]!.x + poly.points[3]!.x) / 2,
-                             y: (poly.points[2]!.y + poly.points[3]!.y) / 2 };
+function plusIsInterior(poly: { points: Point[] }, centroid: Point): boolean {
+  const midPlus: Point = {
+    x: (poly.points[0]!.x + poly.points[1]!.x) / 2,
+    y: (poly.points[0]!.y + poly.points[1]!.y) / 2,
+  };
+  const midMinus: Point = {
+    x: (poly.points[2]!.x + poly.points[3]!.x) / 2,
+    y: (poly.points[2]!.y + poly.points[3]!.y) / 2,
+  };
   return dist(midPlus, centroid) < dist(midMinus, centroid);
 }
 
@@ -66,15 +68,23 @@ function interiorNormal(
  */
 function interiorCorner(
   nodeId: string,
-  wallA: Wall, dA: Point, intNormA: Point,
-  wallB: Wall, dB: Point, intNormB: Point,
+  wallA: Wall,
+  dA: Point,
+  intNormA: Point,
+  wallB: Wall,
+  dB: Point,
+  intNormB: Point,
   nodes: WallNode[],
 ): Point {
   const N = nodePos(nodeId, nodes);
-  const pA: Point = { x: N.x + intNormA.x * wallA.thickness / 2,
-                      y: N.y + intNormA.y * wallA.thickness / 2 };
-  const pB: Point = { x: N.x + intNormB.x * wallB.thickness / 2,
-                      y: N.y + intNormB.y * wallB.thickness / 2 };
+  const pA: Point = {
+    x: N.x + (intNormA.x * wallA.thickness) / 2,
+    y: N.y + (intNormA.y * wallA.thickness) / 2,
+  };
+  const pB: Point = {
+    x: N.x + (intNormB.x * wallB.thickness) / 2,
+    y: N.y + (intNormB.y * wallB.thickness) / 2,
+  };
   const denom = cross(dA, dB);
   if (Math.abs(denom) < 1e-6) return pA; // murs parallèles
   const diff: Point = { x: pB.x - pA.x, y: pB.y - pA.y };
@@ -85,9 +95,9 @@ function interiorCorner(
 // ── computeAutoCotations ──────────────────────────────────────────────────
 
 export function computeAutoCotations(walls: Wall[], nodes: WallNode[]): AutoCotation[] {
-  const polys    = computeCornerGeometry(walls, nodes);
-  const polyMap  = new Map(polys.map((p) => [p.wallId, p]));
-  const rooms    = wallFaceCycles(walls, nodes);
+  const polys = computeCornerGeometry(walls, nodes);
+  const polyMap = new Map(polys.map((p) => [p.wallId, p]));
+  const rooms = wallFaceCycles(walls, nodes);
   const wallsInRooms = new Set<string>();
   const result: AutoCotation[] = [];
 
@@ -103,35 +113,36 @@ export function computeAutoCotations(walls: Wall[], nodes: WallNode[]): AutoCota
 
     for (let i = 0; i < room.wallIds.length; i++) {
       const wallId = room.wallIds[i]!;
-      const wall   = walls.find((w) => w.id === wallId);
-      const poly   = polyMap.get(wallId);
+      const wall = walls.find((w) => w.id === wallId);
+      const poly = polyMap.get(wallId);
       if (!wall || !poly || poly.points.length < 4) continue;
 
-      const dir     = wallDir(wall, nodes);
+      const dir = wallDir(wall, nodes);
       const nPlus: Point = { x: -dir.y, y: dir.x };
       const plusIsInt = plusIsInterior(poly, centroid);
 
       // ── Anchors extérieurs (coins WallPolygon côté le plus éloigné) ──
-      const extPt1  = plusIsInt ? poly.points[3]! : poly.points[0]!;
-      const extPt2  = plusIsInt ? poly.points[2]! : poly.points[1]!;
-      const extNorm = plusIsInt
-        ? { x: -nPlus.x, y: -nPlus.y }
-        : nPlus;
+      const extPt1 = plusIsInt ? poly.points[3]! : poly.points[0]!;
+      const extPt2 = plusIsInt ? poly.points[2]! : poly.points[1]!;
+      const extNorm = plusIsInt ? { x: -nPlus.x, y: -nPlus.y } : nPlus;
 
       result.push({
-        wallId, side: 'exterior',
-        anchor1: extPt1, anchor2: extPt2,
-        normal: extNorm, offset: COTE_OFFSET_EXT,
+        wallId,
+        side: 'exterior',
+        anchor1: extPt1,
+        anchor2: extPt2,
+        normal: extNorm,
+        offset: COTE_OFFSET_EXT,
         label: formatCm(dist(extPt1, extPt2)),
       });
 
       // ── Anchors intérieurs (intersection des faces intérieures adjacentes) ──
       const intNorm = plusIsInt ? nPlus : { x: -nPlus.x, y: -nPlus.y };
 
-      const node1Id  = room.nodeIds[i]!;
-      const node2Id  = room.nodeIds[(i + 1) % n]!;
-      const adjIdx1  = (i - 1 + room.wallIds.length) % room.wallIds.length;
-      const adjIdx2  = (i + 1) % room.wallIds.length;
+      const node1Id = room.nodeIds[i]!;
+      const node2Id = room.nodeIds[(i + 1) % n]!;
+      const adjIdx1 = (i - 1 + room.wallIds.length) % room.wallIds.length;
+      const adjIdx2 = (i + 1) % room.wallIds.length;
       const adjWall1 = walls.find((w) => w.id === room.wallIds[adjIdx1]!);
       const adjWall2 = walls.find((w) => w.id === room.wallIds[adjIdx2]!);
 
@@ -139,16 +150,37 @@ export function computeAutoCotations(walls: Wall[], nodes: WallNode[]): AutoCota
 
       const intNorm1 = interiorNormal(adjWall1, nodes, polyMap.get(adjWall1.id), centroid);
       const intNorm2 = interiorNormal(adjWall2, nodes, polyMap.get(adjWall2.id), centroid);
-      const dir1     = wallDir(adjWall1, nodes);
-      const dir2     = wallDir(adjWall2, nodes);
+      const dir1 = wallDir(adjWall1, nodes);
+      const dir2 = wallDir(adjWall2, nodes);
 
-      const intAnchor1 = interiorCorner(node1Id, wall, dir, intNorm, adjWall1, dir1, intNorm1, nodes);
-      const intAnchor2 = interiorCorner(node2Id, wall, dir, intNorm, adjWall2, dir2, intNorm2, nodes);
+      const intAnchor1 = interiorCorner(
+        node1Id,
+        wall,
+        dir,
+        intNorm,
+        adjWall1,
+        dir1,
+        intNorm1,
+        nodes,
+      );
+      const intAnchor2 = interiorCorner(
+        node2Id,
+        wall,
+        dir,
+        intNorm,
+        adjWall2,
+        dir2,
+        intNorm2,
+        nodes,
+      );
 
       result.push({
-        wallId, side: 'interior',
-        anchor1: intAnchor1, anchor2: intAnchor2,
-        normal: intNorm, offset: COTE_OFFSET_INT,
+        wallId,
+        side: 'interior',
+        anchor1: intAnchor1,
+        anchor2: intAnchor2,
+        normal: intNorm,
+        offset: COTE_OFFSET_INT,
         label: formatCm(dist(intAnchor1, intAnchor2)),
       });
     }
@@ -167,9 +199,9 @@ export function computeAutoCotations(walls: Wall[], nodes: WallNode[]): AutoCota
     if (wallsInRooms.has(wall.id) || wall.isDoor) continue;
     const p1 = nodePos(wall.node1Id, nodes);
     const p2 = nodePos(wall.node2Id, nodes);
-    const d  = dist(p1, p2);
+    const d = dist(p1, p2);
     if (d < 1) continue;
-    const dir: Point    = { x: (p2.x - p1.x) / d, y: (p2.y - p1.y) / d };
+    const dir: Point = { x: (p2.x - p1.x) / d, y: (p2.y - p1.y) / d };
     const normal: Point = { x: -dir.y, y: dir.x };
 
     const deg1 = nodeDegree.get(wall.node1Id) ?? 0;
@@ -181,19 +213,23 @@ export function computeAutoCotations(walls: Wall[], nodes: WallNode[]): AutoCota
     if (deg1 === 1 && deg2 > 1) {
       // p1 libre, p2 connecté → reculer anchor2 de tAdj/2 vers p1
       const adj = walls.filter(
-        (w) => !w.isDoor && w.id !== wall.id &&
-               (w.node1Id === wall.node2Id || w.node2Id === wall.node2Id),
+        (w) =>
+          !w.isDoor &&
+          w.id !== wall.id &&
+          (w.node1Id === wall.node2Id || w.node2Id === wall.node2Id),
       );
       const tAdj = adj.length > 0 ? adj.reduce((s, w) => s + w.thickness, 0) / adj.length : 0;
-      anchor2 = { x: p2.x - dir.x * tAdj / 2, y: p2.y - dir.y * tAdj / 2 };
+      anchor2 = { x: p2.x - (dir.x * tAdj) / 2, y: p2.y - (dir.y * tAdj) / 2 };
     } else if (deg2 === 1 && deg1 > 1) {
       // p2 libre, p1 connecté → avancer anchor1 de tAdj/2 vers p2
       const adj = walls.filter(
-        (w) => !w.isDoor && w.id !== wall.id &&
-               (w.node1Id === wall.node1Id || w.node2Id === wall.node1Id),
+        (w) =>
+          !w.isDoor &&
+          w.id !== wall.id &&
+          (w.node1Id === wall.node1Id || w.node2Id === wall.node1Id),
       );
       const tAdj = adj.length > 0 ? adj.reduce((s, w) => s + w.thickness, 0) / adj.length : 0;
-      anchor1 = { x: p1.x + dir.x * tAdj / 2, y: p1.y + dir.y * tAdj / 2 };
+      anchor1 = { x: p1.x + (dir.x * tAdj) / 2, y: p1.y + (dir.y * tAdj) / 2 };
     }
     // Cas 2 (deg1===1 && deg2===1) : anchor1=p1, anchor2=p2 — inchangé
 
@@ -201,9 +237,12 @@ export function computeAutoCotations(walls: Wall[], nodes: WallNode[]): AutoCota
     if (anchorDist < 1) continue;
 
     result.push({
-      wallId: wall.id, side: 'isolated',
-      anchor1, anchor2,
-      normal, offset: COTE_OFFSET_ISO,
+      wallId: wall.id,
+      side: 'isolated',
+      anchor1,
+      anchor2,
+      normal,
+      offset: COTE_OFFSET_ISO,
       label: formatCm(anchorDist),
     });
   }

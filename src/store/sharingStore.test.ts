@@ -68,7 +68,15 @@ describe('sharingStore.shareProject', () => {
   it('throws ALREADY_SHARED when user is already a collaborator', async () => {
     mockFindUserByEmail.mockResolvedValueOnce({ id: 'user-2', displayName: 'Alice' });
     mockGetShares.mockResolvedValueOnce([
-      { id: 's1', projectId: 'proj-1', userId: 'user-2', userEmail: 'alice@x.com', userDisplayName: 'Alice', role: 'editor', createdAt: '2026-01-01' },
+      {
+        id: 's1',
+        projectId: 'proj-1',
+        userId: 'user-2',
+        userEmail: 'alice@x.com',
+        userDisplayName: 'Alice',
+        role: 'editor',
+        createdAt: '2026-01-01',
+      },
     ]);
     await expect(
       useSharingStore.getState().shareProject('proj-1', 'alice@x.com', 'viewer'),

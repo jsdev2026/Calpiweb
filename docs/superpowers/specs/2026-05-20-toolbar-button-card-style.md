@@ -27,12 +27,12 @@ For each of the 8 raw `<button>` tool elements (PARTITION, EXCLUDE, APPLY_H, APP
 // before
 tool === 'PARTITION'
   ? 'bg-violet-500 text-white shadow-md shadow-violet-500/30'
-  : 'hover:bg-violet-100 dark:hover:bg-violet-900/30 hover:text-violet-600 dark:hover:text-violet-300'
+  : 'hover:bg-violet-100 dark:hover:bg-violet-900/30 hover:text-violet-600 dark:hover:text-violet-300';
 
 // after
 tool === 'PARTITION'
   ? 'bg-violet-500 text-white shadow-md shadow-violet-500/30'
-  : `${TB_CARD} hover:bg-violet-100 dark:hover:bg-violet-900/30 hover:text-violet-600 dark:hover:text-violet-300`
+  : `${TB_CARD} hover:bg-violet-100 dark:hover:bg-violet-900/30 hover:text-violet-600 dark:hover:text-violet-300`;
 ```
 
 SELECT / WALL / DOOR already use `<Button variant="tool">` — no change needed.

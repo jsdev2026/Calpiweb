@@ -7,7 +7,8 @@ function dist(a: Point, b: Point): number {
 }
 
 function projectOntoSegment(cursor: Point, p1: Point, p2: Point) {
-  const dx = p2.x - p1.x, dy = p2.y - p1.y;
+  const dx = p2.x - p1.x,
+    dy = p2.y - p1.y;
   const lenSq = dx * dx + dy * dy;
   if (lenSq === 0) return null;
   const t = ((cursor.x - p1.x) * dx + (cursor.y - p1.y) * dy) / lenSq;
@@ -32,9 +33,9 @@ export function snapToWalls(
   faceRadiusPx: number,
   hvSnapPx: number,
 ): SnapResult | null {
-  const epR  = endpointRadiusPx / scale;
-  const faR  = faceRadiusPx / scale;
-  const hvR  = hvSnapPx / scale;
+  const epR = endpointRadiusPx / scale;
+  const faR = faceRadiusPx / scale;
+  const hvR = hvSnapPx / scale;
 
   // Collect node IDs actually used by walls
   const usedNodeIds = new Set(walls.flatMap((w) => [w.node1Id, w.node2Id]));
@@ -198,10 +199,11 @@ export function collinearSnap(
   let best: { point: Point; dist: number; dir: Point } | null = null;
 
   for (const wall of walls) {
-    const n1 = nodes.find(n => n.id === wall.node1Id);
-    const n2 = nodes.find(n => n.id === wall.node2Id);
+    const n1 = nodes.find((n) => n.id === wall.node1Id);
+    const n2 = nodes.find((n) => n.id === wall.node2Id);
     if (!n1 || !n2) continue;
-    const dx = n2.x - n1.x, dy = n2.y - n1.y;
+    const dx = n2.x - n1.x,
+      dy = n2.y - n1.y;
     const lenSq = dx * dx + dy * dy;
     if (lenSq < 1) continue;
     const len = Math.sqrt(lenSq);
@@ -230,8 +232,10 @@ export function collinearSnapForNode(
 
   for (let i = 0; i < adjacentNodes.length; i++) {
     for (let j = i + 1; j < adjacentNodes.length; j++) {
-      const A = adjacentNodes[i]!, B = adjacentNodes[j]!;
-      const dx = B.x - A.x, dy = B.y - A.y;
+      const A = adjacentNodes[i]!,
+        B = adjacentNodes[j]!;
+      const dx = B.x - A.x,
+        dy = B.y - A.y;
       const lenSq = dx * dx + dy * dy;
       if (lenSq < 1) continue;
       const len = Math.sqrt(lenSq);

@@ -13,12 +13,12 @@ Afficher automatiquement des lignes de cote sur le canvas lorsque le `wallEngine
 
 ## Décisions de design
 
-| Question | Réponse |
-|----------|---------|
-| Mode | Affichage pur — pas de persistence, pas de contrainte |
-| Positionnement | Extérieur (hors-tout) **et** intérieur (vide utile) |
-| Granularité | Par pièce fermée + par mur isolé |
-| Déclenchement | Toujours visible dès qu'il y a des murs |
+| Question       | Réponse                                               |
+| -------------- | ----------------------------------------------------- |
+| Mode           | Affichage pur — pas de persistence, pas de contrainte |
+| Positionnement | Extérieur (hors-tout) **et** intérieur (vide utile)   |
+| Granularité    | Par pièce fermée + par mur isolé                      |
+| Déclenchement  | Toujours visible dès qu'il y a des murs               |
 
 ---
 
@@ -30,12 +30,12 @@ Afficher automatiquement des lignes de cote sur le canvas lorsque le `wallEngine
 export interface AutoCotation {
   wallId: string;
   side: 'exterior' | 'interior' | 'isolated';
-  anchor1: Point;   // coin face-mur côté node1 (face extérieure ou intérieure selon side)
-                    // pour side='isolated' : position du nœud (axe)
-  anchor2: Point;   // coin face-mur côté node2 (idem)
-  normal: Point;    // vecteur unitaire pointant vers la ligne de cote
-  offset: number;   // distance anchor → ligne de cote (mm)
-  label: string;    // "X.X cm" (formatCm depuis src/utils/formatters.ts)
+  anchor1: Point; // coin face-mur côté node1 (face extérieure ou intérieure selon side)
+  // pour side='isolated' : position du nœud (axe)
+  anchor2: Point; // coin face-mur côté node2 (idem)
+  normal: Point; // vecteur unitaire pointant vers la ligne de cote
+  offset: number; // distance anchor → ligne de cote (mm)
+  label: string; // "X.X cm" (formatCm depuis src/utils/formatters.ts)
 }
 ```
 
@@ -53,16 +53,16 @@ const COTE_OFFSET_ISO = 300; // mm — offset depuis l'axe du mur (mur isolé)
 
 ### Nouveaux fichiers
 
-| Fichier | Rôle |
-|---------|------|
-| `src/engine/geometry/wallCotation.ts` | Fonctions pures : détection polygones + calcul côtes |
-| `src/engine/geometry/wallCotation.test.ts` | Tests unitaires |
+| Fichier                                    | Rôle                                                 |
+| ------------------------------------------ | ---------------------------------------------------- |
+| `src/engine/geometry/wallCotation.ts`      | Fonctions pures : détection polygones + calcul côtes |
+| `src/engine/geometry/wallCotation.test.ts` | Tests unitaires                                      |
 
 ### Fichiers modifiés
 
-| Fichier | Modification |
-|---------|-------------|
-| `src/types/wall.ts` | Ajouter `AutoCotation` |
+| Fichier                                     | Modification                    |
+| ------------------------------------------- | ------------------------------- |
+| `src/types/wall.ts`                         | Ajouter `AutoCotation`          |
 | `src/components/plan/WallDrawingCanvas.tsx` | `useMemo` + rendu SVG des côtes |
 
 ---
@@ -91,6 +91,7 @@ const COTE_OFFSET_ISO = 300; // mm — offset depuis l'axe du mur (mur isolé)
 3. Construire `wallsInRooms = new Set<string>()` pour tracker les murs utilisés
 
 **Pour chaque pièce fermée :**
+
 - Calculer le centroïde : moyenne des positions des nœuds du cycle
 - Pour chaque mur de la pièce :
   - Récupérer son `WallPolygon` (4 points)
@@ -103,6 +104,7 @@ const COTE_OFFSET_ISO = 300; // mm — offset depuis l'axe du mur (mur isolé)
   - Label = `formatCm(distance entre les deux anchors)`
 
 **Pour les murs non inclus dans une pièce (`isolated`) :**
+
 - `anchor1 = nodePos(wall.node1Id)`, `anchor2 = nodePos(wall.node2Id)`
 - `normal` = perpendiculaire gauche du vecteur directeur du mur
 - `offset = COTE_OFFSET_ISO`
@@ -113,10 +115,7 @@ const COTE_OFFSET_ISO = 300; // mm — offset depuis l'axe du mur (mur isolé)
 ## Rendu SVG dans `WallDrawingCanvas.tsx`
 
 ```typescript
-const autoCotations = useMemo(
-  () => computeAutoCotations(walls, nodes),
-  [walls, nodes]
-);
+const autoCotations = useMemo(() => computeAutoCotations(walls, nodes), [walls, nodes]);
 ```
 
 **Pour chaque `AutoCotation`**, inséré après le bloc joint lines (avant les poignées) :
@@ -128,6 +127,7 @@ mid   = (lineA + lineB) / 2
 ```
 
 Éléments SVG :
+
 - Ligne témoin pointillée : `anchor1 → lineA` et `anchor2 → lineB`
 - Ligne de cote pleine : `lineA → lineB`
 - Ticks perpendiculaires aux deux extrémités
@@ -136,6 +136,7 @@ mid   = (lineA + lineB) / 2
 - Épaisseur des traits : `1/scale` (reste lisible à tout niveau de zoom)
 
 **Couleurs :**
+
 - `exterior` → `#22c55e` (vert)
 - `interior` → `#3b82f6` (bleu)
 - `isolated` → `#f97316` (orange)
@@ -146,22 +147,22 @@ mid   = (lineA + lineB) / 2
 
 ### `detectClosedPolygons`
 
-| Test | Attendu |
-|------|---------|
-| Pièce rectangulaire 4 murs | 1 polygone, 4 wallIds |
-| 4 murs fermés + 1 mur isolé | 1 polygone, mur isolé non inclus |
-| T-junction (3 murs dont un interne) | 0 polygone détecté |
-| 2 murs seulement (segment ouvert) | 0 polygone |
+| Test                                | Attendu                          |
+| ----------------------------------- | -------------------------------- |
+| Pièce rectangulaire 4 murs          | 1 polygone, 4 wallIds            |
+| 4 murs fermés + 1 mur isolé         | 1 polygone, mur isolé non inclus |
+| T-junction (3 murs dont un interne) | 0 polygone détecté               |
+| 2 murs seulement (segment ouvert)   | 0 polygone                       |
 
 ### `computeAutoCotations`
 
-| Test | Attendu |
-|------|---------|
-| Pièce 4 murs égaux | 8 côtes (2 par mur) |
-| Côte ext top > côte int top | `distExt > distInt` (hors-tout > vide utile) |
-| Label de la côte ext top | `formatCm(distExtFaceToFace)` |
-| Mur isolé horizontal | 1 côte `isolated`, label = longueur node-à-node |
-| Mur longueur 0 (node1 === node2 pos) | Ignoré, 0 côte |
+| Test                                            | Attendu                                          |
+| ----------------------------------------------- | ------------------------------------------------ |
+| Pièce 4 murs égaux                              | 8 côtes (2 par mur)                              |
+| Côte ext top > côte int top                     | `distExt > distInt` (hors-tout > vide utile)     |
+| Label de la côte ext top                        | `formatCm(distExtFaceToFace)`                    |
+| Mur isolé horizontal                            | 1 côte `isolated`, label = longueur node-à-node  |
+| Mur longueur 0 (node1 === node2 pos)            | Ignoré, 0 côte                                   |
 | Côte isolated : normal = perpendiculaire gauche | `normal.x ≈ 0, normal.y ≈ 1` pour mur horizontal |
 
 ---
@@ -173,6 +174,7 @@ mid   = (lineA + lineB) / 2
 - **Orange** = mur isolé (axe nœud → nœud)
 
 Pour une pièce rectangulaire 200mm × 140mm, épaisseur 20mm :
+
 - Ext width = 220mm → "22.0 cm"
 - Ext height = 160mm → "16.0 cm"
 - Int width = 180mm → "18.0 cm"

@@ -17,14 +17,20 @@ export interface QuantityPlanViewProps {
   doorOpenings?: DoorOpening[];
 }
 
-export const QuantityPlanView = ({ result, config, rooms, highlightGroup, wallPolygons, doorOpenings }: QuantityPlanViewProps) => {
+export const QuantityPlanView = ({
+  result,
+  config,
+  rooms,
+  highlightGroup,
+  wallPolygons,
+  doorOpenings,
+}: QuantityPlanViewProps) => {
   const validRooms = rooms.filter((r) => r.points.length >= 3);
   const allPoints = validRooms.flatMap((r) => r.points);
 
   // Bounding box (fallback si pas de pièces valides)
-  const bbox = allPoints.length > 0
-    ? getBoundingBox(allPoints)
-    : { minX: 0, minY: 0, maxX: 1000, maxY: 1000 };
+  const bbox =
+    allPoints.length > 0 ? getBoundingBox(allPoints) : { minX: 0, minY: 0, maxX: 1000, maxY: 1000 };
   const pad = Math.max(bbox.maxX - bbox.minX, bbox.maxY - bbox.minY) * 0.1;
   const initX = bbox.minX - pad;
   const initY = bbox.minY - pad;
@@ -41,8 +47,7 @@ export const QuantityPlanView = ({ result, config, rooms, highlightGroup, wallPo
   const dragRef = useRef<{ x: number; y: number } | null>(null);
   const touchRef = useRef<{ dist: number; midX: number; midY: number; vb: typeof vb } | null>(null);
 
-  const isDirty =
-    vb.x !== initX || vb.y !== initY || vb.w !== initW || vb.h !== initH;
+  const isDirty = vb.x !== initX || vb.y !== initY || vb.w !== initW || vb.h !== initH;
 
   // ── Wheel (passive: false) + touchmove (passive: false) via useEffect ──
   useEffect(() => {
@@ -78,7 +83,16 @@ export const QuantityPlanView = ({ result, config, rooms, highlightGroup, wallPo
       setVb((prev) => {
         const svgMx = prev.x + mx * (prev.w / rect.width);
         const svgMy = prev.y + my * (prev.h / rect.height);
-        return clampAndApply(prev.w * factor, prev.h * factor, svgMx, svgMy, mx, my, rect.width, rect.height);
+        return clampAndApply(
+          prev.w * factor,
+          prev.h * factor,
+          svgMx,
+          svgMy,
+          mx,
+          my,
+          rect.width,
+          rect.height,
+        );
       });
     };
 
@@ -110,7 +124,16 @@ export const QuantityPlanView = ({ result, config, rooms, highlightGroup, wallPo
         setVb((prev) => {
           const svgMx = prev.x + mx * (prev.w / rect.width);
           const svgMy = prev.y + my * (prev.h / rect.height);
-          return clampAndApply(prev.w * factor, prev.h * factor, svgMx, svgMy, mx, my, rect.width, rect.height);
+          return clampAndApply(
+            prev.w * factor,
+            prev.h * factor,
+            svgMx,
+            svgMy,
+            mx,
+            my,
+            rect.width,
+            rect.height,
+          );
         });
         touchRef.current = { ...touchRef.current, dist: newDist, midX, midY };
       }
@@ -186,7 +209,7 @@ export const QuantityPlanView = ({ result, config, rooms, highlightGroup, wallPo
       <div
         ref={wrapperRef}
         data-testid="plan-wrapper"
-        className={`relative flex flex-1 overflow-hidden rounded-2xl border border-gray-200 bg-gray-100 dark:border-zinc-800 dark:bg-zinc-950 select-none ${
+        className={`relative flex flex-1 select-none overflow-hidden rounded-2xl border border-gray-200 bg-gray-100 dark:border-zinc-800 dark:bg-zinc-950 ${
           dragging ? 'cursor-grabbing' : 'cursor-grab'
         }`}
         onMouseDown={handleMouseDown}

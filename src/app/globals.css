@@ -5,95 +5,96 @@
 /* ─── Design tokens ─────────────────────────────────────────────────────────── */
 
 :root {
-  --accent:   #E8671A;
-  --accent-d: #C45510;
-  --accent-l: #FEF3EC;
-  --accent-2: #4A7CB5;
+  --accent: #e8671a;
+  --accent-d: #c45510;
+  --accent-l: #fef3ec;
+  --accent-2: #4a7cb5;
 
-  --bg:    #F0F2F5;
-  --surf:  #FFFFFF;
-  --surf2: #F8F9FB;
-  --surf3: #EFF1F4;
+  --bg: #f0f2f5;
+  --surf: #ffffff;
+  --surf2: #f8f9fb;
+  --surf3: #eff1f4;
 
-  --text:  #111827;
-  --text2: #4B5563;
-  --muted: #9CA3AF;
+  --text: #111827;
+  --text2: #4b5563;
+  --muted: #9ca3af;
 
-  --bdr:  #E5E7EB;
-  --bdr2: #D1D5DB;
+  --bdr: #e5e7eb;
+  --bdr2: #d1d5db;
 
-  --sh:    0 1px 3px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.04);
-  --sh-md: 0 4px 16px rgba(0,0,0,.09);
-  --sh-lg: 0 12px 40px rgba(0,0,0,.13);
+  --sh: 0 1px 3px rgba(0, 0, 0, 0.07), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --sh-md: 0 4px 16px rgba(0, 0, 0, 0.09);
+  --sh-lg: 0 12px 40px rgba(0, 0, 0, 0.13);
 
   /* Canvas drawing area */
-  --canvas-bg:           #E8EBF0;
-  --canvas-dot:          #C4C7CC;
-  --canvas-poly-active:  rgba(226,232,240,0.95);
-  --canvas-poly-inact:   rgba(226,232,240,0.45);
-  --canvas-label-bg:     rgba(255,255,255,0.93);
-  --canvas-label-text:   #111827;
-  --canvas-label-muted:  #6B7280;
-  --canvas-ghost-bg:     rgba(248,248,250,0.88);
-  --canvas-wall-inact:   #9CA3AF;
-  --canvas-wall:         #64748b;
-  --canvas-wall-joint:   #94a3b8;
-  --canvas-vtx-default:  #94A3B8;
-  --canvas-name-active:  #6B7280;
-  --canvas-name-inact:   #9CA3AF;
+  --canvas-bg: #e8ebf0;
+  --canvas-dot: #c4c7cc;
+  --canvas-poly-active: rgba(226, 232, 240, 0.95);
+  --canvas-poly-inact: rgba(226, 232, 240, 0.45);
+  --canvas-label-bg: rgba(255, 255, 255, 0.93);
+  --canvas-label-text: #111827;
+  --canvas-label-muted: #6b7280;
+  --canvas-ghost-bg: rgba(248, 248, 250, 0.88);
+  --canvas-wall-inact: #9ca3af;
+  --canvas-wall: #64748b;
+  --canvas-wall-joint: #94a3b8;
+  --canvas-vtx-default: #94a3b8;
+  --canvas-name-active: #6b7280;
+  --canvas-name-inact: #9ca3af;
 
   /* Tile visualization */
-  --tile-cut-bg:   #cbd5e1;
-  --tile-joint:    #94a3b8;
+  --tile-cut-bg: #cbd5e1;
+  --tile-joint: #94a3b8;
   --tile-thumb-bg: #e5e7eb;
-  --tile-thumb-bdr:#9ca3af;
+  --tile-thumb-bdr: #9ca3af;
 
   --topbar: 48px;
-  --tabs:   44px;
-  --r:      10px;
-  --rs:     6px;
-  --rl:     16px;
+  --tabs: 44px;
+  --r: 10px;
+  --rs: 6px;
+  --rl: 16px;
 }
 
-[data-dark="true"] {
-  --bg:    #0D1117;
-  --surf:  #161B22;
-  --surf2: #1C2430;
-  --surf3: #21262D;
+[data-dark='true'] {
+  --bg: #0d1117;
+  --surf: #161b22;
+  --surf2: #1c2430;
+  --surf3: #21262d;
 
-  --text:  #E6EDF3;
-  --text2: #8B949E;
-  --muted: #484F58;
+  --text: #e6edf3;
+  --text2: #8b949e;
+  --muted: #484f58;
 
-  --bdr:  #30363D;
-  --bdr2: #444C56;
+  --bdr: #30363d;
+  --bdr2: #444c56;
 
   /* Canvas drawing area — dark */
-  --canvas-bg:           #09090b;
-  --canvas-dot:          #27272a;
-  --canvas-poly-active:  #18181b;
-  --canvas-poly-inact:   rgba(24,24,27,0.38);
-  --canvas-label-bg:     rgba(24,24,27,0.95);
-  --canvas-label-text:   #f4f4f5;
-  --canvas-label-muted:  #a1a1aa;
-  --canvas-ghost-bg:     rgba(28,25,23,0.82);
-  --canvas-wall-inact:   #52525b;
-  --canvas-wall:         #52525b;
-  --canvas-wall-joint:   #3f3f46;
-  --canvas-vtx-default:  #27272a;
-  --canvas-name-active:  #71717a;
-  --canvas-name-inact:   #3f3f46;
+  --canvas-bg: #09090b;
+  --canvas-dot: #27272a;
+  --canvas-poly-active: #18181b;
+  --canvas-poly-inact: rgba(24, 24, 27, 0.38);
+  --canvas-label-bg: rgba(24, 24, 27, 0.95);
+  --canvas-label-text: #f4f4f5;
+  --canvas-label-muted: #a1a1aa;
+  --canvas-ghost-bg: rgba(28, 25, 23, 0.82);
+  --canvas-wall-inact: #52525b;
+  --canvas-wall: #52525b;
+  --canvas-wall-joint: #3f3f46;
+  --canvas-vtx-default: #27272a;
+  --canvas-name-active: #71717a;
+  --canvas-name-inact: #3f3f46;
 
   /* Tile visualization — dark */
-  --tile-cut-bg:   #3f3f46;
-  --tile-joint:    #09090b;
+  --tile-cut-bg: #3f3f46;
+  --tile-joint: #09090b;
   --tile-thumb-bg: #27272a;
-  --tile-thumb-bdr:#52525b;
+  --tile-thumb-bdr: #52525b;
 }
 
 /* ─── Base ───────────────────────────────────────────────────────────────────── */
 
-html, body {
+html,
+body {
   height: 100%;
 }
 
@@ -102,7 +103,9 @@ body {
   font-size: 13.5px;
   background-color: var(--bg);
   color: var(--text);
-  transition: background-color 0.2s, color 0.2s;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
 }
 
 /* ─── Shell utilities (used by new pages via className) ──────────────────────── */
@@ -136,58 +139,104 @@ body {
   color: var(--text2);
   border-bottom: 2px solid transparent;
   cursor: pointer;
-  transition: color 0.15s, background 0.15s;
+  transition:
+    color 0.15s,
+    background 0.15s;
   white-space: nowrap;
 }
-.shell-tab:hover { background: var(--surf2); color: var(--text); }
-.shell-tab.active { border-bottom-color: var(--accent); color: var(--accent); font-weight: 600; }
-.shell-tab:disabled { opacity: 0.4; cursor: not-allowed; }
+.shell-tab:hover {
+  background: var(--surf2);
+  color: var(--text);
+}
+.shell-tab.active {
+  border-bottom-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+.shell-tab:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
 
 .btn-primary {
-  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   padding: 7px 14px;
   background: linear-gradient(135deg, var(--accent) 0%, var(--accent-d) 100%);
   color: #fff;
-  border: none; border-radius: var(--rs);
-  font-size: 13.5px; font-weight: 600; cursor: pointer;
-  transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s;
-  box-shadow: 0 2px 8px rgba(232,103,26,.25);
+  border: none;
+  border-radius: var(--rs);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    opacity 0.15s,
+    transform 0.1s,
+    box-shadow 0.15s;
+  box-shadow: 0 2px 8px rgba(232, 103, 26, 0.25);
 }
 .btn-primary:hover {
   opacity: 0.88;
   transform: translateY(-1px);
-  box-shadow: 0 5px 16px rgba(232,103,26,.4);
+  box-shadow: 0 5px 16px rgba(232, 103, 26, 0.4);
 }
 
 .btn-secondary {
-  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   padding: 7px 14px;
-  background: var(--surf); border: 1px solid var(--bdr2); color: var(--text);
+  background: var(--surf);
+  border: 1px solid var(--bdr2);
+  color: var(--text);
   border-radius: var(--rs);
-  font-size: 13.5px; font-weight: 500; cursor: pointer;
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
   transition: background 0.15s;
 }
-.btn-secondary:hover { background: var(--surf2); }
+.btn-secondary:hover {
+  background: var(--surf2);
+}
 
 .btn-ghost {
-  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   padding: 7px 14px;
-  background: transparent; border: none; color: var(--text2);
+  background: transparent;
+  border: none;
+  color: var(--text2);
   border-radius: var(--rs);
-  font-size: 13.5px; font-weight: 500; cursor: pointer;
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
   transition: background 0.15s;
 }
-.btn-ghost:hover { background: var(--surf3); }
+.btn-ghost:hover {
+  background: var(--surf3);
+}
 
 .btn-icon {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 34px; height: 34px;
-  background: var(--surf2); border: 1px solid var(--bdr);
-  border-radius: var(--rs); cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  background: var(--surf2);
+  border: 1px solid var(--bdr);
+  border-radius: var(--rs);
+  cursor: pointer;
   color: var(--text2);
   transition: background 0.15s;
 }
-.btn-icon:hover { background: var(--surf3); }
+.btn-icon:hover {
+  background: var(--surf3);
+}
 
 .kpi-card {
   background: var(--surf);
@@ -198,23 +247,47 @@ body {
   transition: box-shadow 0.15s;
 }
 .kpi-card.accent {
-  border-color: rgba(232,103,26,0.5);
+  border-color: rgba(232, 103, 26, 0.5);
   background: linear-gradient(135deg, var(--accent-l) 0%, #fff 100%);
-  box-shadow: 0 2px 12px rgba(232,103,26,0.12);
+  box-shadow: 0 2px 12px rgba(232, 103, 26, 0.12);
 }
-[data-dark="true"] .kpi-card.accent {
-  background: linear-gradient(135deg, rgba(232,103,26,0.12) 0%, transparent 100%);
+[data-dark='true'] .kpi-card.accent {
+  background: linear-gradient(135deg, rgba(232, 103, 26, 0.12) 0%, transparent 100%);
 }
 
-.tag-new  { background: #EDE9FE; color: #5B21B6; }
-.tag-wip  { background: #FEF3C7; color: #92400E; }
-.tag-ok   { background: #D1FAE5; color: #065F46; }
-.tag-pro  { background: var(--accent-l); color: var(--accent); }
+.tag-new {
+  background: #ede9fe;
+  color: #5b21b6;
+}
+.tag-wip {
+  background: #fef3c7;
+  color: #92400e;
+}
+.tag-ok {
+  background: #d1fae5;
+  color: #065f46;
+}
+.tag-pro {
+  background: var(--accent-l);
+  color: var(--accent);
+}
 
-[data-dark="true"] .tag-new  { background: #2e1b5e; color: #c4b5fd; }
-[data-dark="true"] .tag-wip  { background: #3b2808; color: #fcd34d; }
-[data-dark="true"] .tag-ok   { background: #052e16; color: #6ee7b7; }
-[data-dark="true"] .tag-pro  { background: rgba(232,103,26,.15); color: var(--accent); }
+[data-dark='true'] .tag-new {
+  background: #2e1b5e;
+  color: #c4b5fd;
+}
+[data-dark='true'] .tag-wip {
+  background: #3b2808;
+  color: #fcd34d;
+}
+[data-dark='true'] .tag-ok {
+  background: #052e16;
+  color: #6ee7b7;
+}
+[data-dark='true'] .tag-pro {
+  background: rgba(232, 103, 26, 0.15);
+  color: var(--accent);
+}
 
 /* ─── Print ──────────────────────────────────────────────────────────────────── */
 
@@ -242,5 +315,9 @@ body {
 /* ─── Mobile — prevent iOS Safari auto-zoom on input focus ──────────────────── */
 
 @media (pointer: coarse) {
-  input, select, textarea { font-size: 16px !important; }
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
 }

@@ -43,12 +43,12 @@ export function wallFaceCycles(walls: Wall[], nodes: WallNode[]): FaceCycle[] {
   const coreWalls = pruneLeaves(walls);
   if (coreWalls.length === 0) return [];
 
-  const nodeMap = new Map(nodes.map(n => [n.id, n]));
-  const validWalls = coreWalls.filter(w => nodeMap.has(w.node1Id) && nodeMap.has(w.node2Id));
+  const nodeMap = new Map(nodes.map((n) => [n.id, n]));
+  const validWalls = coreWalls.filter((w) => nodeMap.has(w.node1Id) && nodeMap.has(w.node2Id));
   const getPos = (id: string) => nodeMap.get(id)!;
 
   type HE = { from: string; to: string };
-  const halfEdges: HE[] = validWalls.flatMap(w => [
+  const halfEdges: HE[] = validWalls.flatMap((w) => [
     { from: w.node1Id, to: w.node2Id },
     { from: w.node2Id, to: w.node1Id },
   ]);
@@ -65,12 +65,15 @@ export function wallFaceCycles(walls: Wall[], nodes: WallNode[]): FaceCycle[] {
     const θRev = Math.atan2(u.y - v.y, u.x - v.x);
     let best: HE | null = null;
     let bestCw = Infinity;
-    for (const e of (out.get(he.to) ?? [])) {
+    for (const e of out.get(he.to) ?? []) {
       if (e.to === he.from) continue;
       const w = getPos(e.to);
       const θOut = Math.atan2(w.y - v.y, w.x - v.x);
-      const cw = ((θRev - θOut) + 2 * Math.PI) % (2 * Math.PI);
-      if (cw < bestCw) { bestCw = cw; best = e; }
+      const cw = (θRev - θOut + 2 * Math.PI) % (2 * Math.PI);
+      if (cw < bestCw) {
+        bestCw = cw;
+        best = e;
+      }
     }
     return best;
   };
@@ -96,7 +99,10 @@ export function wallFaceCycles(walls: Wall[], nodes: WallNode[]): FaceCycle[] {
       cur = nextHE(cur);
     }
     if (cur && key(cur) === key(start) && cycle.length >= 3) {
-      const pts = cycle.map(he => { const p = getPos(he.from); return { x: p.x, y: p.y }; });
+      const pts = cycle.map((he) => {
+        const p = getPos(he.from);
+        return { x: p.x, y: p.y };
+      });
       let s = 0;
       for (let i = 0; i < pts.length; i++) {
         const j = (i + 1) % pts.length;
@@ -104,8 +110,8 @@ export function wallFaceCycles(walls: Wall[], nodes: WallNode[]): FaceCycle[] {
       }
       if (s / 2 > 0) {
         cycles.push({
-          nodeIds: cycle.map(he => he.from),
-          wallIds: cycle.map(he => wallLookup.get(`${he.from}\x00${he.to}`) ?? ''),
+          nodeIds: cycle.map((he) => he.from),
+          wallIds: cycle.map((he) => wallLookup.get(`${he.from}\x00${he.to}`) ?? ''),
         });
       }
     }
@@ -129,9 +135,12 @@ export function wallsToRooms(
   nodes: WallNode[],
   excludedZones: WallExcludedZone[] = [],
 ): Room[] {
-  const nodeMap = new Map(nodes.map(n => [n.id, n]));
-  const getPos = (id: string) => { const n = nodeMap.get(id)!; return { x: n.x, y: n.y }; };
-  const wallMap = new Map(walls.map(w => [w.id, w]));
+  const nodeMap = new Map(nodes.map((n) => [n.id, n]));
+  const getPos = (id: string) => {
+    const n = nodeMap.get(id)!;
+    return { x: n.x, y: n.y };
+  };
+  const wallMap = new Map(walls.map((w) => [w.id, w]));
 
   const cycles = wallFaceCycles(walls, nodes);
 
@@ -142,13 +151,15 @@ export function wallsToRooms(
     const cya = ptsA.reduce((s, p) => s + p.y, 0) / ptsA.length;
     const cyb = ptsB.reduce((s, p) => s + p.y, 0) / ptsB.length;
     if (Math.abs(cya - cyb) > 1) return cya - cyb;
-    return (ptsA.reduce((s, p) => s + p.x, 0) / ptsA.length) -
-           (ptsB.reduce((s, p) => s + p.x, 0) / ptsB.length);
+    return (
+      ptsA.reduce((s, p) => s + p.x, 0) / ptsA.length -
+      ptsB.reduce((s, p) => s + p.x, 0) / ptsB.length
+    );
   });
 
   return cycles.map((cycle, idx) => {
-    const facePts = cycle.nodeIds.map(id => getPos(id));
-    const roomZones = excludedZones.filter(zone => {
+    const facePts = cycle.nodeIds.map((id) => getPos(id));
+    const roomZones = excludedZones.filter((zone) => {
       if (zone.nodes.length < 3) return false;
       const cx = zone.nodes.reduce((s, n) => s + n.x, 0) / zone.nodes.length;
       const cy = zone.nodes.reduce((s, n) => s + n.y, 0) / zone.nodes.length;
@@ -158,11 +169,11 @@ export function wallsToRooms(
       id: faceId(cycle.nodeIds),
       name: `Pièce ${idx + 1}`,
       points: facePts,
-      edges: cycle.wallIds.map(wid => (wallMap.get(wid)?.isDoor ? 'DOOR' : 'WALL') as EdgeType),
+      edges: cycle.wallIds.map((wid) => (wallMap.get(wid)?.isDoor ? 'DOOR' : 'WALL') as EdgeType),
       partitions: [],
-      excludedZones: roomZones.map(zone => ({
+      excludedZones: roomZones.map((zone) => ({
         id: zone.id,
-        points: zone.nodes.map(n => ({ x: n.x, y: n.y })),
+        points: zone.nodes.map((n) => ({ x: n.x, y: n.y })),
         label: zone.label,
       })),
     };

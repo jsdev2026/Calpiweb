@@ -12,27 +12,28 @@
 
 ## Fichiers touchés
 
-| Action | Fichier | Rôle |
-|--------|---------|------|
-| Create | `supabase/migrations/002_project_sharing.sql` | 3 tables + RLS policies + profils enrichis |
-| Create | `src/types/sharing.ts` | Types ShareRole, ProjectShare, ProjectLock, ProjectNotification |
-| Modify | `src/types/project.ts` | Ajouter `myRole?` et `lock?` à Project |
-| Create | `src/lib/supabase/sharing.ts` | Toutes les opérations Supabase du partage |
-| Create | `src/lib/supabase/sharing.test.ts` | Tests unitaires de sharingDb |
-| Modify | `src/lib/supabase/db.ts` | Étendre `getAll()` pour shared projects + myRole + lock |
-| Modify | `src/lib/supabase/db.test.ts` | Tests du getAll étendu |
-| Create | `src/store/sharingStore.ts` | Zustand store : shares, notifications, locks |
-| Create | `src/store/sharingStore.test.ts` | Tests unitaires du store |
-| Modify | `src/components/home/ProjectList.tsx` | Split "Mes projets" / "Partagés avec moi" + badge |
-| Create | `src/components/home/SharePanel.tsx` | Drawer de gestion des collaborateurs |
-| Create | `src/components/home/SharePanel.test.tsx` | Tests composant SharePanel |
-| Modify | `src/app/project/[id]/page.tsx` | Intégrer LockBanner + acquireLock/releaseLock |
+| Action | Fichier                                       | Rôle                                                            |
+| ------ | --------------------------------------------- | --------------------------------------------------------------- |
+| Create | `supabase/migrations/002_project_sharing.sql` | 3 tables + RLS policies + profils enrichis                      |
+| Create | `src/types/sharing.ts`                        | Types ShareRole, ProjectShare, ProjectLock, ProjectNotification |
+| Modify | `src/types/project.ts`                        | Ajouter `myRole?` et `lock?` à Project                          |
+| Create | `src/lib/supabase/sharing.ts`                 | Toutes les opérations Supabase du partage                       |
+| Create | `src/lib/supabase/sharing.test.ts`            | Tests unitaires de sharingDb                                    |
+| Modify | `src/lib/supabase/db.ts`                      | Étendre `getAll()` pour shared projects + myRole + lock         |
+| Modify | `src/lib/supabase/db.test.ts`                 | Tests du getAll étendu                                          |
+| Create | `src/store/sharingStore.ts`                   | Zustand store : shares, notifications, locks                    |
+| Create | `src/store/sharingStore.test.ts`              | Tests unitaires du store                                        |
+| Modify | `src/components/home/ProjectList.tsx`         | Split "Mes projets" / "Partagés avec moi" + badge               |
+| Create | `src/components/home/SharePanel.tsx`          | Drawer de gestion des collaborateurs                            |
+| Create | `src/components/home/SharePanel.test.tsx`     | Tests composant SharePanel                                      |
+| Modify | `src/app/project/[id]/page.tsx`               | Intégrer LockBanner + acquireLock/releaseLock                   |
 
 ---
 
 ## Task 1 : Types & migration SQL
 
 **Files:**
+
 - Create: `src/types/sharing.ts`
 - Modify: `src/types/project.ts`
 - Create: `supabase/migrations/002_project_sharing.sql`
@@ -252,6 +253,7 @@ git commit -m "feat(sharing): types + SQL migration for project_shares, locks, n
 ## Task 2 : Bibliothèque Supabase `sharingDb`
 
 **Files:**
+
 - Create: `src/lib/supabase/sharing.ts`
 - Create: `src/lib/supabase/sharing.test.ts`
 
@@ -303,7 +305,8 @@ describe('sharingDb.findUserByEmail', () => {
 
   it('returns user when found', async () => {
     mockMaybeSingle.mockResolvedValueOnce({
-      data: { id: 'user-2', display_name: 'Alice' }, error: null,
+      data: { id: 'user-2', display_name: 'Alice' },
+      error: null,
     });
     const result = await sharingDb.findUserByEmail('alice@example.com');
     expect(result).toEqual({ id: 'user-2', displayName: 'Alice' });
@@ -455,7 +458,9 @@ export const sharingDb = {
 
   async acquireLock(projectId: string): Promise<'acquired' | 'locked_by_other'> {
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) throw new Error('NOT_AUTHENTICATED');
 
     const { data: existing } = await supabase
@@ -470,29 +475,26 @@ export const sharingDb = {
     }
 
     const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
-    const { error } = await supabase
-      .from('project_locks')
-      .upsert({
-        project_id: projectId,
-        locked_by: user.id,
-        locked_at: new Date().toISOString(),
-        expires_at: expiresAt,
-      });
+    const { error } = await supabase.from('project_locks').upsert({
+      project_id: projectId,
+      locked_by: user.id,
+      locked_at: new Date().toISOString(),
+      expires_at: expiresAt,
+    });
     if (error) throw new Error(`[${error.code}] ${error.message}`);
     return 'acquired';
   },
 
   async releaseLock(projectId: string): Promise<void> {
     const supabase = createClient();
-    await supabase
-      .from('project_locks')
-      .delete()
-      .eq('project_id', projectId);
+    await supabase.from('project_locks').delete().eq('project_id', projectId);
   },
 
   async refreshLock(projectId: string): Promise<void> {
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) return;
     const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
     await supabase
@@ -539,10 +541,7 @@ export const sharingDb = {
 
   async markNotificationsSeen(): Promise<void> {
     const supabase = createClient();
-    await supabase
-      .from('project_notifications')
-      .update({ seen: true })
-      .eq('seen', false);
+    await supabase.from('project_notifications').update({ seen: true }).eq('seen', false);
   },
 };
 ```
@@ -567,6 +566,7 @@ git commit -m "feat(sharing): sharingDb — findUserByEmail, shares, locks, noti
 ## Task 3 : Étendre `db.getAll` pour les projets partagés
 
 **Files:**
+
 - Modify: `src/lib/supabase/db.ts`
 - Modify: `src/lib/supabase/db.test.ts`
 
@@ -582,7 +582,10 @@ describe('supabaseDb.getAll — with shared projects', () => {
     mockGetUser.mockResolvedValueOnce({ data: { user: { id: 'user-1' } } });
     const p = makeProject();
     // First call: projects
-    mockOrder.mockResolvedValueOnce({ data: [{ id: p.id, user_id: 'user-1', data: p }], error: null });
+    mockOrder.mockResolvedValueOnce({
+      data: [{ id: p.id, user_id: 'user-1', data: p }],
+      error: null,
+    });
     // Second call: shares
     mockOrder.mockResolvedValueOnce({ data: [], error: null });
     // Third call: locks
@@ -595,7 +598,10 @@ describe('supabaseDb.getAll — with shared projects', () => {
   it('sets myRole to editor for shared project', async () => {
     mockGetUser.mockResolvedValueOnce({ data: { user: { id: 'user-1' } } });
     const p = makeProject('shared-proj');
-    mockOrder.mockResolvedValueOnce({ data: [{ id: p.id, user_id: 'user-99', data: p }], error: null });
+    mockOrder.mockResolvedValueOnce({
+      data: [{ id: p.id, user_id: 'user-99', data: p }],
+      error: null,
+    });
     mockOrder.mockResolvedValueOnce({ data: [{ project_id: p.id, role: 'editor' }], error: null });
     mockIn.mockResolvedValueOnce({ data: [], error: null });
 
@@ -606,6 +612,7 @@ describe('supabaseDb.getAll — with shared projects', () => {
 ```
 
 Also add `mockIn` to the mock chain at top of db.test.ts:
+
 ```ts
 const mockIn = vi.fn();
 // Add to mockChain:
@@ -704,6 +711,7 @@ git commit -m "feat(sharing): extend db.getAll to include shared projects with m
 ## Task 4 : `sharingStore` Zustand
 
 **Files:**
+
 - Create: `src/store/sharingStore.ts`
 - Create: `src/store/sharingStore.test.ts`
 
@@ -898,6 +906,7 @@ git commit -m "feat(sharing): sharingStore — shareProject, locks, notification
 ## Task 5 : ProjectList — split "Mes projets" / "Partagés avec moi" + badge
 
 **Files:**
+
 - Modify: `src/components/home/ProjectList.tsx`
 - Modify: `src/components/home/ProjectCard.tsx`
 
@@ -922,10 +931,18 @@ interface ProjectListProps {
   onShare: (project: Project) => void;
 }
 
-export const ProjectList = ({ projects, onCreate, onOpen, onDelete, onShare }: ProjectListProps) => {
+export const ProjectList = ({
+  projects,
+  onCreate,
+  onOpen,
+  onDelete,
+  onShare,
+}: ProjectListProps) => {
   const { unseenCount, loadNotifications, markNotificationsSeen } = useSharingStore();
 
-  useEffect(() => { void loadNotifications(); }, [loadNotifications]);
+  useEffect(() => {
+    void loadNotifications();
+  }, [loadNotifications]);
 
   const ownProjects = projects.filter((p) => !p.myRole || p.myRole === 'owner');
   const sharedProjects = projects.filter((p) => p.myRole === 'viewer' || p.myRole === 'editor');
@@ -1029,15 +1046,23 @@ export const ProjectCard = ({ project, onOpen, onDelete, onShare }: ProjectCardP
   const isOwner = !project.myRole || project.myRole === 'owner';
   const roleLabel = !isOwner ? ROLE_LABELS[project.myRole ?? ''] : null;
 
-  const handleDelete = (e: MouseEvent) => { e.stopPropagation(); onDelete(); };
-  const handleShare = (e: MouseEvent) => { e.stopPropagation(); onShare(); };
+  const handleDelete = (e: MouseEvent) => {
+    e.stopPropagation();
+    onDelete();
+  };
+  const handleShare = (e: MouseEvent) => {
+    e.stopPropagation();
+    onShare();
+  };
 
   return (
     <div
       role="button"
       tabIndex={0}
       onClick={onOpen}
-      onKeyDown={(e) => { if (e.key === 'Enter') onOpen(); }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') onOpen();
+      }}
       className="group flex h-64 cursor-pointer flex-col justify-between rounded-3xl border border-zinc-800 bg-zinc-900/50 p-8 shadow-sm transition-all duration-500 hover:border-blue-500/50 hover:bg-zinc-900 hover:shadow-2xl hover:shadow-blue-500/5"
     >
       <div>
@@ -1117,6 +1142,7 @@ git commit -m "feat(sharing): split ProjectList into own/shared sections + role 
 ## Task 6 : Composant `SharePanel`
 
 **Files:**
+
 - Create: `src/components/home/SharePanel.tsx`
 - Create: `src/components/home/SharePanel.test.tsx`
 
@@ -1136,9 +1162,13 @@ vi.mock('@/store/sharingStore', () => ({
       shares: {
         'proj-1': [
           {
-            id: 's1', projectId: 'proj-1', userId: 'user-2',
-            userEmail: 'alice@x.com', userDisplayName: 'Alice',
-            role: 'editor', createdAt: '2026-01-01',
+            id: 's1',
+            projectId: 'proj-1',
+            userId: 'user-2',
+            userEmail: 'alice@x.com',
+            userDisplayName: 'Alice',
+            role: 'editor',
+            createdAt: '2026-01-01',
           },
         ],
       },
@@ -1236,7 +1266,9 @@ export const SharePanel = ({ projectId, onClose }: SharePanelProps) => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => { void loadShares(projectId); }, [projectId, loadShares]);
+  useEffect(() => {
+    void loadShares(projectId);
+  }, [projectId, loadShares]);
 
   const handleInvite = async () => {
     if (!email.trim()) return;
@@ -1258,15 +1290,25 @@ export const SharePanel = ({ projectId, onClose }: SharePanelProps) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-end p-4" style={{ background: 'rgba(0,0,0,0.4)' }}>
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-end p-4"
+      style={{ background: 'rgba(0,0,0,0.4)' }}
+    >
       <div
         className="flex w-full max-w-sm flex-col rounded-2xl shadow-2xl"
         style={{ background: 'var(--surf)', border: '1px solid var(--bdr)', maxHeight: '85vh' }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b px-5 py-4" style={{ borderColor: 'var(--bdr)' }}>
-          <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>Partager le projet</h2>
-          <button type="button" className="btn-icon" onClick={onClose}><X size={15} /></button>
+        <div
+          className="flex items-center justify-between border-b px-5 py-4"
+          style={{ borderColor: 'var(--bdr)' }}
+        >
+          <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>
+            Partager le projet
+          </h2>
+          <button type="button" className="btn-icon" onClick={onClose}>
+            <X size={15} />
+          </button>
         </div>
 
         {/* Invite form */}
@@ -1275,27 +1317,42 @@ export const SharePanel = ({ projectId, onClose }: SharePanelProps) => {
             <input
               type="email"
               value={email}
-              onChange={(e) => { setEmail(e.target.value); setError(null); }}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setError(null);
+              }}
               placeholder="adresse@email.com"
               className="flex-1 rounded-lg px-3 py-2 text-[13px] outline-none"
-              style={{ background: 'var(--surf2)', border: '1px solid var(--bdr)', color: 'var(--text)' }}
-              onFocus={(e) => { e.target.style.borderColor = 'var(--accent)'; }}
-              onBlur={(e) => { e.target.style.borderColor = 'var(--bdr)'; }}
-              onKeyDown={(e) => { if (e.key === 'Enter') void handleInvite(); }}
+              style={{
+                background: 'var(--surf2)',
+                border: '1px solid var(--bdr)',
+                color: 'var(--text)',
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = 'var(--accent)';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = 'var(--bdr)';
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') void handleInvite();
+              }}
             />
             <select
               value={role}
               onChange={(e) => setRole(e.target.value as ShareRole)}
               className="rounded-lg px-2 py-2 text-[12px] outline-none"
-              style={{ background: 'var(--surf2)', border: '1px solid var(--bdr)', color: 'var(--text)' }}
+              style={{
+                background: 'var(--surf2)',
+                border: '1px solid var(--bdr)',
+                color: 'var(--text)',
+              }}
             >
               <option value="editor">Éditeur</option>
               <option value="viewer">Lecteur</option>
             </select>
           </div>
-          {error && (
-            <p className="mt-2 text-[12px] text-red-400">{error}</p>
-          )}
+          {error && <p className="mt-2 text-[12px] text-red-400">{error}</p>}
           <button
             type="button"
             className="btn-primary mt-3 w-full text-[13px]"
@@ -1324,7 +1381,9 @@ export const SharePanel = ({ projectId, onClose }: SharePanelProps) => {
                     <p className="text-[13px] font-medium" style={{ color: 'var(--text)' }}>
                       {c.userDisplayName || c.userEmail}
                     </p>
-                    <p className="text-[11px]" style={{ color: 'var(--muted)' }}>{c.userEmail}</p>
+                    <p className="text-[11px]" style={{ color: 'var(--muted)' }}>
+                      {c.userEmail}
+                    </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <span
@@ -1373,6 +1432,7 @@ git commit -m "feat(sharing): SharePanel component — invite, role select, revo
 ## Task 7 : Verrouillage dans la page workspace
 
 **Files:**
+
 - Modify: `src/app/project/[id]/page.tsx`
 
 - [ ] **Step 1 : Ajouter le `LockBanner` inline dans la page workspace**
@@ -1386,12 +1446,12 @@ import { useSharingStore } from '@/store/sharingStore';
 Dans le composant `WorkspacePage`, après `const removeNote = useProjectStore((s) => s.removeNote);`, ajouter :
 
 ```ts
-  const acquireLock = useSharingStore((s) => s.acquireLock);
-  const releaseLock = useSharingStore((s) => s.releaseLock);
-  const refreshLock = useSharingStore((s) => s.refreshLock);
+const acquireLock = useSharingStore((s) => s.acquireLock);
+const releaseLock = useSharingStore((s) => s.releaseLock);
+const refreshLock = useSharingStore((s) => s.refreshLock);
 
-  const [lockStatus, setLockStatus] = useState<'idle' | 'acquired' | 'locked_by_other'>('idle');
-  const [lockInfo, setLockInfo] = useState<{ lockedByDisplayName: string } | null>(null);
+const [lockStatus, setLockStatus] = useState<'idle' | 'acquired' | 'locked_by_other'>('idle');
+const [lockInfo, setLockInfo] = useState<{ lockedByDisplayName: string } | null>(null);
 ```
 
 - [ ] **Step 2 : Acquérir le verrou à l'ouverture du projet**
@@ -1399,32 +1459,41 @@ Dans le composant `WorkspacePage`, après `const removeNote = useProjectStore((s
 Après le `useEffect` qui appelle `setActive(id)`, ajouter :
 
 ```ts
-  useEffect(() => {
-    if (!hydrated || !activeProject) return;
-    const isEditor = activeProject.myRole === 'editor' || activeProject.myRole === 'owner';
-    if (!isEditor) return;
+useEffect(() => {
+  if (!hydrated || !activeProject) return;
+  const isEditor = activeProject.myRole === 'editor' || activeProject.myRole === 'owner';
+  if (!isEditor) return;
 
-    void acquireLock(id).then((status) => {
-      setLockStatus(status);
-      if (status === 'locked_by_other' && activeProject.lock) {
-        setLockInfo({ lockedByDisplayName: activeProject.lock.lockedByDisplayName });
-      }
-    });
+  void acquireLock(id).then((status) => {
+    setLockStatus(status);
+    if (status === 'locked_by_other' && activeProject.lock) {
+      setLockInfo({ lockedByDisplayName: activeProject.lock.lockedByDisplayName });
+    }
+  });
 
-    return () => { void releaseLock(id); };
-  }, [id, hydrated, activeProject?.myRole]);
+  return () => {
+    void releaseLock(id);
+  };
+}, [id, hydrated, activeProject?.myRole]);
 
-  useEffect(() => {
-    if (lockStatus !== 'acquired') return;
-    const interval = setInterval(() => { void refreshLock(id); }, 10 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, [id, lockStatus]);
+useEffect(() => {
+  if (lockStatus !== 'acquired') return;
+  const interval = setInterval(
+    () => {
+      void refreshLock(id);
+    },
+    10 * 60 * 1000,
+  );
+  return () => clearInterval(interval);
+}, [id, lockStatus]);
 
-  useEffect(() => {
-    const handler = () => { void releaseLock(id); };
-    window.addEventListener('beforeunload', handler);
-    return () => window.removeEventListener('beforeunload', handler);
-  }, [id]);
+useEffect(() => {
+  const handler = () => {
+    void releaseLock(id);
+  };
+  window.addEventListener('beforeunload', handler);
+  return () => window.removeEventListener('beforeunload', handler);
+}, [id]);
 ```
 
 - [ ] **Step 3 : Rendre le LockBanner dans le JSX**
@@ -1432,19 +1501,30 @@ Après le `useEffect` qui appelle `setActive(id)`, ajouter :
 Dans le JSX, juste après le `<header>` de la topbar (après la balise `</header>`) et avant `{/* Tab bar */}`, ajouter :
 
 ```tsx
-      {/* Lock banner */}
-      {lockStatus === 'locked_by_other' && (
-        <div className="flex items-center gap-2 border-b px-5 py-2 text-[12px]"
-          style={{ background: '#f97316/10', borderColor: 'var(--bdr)', color: '#f97316' }}>
-          <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-            <rect x="3" y="6" width="8" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.3"/>
-            <path d="M5 6V4.5a2 2 0 1 1 4 0V6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
-          </svg>
-          Édition en cours par{' '}
-          <strong>{lockInfo?.lockedByDisplayName ?? 'un autre utilisateur'}</strong>.{' '}
-          Vous êtes en lecture seule.
-        </div>
-      )}
+{
+  /* Lock banner */
+}
+{
+  lockStatus === 'locked_by_other' && (
+    <div
+      className="flex items-center gap-2 border-b px-5 py-2 text-[12px]"
+      style={{ background: '#f97316/10', borderColor: 'var(--bdr)', color: '#f97316' }}
+    >
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+        <rect x="3" y="6" width="8" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
+        <path
+          d="M5 6V4.5a2 2 0 1 1 4 0V6"
+          stroke="currentColor"
+          strokeWidth="1.3"
+          strokeLinecap="round"
+        />
+      </svg>
+      Édition en cours par{' '}
+      <strong>{lockInfo?.lockedByDisplayName ?? 'un autre utilisateur'}</strong>. Vous êtes en
+      lecture seule.
+    </div>
+  );
+}
 ```
 
 - [ ] **Step 4 : Ajouter le polling du verrou toutes les 60s (lecture seule → déblocage auto)**
@@ -1461,15 +1541,15 @@ Ajouter à `sharingStore.ts` la méthode `checkLock` :
 Dans la page workspace, après le `useEffect` du refresh (10 min), ajouter :
 
 ```ts
-  useEffect(() => {
-    if (lockStatus !== 'locked_by_other') return;
-    const interval = setInterval(async () => {
-      const status = await acquireLock(id);
-      setLockStatus(status);
-      if (status === 'acquired') setLockInfo(null);
-    }, 60 * 1000);
-    return () => clearInterval(interval);
-  }, [id, lockStatus]);
+useEffect(() => {
+  if (lockStatus !== 'locked_by_other') return;
+  const interval = setInterval(async () => {
+    const status = await acquireLock(id);
+    setLockStatus(status);
+    if (status === 'acquired') setLockInfo(null);
+  }, 60 * 1000);
+  return () => clearInterval(interval);
+}, [id, lockStatus]);
 ```
 
 - [ ] **Step 5 : Désactiver les modifications en lecture seule**
@@ -1477,7 +1557,7 @@ Dans la page workspace, après le `useEffect` du refresh (10 min), ajouter :
 Dans le composant, définir :
 
 ```ts
-  const isReadOnly = lockStatus === 'locked_by_other' || activeProject?.myRole === 'viewer';
+const isReadOnly = lockStatus === 'locked_by_other' || activeProject?.myRole === 'viewer';
 ```
 
 Passer `isReadOnly` comme prop aux composants qui modifient des données (les composants existants n'ont pas encore ce prop — cette étape se limite à bloquer le `updateActive` du store). Dans l'`updateActive` du store côté composant, vérifier `isReadOnly` avant de modifier :
@@ -1485,14 +1565,14 @@ Passer `isReadOnly` comme prop aux composants qui modifient des données (les co
 Sur la balise `<input>` du nom de projet dans la topbar, ajouter :
 
 ```tsx
-readOnly={isReadOnly}
-disabled={isReadOnly}
+readOnly = { isReadOnly };
+disabled = { isReadOnly };
 ```
 
 Et désactiver le bouton Settings :
 
 ```tsx
-disabled={isReadOnly}
+disabled = { isReadOnly };
 ```
 
 - [ ] **Step 6 : Vérifier la compilation TypeScript**
@@ -1523,6 +1603,7 @@ git commit -m "feat(sharing): lock acquisition, refresh, release + 60s poll + re
 ## Task 8 : Brancher SharePanel dans le dashboard
 
 **Files:**
+
 - Modify: `src/app/dashboard/page.tsx`
 
 - [ ] **Step 1 : Lire la page dashboard**
@@ -1540,6 +1621,7 @@ const [sharingProjectId, setSharingProjectId] = useState<string | null>(null);
 - [ ] **Step 3 : Passer `onShare` à `ProjectList` et rendre `SharePanel`**
 
 Dans le JSX du dashboard, modifier le rendu de `ProjectList` pour ajouter :
+
 ```tsx
 onShare={(project) => setSharingProjectId(project.id)}
 ```
@@ -1547,15 +1629,15 @@ onShare={(project) => setSharingProjectId(project.id)}
 Et juste après `ProjectList`, ajouter :
 
 ```tsx
-{sharingProjectId && (
-  <SharePanel
-    projectId={sharingProjectId}
-    onClose={() => setSharingProjectId(null)}
-  />
-)}
+{
+  sharingProjectId && (
+    <SharePanel projectId={sharingProjectId} onClose={() => setSharingProjectId(null)} />
+  );
+}
 ```
 
 Ajouter les imports :
+
 ```ts
 import { useState } from 'react';
 import { SharePanel } from '@/components/home/SharePanel';

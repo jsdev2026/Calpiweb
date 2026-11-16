@@ -34,7 +34,12 @@ describe('getPolygonArea', () => {
   it('returns 0 for fewer than 3 points', () => {
     expect(getPolygonArea([])).toBe(0);
     expect(getPolygonArea([{ x: 0, y: 0 }])).toBe(0);
-    expect(getPolygonArea([{ x: 0, y: 0 }, { x: 10, y: 0 }])).toBe(0);
+    expect(
+      getPolygonArea([
+        { x: 0, y: 0 },
+        { x: 10, y: 0 },
+      ]),
+    ).toBe(0);
   });
 
   it('computes the area of a 1000x1000 square', () => {
@@ -84,12 +89,7 @@ describe('getIntersection', () => {
   });
 
   it('finds the intersection of two crossing segments', () => {
-    const p = getIntersection(
-      { x: 0, y: 0 },
-      { x: 10, y: 10 },
-      { x: 0, y: 10 },
-      { x: 10, y: 0 },
-    );
+    const p = getIntersection({ x: 0, y: 0 }, { x: 10, y: 10 }, { x: 0, y: 10 }, { x: 10, y: 0 });
     expect(p).not.toBeNull();
     expect(p!.x).toBeCloseTo(5);
     expect(p!.y).toBeCloseTo(5);
@@ -121,7 +121,12 @@ describe('getBoundingBox', () => {
 function makeRect(w: number, h: number, edgeThicknesses?: (number | undefined)[]): Room {
   return {
     id: 'r1',
-    points: [{ x: 0, y: 0 }, { x: w, y: 0 }, { x: w, y: h }, { x: 0, y: h }],
+    points: [
+      { x: 0, y: 0 },
+      { x: w, y: 0 },
+      { x: w, y: h },
+      { x: 0, y: h },
+    ],
     edges: ['WALL', 'WALL', 'WALL', 'WALL'],
     edgeThicknesses,
   };
@@ -158,7 +163,14 @@ describe('insetRoomPolygon', () => {
   });
 
   it('returns original points for degenerate polygon (< 3 pts)', () => {
-    const room: Room = { id: 'r', points: [{ x: 0, y: 0 }, { x: 1, y: 0 }], edges: [] };
+    const room: Room = {
+      id: 'r',
+      points: [
+        { x: 0, y: 0 },
+        { x: 1, y: 0 },
+      ],
+      edges: [],
+    };
     expect(insetRoomPolygon(room, 100)).toEqual(room.points);
   });
 
@@ -166,7 +178,12 @@ describe('insetRoomPolygon', () => {
     // CCW in y-down: (0,0)→(0,3000)→(2000,3000)→(2000,0)
     const room: Room = {
       id: 'r2',
-      points: [{ x: 0, y: 0 }, { x: 0, y: 3000 }, { x: 2000, y: 3000 }, { x: 2000, y: 0 }],
+      points: [
+        { x: 0, y: 0 },
+        { x: 0, y: 3000 },
+        { x: 2000, y: 3000 },
+        { x: 2000, y: 0 },
+      ],
       edges: ['WALL', 'WALL', 'WALL', 'WALL'],
     };
     const result = insetRoomPolygon(room, 100); // 50mm inset
@@ -177,10 +194,10 @@ describe('insetRoomPolygon', () => {
     expect(result[2]!.x).toBeLessThanOrEqual(2000);
     expect(result[2]!.y).toBeLessThanOrEqual(3000);
     // The bounding box of inset polygon should be strictly smaller
-    const minX = Math.min(...result.map(p => p.x));
-    const maxX = Math.max(...result.map(p => p.x));
-    const minY = Math.min(...result.map(p => p.y));
-    const maxY = Math.max(...result.map(p => p.y));
+    const minX = Math.min(...result.map((p) => p.x));
+    const maxX = Math.max(...result.map((p) => p.x));
+    const minY = Math.min(...result.map((p) => p.y));
+    const maxY = Math.max(...result.map((p) => p.y));
     expect(maxX - minX).toBeLessThan(2000); // narrower than original
     expect(maxY - minY).toBeLessThan(3000); // shorter than original
   });

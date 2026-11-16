@@ -13,6 +13,7 @@
 ### Task 1 : Modifier les tokens CSS light mode
 
 **Files:**
+
 - Modify: `src/app/globals.css:44-45`
 
 - [ ] **Step 1 : Changer les deux valeurs dans `:root`**
@@ -20,9 +21,9 @@
 Dans [src/app/globals.css](src/app/globals.css), remplacer les lignes 44-45 :
 
 ```css
-  /* Tile visualization */
-  --tile-cut-bg:   #cbd5e1;
-  --tile-joint:    #94a3b8;
+/* Tile visualization */
+--tile-cut-bg: #cbd5e1;
+--tile-joint: #94a3b8;
 ```
 
 (Avant : les deux valaient `#d1d5db`)
@@ -30,6 +31,7 @@ Dans [src/app/globals.css](src/app/globals.css), remplacer les lignes 44-45 :
 - [ ] **Step 2 : Vérifier visuellement en light mode**
 
 Lancer l'app :
+
 ```bash
 npm run dev
 ```
@@ -38,6 +40,7 @@ Ouvrir `http://localhost:3000`, naviguer jusqu'à la vue calepinage avec une pi�
 S'assurer que le thème est en **light mode** (pas de `data-dark="true"` sur le `<html>`).
 
 Vérifications attendues :
+
 - Les joints (espaces entre carreaux) sont clairement visibles en **slate-400** (`#94a3b8`)
 - Les carreaux coupés (couleur `--tile-cut-bg`) apparaissent légèrement plus clairs que les joints
 - Le dark mode est inchangé (basculer avec le toggle — les joints doivent rester quasi-noirs)

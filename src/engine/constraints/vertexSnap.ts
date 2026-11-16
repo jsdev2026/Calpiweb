@@ -7,15 +7,11 @@ import { distance } from '@/engine/geometry/polygon';
  * Retourne la normale unitaire de l'arête (prev→vtx ou vtx→next) la plus
  * alignée avec la direction vtx→curseur (produit scalaire maximal en valeur absolue).
  */
-export function bestEdgeNormal(
-  cursor: Point,
-  vtx: Point,
-  prev: Point,
-  next: Point,
-): Point {
+export function bestEdgeNormal(cursor: Point, vtx: Point, prev: Point, next: Point): Point {
   const toCursor = { x: cursor.x - vtx.x, y: cursor.y - vtx.y };
   const normalOf = (a: Point, b: Point): Point => {
-    const dx = b.x - a.x, dy = b.y - a.y;
+    const dx = b.x - a.x,
+      dy = b.y - a.y;
     const len = Math.sqrt(dx * dx + dy * dy) || 1;
     return { x: -dy / len, y: dx / len };
   };
@@ -48,22 +44,28 @@ export function findNearestVertexSnapImpl(
     const n = pts.length;
     if (n < 2) continue;
     for (let i = 0; i < n; i++) {
-      const vtx  = pts[i]!;
+      const vtx = pts[i]!;
       const dist = distance(cursor, vtx);
       if (dist > threshold) continue;
 
       const prev = pts[(i - 1 + n) % n]!;
       const next = pts[(i + 1) % n]!;
-      const halfPrev  = (room.edgeThicknesses?.[(i - 1 + n) % n] ?? wallThickness) / 2;
-      const halfNext  = (room.edgeThicknesses?.[i] ?? wallThickness) / 2;
+      const halfPrev = (room.edgeThicknesses?.[(i - 1 + n) % n] ?? wallThickness) / 2;
+      const halfNext = (room.edgeThicknesses?.[i] ?? wallThickness) / 2;
       const halfThick = Math.max(halfPrev, halfNext);
 
       const wallNormal = bestEdgeNormal(cursor, vtx, prev, next);
 
       const candidates: Array<{ face: 'INSIDE' | 'AXIS' | 'OUTSIDE'; pos: Point }> = [
-        { face: 'INSIDE',  pos: { x: vtx.x + wallNormal.x * halfThick, y: vtx.y + wallNormal.y * halfThick } },
-        { face: 'AXIS',    pos: vtx },
-        { face: 'OUTSIDE', pos: { x: vtx.x - wallNormal.x * halfThick, y: vtx.y - wallNormal.y * halfThick } },
+        {
+          face: 'INSIDE',
+          pos: { x: vtx.x + wallNormal.x * halfThick, y: vtx.y + wallNormal.y * halfThick },
+        },
+        { face: 'AXIS', pos: vtx },
+        {
+          face: 'OUTSIDE',
+          pos: { x: vtx.x - wallNormal.x * halfThick, y: vtx.y - wallNormal.y * halfThick },
+        },
       ];
 
       let bestFace: FaceSnapPoint | null = null;
@@ -96,8 +98,6 @@ export function computeDimDisplayedValue(
   const dx = Math.abs(toWorld.x - fromWorld.x);
   const dy = Math.abs(toWorld.y - fromWorld.y);
   const rawMm =
-    dimType === 'H_DISTANCE' ? dx :
-    dimType === 'V_DISTANCE' ? dy :
-    Math.sqrt(dx * dx + dy * dy);
+    dimType === 'H_DISTANCE' ? dx : dimType === 'V_DISTANCE' ? dy : Math.sqrt(dx * dx + dy * dy);
   return rawMm / 10;
 }

@@ -13,6 +13,7 @@ Corriger les deux sources de sur-estimation du calcul de carreaux (algorithme de
 **Problème actuel :** `canReuseFor` rejette des réemplois valides car la tolérance dimensionnelle de 5mm est trop stricte. Un carreleur peut réemployer une chute avec jusqu'à ~10mm de différence (précision réaliste d'une coupe sur chantier).
 
 **Correction :**
+
 - Tolérance dimensionnelle : `CUT_TOLERANCE_MM` passe de **5mm à 10mm**
 - Les 4 rotations (0°, 90°, 180°, 270°) sont conservées — elles couvrent tous les cas pour un carreau rectangulaire
 - La contrainte de bord d'origine est **maintenue** : les arêtes d'usine (factory edges) doivent toujours faire face aux carreaux adjacents ; seules les arêtes coupées peuvent faire face aux murs/bords
@@ -26,11 +27,11 @@ Corriger les deux sources de sur-estimation du calcul de carreaux (algorithme de
 
 **Nouvelle logique :**
 
-| Type de pose | Marge par défaut |
-|---|---|
-| Droite (`angle === 0`, layout `straight`) | 5% |
-| Diagonal (`angle === 45`) | 10% |
-| Chevron / arête-de-poisson (`layout === 'chevron'` ou `'herringbone'`) | 15% |
+| Type de pose                                                           | Marge par défaut |
+| ---------------------------------------------------------------------- | ---------------- |
+| Droite (`angle === 0`, layout `straight`)                              | 5%               |
+| Diagonal (`angle === 45`)                                              | 10%              |
+| Chevron / arête-de-poisson (`layout === 'chevron'` ou `'herringbone'`) | 15%              |
 
 La marge est calculée dans `quantityEngine.ts` à partir de `config.angle` et `config.layout`. Elle est exposée dans `QuantityResult.margin` (nombre décimal, ex. `0.05`).
 
@@ -41,7 +42,7 @@ La marge est calculée dans `quantityEngine.ts` à partir de `config.angle` et `
 function computeMargin(config: TilingConfig): number {
   if (config.marginOverride !== undefined) return config.marginOverride;
   if (config.layout === 'chevron' || config.layout === 'herringbone') return 0.15;
-  if (config.angle === 45) return 0.10;
+  if (config.angle === 45) return 0.1;
   return 0.05;
 }
 ```
@@ -67,10 +68,10 @@ Ce champ est nécessaire pour la formule du joint (ISO 13007). Il est saisi dans
 ```typescript
 // src/engine/quantities/types.ts
 interface ConsumableItem {
-  totalKg: number;       // quantité totale en kg (ou unités pour croisillons)
-  bags: number;          // nombre de conditionnements (arrondi au-dessus)
-  bagSize: number;       // taille d'un conditionnement (kg ou unités)
-  rendement: number;     // rendement unitaire (kg/m² ou unités/carreau)
+  totalKg: number; // quantité totale en kg (ou unités pour croisillons)
+  bags: number; // nombre de conditionnements (arrondi au-dessus)
+  bagSize: number; // taille d'un conditionnement (kg ou unités)
+  rendement: number; // rendement unitaire (kg/m² ou unités/carreau)
 }
 
 interface Consumables {
@@ -85,7 +86,7 @@ interface Consumables {
 ```typescript
 interface QuantityResult {
   // ... champs existants ...
-  margin: number;          // marge appliquée (ex. 0.05)
+  margin: number; // marge appliquée (ex. 0.05)
   consumables: Consumables;
 }
 ```
@@ -127,25 +128,25 @@ sachets = ceil(total_unités / bag_size)   // bag_size défaut = 200 unités
 
 Le carreleur peut modifier dans l'interface :
 
-| Paramètre | Défaut | Modifiable |
-|---|---|---|
-| Rendement colle (kg/m²) | 4 | ✓ |
-| Taille sac colle (kg) | 25 | ✓ |
-| Rendement joint (kg/m²) | calculé ISO | ✓ (override) |
-| Taille sac joint (kg) | 5 | ✓ |
-| Taille sachet croisillons (unités) | 200 | ✓ |
-| Épaisseur carreau (mm) | 10 | ✓ |
+| Paramètre                          | Défaut      | Modifiable   |
+| ---------------------------------- | ----------- | ------------ |
+| Rendement colle (kg/m²)            | 4           | ✓            |
+| Taille sac colle (kg)              | 25          | ✓            |
+| Rendement joint (kg/m²)            | calculé ISO | ✓ (override) |
+| Taille sac joint (kg)              | 5           | ✓            |
+| Taille sachet croisillons (unités) | 200         | ✓            |
+| Épaisseur carreau (mm)             | 10          | ✓            |
 
 Ces paramètres sont stockés dans `TilingConfig` (sous `consumableParams?: ConsumableParams`) pour être persistés avec le projet.
 
 ```typescript
 interface ConsumableParams {
-  colleRendement?: number;       // kg/m², défaut 4
-  colleBagSize?: number;         // kg, défaut 25
-  jointRendement?: number;       // kg/m², si défini override ISO
-  jointBagSize?: number;         // kg, défaut 5
-  croisillonsBagSize?: number;   // unités, défaut 200
-  tileThickness?: number;        // mm, défaut 10
+  colleRendement?: number; // kg/m², défaut 4
+  colleBagSize?: number; // kg, défaut 25
+  jointRendement?: number; // kg/m², si défini override ISO
+  jointBagSize?: number; // kg, défaut 5
+  croisillonsBagSize?: number; // unités, défaut 200
+  tileThickness?: number; // mm, défaut 10
 }
 ```
 
@@ -199,18 +200,18 @@ Le reste du rapport (sections par pièce, groupes de coupe) reste inchangé.
 
 ## Fichiers modifiés
 
-| Fichier | Changement |
-|---|---|
-| `src/types/tiling.ts` | Ajouter `marginOverride?: number` et `consumableParams?: ConsumableParams` à `TilingConfig` |
-| `src/constants/businessRules.ts` | Ajouter `MARGIN_STRAIGHT`, `MARGIN_DIAGONAL`, `MARGIN_CHEVRON` |
-| `src/engine/quantities/constants.ts` | `CUT_TOLERANCE_MM` : 5 → 10 |
-| `src/engine/quantities/assignOffcuts.ts` | Vérifier que la tolérance est correctement appliquée dans `canReuseFor` |
-| `src/engine/quantities/types.ts` | Ajouter `ConsumableItem`, `Consumables`, étendre `QuantityResult` |
-| `src/engine/quantities/quantityEngine.ts` | Ajouter `computeMargin()`, `computeConsumables()`, exposer dans `QuantityResult` |
-| `src/components/quantities/QuantitiesPanel.tsx` | Affichage marge + bloc consommables éditables |
-| `src/components/quantities/QuantitiesPrintView.tsx` | Section "Récapitulatif chantier" en tête |
-| `src/engine/quantities/quantityEngine.integration.test.ts` | Tests marge auto par type de pose |
-| `src/engine/quantities/assignOffcuts.test.ts` | Tests réemploi avec tolérance 10mm |
+| Fichier                                                    | Changement                                                                                  |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `src/types/tiling.ts`                                      | Ajouter `marginOverride?: number` et `consumableParams?: ConsumableParams` à `TilingConfig` |
+| `src/constants/businessRules.ts`                           | Ajouter `MARGIN_STRAIGHT`, `MARGIN_DIAGONAL`, `MARGIN_CHEVRON`                              |
+| `src/engine/quantities/constants.ts`                       | `CUT_TOLERANCE_MM` : 5 → 10                                                                 |
+| `src/engine/quantities/assignOffcuts.ts`                   | Vérifier que la tolérance est correctement appliquée dans `canReuseFor`                     |
+| `src/engine/quantities/types.ts`                           | Ajouter `ConsumableItem`, `Consumables`, étendre `QuantityResult`                           |
+| `src/engine/quantities/quantityEngine.ts`                  | Ajouter `computeMargin()`, `computeConsumables()`, exposer dans `QuantityResult`            |
+| `src/components/quantities/QuantitiesPanel.tsx`            | Affichage marge + bloc consommables éditables                                               |
+| `src/components/quantities/QuantitiesPrintView.tsx`        | Section "Récapitulatif chantier" en tête                                                    |
+| `src/engine/quantities/quantityEngine.integration.test.ts` | Tests marge auto par type de pose                                                           |
+| `src/engine/quantities/assignOffcuts.test.ts`              | Tests réemploi avec tolérance 10mm                                                          |
 
 ---
 

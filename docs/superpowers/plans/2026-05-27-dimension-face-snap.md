@@ -14,23 +14,24 @@
 
 ## File Map
 
-| File | Action | Responsibility |
-|------|--------|----------------|
-| `src/types/project.ts` | Modify | Add `face?` to `PointRef` |
-| `src/engine/constraints/interiorOffset.ts` | Delete | Replaced by faceOffset.ts |
-| `src/engine/constraints/faceOffset.ts` | Create | `constraintFaceOffset` reading PointRef.face |
-| `src/components/plan/DimensionPopup.tsx` | Create | Popup for dimension input (replaces dim part of WallEdgeEditor) |
-| `src/components/plan/DrawingCanvas.tsx` | Modify | `FaceSnapPoint` type, `faceSnapHover`/`dimensionSource` props, snap dot rendering |
-| `src/components/plan/PlanEditor.tsx` | Modify | `findNearestFaceSnap`, DIMENSION flow refactor, SELECT thickness-only |
-| `src/components/plan/WallEdgeEditor.tsx` | Modify | Remove dim props, keep thickness-only |
-| `src/components/plan/PlanEditor.toolbar.test.ts` | Modify | Add faceOffset unit tests, update DIMENSION flow tests |
-| `src/components/plan/PlanToolbar.test.tsx` | Modify | Remove stale dim prop references if any |
+| File                                             | Action | Responsibility                                                                    |
+| ------------------------------------------------ | ------ | --------------------------------------------------------------------------------- |
+| `src/types/project.ts`                           | Modify | Add `face?` to `PointRef`                                                         |
+| `src/engine/constraints/interiorOffset.ts`       | Delete | Replaced by faceOffset.ts                                                         |
+| `src/engine/constraints/faceOffset.ts`           | Create | `constraintFaceOffset` reading PointRef.face                                      |
+| `src/components/plan/DimensionPopup.tsx`         | Create | Popup for dimension input (replaces dim part of WallEdgeEditor)                   |
+| `src/components/plan/DrawingCanvas.tsx`          | Modify | `FaceSnapPoint` type, `faceSnapHover`/`dimensionSource` props, snap dot rendering |
+| `src/components/plan/PlanEditor.tsx`             | Modify | `findNearestFaceSnap`, DIMENSION flow refactor, SELECT thickness-only             |
+| `src/components/plan/WallEdgeEditor.tsx`         | Modify | Remove dim props, keep thickness-only                                             |
+| `src/components/plan/PlanEditor.toolbar.test.ts` | Modify | Add faceOffset unit tests, update DIMENSION flow tests                            |
+| `src/components/plan/PlanToolbar.test.tsx`       | Modify | Remove stale dim prop references if any                                           |
 
 ---
 
 ## Task 1: Data model — `PointRef.face` + `faceOffset.ts`
 
 **Files:**
+
 - Modify: `src/types/project.ts:45-48`
 - Create: `src/engine/constraints/faceOffset.ts`
 - Delete: `src/engine/constraints/interiorOffset.ts` (after migration complete in later tasks)
@@ -48,10 +49,10 @@ describe('constraintFaceOffset', () => {
   const makeRoom = (id: string): import('@/types/project').Room => ({
     id,
     points: [
-      { x: 0,   y: 0   },
-      { x: 300, y: 0   },
+      { x: 0, y: 0 },
+      { x: 300, y: 0 },
       { x: 300, y: 300 },
-      { x: 0,   y: 300 },
+      { x: 0, y: 300 },
     ],
     edges: ['WALL', 'WALL', 'WALL', 'WALL'],
     edgeThicknesses: [20, 20, 20, 20], // 20mm → halfThick = 10mm
@@ -103,7 +104,11 @@ describe('constraintFaceOffset', () => {
 
   it('LENGTH: retourne toujours 0', async () => {
     const { constraintFaceOffset } = await import('@/engine/constraints/faceOffset');
-    const offset = constraintFaceOffset(makeConstraint('INSIDE', 'INSIDE', 'LENGTH'), makeRoom('r1'), 20);
+    const offset = constraintFaceOffset(
+      makeConstraint('INSIDE', 'INSIDE', 'LENGTH'),
+      makeRoom('r1'),
+      20,
+    );
     expect(offset).toBe(0);
   });
 });
@@ -209,7 +214,7 @@ export function constraintFaceOffset(
 
   const faceOffset = (face: 'INSIDE' | 'AXIS' | 'OUTSIDE' | undefined, half: number): number => {
     const f = face ?? 'INSIDE';
-    if (f === 'INSIDE')  return +half;
+    if (f === 'INSIDE') return +half;
     if (f === 'OUTSIDE') return -half;
     return 0; // AXIS
   };
@@ -246,6 +251,7 @@ git commit -m "feat(constraints): PointRef.face + constraintFaceOffset (rétroco
 ## Task 2: New `DimensionPopup` component
 
 **Files:**
+
 - Create: `src/components/plan/DimensionPopup.tsx`
 
 - [ ] **Step 1: Write a minimal rendering test**
@@ -483,9 +489,11 @@ git commit -m "feat(plan): DimensionPopup component — saisie cote avec label I
 ## Task 3: `DrawingCanvas` — `FaceSnapPoint` type + snap dot rendering
 
 **Files:**
+
 - Modify: `src/components/plan/DrawingCanvas.tsx`
 
 The goal here is to:
+
 1. Export `FaceSnapPoint` type from `DrawingCanvas.tsx`
 2. Add `faceSnapHover` and update `dimensionSource` props to the new shape
 3. Render 3 colored snap dots when hovering in DIMENSION mode
@@ -501,9 +509,15 @@ Add to `src/components/plan/PlanEditor.toolbar.test.ts`:
 describe('FaceSnapPoint — label mapping', () => {
   const FACE_LABEL = { INSIDE: 'I', AXIS: 'A', OUTSIDE: 'E' } as const;
 
-  it('INSIDE → "I"', () => { expect(FACE_LABEL['INSIDE']).toBe('I'); });
-  it('AXIS → "A"',   () => { expect(FACE_LABEL['AXIS']).toBe('A'); });
-  it('OUTSIDE → "E"', () => { expect(FACE_LABEL['OUTSIDE']).toBe('E'); });
+  it('INSIDE → "I"', () => {
+    expect(FACE_LABEL['INSIDE']).toBe('I');
+  });
+  it('AXIS → "A"', () => {
+    expect(FACE_LABEL['AXIS']).toBe('A');
+  });
+  it('OUTSIDE → "E"', () => {
+    expect(FACE_LABEL['OUTSIDE']).toBe('E');
+  });
 });
 ```
 
@@ -530,10 +544,13 @@ export interface FaceSnapPoint {
 ```
 
 In `DrawingCanvasProps`, replace:
+
 ```typescript
   dimensionSource: { roomId: string; idx: number } | null;
 ```
+
 with:
+
 ```typescript
   faceSnapHover:   FaceSnapPoint | null;
   dimensionSource: {
@@ -549,80 +566,108 @@ Find the section where `tool === 'DIMENSION'` renders the dimension preview line
 The snap dots should render as a separate `<g>` layer, after wall elements but before annotations. Insert this block into the JSX return, just before the closing `</svg>` or before the constraints annotation layer:
 
 ```tsx
-{/* ── Face snap dots (DIMENSION tool hover) ─────────────────────── */}
-{tool === 'DIMENSION' && faceSnapHover && (() => {
-  const { worldPos, face, wallNormal, roomId, vertexIdx } = faceSnapHover;
+{
+  /* ── Face snap dots (DIMENSION tool hover) ─────────────────────── */
+}
+{
+  tool === 'DIMENSION' &&
+    faceSnapHover &&
+    (() => {
+      const { worldPos, face, wallNormal, roomId, vertexIdx } = faceSnapHover;
 
-  // Locate the hovered segment to draw the three snap positions
-  // We need the segment's two endpoints to project worldPos back to proj
-  // For simplicity: render dots at fixed offsets along wallNormal from worldPos
-  // The snap was computed in PlanEditor; worldPos IS the snapped point.
-  // We re-derive the INSIDE/AXIS/OUTSIDE positions from worldPos + face + normal.
+      // Locate the hovered segment to draw the three snap positions
+      // We need the segment's two endpoints to project worldPos back to proj
+      // For simplicity: render dots at fixed offsets along wallNormal from worldPos
+      // The snap was computed in PlanEditor; worldPos IS the snapped point.
+      // We re-derive the INSIDE/AXIS/OUTSIDE positions from worldPos + face + normal.
 
-  // Find half-thickness for this room/edge
-  const room = rooms.find(r => r.id === roomId);
-  const n = room ? room.points.length : 0;
-  const half = room
-    ? (room.edgeThicknesses?.[vertexIdx < n ? vertexIdx : 0] ?? wallThickness) / 2
-    : wallThickness / 2;
+      // Find half-thickness for this room/edge
+      const room = rooms.find((r) => r.id === roomId);
+      const n = room ? room.points.length : 0;
+      const half = room
+        ? (room.edgeThicknesses?.[vertexIdx < n ? vertexIdx : 0] ?? wallThickness) / 2
+        : wallThickness / 2;
 
-  // Reconstruct the 3 snap positions from worldPos and face
-  let axisPos: Point;
-  if (face === 'AXIS') {
-    axisPos = worldPos;
-  } else if (face === 'INSIDE') {
-    axisPos = { x: worldPos.x - wallNormal.x * half, y: worldPos.y - wallNormal.y * half };
-  } else {
-    axisPos = { x: worldPos.x + wallNormal.x * half, y: worldPos.y - wallNormal.y * half };
-  }
-  const insidePos:  Point = { x: axisPos.x + wallNormal.x * half, y: axisPos.y + wallNormal.y * half };
-  const outsidePos: Point = { x: axisPos.x - wallNormal.x * half, y: axisPos.y - wallNormal.y * half };
+      // Reconstruct the 3 snap positions from worldPos and face
+      let axisPos: Point;
+      if (face === 'AXIS') {
+        axisPos = worldPos;
+      } else if (face === 'INSIDE') {
+        axisPos = { x: worldPos.x - wallNormal.x * half, y: worldPos.y - wallNormal.y * half };
+      } else {
+        axisPos = { x: worldPos.x + wallNormal.x * half, y: worldPos.y - wallNormal.y * half };
+      }
+      const insidePos: Point = {
+        x: axisPos.x + wallNormal.x * half,
+        y: axisPos.y + wallNormal.y * half,
+      };
+      const outsidePos: Point = {
+        x: axisPos.x - wallNormal.x * half,
+        y: axisPos.y - wallNormal.y * half,
+      };
 
-  const dots: Array<{ pos: Point; face: 'INSIDE' | 'AXIS' | 'OUTSIDE'; color: string; baseR: number }> = [
-    { pos: outsidePos, face: 'OUTSIDE', color: '#3b82f6', baseR: 120 },
-    { pos: axisPos,    face: 'AXIS',    color: '#a855f7', baseR: 100 },
-    { pos: insidePos,  face: 'INSIDE',  color: '#22c55e', baseR: 120 },
-  ];
+      const dots: Array<{
+        pos: Point;
+        face: 'INSIDE' | 'AXIS' | 'OUTSIDE';
+        color: string;
+        baseR: number;
+      }> = [
+        { pos: outsidePos, face: 'OUTSIDE', color: '#3b82f6', baseR: 120 },
+        { pos: axisPos, face: 'AXIS', color: '#a855f7', baseR: 100 },
+        { pos: insidePos, face: 'INSIDE', color: '#22c55e', baseR: 120 },
+      ];
 
-  return (
-    <g>
-      {dots.map(({ pos, face: dotFace, color, baseR }) => {
-        const isActive = dotFace === face;
-        const r = isActive ? baseR * 1.6 : baseR;
-        const opacity = isActive ? 1 : 0.5;
-        return (
-          <circle
-            key={dotFace}
-            cx={pos.x} cy={pos.y}
-            r={r}
-            fill={color}
-            opacity={opacity}
-            style={{ pointerEvents: 'none' }}
-          />
-        );
-      })}
-    </g>
-  );
-})()}
+      return (
+        <g>
+          {dots.map(({ pos, face: dotFace, color, baseR }) => {
+            const isActive = dotFace === face;
+            const r = isActive ? baseR * 1.6 : baseR;
+            const opacity = isActive ? 1 : 0.5;
+            return (
+              <circle
+                key={dotFace}
+                cx={pos.x}
+                cy={pos.y}
+                r={r}
+                fill={color}
+                opacity={opacity}
+                style={{ pointerEvents: 'none' }}
+              />
+            );
+          })}
+        </g>
+      );
+    })();
+}
 
-{/* ── Confirmed dimension source point ───────────────────────────── */}
-{tool === 'DIMENSION' && dimensionSource && (() => {
-  const FACE_LABEL = { INSIDE: 'I', AXIS: 'A', OUTSIDE: 'E' } as const;
-  const { worldPos, ref } = dimensionSource;
-  const label = FACE_LABEL[ref.face ?? 'INSIDE'];
-  return (
-    <g style={{ pointerEvents: 'none' }}>
-      <circle cx={worldPos.x} cy={worldPos.y} r={180} fill="#f97316" />
-      <text
-        x={worldPos.x} y={worldPos.y}
-        textAnchor="middle" dominantBaseline="central"
-        fontSize={160} fontWeight="800" fill="white"
-      >
-        {label}
-      </text>
-    </g>
-  );
-})()}
+{
+  /* ── Confirmed dimension source point ───────────────────────────── */
+}
+{
+  tool === 'DIMENSION' &&
+    dimensionSource &&
+    (() => {
+      const FACE_LABEL = { INSIDE: 'I', AXIS: 'A', OUTSIDE: 'E' } as const;
+      const { worldPos, ref } = dimensionSource;
+      const label = FACE_LABEL[ref.face ?? 'INSIDE'];
+      return (
+        <g style={{ pointerEvents: 'none' }}>
+          <circle cx={worldPos.x} cy={worldPos.y} r={180} fill="#f97316" />
+          <text
+            x={worldPos.x}
+            y={worldPos.y}
+            textAnchor="middle"
+            dominantBaseline="central"
+            fontSize={160}
+            fontWeight="800"
+            fill="white"
+          >
+            {label}
+          </text>
+        </g>
+      );
+    })();
+}
 ```
 
 Also update the existing preview line logic: find where `dimensionSource` is used to draw the dashed line and update it to use `dimensionSource.worldPos` instead of resolving via `roomId`/`idx`.
@@ -630,11 +675,13 @@ Also update the existing preview line logic: find where `dimensionSource` is use
 - [ ] **Step 5: Update the place where `dimensionSource` position was resolved**
 
 Search for usage of `dimensionSource.roomId` and `dimensionSource.idx` in the DrawingCanvas JSX. The preview line currently does something like:
+
 ```tsx
-const srcPt = rooms.find(r => r.id === dimensionSource.roomId)?.points[dimensionSource.idx];
+const srcPt = rooms.find((r) => r.id === dimensionSource.roomId)?.points[dimensionSource.idx];
 ```
 
 Replace with:
+
 ```tsx
 const srcPt = dimensionSource.worldPos;
 ```
@@ -659,9 +706,11 @@ git commit -m "feat(canvas): FaceSnapPoint type + snap dot rendering DIMENSION m
 ## Task 4: `PlanEditor` — DIMENSION flow refactor + SELECT thickness-only
 
 **Files:**
+
 - Modify: `src/components/plan/PlanEditor.tsx`
 
 This is the largest task. It covers:
+
 1. Import `constraintFaceOffset` instead of `constraintInteriorOffset`
 2. Import `FaceSnapPoint` from `DrawingCanvas`
 3. Replace `dimensionSource` state shape with the new `{ ref: PointRef; worldPos: Point }` shape
@@ -688,22 +737,22 @@ describe('findNearestFaceSnap — sélection du candidat', () => {
   type Candidate = { face: FaceType; dist: number };
 
   const pickNearest = (candidates: Candidate[]): FaceType =>
-    candidates.reduce((best, c) => c.dist < best.dist ? c : best).face;
+    candidates.reduce((best, c) => (c.dist < best.dist ? c : best)).face;
 
   it('INSIDE sélectionné quand le curseur est sur la face intérieure', () => {
     const result = pickNearest([
       { face: 'OUTSIDE', dist: 30 },
-      { face: 'AXIS',    dist: 15 },
-      { face: 'INSIDE',  dist: 5  },
+      { face: 'AXIS', dist: 15 },
+      { face: 'INSIDE', dist: 5 },
     ]);
     expect(result).toBe('INSIDE');
   });
 
-  it('AXIS sélectionné quand le curseur est sur l\'axe', () => {
+  it("AXIS sélectionné quand le curseur est sur l'axe", () => {
     const result = pickNearest([
       { face: 'OUTSIDE', dist: 20 },
-      { face: 'AXIS',    dist: 3  },
-      { face: 'INSIDE',  dist: 20 },
+      { face: 'AXIS', dist: 3 },
+      { face: 'INSIDE', dist: 20 },
     ]);
     expect(result).toBe('AXIS');
   });
@@ -712,9 +761,7 @@ describe('findNearestFaceSnap — sélection du candidat', () => {
     const threshold = 80;
     const candidates: Candidate[] = [];
     // No candidates within threshold
-    const result = candidates.length > 0
-      ? pickNearest(candidates)
-      : null;
+    const result = candidates.length > 0 ? pickNearest(candidates) : null;
     expect(result).toBeNull();
   });
 });
@@ -731,45 +778,57 @@ Expected: PASS.
 - [ ] **Step 3: Update imports in `PlanEditor.tsx`**
 
 Replace:
+
 ```typescript
 import { constraintInteriorOffset } from '@/engine/constraints/interiorOffset';
 ```
+
 with:
+
 ```typescript
 import { constraintFaceOffset } from '@/engine/constraints/faceOffset';
 ```
 
 Also add `FaceSnapPoint` to the DrawingCanvas import:
+
 ```typescript
 import {
   DrawingCanvas,
-  type EditingEdgeState, type HoveredEdge, type SnapPreview,
-  type HoveredZoneEdge, type EditingZoneEdge, type HoveredPartitionEdge,
+  type EditingEdgeState,
+  type HoveredEdge,
+  type SnapPreview,
+  type HoveredZoneEdge,
+  type EditingZoneEdge,
+  type HoveredPartitionEdge,
   type PartitionDimLine,
   type DeleteHoverTarget,
-  type FaceSnapPoint,    // ← add this
+  type FaceSnapPoint, // ← add this
 } from './DrawingCanvas';
 ```
 
 - [ ] **Step 4: Replace `dimensionSource` state and add `faceSnapHover` + `dimensionPopup`**
 
 Find the existing `dimensionSource` state declaration:
+
 ```typescript
-const [dimensionSource, setDimensionSource] = useState<{ roomId: string; idx: number } | null>(null);
+const [dimensionSource, setDimensionSource] = useState<{ roomId: string; idx: number } | null>(
+  null,
+);
 ```
 
 Replace with:
+
 ```typescript
 const [faceSnapHover, setFaceSnapHover] = useState<FaceSnapPoint | null>(null);
 const [dimensionSource, setDimensionSource] = useState<{
-  ref:      PointRef;
+  ref: PointRef;
   worldPos: Point;
 } | null>(null);
 const [dimensionPopup, setDimensionPopup] = useState<{
-  fromRef:  PointRef;
-  toRef:    PointRef;
-  dimType:  'H_DISTANCE' | 'V_DISTANCE' | 'LENGTH';
-  value:    string; // displayed value in cm
+  fromRef: PointRef;
+  toRef: PointRef;
+  dimType: 'H_DISTANCE' | 'V_DISTANCE' | 'LENGTH';
+  value: string; // displayed value in cm
 } | null>(null);
 ```
 
@@ -778,66 +837,79 @@ const [dimensionPopup, setDimensionPopup] = useState<{
 Add this function inside the `PlanEditor` component, before the event handlers:
 
 ```typescript
-const findNearestFaceSnap = useCallback((cursor: Point): FaceSnapPoint | null => {
-  const threshold = 80 / scale;
-  let best: { snap: FaceSnapPoint; dist: number } | null = null;
+const findNearestFaceSnap = useCallback(
+  (cursor: Point): FaceSnapPoint | null => {
+    const threshold = 80 / scale;
+    let best: { snap: FaceSnapPoint; dist: number } | null = null;
 
-  const trySegment = (
-    p1: Point, p2: Point,
-    roomId: string, vertexIdx: number,
-    halfThick: number,
-  ) => {
-    const dx = p2.x - p1.x, dy = p2.y - p1.y;
-    const len2 = dx * dx + dy * dy;
-    if (len2 < 0.001) return;
+    const trySegment = (
+      p1: Point,
+      p2: Point,
+      roomId: string,
+      vertexIdx: number,
+      halfThick: number,
+    ) => {
+      const dx = p2.x - p1.x,
+        dy = p2.y - p1.y;
+      const len2 = dx * dx + dy * dy;
+      if (len2 < 0.001) return;
 
-    const t = Math.max(0, Math.min(1, ((cursor.x - p1.x) * dx + (cursor.y - p1.y) * dy) / len2));
-    const proj: Point = { x: p1.x + t * dx, y: p1.y + t * dy };
-    if (distance(cursor, proj) > threshold) return;
+      const t = Math.max(0, Math.min(1, ((cursor.x - p1.x) * dx + (cursor.y - p1.y) * dy) / len2));
+      const proj: Point = { x: p1.x + t * dx, y: p1.y + t * dy };
+      if (distance(cursor, proj) > threshold) return;
 
-    // Normal pointing inward (rotate segment 90° CCW)
-    const rawNx = -dy / Math.sqrt(len2), rawNy = dx / Math.sqrt(len2);
-    const wallNormal: Point = { x: rawNx, y: rawNy };
+      // Normal pointing inward (rotate segment 90° CCW)
+      const rawNx = -dy / Math.sqrt(len2),
+        rawNy = dx / Math.sqrt(len2);
+      const wallNormal: Point = { x: rawNx, y: rawNy };
 
-    const candidates: Array<{ face: 'INSIDE' | 'AXIS' | 'OUTSIDE'; pos: Point }> = [
-      { face: 'INSIDE',  pos: { x: proj.x + wallNormal.x * halfThick, y: proj.y + wallNormal.y * halfThick } },
-      { face: 'AXIS',    pos: proj },
-      { face: 'OUTSIDE', pos: { x: proj.x - wallNormal.x * halfThick, y: proj.y - wallNormal.y * halfThick } },
-    ];
+      const candidates: Array<{ face: 'INSIDE' | 'AXIS' | 'OUTSIDE'; pos: Point }> = [
+        {
+          face: 'INSIDE',
+          pos: { x: proj.x + wallNormal.x * halfThick, y: proj.y + wallNormal.y * halfThick },
+        },
+        { face: 'AXIS', pos: proj },
+        {
+          face: 'OUTSIDE',
+          pos: { x: proj.x - wallNormal.x * halfThick, y: proj.y - wallNormal.y * halfThick },
+        },
+      ];
 
-    for (const { face, pos } of candidates) {
-      const d = distance(cursor, pos);
-      if (!best || d < best.dist) {
-        best = {
-          snap: { roomId, vertexIdx, face, worldPos: pos, wallNormal },
-          dist: d,
-        };
+      for (const { face, pos } of candidates) {
+        const d = distance(cursor, pos);
+        if (!best || d < best.dist) {
+          best = {
+            snap: { roomId, vertexIdx, face, worldPos: pos, wallNormal },
+            dist: d,
+          };
+        }
+      }
+    };
+
+    for (const room of rooms) {
+      const n = room.points.length;
+      if (n < 2) continue;
+      for (let i = 0; i < n; i++) {
+        const p1 = room.points[i]!;
+        const p2 = room.points[(i + 1) % n]!;
+        const halfThick = (room.edgeThicknesses?.[i] ?? wallThickness) / 2;
+        trySegment(p1, p2, room.id, i, halfThick);
+      }
+      for (const part of room.partitions ?? []) {
+        trySegment(part.p1, part.p2, room.id, 0, part.thickness / 2);
+      }
+      for (const zone of room.excludedZones ?? []) {
+        const zn = zone.points.length;
+        for (let i = 0; i < zn; i++) {
+          trySegment(zone.points[i]!, zone.points[(i + 1) % zn]!, zone.id, i, 0);
+        }
       }
     }
-  };
 
-  for (const room of rooms) {
-    const n = room.points.length;
-    if (n < 2) continue;
-    for (let i = 0; i < n; i++) {
-      const p1 = room.points[i]!;
-      const p2 = room.points[(i + 1) % n]!;
-      const halfThick = (room.edgeThicknesses?.[i] ?? wallThickness) / 2;
-      trySegment(p1, p2, room.id, i, halfThick);
-    }
-    for (const part of room.partitions ?? []) {
-      trySegment(part.p1, part.p2, room.id, 0, part.thickness / 2);
-    }
-    for (const zone of room.excludedZones ?? []) {
-      const zn = zone.points.length;
-      for (let i = 0; i < zn; i++) {
-        trySegment(zone.points[i]!, zone.points[(i + 1) % zn]!, zone.id, i, 0);
-      }
-    }
-  }
-
-  return best ? best.snap : null;
-}, [rooms, scale, wallThickness]);
+    return best ? best.snap : null;
+  },
+  [rooms, scale, wallThickness],
+);
 ```
 
 - [ ] **Step 6: Update `handlePointerMove` — DIMENSION branch**
@@ -908,46 +980,50 @@ if (tool === 'DIMENSION') {
 Add this function inside the component:
 
 ```typescript
-const openDimensionPopup = useCallback((
-  fromRef: PointRef,
-  toRef: PointRef,
-  fromWorld: Point,
-  toWorld: Point,
-) => {
-  const dx = Math.abs(toWorld.x - fromWorld.x);
-  const dy = Math.abs(toWorld.y - fromWorld.y);
-  const dimType: 'H_DISTANCE' | 'V_DISTANCE' | 'LENGTH' =
-    dx >= dy ? 'H_DISTANCE' : 'V_DISTANCE';
+const openDimensionPopup = useCallback(
+  (fromRef: PointRef, toRef: PointRef, fromWorld: Point, toWorld: Point) => {
+    const dx = Math.abs(toWorld.x - fromWorld.x);
+    const dy = Math.abs(toWorld.y - fromWorld.y);
+    const dimType: 'H_DISTANCE' | 'V_DISTANCE' | 'LENGTH' = dx >= dy ? 'H_DISTANCE' : 'V_DISTANCE';
 
-  const rawValue = dimType === 'H_DISTANCE' ? dx : dy;
+    const rawValue = dimType === 'H_DISTANCE' ? dx : dy;
 
-  // Find existing constraint between these two vertices
-  const existing = constraints.find((c) =>
-    (c.type === 'H_DISTANCE' || c.type === 'V_DISTANCE' || c.type === 'LENGTH') &&
-    c.pts.length >= 2 &&
-    ((c.pts[0]!.roomId === fromRef.roomId && c.pts[0]!.vertexIdx === fromRef.vertexIdx &&
-      c.pts[1]!.roomId === toRef.roomId   && c.pts[1]!.vertexIdx === toRef.vertexIdx) ||
-     (c.pts[0]!.roomId === toRef.roomId   && c.pts[0]!.vertexIdx === toRef.vertexIdx &&
-      c.pts[1]!.roomId === fromRef.roomId && c.pts[1]!.vertexIdx === fromRef.vertexIdx))
-  );
+    // Find existing constraint between these two vertices
+    const existing = constraints.find(
+      (c) =>
+        (c.type === 'H_DISTANCE' || c.type === 'V_DISTANCE' || c.type === 'LENGTH') &&
+        c.pts.length >= 2 &&
+        ((c.pts[0]!.roomId === fromRef.roomId &&
+          c.pts[0]!.vertexIdx === fromRef.vertexIdx &&
+          c.pts[1]!.roomId === toRef.roomId &&
+          c.pts[1]!.vertexIdx === toRef.vertexIdx) ||
+          (c.pts[0]!.roomId === toRef.roomId &&
+            c.pts[0]!.vertexIdx === toRef.vertexIdx &&
+            c.pts[1]!.roomId === fromRef.roomId &&
+            c.pts[1]!.vertexIdx === fromRef.vertexIdx)),
+    );
 
-  let displayedValue: number;
-  if (existing) {
-    // Pre-fill with existing constraint value (apply face offset for display)
-    const room = rooms.find(r => r.id === fromRef.roomId);
-    const offset = room ? constraintFaceOffset({ ...existing, pts: [fromRef, toRef] }, room, wallThickness) : 0;
-    displayedValue = ((existing.value as number ?? 0) + offset) / 10;
-  } else {
-    displayedValue = rawValue / 10;
-  }
+    let displayedValue: number;
+    if (existing) {
+      // Pre-fill with existing constraint value (apply face offset for display)
+      const room = rooms.find((r) => r.id === fromRef.roomId);
+      const offset = room
+        ? constraintFaceOffset({ ...existing, pts: [fromRef, toRef] }, room, wallThickness)
+        : 0;
+      displayedValue = (((existing.value as number) ?? 0) + offset) / 10;
+    } else {
+      displayedValue = rawValue / 10;
+    }
 
-  setDimensionPopup({
-    fromRef,
-    toRef,
-    dimType: existing ? (existing.type as 'H_DISTANCE' | 'V_DISTANCE' | 'LENGTH') : dimType,
-    value: displayedValue.toFixed(1),
-  });
-}, [constraints, rooms, wallThickness]);
+    setDimensionPopup({
+      fromRef,
+      toRef,
+      dimType: existing ? (existing.type as 'H_DISTANCE' | 'V_DISTANCE' | 'LENGTH') : dimType,
+      value: displayedValue.toFixed(1),
+    });
+  },
+  [constraints, rooms, wallThickness],
+);
 ```
 
 - [ ] **Step 9: Add `submitDimensionPopup` and `releaseDimensionPopup` handlers**
@@ -959,7 +1035,7 @@ const submitDimensionPopup = useCallback(() => {
   const displayedMm = parseFloat(value) * 10;
   if (isNaN(displayedMm)) return;
 
-  const room = rooms.find(r => r.id === fromRef.roomId);
+  const room = rooms.find((r) => r.id === fromRef.roomId);
   const offset = room
     ? constraintFaceOffset({ id: '', type: dimType, pts: [fromRef, toRef] }, room, wallThickness)
     : 0;
@@ -968,17 +1044,22 @@ const submitDimensionPopup = useCallback(() => {
   pushHistory();
 
   // Remove existing constraint between these vertices if present
-  const existingId = constraints.find((c) =>
-    (c.type === 'H_DISTANCE' || c.type === 'V_DISTANCE' || c.type === 'LENGTH') &&
-    c.pts.length >= 2 &&
-    ((c.pts[0]!.roomId === fromRef.roomId && c.pts[0]!.vertexIdx === fromRef.vertexIdx &&
-      c.pts[1]!.roomId === toRef.roomId   && c.pts[1]!.vertexIdx === toRef.vertexIdx) ||
-     (c.pts[0]!.roomId === toRef.roomId   && c.pts[0]!.vertexIdx === toRef.vertexIdx &&
-      c.pts[1]!.roomId === fromRef.roomId && c.pts[1]!.vertexIdx === fromRef.vertexIdx))
+  const existingId = constraints.find(
+    (c) =>
+      (c.type === 'H_DISTANCE' || c.type === 'V_DISTANCE' || c.type === 'LENGTH') &&
+      c.pts.length >= 2 &&
+      ((c.pts[0]!.roomId === fromRef.roomId &&
+        c.pts[0]!.vertexIdx === fromRef.vertexIdx &&
+        c.pts[1]!.roomId === toRef.roomId &&
+        c.pts[1]!.vertexIdx === toRef.vertexIdx) ||
+        (c.pts[0]!.roomId === toRef.roomId &&
+          c.pts[0]!.vertexIdx === toRef.vertexIdx &&
+          c.pts[1]!.roomId === fromRef.roomId &&
+          c.pts[1]!.vertexIdx === fromRef.vertexIdx)),
   )?.id;
 
   const newConstraints = existingId
-    ? constraints.filter(c => c.id !== existingId)
+    ? constraints.filter((c) => c.id !== existingId)
     : [...constraints];
 
   newConstraints.push({
@@ -994,53 +1075,78 @@ const submitDimensionPopup = useCallback(() => {
   }
 
   setDimensionPopup(null);
-}, [dimensionPopup, rooms, constraints, wallThickness, pushHistory, buildAndSolve, setRoomsAndConstraints]);
+}, [
+  dimensionPopup,
+  rooms,
+  constraints,
+  wallThickness,
+  pushHistory,
+  buildAndSolve,
+  setRoomsAndConstraints,
+]);
 
 const releaseDimensionPopup = useCallback(() => {
   if (!dimensionPopup) return;
   const { fromRef, toRef } = dimensionPopup;
 
-  const existingId = constraints.find((c) =>
-    c.pts.length >= 2 &&
-    ((c.pts[0]!.roomId === fromRef.roomId && c.pts[0]!.vertexIdx === fromRef.vertexIdx &&
-      c.pts[1]!.roomId === toRef.roomId   && c.pts[1]!.vertexIdx === toRef.vertexIdx) ||
-     (c.pts[0]!.roomId === toRef.roomId   && c.pts[0]!.vertexIdx === toRef.vertexIdx &&
-      c.pts[1]!.roomId === fromRef.roomId && c.pts[1]!.vertexIdx === fromRef.vertexIdx))
+  const existingId = constraints.find(
+    (c) =>
+      c.pts.length >= 2 &&
+      ((c.pts[0]!.roomId === fromRef.roomId &&
+        c.pts[0]!.vertexIdx === fromRef.vertexIdx &&
+        c.pts[1]!.roomId === toRef.roomId &&
+        c.pts[1]!.vertexIdx === toRef.vertexIdx) ||
+        (c.pts[0]!.roomId === toRef.roomId &&
+          c.pts[0]!.vertexIdx === toRef.vertexIdx &&
+          c.pts[1]!.roomId === fromRef.roomId &&
+          c.pts[1]!.vertexIdx === fromRef.vertexIdx)),
   )?.id;
 
   if (existingId) {
     pushHistory();
-    const newConstraints = constraints.filter(c => c.id !== existingId);
+    const newConstraints = constraints.filter((c) => c.id !== existingId);
     const result = buildAndSolve(rooms, newConstraints, wallThickness);
     if (result.ok) setRoomsAndConstraints(result.rooms, result.constraints);
   }
   setDimensionPopup(null);
-}, [dimensionPopup, constraints, rooms, wallThickness, pushHistory, buildAndSolve, setRoomsAndConstraints]);
+}, [
+  dimensionPopup,
+  constraints,
+  rooms,
+  wallThickness,
+  pushHistory,
+  buildAndSolve,
+  setRoomsAndConstraints,
+]);
 ```
 
 - [ ] **Step 10: Simplify `tapActivateEdge` to thickness-only**
 
 Find `tapActivateEdge` (around line 1141). Remove all lines that:
+
 - Lookup constraints for the edge (`edgeDimConstraintIds`, `hDist`, `vDist`, `lenC`)
 - Call `constraintInteriorOffset`
 - Set `editValue` with a dimension value
 - Set `editingEdgeConstraintType`
 
 Keep only:
+
 ```typescript
 setEditingEdge({ roomId, edgeIndex });
-const t = (room.edgeThicknesses?.[edgeIndex] ?? wallThickness);
+const t = room.edgeThicknesses?.[edgeIndex] ?? wallThickness;
 setEditingEdgeThicknessValue(String(t / 10));
 ```
 
 - [ ] **Step 11: Rename `submitDimension` → `submitThickness`, remove constraint logic**
 
 Find the `submitDimension` function. Rename it to `submitThickness`. Remove all code that:
+
 - Reads `editValue` as a constraint value
 - Calls `constraintInteriorOffset`
 - Creates/modifies constraints
 
 Keep only the thickness update logic:
+
 ```typescript
 const submitThickness = useCallback(() => {
   if (!editingEdge) return;
@@ -1056,7 +1162,15 @@ const submitThickness = useCallback(() => {
   });
   setRoomsAndConstraints(updatedRooms, constraints);
   setEditingEdge(null);
-}, [editingEdge, editingEdgeThicknessValue, rooms, constraints, wallThickness, pushHistory, setRoomsAndConstraints]);
+}, [
+  editingEdge,
+  editingEdgeThicknessValue,
+  rooms,
+  constraints,
+  wallThickness,
+  pushHistory,
+  setRoomsAndConstraints,
+]);
 ```
 
 Update any call sites that referenced `submitDimension` to use `submitThickness`.
@@ -1064,6 +1178,7 @@ Update any call sites that referenced `submitDimension` to use `submitThickness`
 - [ ] **Step 12: Update Escape handler and `onChangeTool`**
 
 In the Escape key handler, add cleanup:
+
 ```typescript
 setFaceSnapHover(null);
 setDimensionSource(null);
@@ -1071,6 +1186,7 @@ setDimensionPopup(null);
 ```
 
 In `onChangeTool` (the function passed to `PlanToolbar`), add:
+
 ```typescript
 setFaceSnapHover(null);
 setDimensionSource(null);
@@ -1080,42 +1196,48 @@ setDimensionPopup(null);
 - [ ] **Step 13: Update `<DrawingCanvas>` JSX**
 
 Find the `<DrawingCanvas ... />` usage and update props:
+
 - Replace `dimensionSource={{ roomId: ..., idx: ... }}` with `dimensionSource={dimensionSource}`
 - Add `faceSnapHover={faceSnapHover}`
 
 - [ ] **Step 14: Add `<DimensionPopup>` to the component JSX**
 
 Add import:
+
 ```typescript
 import { DimensionPopup } from './DimensionPopup';
 ```
 
 Add the popup render (near `WallEdgeEditor` in the JSX):
+
 ```tsx
-{dimensionPopup && (
-  <DimensionPopup
-    fromFace={dimensionPopup.fromRef.face ?? 'INSIDE'}
-    toFace={dimensionPopup.toRef.face ?? 'INSIDE'}
-    dimType={dimensionPopup.dimType}
-    onDimTypeChange={(t) => setDimensionPopup(prev => prev ? { ...prev, dimType: t } : null)}
-    value={dimensionPopup.value}
-    onValueChange={(v) => setDimensionPopup(prev => prev ? { ...prev, value: v } : null)}
-    hasExisting={constraints.some((c) =>
-      c.pts.length >= 2 &&
-      ((c.pts[0]!.roomId === dimensionPopup.fromRef.roomId &&
-        c.pts[0]!.vertexIdx === dimensionPopup.fromRef.vertexIdx &&
-        c.pts[1]!.roomId === dimensionPopup.toRef.roomId &&
-        c.pts[1]!.vertexIdx === dimensionPopup.toRef.vertexIdx) ||
-       (c.pts[0]!.roomId === dimensionPopup.toRef.roomId &&
-        c.pts[0]!.vertexIdx === dimensionPopup.toRef.vertexIdx &&
-        c.pts[1]!.roomId === dimensionPopup.fromRef.roomId &&
-        c.pts[1]!.vertexIdx === dimensionPopup.fromRef.vertexIdx))
-    )}
-    onRelease={releaseDimensionPopup}
-    onSubmit={submitDimensionPopup}
-    onCancel={() => setDimensionPopup(null)}
-  />
-)}
+{
+  dimensionPopup && (
+    <DimensionPopup
+      fromFace={dimensionPopup.fromRef.face ?? 'INSIDE'}
+      toFace={dimensionPopup.toRef.face ?? 'INSIDE'}
+      dimType={dimensionPopup.dimType}
+      onDimTypeChange={(t) => setDimensionPopup((prev) => (prev ? { ...prev, dimType: t } : null))}
+      value={dimensionPopup.value}
+      onValueChange={(v) => setDimensionPopup((prev) => (prev ? { ...prev, value: v } : null))}
+      hasExisting={constraints.some(
+        (c) =>
+          c.pts.length >= 2 &&
+          ((c.pts[0]!.roomId === dimensionPopup.fromRef.roomId &&
+            c.pts[0]!.vertexIdx === dimensionPopup.fromRef.vertexIdx &&
+            c.pts[1]!.roomId === dimensionPopup.toRef.roomId &&
+            c.pts[1]!.vertexIdx === dimensionPopup.toRef.vertexIdx) ||
+            (c.pts[0]!.roomId === dimensionPopup.toRef.roomId &&
+              c.pts[0]!.vertexIdx === dimensionPopup.toRef.vertexIdx &&
+              c.pts[1]!.roomId === dimensionPopup.fromRef.roomId &&
+              c.pts[1]!.vertexIdx === dimensionPopup.fromRef.vertexIdx)),
+      )}
+      onRelease={releaseDimensionPopup}
+      onSubmit={submitDimensionPopup}
+      onCancel={() => setDimensionPopup(null)}
+    />
+  );
+}
 ```
 
 - [ ] **Step 15: TypeScript check**
@@ -1146,6 +1268,7 @@ git commit -m "feat(plan): DIMENSION face-snap flow — findNearestFaceSnap, two
 ## Task 5: `WallEdgeEditor` — simplify to thickness-only
 
 **Files:**
+
 - Modify: `src/components/plan/WallEdgeEditor.tsx`
 
 - [ ] **Step 1: Write tests for thickness-only WallEdgeEditor**
@@ -1337,6 +1460,7 @@ git commit -m "refactor(plan): WallEdgeEditor — épaisseur uniquement, suppres
 ## Task 6: Cleanup — remove `interiorOffset.ts`, update remaining usages and tests
 
 **Files:**
+
 - Delete: `src/engine/constraints/interiorOffset.ts`
 - Modify: `src/components/plan/DrawingCanvas.tsx` (remove stale import)
 - Modify: `src/components/plan/PlanEditor.toolbar.test.ts` (update DIMENSION-related tests)
@@ -1345,11 +1469,13 @@ git commit -m "refactor(plan): WallEdgeEditor — épaisseur uniquement, suppres
 - [ ] **Step 1: Remove `constraintInteriorOffset` import from `DrawingCanvas.tsx`**
 
 Find and remove:
+
 ```typescript
 import { constraintInteriorOffset } from '@/engine/constraints/interiorOffset';
 ```
 
 Search for any usage of `constraintInteriorOffset` inside `DrawingCanvas.tsx` and replace with `constraintFaceOffset` (add the import):
+
 ```typescript
 import { constraintFaceOffset } from '@/engine/constraints/faceOffset';
 ```
@@ -1405,29 +1531,29 @@ git commit -m "chore(cleanup): supprimer interiorOffset.ts, migrer tous les appe
 
 ### Spec Coverage Check
 
-| Spec Section | Task |
-|---|---|
-| §2 `PointRef.face` field | Task 1 |
-| §2 `constraintFaceOffset` replaces `constraintInteriorOffset` | Task 1 |
-| §3 `FaceSnapPoint` type exported from DrawingCanvas | Task 3 |
-| §4 `findNearestFaceSnap` in PlanEditor | Task 4 |
-| §4 snap threshold 80/scale | Task 4 (step 5) |
-| §4 3 candidates INSIDE/AXIS/OUTSIDE per segment | Task 4 (step 5) |
-| §4 `halfThickness` from `edgeThicknesses` or `partition.thickness` or 0 for zones | Task 4 (step 5) |
-| §5 `faceSnapHover` + `dimensionSource` props on DrawingCanvas | Task 3 |
-| §5 3 colored dots (blue/purple/green), active one enlarged ×1.6 | Task 3 (step 4) |
-| §5 orange confirmed source dot with I/A/E letter | Task 3 (step 4) |
-| §6 `handlePointerMove` DIMENSION branch → `findNearestFaceSnap` | Task 4 (step 6) |
-| §6 `handlePointerDown` DIMENSION branch — 1st/2nd click logic | Task 4 (step 7) |
-| §6 `dimensionPopup` state | Task 4 (step 4) |
-| §6 `openDimensionPopup` — auto-detect H/V, pre-fill existing | Task 4 (step 8) |
-| §6 Escape / tool change clears source + hover | Task 4 (step 12) |
-| §7 `DimensionPopup` component with face label, H/V/L toggle, value input | Task 2 |
-| §8 `WallEdgeEditor` thickness-only | Task 5 |
-| §9 `tapActivateEdge` → thickness only | Task 4 (step 10) |
-| §9 `submitDimension` → `submitThickness` | Task 4 (step 11) |
-| §10 Dimension line auto-positioned (existing behavior preserved) | Existing code untouched |
-| §12 `interiorOffset.ts` deleted | Task 6 |
+| Spec Section                                                                      | Task                    |
+| --------------------------------------------------------------------------------- | ----------------------- |
+| §2 `PointRef.face` field                                                          | Task 1                  |
+| §2 `constraintFaceOffset` replaces `constraintInteriorOffset`                     | Task 1                  |
+| §3 `FaceSnapPoint` type exported from DrawingCanvas                               | Task 3                  |
+| §4 `findNearestFaceSnap` in PlanEditor                                            | Task 4                  |
+| §4 snap threshold 80/scale                                                        | Task 4 (step 5)         |
+| §4 3 candidates INSIDE/AXIS/OUTSIDE per segment                                   | Task 4 (step 5)         |
+| §4 `halfThickness` from `edgeThicknesses` or `partition.thickness` or 0 for zones | Task 4 (step 5)         |
+| §5 `faceSnapHover` + `dimensionSource` props on DrawingCanvas                     | Task 3                  |
+| §5 3 colored dots (blue/purple/green), active one enlarged ×1.6                   | Task 3 (step 4)         |
+| §5 orange confirmed source dot with I/A/E letter                                  | Task 3 (step 4)         |
+| §6 `handlePointerMove` DIMENSION branch → `findNearestFaceSnap`                   | Task 4 (step 6)         |
+| §6 `handlePointerDown` DIMENSION branch — 1st/2nd click logic                     | Task 4 (step 7)         |
+| §6 `dimensionPopup` state                                                         | Task 4 (step 4)         |
+| §6 `openDimensionPopup` — auto-detect H/V, pre-fill existing                      | Task 4 (step 8)         |
+| §6 Escape / tool change clears source + hover                                     | Task 4 (step 12)        |
+| §7 `DimensionPopup` component with face label, H/V/L toggle, value input          | Task 2                  |
+| §8 `WallEdgeEditor` thickness-only                                                | Task 5                  |
+| §9 `tapActivateEdge` → thickness only                                             | Task 4 (step 10)        |
+| §9 `submitDimension` → `submitThickness`                                          | Task 4 (step 11)        |
+| §10 Dimension line auto-positioned (existing behavior preserved)                  | Existing code untouched |
+| §12 `interiorOffset.ts` deleted                                                   | Task 6                  |
 
 ### Backward Compatibility
 

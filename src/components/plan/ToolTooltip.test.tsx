@@ -25,7 +25,9 @@ describe('ToolTooltip', () => {
       </ToolTooltip>,
     );
     fireEvent.mouseEnter(screen.getByTestId('tooltip-wrapper'));
-    act(() => { vi.advanceTimersByTime(600); });
+    act(() => {
+      vi.advanceTimersByTime(600);
+    });
     expect(screen.getByText('Outil')).toBeDefined();
     expect(screen.getByText('Une description')).toBeDefined();
   });
@@ -39,7 +41,9 @@ describe('ToolTooltip', () => {
     );
     const wrapper = screen.getByTestId('tooltip-wrapper');
     fireEvent.mouseEnter(wrapper);
-    act(() => { vi.advanceTimersByTime(600); });
+    act(() => {
+      vi.advanceTimersByTime(600);
+    });
     fireEvent.mouseLeave(wrapper);
     expect(screen.queryByText('Une description')).toBeNull();
   });
@@ -53,9 +57,13 @@ describe('ToolTooltip', () => {
     );
     const wrapper = screen.getByTestId('tooltip-wrapper');
     fireEvent.mouseEnter(wrapper);
-    act(() => { vi.advanceTimersByTime(300); });
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
     fireEvent.mouseLeave(wrapper);
-    act(() => { vi.advanceTimersByTime(600); });
+    act(() => {
+      vi.advanceTimersByTime(600);
+    });
     expect(screen.queryByText('Une description')).toBeNull();
   });
 });

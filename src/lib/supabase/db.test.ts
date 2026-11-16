@@ -50,10 +50,16 @@ const makeProject = (id = 'proj-1'): Project => ({
   updatedAt: 1000,
   rooms: [],
   config: {
-    width: 300, height: 600, joint: 3,
-    offsetX: 0, offsetY: 0, stagger: 33,
-    angle: 0, chevronAngle: 45,
-    color: '#93c5fd', layout: 'STRAIGHT',
+    width: 300,
+    height: 600,
+    joint: 3,
+    offsetX: 0,
+    offsetY: 0,
+    stagger: 33,
+    angle: 0,
+    chevronAngle: 45,
+    color: '#93c5fd',
+    layout: 'STRAIGHT',
   },
   wallThickness: 100,
   constraints: [],
@@ -68,7 +74,10 @@ describe('supabaseDb.getAll', () => {
 
   it('returns projects from Supabase rows', async () => {
     const p = makeProject();
-    mockOrder.mockResolvedValueOnce({ data: [{ id: p.id, user_id: 'user-1', data: p }], error: null });
+    mockOrder.mockResolvedValueOnce({
+      data: [{ id: p.id, user_id: 'user-1', data: p }],
+      error: null,
+    });
     mockOrder.mockResolvedValueOnce({ data: [], error: null });
     mockGt.mockResolvedValueOnce({ data: [], error: null });
     const result = await supabaseDb.getAll();
@@ -165,7 +174,10 @@ describe('supabaseDb.getProfile', () => {
 
   it('throws on Supabase error', async () => {
     mockGetUser.mockResolvedValueOnce({ data: { user: { id: 'user-1' } } });
-    mockMaybeSingle.mockResolvedValueOnce({ data: null, error: { code: 'XXXXX', message: 'DB error' } });
+    mockMaybeSingle.mockResolvedValueOnce({
+      data: null,
+      error: { code: 'XXXXX', message: 'DB error' },
+    });
     await expect(supabaseDb.getProfile()).rejects.toThrow('[XXXXX] DB error');
   });
 });
@@ -177,7 +189,10 @@ describe('supabaseDb.getAll — with shared projects', () => {
     mockGetUser.mockResolvedValueOnce({ data: { user: { id: 'user-1' } } });
     const p = makeProject();
     // projects query
-    mockOrder.mockResolvedValueOnce({ data: [{ id: p.id, user_id: 'user-1', data: p }], error: null });
+    mockOrder.mockResolvedValueOnce({
+      data: [{ id: p.id, user_id: 'user-1', data: p }],
+      error: null,
+    });
     // shares query
     mockOrder.mockResolvedValueOnce({ data: [], error: null });
     // locks query — mockGt is the terminal call (after .in())
@@ -190,7 +205,10 @@ describe('supabaseDb.getAll — with shared projects', () => {
   it('sets myRole to editor for shared project', async () => {
     mockGetUser.mockResolvedValueOnce({ data: { user: { id: 'user-1' } } });
     const p = makeProject('shared-proj');
-    mockOrder.mockResolvedValueOnce({ data: [{ id: p.id, user_id: 'user-99', data: p }], error: null });
+    mockOrder.mockResolvedValueOnce({
+      data: [{ id: p.id, user_id: 'user-99', data: p }],
+      error: null,
+    });
     mockOrder.mockResolvedValueOnce({ data: [{ project_id: p.id, role: 'editor' }], error: null });
     mockGt.mockResolvedValueOnce({ data: [], error: null });
 

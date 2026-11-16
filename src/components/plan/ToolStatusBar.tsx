@@ -2,10 +2,10 @@
 import type { PlanTool } from './PlanToolbar';
 
 export const TOOL_STATUS_TEXTS: Partial<Record<PlanTool, string>> = {
-  WALL:    'Cliquez pour poser un point',
-  DOOR:    'Cliquez sur un mur pour placer une porte',
+  WALL: 'Cliquez pour poser un point',
+  DOOR: 'Cliquez sur un mur pour placer une porte',
   EXCLUDE: 'Délimitez la zone à exclure du carrelage',
-  DELETE:  'Cliquez sur un élément pour le supprimer — Échap pour quitter',
+  DELETE: 'Cliquez sur un élément pour le supprimer — Échap pour quitter',
 };
 
 export const ToolStatusBar = ({ tool }: { tool: PlanTool }) => {
@@ -14,7 +14,7 @@ export const ToolStatusBar = ({ tool }: { tool: PlanTool }) => {
   return (
     <div
       data-testid="tool-status-bar"
-      className="pointer-events-none absolute left-1/2 top-3 z-10 hidden -translate-x-1/2 md:block mouse:block"
+      className="pointer-events-none absolute left-1/2 top-3 z-10 hidden -translate-x-1/2 mouse:block md:block"
     >
       <span
         className="rounded-full px-3 py-1 text-xs backdrop-blur-sm"

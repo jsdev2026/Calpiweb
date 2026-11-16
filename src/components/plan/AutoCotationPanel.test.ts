@@ -3,7 +3,9 @@ import { describe, it, expect } from 'vitest';
 import { computeNewNode2 } from './AutoCotationPanel';
 import type { Wall, WallNode } from '@/types/wall';
 
-function nd(id: string, x: number, y: number): WallNode { return { id, x, y }; }
+function nd(id: string, x: number, y: number): WallNode {
+  return { id, x, y };
+}
 function w(id: string, n1: string, n2: string, t: number): Wall {
   return { id, node1Id: n1, node2Id: n2, thickness: t };
 }
@@ -13,14 +15,14 @@ const wallH = w('w1', 'n1', 'n2', 10);
 const nodesH = [nd('n1', 0, 0), nd('n2', 200, 0)];
 
 describe('computeNewNode2', () => {
-  it('exterior — soustrait l\'épaisseur pour trouver node_dist', () => {
+  it("exterior — soustrait l'épaisseur pour trouver node_dist", () => {
     // label ext = node_dist + thickness => on entre 300mm (ext), thickness=10 => node_dist=290
     const result = computeNewNode2(wallH, nodesH, 300, 'exterior');
     expect(result.x).toBeCloseTo(290);
     expect(result.y).toBeCloseTo(0);
   });
 
-  it('interior — ajoute l\'épaisseur pour trouver node_dist', () => {
+  it("interior — ajoute l'épaisseur pour trouver node_dist", () => {
     // interior label = node_dist - thickness, so node_dist = label + thickness = 180 + 10 = 190
     const result = computeNewNode2(wallH, nodesH, 180, 'interior');
     expect(result.x).toBeCloseTo(190);

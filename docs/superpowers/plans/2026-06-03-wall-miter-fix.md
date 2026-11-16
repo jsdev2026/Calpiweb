@@ -12,16 +12,17 @@
 
 ## Fichiers concernés
 
-| Fichier | Action |
-|---------|--------|
-| `src/engine/geometry/wallGeometry.ts` | **Modifier** lignes 94–95 : inverser signe `dir` pour `pts[0]` et `pts[1]` |
-| `src/engine/geometry/wallGeometry.test.ts` | **Modifier** : mettre à jour 3 tests `computeCornerGeometry` |
+| Fichier                                    | Action                                                                     |
+| ------------------------------------------ | -------------------------------------------------------------------------- |
+| `src/engine/geometry/wallGeometry.ts`      | **Modifier** lignes 94–95 : inverser signe `dir` pour `pts[0]` et `pts[1]` |
+| `src/engine/geometry/wallGeometry.test.ts` | **Modifier** : mettre à jour 3 tests `computeCornerGeometry`               |
 
 ---
 
 ### Task 1 : Mettre à jour les tests pour refléter le comportement correct (TDD)
 
 **Files:**
+
 - Modify: `src/engine/geometry/wallGeometry.test.ts`
 
 - [ ] **Step 1.1 : Ouvrir le fichier de test**
@@ -36,12 +37,12 @@ Localiser le test `two walls at 90° — correct extensions` et remplacer les as
 
 ```typescript
 // AVANT (comportement bugué)
-expect(near(p1.points[1]!, { x: 105, y: 5  })).toBe(true);  // +n, node2 de w1
-expect(near(p2.points[0]!, { x: 95,  y: -5 })).toBe(true);  // +n, node1 de w2
+expect(near(p1.points[1]!, { x: 105, y: 5 })).toBe(true); // +n, node2 de w1
+expect(near(p2.points[0]!, { x: 95, y: -5 })).toBe(true); // +n, node1 de w2
 
 // APRÈS (comportement correct — coin intérieur en retrait de P)
-expect(near(p1.points[1]!, { x: 95,  y: 5  })).toBe(true);  // +n, node2 de w1 ← CHANGÉ
-expect(near(p2.points[0]!, { x: 95,  y: 5  })).toBe(true);  // +n, node1 de w2 ← CHANGÉ
+expect(near(p1.points[1]!, { x: 95, y: 5 })).toBe(true); // +n, node2 de w1 ← CHANGÉ
+expect(near(p2.points[0]!, { x: 95, y: 5 })).toBe(true); // +n, node1 de w2 ← CHANGÉ
 ```
 
 Les assertions sur `p1.points[0]`, `p1.points[2]`, `p1.points[3]`, `p2.points[3]` ne changent pas.
@@ -50,20 +51,20 @@ Le test complet devient :
 
 ```typescript
 it('two walls at 90° — correct extensions', () => {
-  const nodes = [nd('n1',0,0), nd('n2',100,0), nd('n3',100,100)];
+  const nodes = [nd('n1', 0, 0), nd('n2', 100, 0), nd('n3', 100, 100)];
   const walls: Wall[] = [
-    { id:'w1', node1Id:'n1', node2Id:'n2', thickness:10 },
-    { id:'w2', node1Id:'n2', node2Id:'n3', thickness:10 },
+    { id: 'w1', node1Id: 'n1', node2Id: 'n2', thickness: 10 },
+    { id: 'w2', node1Id: 'n2', node2Id: 'n3', thickness: 10 },
   ];
   const polys = computeCornerGeometry(walls, nodes);
-  const p1 = polys.find(p => p.wallId==='w1')!;
-  const p2 = polys.find(p => p.wallId==='w2')!;
-  expect(near(p1.points[0]!, { x:0,   y:5  })).toBe(true);
-  expect(near(p1.points[3]!, { x:0,   y:-5 })).toBe(true);
-  expect(near(p1.points[1]!, { x:95,  y:5  })).toBe(true);   // ← 105→95
-  expect(near(p1.points[2]!, { x:105, y:-5 })).toBe(true);
-  expect(near(p2.points[0]!, { x:95,  y:5  })).toBe(true);   // ← -5→5
-  expect(near(p2.points[3]!, { x:105, y:-5 })).toBe(true);
+  const p1 = polys.find((p) => p.wallId === 'w1')!;
+  const p2 = polys.find((p) => p.wallId === 'w2')!;
+  expect(near(p1.points[0]!, { x: 0, y: 5 })).toBe(true);
+  expect(near(p1.points[3]!, { x: 0, y: -5 })).toBe(true);
+  expect(near(p1.points[1]!, { x: 95, y: 5 })).toBe(true); // ← 105→95
+  expect(near(p1.points[2]!, { x: 105, y: -5 })).toBe(true);
+  expect(near(p2.points[0]!, { x: 95, y: 5 })).toBe(true); // ← -5→5
+  expect(near(p2.points[3]!, { x: 105, y: -5 })).toBe(true);
 });
 ```
 
@@ -79,8 +80,8 @@ expect(extX).toBeLessThan(5);
 
 // APRÈS (correct — le coin intérieur est en RETRAIT avant P, donc extX < 0)
 const extX = p1.points[1]!.x - 100;
-expect(extX).toBeLessThan(0);        // coin intérieur se rétracte avant P
-expect(extX).toBeGreaterThan(-5);    // mais de moins d'un demi-épaisseur
+expect(extX).toBeLessThan(0); // coin intérieur se rétracte avant P
+expect(extX).toBeGreaterThan(-5); // mais de moins d'un demi-épaisseur
 ```
 
 - [ ] **Step 1.4 : Mettre à jour le test `120° corner`**
@@ -94,7 +95,7 @@ expect(extX).toBeGreaterThan(5);
 
 // APRÈS (correct — le coin intérieur se rétracte de plus d'un demi-épaisseur avant P)
 const extX = p1.points[1]!.x - 100;
-expect(extX).toBeLessThan(-5);       // rétraction > T/2 = 5
+expect(extX).toBeLessThan(-5); // rétraction > T/2 = 5
 ```
 
 - [ ] **Step 1.5 : Lancer les tests pour confirmer qu'ils échouent**
@@ -111,6 +112,7 @@ Les tests `computeJointLines` doivent tous rester **PASS**.
 ### Task 2 : Appliquer le fix — inverser 2 signes dans `wallGeometry.ts`
 
 **Files:**
+
 - Modify: `src/engine/geometry/wallGeometry.ts:94-99`
 
 - [ ] **Step 2.1 : Appliquer les 2 changements de signe**
@@ -169,6 +171,7 @@ Résultat attendu : tous les tests passent. Si des tests en dehors de `wallGeome
 ### Task 3 : Commit
 
 **Files:**
+
 - `src/engine/geometry/wallGeometry.ts`
 - `src/engine/geometry/wallGeometry.test.ts`
 

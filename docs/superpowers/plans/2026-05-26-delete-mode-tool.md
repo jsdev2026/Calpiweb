@@ -12,13 +12,13 @@
 
 ## Fichiers touchés
 
-| Fichier | Action |
-|---------|--------|
-| `src/components/plan/PlanToolbar.tsx` | Modifier — type + bouton |
-| `src/components/plan/ToolStatusBar.tsx` | Modifier — texte DELETE |
-| `src/components/plan/DrawingCanvas.tsx` | Modifier — prop + rendu rouge |
-| `src/components/plan/PlanEditor.tsx` | Modifier — logique principale |
-| `src/components/plan/PlanToolbar.test.tsx` | Modifier — adapter les props |
+| Fichier                                          | Action                                                        |
+| ------------------------------------------------ | ------------------------------------------------------------- |
+| `src/components/plan/PlanToolbar.tsx`            | Modifier — type + bouton                                      |
+| `src/components/plan/ToolStatusBar.tsx`          | Modifier — texte DELETE                                       |
+| `src/components/plan/DrawingCanvas.tsx`          | Modifier — prop + rendu rouge                                 |
+| `src/components/plan/PlanEditor.tsx`             | Modifier — logique principale                                 |
+| `src/components/plan/PlanToolbar.test.tsx`       | Modifier — adapter les props                                  |
 | `src/components/plan/PlanEditor.toolbar.test.ts` | Modifier — supprimer canDelete/editingContext, ajouter DELETE |
 
 ---
@@ -26,6 +26,7 @@
 ### Task 1 : Type DELETE + ToolStatusBar
 
 **Files:**
+
 - Modify: `src/components/plan/PlanToolbar.tsx:8`
 - Modify: `src/components/plan/ToolStatusBar.tsx:4-14`
 - Test: `src/components/plan/PlanEditor.toolbar.test.ts`
@@ -40,8 +41,17 @@ Dans `src/components/plan/PlanEditor.toolbar.test.ts`, ajouter à la fin :
 describe('DELETE tool', () => {
   it('DELETE fait partie de PlanTool', () => {
     const tools: PlanTool[] = [
-      'SELECT', 'WALL', 'DOOR', 'APPLY_H', 'APPLY_V',
-      'COINCIDE', 'ANCHOR', 'PARTITION', 'EXCLUDE', 'DIMENSION', 'DELETE',
+      'SELECT',
+      'WALL',
+      'DOOR',
+      'APPLY_H',
+      'APPLY_V',
+      'COINCIDE',
+      'ANCHOR',
+      'PARTITION',
+      'EXCLUDE',
+      'DIMENSION',
+      'DELETE',
     ];
     expect(tools).toContain('DELETE');
   });
@@ -71,13 +81,34 @@ Expected: FAIL — `'DELETE'` does not satisfy type `PlanTool`
 Dans `src/components/plan/PlanToolbar.tsx`, ligne 8, remplacer :
 
 ```typescript
-export type PlanTool = 'SELECT' | 'WALL' | 'DOOR' | 'APPLY_H' | 'APPLY_V' | 'COINCIDE' | 'ANCHOR' | 'PARTITION' | 'EXCLUDE' | 'DIMENSION';
+export type PlanTool =
+  | 'SELECT'
+  | 'WALL'
+  | 'DOOR'
+  | 'APPLY_H'
+  | 'APPLY_V'
+  | 'COINCIDE'
+  | 'ANCHOR'
+  | 'PARTITION'
+  | 'EXCLUDE'
+  | 'DIMENSION';
 ```
 
 par :
 
 ```typescript
-export type PlanTool = 'SELECT' | 'WALL' | 'DOOR' | 'APPLY_H' | 'APPLY_V' | 'COINCIDE' | 'ANCHOR' | 'PARTITION' | 'EXCLUDE' | 'DIMENSION' | 'DELETE';
+export type PlanTool =
+  | 'SELECT'
+  | 'WALL'
+  | 'DOOR'
+  | 'APPLY_H'
+  | 'APPLY_V'
+  | 'COINCIDE'
+  | 'ANCHOR'
+  | 'PARTITION'
+  | 'EXCLUDE'
+  | 'DIMENSION'
+  | 'DELETE';
 ```
 
 - [ ] **Step 4 : Ajouter DELETE à TOOL_STATUS_TEXTS**
@@ -86,16 +117,16 @@ Dans `src/components/plan/ToolStatusBar.tsx`, ligne 4-14, ajouter la ligne DELET
 
 ```typescript
 export const TOOL_STATUS_TEXTS: Partial<Record<PlanTool, string>> = {
-  WALL:      'Cliquez pour poser un point',
-  DOOR:      'Cliquez sur un mur pour placer une porte',
+  WALL: 'Cliquez pour poser un point',
+  DOOR: 'Cliquez sur un mur pour placer une porte',
   PARTITION: 'Cliquez pour tracer une cloison',
-  EXCLUDE:   'Délimitez la zone à exclure',
-  APPLY_H:   "Cliquez sur un mur pour le verrouiller à l'horizontale",
-  APPLY_V:   'Cliquez sur un mur pour le verrouiller à la verticale',
-  COINCIDE:  'Cliquez sur le nœud, puis sur un mur/nœud pour les joindre',
+  EXCLUDE: 'Délimitez la zone à exclure',
+  APPLY_H: "Cliquez sur un mur pour le verrouiller à l'horizontale",
+  APPLY_V: 'Cliquez sur un mur pour le verrouiller à la verticale',
+  COINCIDE: 'Cliquez sur le nœud, puis sur un mur/nœud pour les joindre',
   DIMENSION: 'Cliquez sur un premier nœud, puis sur le second',
-  ANCHOR:    'Cliquez sur un nœud pour le figer en place',
-  DELETE:    'Cliquez sur un élément pour le supprimer — Échap pour quitter',
+  ANCHOR: 'Cliquez sur un nœud pour le figer en place',
+  DELETE: 'Cliquez sur un élément pour le supprimer — Échap pour quitter',
 };
 ```
 
@@ -119,6 +150,7 @@ git commit -m "feat(drawing): ajoute DELETE à PlanTool + texte ToolStatusBar"
 ### Task 2 : Bouton corbeille → outil DELETE dans PlanToolbar
 
 **Files:**
+
 - Modify: `src/components/plan/PlanToolbar.tsx`
 - Modify: `src/components/plan/PlanToolbar.test.tsx`
 
@@ -195,19 +227,37 @@ Dans la constante `TOOL_TOOLTIPS`, remplacer la ligne `clear` par `DELETE` :
 
 ```typescript
 const TOOL_TOOLTIPS = {
-  SELECT:    { label: 'Sélectionner',           description: 'Déplacer un nœud ou un segment' },
-  WALL:      { label: 'Tracer des murs',         description: 'Cliquez pour poser des points, Entrée pour fermer' },
-  DOOR:      { label: 'Placer une porte',        description: 'Cliquez sur un mur pour y insérer une ouverture' },
-  PARTITION: { label: 'Cloison (pointillés)',    description: 'Trace une séparation visuelle non porteuse' },
-  EXCLUDE:   { label: 'Zone non carrelée',       description: 'Délimite une surface à exclure du carrelage' },
-  APPLY_H:   { label: 'Contrainte horizontale',  description: "Fixe la distance horizontale d'un mur" },
-  APPLY_V:   { label: 'Contrainte verticale',    description: "Fixe la distance verticale d'un mur" },
-  COINCIDE:  { label: 'Coïncidence',             description: 'Aligne deux nœuds ou colle un nœud à un mur' },
-  DIMENSION: { label: 'Cotation',                description: 'Mesure ou contraint la distance entre deux nœuds' },
-  ANCHOR:    { label: 'Ancrer un nœud',          description: "Fige un point pour qu'il ne soit pas déplacé" },
-  undo:      { label: 'Annuler',                 description: "Ctrl+Z — revenir à l'état précédent" },
-  redo:      { label: 'Rétablir',                description: "Ctrl+Y — rétablir l'action annulée" },
-  DELETE:    { label: 'Mode suppression',        description: 'Cliquez un élément pour le supprimer — Échap pour quitter' },
+  SELECT: { label: 'Sélectionner', description: 'Déplacer un nœud ou un segment' },
+  WALL: {
+    label: 'Tracer des murs',
+    description: 'Cliquez pour poser des points, Entrée pour fermer',
+  },
+  DOOR: {
+    label: 'Placer une porte',
+    description: 'Cliquez sur un mur pour y insérer une ouverture',
+  },
+  PARTITION: {
+    label: 'Cloison (pointillés)',
+    description: 'Trace une séparation visuelle non porteuse',
+  },
+  EXCLUDE: {
+    label: 'Zone non carrelée',
+    description: 'Délimite une surface à exclure du carrelage',
+  },
+  APPLY_H: {
+    label: 'Contrainte horizontale',
+    description: "Fixe la distance horizontale d'un mur",
+  },
+  APPLY_V: { label: 'Contrainte verticale', description: "Fixe la distance verticale d'un mur" },
+  COINCIDE: { label: 'Coïncidence', description: 'Aligne deux nœuds ou colle un nœud à un mur' },
+  DIMENSION: { label: 'Cotation', description: 'Mesure ou contraint la distance entre deux nœuds' },
+  ANCHOR: { label: 'Ancrer un nœud', description: "Fige un point pour qu'il ne soit pas déplacé" },
+  undo: { label: 'Annuler', description: "Ctrl+Z — revenir à l'état précédent" },
+  redo: { label: 'Rétablir', description: "Ctrl+Y — rétablir l'action annulée" },
+  DELETE: {
+    label: 'Mode suppression',
+    description: 'Cliquez un élément pour le supprimer — Échap pour quitter',
+  },
 } as const;
 ```
 
@@ -233,16 +283,16 @@ export const PlanToolbar = ({
 Puis dans la section `{/* ── Actions ── */}` du desktop, remplacer le bloc du bouton corbeille :
 
 ```tsx
-    <ToolTooltip {...TOOL_TOOLTIPS.DELETE}>
-      <Button
-        variant={tool === 'DELETE' ? 'danger' : 'ghost'}
-        size="icon"
-        className="h-8 w-8"
-        onClick={() => onChangeTool('DELETE')}
-      >
-        <Trash2 size={16} />
-      </Button>
-    </ToolTooltip>
+<ToolTooltip {...TOOL_TOOLTIPS.DELETE}>
+  <Button
+    variant={tool === 'DELETE' ? 'danger' : 'ghost'}
+    size="icon"
+    className="h-8 w-8"
+    onClick={() => onChangeTool('DELETE')}
+  >
+    <Trash2 size={16} />
+  </Button>
+</ToolTooltip>
 ```
 
 - [ ] **Step 6 : Mettre à jour le bouton corbeille mobile**
@@ -250,17 +300,17 @@ Puis dans la section `{/* ── Actions ── */}` du desktop, remplacer le bl
 Dans la section mobile (`plan-toolbar-mobile`), remplacer le dernier bouton Trash :
 
 ```tsx
-    <button
-      type="button"
-      aria-label="Mode suppression"
-      onClick={() => onChangeTool('DELETE')}
-      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${
-        tool === 'DELETE' ? 'bg-red-500 text-white shadow-md shadow-red-500/30' : `${TB_CARD}`
-      }`}
-      style={tool !== 'DELETE' ? { color: 'var(--text2)' } : {}}
-    >
-      <Trash2 size={18} />
-    </button>
+<button
+  type="button"
+  aria-label="Mode suppression"
+  onClick={() => onChangeTool('DELETE')}
+  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${
+    tool === 'DELETE' ? 'bg-red-500 text-white shadow-md shadow-red-500/30' : `${TB_CARD}`
+  }`}
+  style={tool !== 'DELETE' ? { color: 'var(--text2)' } : {}}
+>
+  <Trash2 size={18} />
+</button>
 ```
 
 - [ ] **Step 7 : Lancer les tests — vérifier la réussite**
@@ -291,6 +341,7 @@ git commit -m "feat(drawing): bouton corbeille → outil DELETE (toggle, toujour
 ### Task 3 : DrawingCanvas — prop deleteHover + rendu rouge
 
 **Files:**
+
 - Modify: `src/components/plan/DrawingCanvas.tsx`
 
 Note : `DeleteHoverTarget` sera défini et exporté dans `DrawingCanvas.tsx` pour suivre le pattern des autres types (`EditingEdgeState`, `HoveredEdge`…).
@@ -301,16 +352,16 @@ En haut de `src/components/plan/DrawingCanvas.tsx`, après les interfaces exista
 
 ```typescript
 export type DeleteHoverTarget =
-  | { type: 'wall';      roomId: string; edgeIndex: number }
-  | { type: 'door';      roomId: string; edgeIndex: number }
+  | { type: 'wall'; roomId: string; edgeIndex: number }
+  | { type: 'door'; roomId: string; edgeIndex: number }
   | { type: 'partition'; roomId: string; partitionId: string }
-  | { type: 'zone';      roomId: string; zoneId: string }
+  | { type: 'zone'; roomId: string; zoneId: string };
 ```
 
 Dans l'interface `DrawingCanvasProps`, ajouter la prop :
 
 ```typescript
-  deleteHover: DeleteHoverTarget | null;
+deleteHover: DeleteHoverTarget | null;
 ```
 
 - [ ] **Step 2 : Mettre à jour le destructuring de DrawingCanvas**
@@ -330,12 +381,23 @@ export const DrawingCanvas = ({
 Remplacer le bloc `cursorClass` :
 
 ```typescript
-  const cursorClass =
-    tool === 'WALL' || tool === 'COINCIDE' || tool === 'ANCHOR' || tool === 'PARTITION' || tool === 'EXCLUDE' || tool === 'DELETE'
-      ? 'cursor-crosshair'
-      : tool === 'DOOR'
-        ? (hoveredEdgeType === 'DOOR' ? 'cursor-pointer' : hoveredEdge ? 'cursor-cell' : 'cursor-default')
-      : isPanning ? 'cursor-grabbing' : 'cursor-grab';
+const cursorClass =
+  tool === 'WALL' ||
+  tool === 'COINCIDE' ||
+  tool === 'ANCHOR' ||
+  tool === 'PARTITION' ||
+  tool === 'EXCLUDE' ||
+  tool === 'DELETE'
+    ? 'cursor-crosshair'
+    : tool === 'DOOR'
+      ? hoveredEdgeType === 'DOOR'
+        ? 'cursor-pointer'
+        : hoveredEdge
+          ? 'cursor-cell'
+          : 'cursor-default'
+      : isPanning
+        ? 'cursor-grabbing'
+        : 'cursor-grab';
 ```
 
 - [ ] **Step 4 : Highlight rouge sur les murs/portes survolés**
@@ -343,16 +405,29 @@ Remplacer le bloc `cursorClass` :
 Dans la section `{/* Walls */}` (le `.map()` qui rend les `<line>` de murs), remplacer le calcul de `color` pour prendre en compte `deleteHover` :
 
 ```typescript
-                const isDeleteHovered =
-                  deleteHover?.type === 'wall' || deleteHover?.type === 'door'
-                    ? deleteHover.roomId === room.id && deleteHover.edgeIndex === i
-                    : false;
-                const color = isDeleteHovered ? '#ef4444'
-                  : isHov && isDoor ? '#f87171' : isHov ? '#fb923c'
-                  : isDoor ? '#f97316'
-                  : hasH || hasV ? (isActive ? '#60a5fa' : '#1d4ed8')
-                  : hasDist ? (isActive ? '#fbbf24' : '#92400e')
-                  : isActive ? '#ea580c' : 'var(--canvas-wall-inact)';
+const isDeleteHovered =
+  deleteHover?.type === 'wall' || deleteHover?.type === 'door'
+    ? deleteHover.roomId === room.id && deleteHover.edgeIndex === i
+    : false;
+const color = isDeleteHovered
+  ? '#ef4444'
+  : isHov && isDoor
+    ? '#f87171'
+    : isHov
+      ? '#fb923c'
+      : isDoor
+        ? '#f97316'
+        : hasH || hasV
+          ? isActive
+            ? '#60a5fa'
+            : '#1d4ed8'
+          : hasDist
+            ? isActive
+              ? '#fbbf24'
+              : '#92400e'
+            : isActive
+              ? '#ea580c'
+              : 'var(--canvas-wall-inact)';
 ```
 
 - [ ] **Step 5 : Highlight rouge sur les cloisons survolées**
@@ -360,20 +435,22 @@ Dans la section `{/* Walls */}` (le `.map()` qui rend les `<line>` de murs), rem
 Dans la section `{/* ── Partitions ── */}`, trouver le rendu du segment de cloison principal. Chercher le `<line>` ou `<rect>` principal de la cloison (celui avec `strokeWidth={pt.thickness}`). Ajouter une variable `isPartitionDeleteHovered` et changer la couleur de contour :
 
 ```typescript
-                const isPartitionDeleteHovered =
-                  deleteHover?.type === 'partition' &&
-                  deleteHover.roomId === room.id &&
-                  deleteHover.partitionId === pt.id;
+const isPartitionDeleteHovered =
+  deleteHover?.type === 'partition' &&
+  deleteHover.roomId === room.id &&
+  deleteHover.partitionId === pt.id;
 ```
 
 Puis sur le rendu de la cloison (la ligne avec `stroke="var(--canvas-wall-inact)"` ou similaire pour la cloison), si `isPartitionDeleteHovered`, utiliser `stroke="#ef4444"`.
 
 > Note : chercher dans le fichier `strokeDasharray` car les cloisons utilisent des pointillés. La ligne ressemble à :
+>
 > ```tsx
 > <line x1={pt.p1.x} y1={pt.p1.y} x2={pt.p2.x} y2={pt.p2.y}
 >   stroke={isEditingLabel ? '#fb923c' : 'var(--canvas-partition)'}
 >   strokeWidth={pt.thickness} strokeDasharray={...} />
 > ```
+>
 > Ajouter `isPartitionDeleteHovered ? '#ef4444' :` avant `isEditingLabel`.
 
 - [ ] **Step 6 : Highlight rouge sur les zones survolées**
@@ -381,20 +458,22 @@ Puis sur le rendu de la cloison (la ligne avec `stroke="var(--canvas-wall-inact)
 Dans la section `{/* Zone edge lines */}` à l'intérieur de `isClosed && room.excludedZones.map(zone => ...)`, trouver le rendu des bords de la zone. Ajouter :
 
 ```typescript
-                      const isZoneDeleteHovered =
-                        deleteHover?.type === 'zone' &&
-                        deleteHover.roomId === room.id &&
-                        deleteHover.zoneId === zone.id;
+const isZoneDeleteHovered =
+  deleteHover?.type === 'zone' && deleteHover.roomId === room.id && deleteHover.zoneId === zone.id;
 ```
 
 Sur la `<line>` de bord de zone, modifier le calcul de `color` :
 
 ```typescript
-                      const color = isZoneDeleteHovered ? '#ef4444'
-                        : isHov ? '#fb923c'
-                        : hasH || hasV ? '#60a5fa'
-                        : hasDist ? '#fbbf24'
-                        : '#f59e0b';
+const color = isZoneDeleteHovered
+  ? '#ef4444'
+  : isHov
+    ? '#fb923c'
+    : hasH || hasV
+      ? '#60a5fa'
+      : hasDist
+        ? '#fbbf24'
+        : '#f59e0b';
 ```
 
 - [ ] **Step 7 : TypeScript check**
@@ -417,10 +496,12 @@ git commit -m "feat(drawing): DrawingCanvas — prop deleteHover, cursor-crossha
 ### Task 4 : PlanEditor — logique DELETE complète
 
 **Files:**
+
 - Modify: `src/components/plan/PlanEditor.tsx`
 - Test: `src/components/plan/PlanEditor.toolbar.test.ts`
 
 Cette tâche est la plus grosse. Elle :
+
 1. Ajoute le state `deleteHover`
 2. Ajoute `findDeleteTarget` et `deleteTarget`
 3. Ajoute la branche DELETE dans `handlePointerDown` et `handlePointerMove`
@@ -437,15 +518,13 @@ Dans `src/components/plan/PlanEditor.toolbar.test.ts`, **remplacer** les describ
 
 describe('findDeleteTarget — priorité', () => {
   type Target =
-    | { type: 'wall';      priority: number }
-    | { type: 'door';      priority: number }
+    | { type: 'wall'; priority: number }
+    | { type: 'door'; priority: number }
     | { type: 'partition'; priority: number }
-    | { type: 'zone';      priority: number };
+    | { type: 'zone'; priority: number };
 
   const pick = (candidates: Target[]) =>
-    candidates.reduce((best, c) =>
-      c.priority < best.priority ? c : best
-    );
+    candidates.reduce((best, c) => (c.priority < best.priority ? c : best));
 
   it('partition gagne face à un mur à même distance', () => {
     const result = pick([
@@ -505,9 +584,14 @@ En haut de `src/components/plan/PlanEditor.tsx`, dans la ligne d'import depuis `
 
 ```typescript
 import type {
-  HoveredEdge, EditingEdgeState, SnapPreview, HoveredZoneEdge, EditingZoneEdge,
-  HoveredPartitionEdge, PartitionDimLine,
-  DeleteHoverTarget,   // ← nouveau
+  HoveredEdge,
+  EditingEdgeState,
+  SnapPreview,
+  HoveredZoneEdge,
+  EditingZoneEdge,
+  HoveredPartitionEdge,
+  PartitionDimLine,
+  DeleteHoverTarget, // ← nouveau
 } from './DrawingCanvas';
 ```
 
@@ -516,7 +600,7 @@ import type {
 Dans les déclarations de state (vers la ligne 268, près des autres états d'édition), ajouter :
 
 ```typescript
-  const [deleteHover, setDeleteHover] = useState<DeleteHoverTarget | null>(null);
+const [deleteHover, setDeleteHover] = useState<DeleteHoverTarget | null>(null);
 ```
 
 - [ ] **Step 5 : Ajouter findDeleteTarget**
@@ -524,49 +608,60 @@ Dans les déclarations de state (vers la ligne 268, près des autres états d'é
 Après la fonction `findNearestPartitionEdge` (vers la ligne 685), ajouter :
 
 ```typescript
-  // ── Détecte l'élément le plus proche pour le mode DELETE ──────────────────
-  const findDeleteTarget = (worldPos: Point): DeleteHoverTarget | null => {
-    const threshold = 80 / scale;
-    let best: { target: DeleteHoverTarget; dist: number; priority: number } | null = null;
+// ── Détecte l'élément le plus proche pour le mode DELETE ──────────────────
+const findDeleteTarget = (worldPos: Point): DeleteHoverTarget | null => {
+  const threshold = 80 / scale;
+  let best: { target: DeleteHoverTarget; dist: number; priority: number } | null = null;
 
-    const candidate = (target: DeleteHoverTarget, d: number, priority: number) => {
-      if (d >= threshold) return;
-      if (!best || d < best.dist || (d === best.dist && priority < best.priority)) {
-        best = { target, dist: d, priority };
-      }
-    };
+  const candidate = (target: DeleteHoverTarget, d: number, priority: number) => {
+    if (d >= threshold) return;
+    if (!best || d < best.dist || (d === best.dist && priority < best.priority)) {
+      best = { target, dist: d, priority };
+    }
+  };
 
-    for (const room of rooms) {
-      if (room.points.length < 3) continue;
-      // Murs et portes
-      for (let i = 0; i < room.points.length; i++) {
-        const p1 = room.points[i]!, p2 = room.points[(i + 1) % room.points.length]!;
-        const proj = getPointOnSegment(worldPos, p1, p2);
-        const d = distance(worldPos, proj);
-        const edgeType = room.edges[i] ?? 'WALL';
-        if (edgeType === 'DOOR') {
-          candidate({ type: 'door', roomId: room.id, edgeIndex: i }, d, 2);
-        } else {
-          candidate({ type: 'wall', roomId: room.id, edgeIndex: i }, d, 3);
-        }
-      }
-      // Cloisons
-      for (const pt of (room.partitions ?? [])) {
-        const proj = getPointOnSegment(worldPos, pt.p1, pt.p2);
-        candidate({ type: 'partition', roomId: room.id, partitionId: pt.id }, distance(worldPos, proj), 0);
-      }
-      // Zones exclues
-      for (const zone of (room.excludedZones ?? [])) {
-        if (zone.points.length < 3) continue;
-        for (let i = 0; i < zone.points.length; i++) {
-          const proj = getPointOnSegment(worldPos, zone.points[i]!, zone.points[(i + 1) % zone.points.length]!);
-          candidate({ type: 'zone', roomId: room.id, zoneId: zone.id }, distance(worldPos, proj), 1);
-        }
+  for (const room of rooms) {
+    if (room.points.length < 3) continue;
+    // Murs et portes
+    for (let i = 0; i < room.points.length; i++) {
+      const p1 = room.points[i]!,
+        p2 = room.points[(i + 1) % room.points.length]!;
+      const proj = getPointOnSegment(worldPos, p1, p2);
+      const d = distance(worldPos, proj);
+      const edgeType = room.edges[i] ?? 'WALL';
+      if (edgeType === 'DOOR') {
+        candidate({ type: 'door', roomId: room.id, edgeIndex: i }, d, 2);
+      } else {
+        candidate({ type: 'wall', roomId: room.id, edgeIndex: i }, d, 3);
       }
     }
+    // Cloisons
+    for (const pt of room.partitions ?? []) {
+      const proj = getPointOnSegment(worldPos, pt.p1, pt.p2);
+      candidate(
+        { type: 'partition', roomId: room.id, partitionId: pt.id },
+        distance(worldPos, proj),
+        0,
+      );
+    }
+    // Zones exclues
+    for (const zone of room.excludedZones ?? []) {
+      if (zone.points.length < 3) continue;
+      for (let i = 0; i < zone.points.length; i++) {
+        const proj = getPointOnSegment(
+          worldPos,
+          zone.points[i]!,
+          zone.points[(i + 1) % zone.points.length]!,
+        );
+        candidate({ type: 'zone', roomId: room.id, zoneId: zone.id }, distance(worldPos, proj), 1);
+      }
+    }
+  }
 
-    return best ? (best as { target: DeleteHoverTarget; dist: number; priority: number }).target : null;
-  };
+  return best
+    ? (best as { target: DeleteHoverTarget; dist: number; priority: number }).target
+    : null;
+};
 ```
 
 - [ ] **Step 6 : Ajouter deleteTarget**
@@ -574,54 +669,52 @@ Après la fonction `findNearestPartitionEdge` (vers la ligne 685), ajouter :
 Après `findDeleteTarget`, ajouter :
 
 ```typescript
-  // ── Supprime l'élément cible (mode DELETE) ────────────────────────────────
-  const deleteTarget = (target: DeleteHoverTarget) => {
-    if (target.type === 'partition') {
-      pushHistory();
-      removePartition(target.roomId, target.partitionId);
-      setDeleteHover(null);
-      return;
-    }
-    if (target.type === 'zone') {
-      pushHistory();
-      removeExcludedZone(target.roomId, target.zoneId);
-      setDeleteHover(null);
-      return;
-    }
-    const room = rooms.find((r) => r.id === target.roomId);
-    if (!room) return;
-    if (target.type === 'door') {
-      const result = removeDoorFromRoom(room, target.edgeIndex);
-      if (!result) return;
-      pushHistory();
-      shiftConstraintIndices(room.id, target.edgeIndex, -2);
-      updateRoom(room.id, result.points, result.edges);
-      setDeleteHover(null);
-      return;
-    }
-    // type === 'wall' : ré-ouvrir la pièce
-    const n = room.points.length;
-    if (n < 3) return;
+// ── Supprime l'élément cible (mode DELETE) ────────────────────────────────
+const deleteTarget = (target: DeleteHoverTarget) => {
+  if (target.type === 'partition') {
     pushHistory();
-    const rotateBy = (target.edgeIndex + 1) % n;
-    const newPoints = [...room.points.slice(rotateBy), ...room.points.slice(0, rotateBy)];
-    const reorderedEdges = [...room.edges.slice(rotateBy), ...room.edges.slice(0, rotateBy)];
-    const newEdges = reorderedEdges.slice(0, n - 1) as EdgeType[];
-    const roomConstraints = constraints.filter((c) => c.pts.some((r) => r.roomId === room.id));
-    roomConstraints.forEach((c) => {
-      removeConstraint(c.id);
-      addConstraint({
-        ...c,
-        pts: c.pts.map((r) =>
-          r.roomId === room.id
-            ? { ...r, vertexIdx: (r.vertexIdx - rotateBy + n) % n }
-            : r,
-        ),
-      });
-    });
-    updateRoom(room.id, newPoints, newEdges);
+    removePartition(target.roomId, target.partitionId);
     setDeleteHover(null);
-  };
+    return;
+  }
+  if (target.type === 'zone') {
+    pushHistory();
+    removeExcludedZone(target.roomId, target.zoneId);
+    setDeleteHover(null);
+    return;
+  }
+  const room = rooms.find((r) => r.id === target.roomId);
+  if (!room) return;
+  if (target.type === 'door') {
+    const result = removeDoorFromRoom(room, target.edgeIndex);
+    if (!result) return;
+    pushHistory();
+    shiftConstraintIndices(room.id, target.edgeIndex, -2);
+    updateRoom(room.id, result.points, result.edges);
+    setDeleteHover(null);
+    return;
+  }
+  // type === 'wall' : ré-ouvrir la pièce
+  const n = room.points.length;
+  if (n < 3) return;
+  pushHistory();
+  const rotateBy = (target.edgeIndex + 1) % n;
+  const newPoints = [...room.points.slice(rotateBy), ...room.points.slice(0, rotateBy)];
+  const reorderedEdges = [...room.edges.slice(rotateBy), ...room.edges.slice(0, rotateBy)];
+  const newEdges = reorderedEdges.slice(0, n - 1) as EdgeType[];
+  const roomConstraints = constraints.filter((c) => c.pts.some((r) => r.roomId === room.id));
+  roomConstraints.forEach((c) => {
+    removeConstraint(c.id);
+    addConstraint({
+      ...c,
+      pts: c.pts.map((r) =>
+        r.roomId === room.id ? { ...r, vertexIdx: (r.vertexIdx - rotateBy + n) % n } : r,
+      ),
+    });
+  });
+  updateRoom(room.id, newPoints, newEdges);
+  setDeleteHover(null);
+};
 ```
 
 - [ ] **Step 7 : Ajouter la branche DELETE dans handlePointerDown**
@@ -629,17 +722,17 @@ Après `findDeleteTarget`, ajouter :
 Dans `handlePointerDown` (vers la ligne 732), ajouter une branche au début, juste **après** les gardes `editingEdge`, `draggedVertex` etc. et la récupération de `raw`, mais **avant** la branche `DIMENSION`. Chercher le commentaire `// ── DIMENSION` et insérer avant :
 
 ```typescript
-    // ── DELETE ──
-    if (tool === 'DELETE') {
-      const target = findDeleteTarget(raw);
-      if (target) {
-        deleteTarget(target);
-      } else {
-        setTool('SELECT');
-        setDeleteHover(null);
-      }
-      return;
-    }
+// ── DELETE ──
+if (tool === 'DELETE') {
+  const target = findDeleteTarget(raw);
+  if (target) {
+    deleteTarget(target);
+  } else {
+    setTool('SELECT');
+    setDeleteHover(null);
+  }
+  return;
+}
 ```
 
 - [ ] **Step 8 : Ajouter la branche DELETE dans handlePointerMove**
@@ -647,17 +740,19 @@ Dans `handlePointerDown` (vers la ligne 732), ajouter une branche au début, jus
 Dans `handlePointerMove`, à la fin du bloc (juste avant `}`), remplacer le bloc `else { setHoveredEdge(null) … }` par :
 
 ```typescript
-    if (tool === 'DELETE') {
-      setDeleteHover(findDeleteTarget(raw));
-    } else if (tool === 'DOOR') {
-      setHoveredEdge(findNearestEdgeOfType(raw, 'DOOR') ?? findNearestWallEdge(raw));
-    } else if (tool === 'APPLY_H' || tool === 'APPLY_V') {
-      setHoveredEdge(findNearestWallEdge(raw));
-      setHoveredZoneEdge(findNearestZoneEdge(raw));
-      setHoveredPartitionEdge(findNearestPartitionEdge(raw));
-    } else {
-      setHoveredEdge(null); setHoveredZoneEdge(null); setHoveredPartitionEdge(null);
-    }
+if (tool === 'DELETE') {
+  setDeleteHover(findDeleteTarget(raw));
+} else if (tool === 'DOOR') {
+  setHoveredEdge(findNearestEdgeOfType(raw, 'DOOR') ?? findNearestWallEdge(raw));
+} else if (tool === 'APPLY_H' || tool === 'APPLY_V') {
+  setHoveredEdge(findNearestWallEdge(raw));
+  setHoveredZoneEdge(findNearestZoneEdge(raw));
+  setHoveredPartitionEdge(findNearestPartitionEdge(raw));
+} else {
+  setHoveredEdge(null);
+  setHoveredZoneEdge(null);
+  setHoveredPartitionEdge(null);
+}
 ```
 
 - [ ] **Step 9 : Étendre handleTouchEnd pour le mode DELETE**
@@ -665,30 +760,30 @@ Dans `handlePointerMove`, à la fin du bloc (juste avant `}`), remplacer le bloc
 Dans `handleTouchEnd`, trouver le bloc `if (tool !== 'SELECT' || !ref || ref.dist !== 0) return;` et le remplacer par :
 
 ```typescript
-    if (!ref || ref.dist !== 0) return;
-    const touch = e.changedTouches[0];
-    if (!touch) return;
-    const moved = Math.hypot(touch.clientX - ref.midX, touch.clientY - ref.midY);
-    if (moved > 12) return;
+if (!ref || ref.dist !== 0) return;
+const touch = e.changedTouches[0];
+if (!touch) return;
+const moved = Math.hypot(touch.clientX - ref.midX, touch.clientY - ref.midY);
+if (moved > 12) return;
 
-    if (!svgRef.current) return;
-    const svgRect = svgRef.current.getBoundingClientRect();
-    const worldPos = toWorld(touch.clientX - svgRect.left, touch.clientY - svgRect.top);
+if (!svgRef.current) return;
+const svgRect = svgRef.current.getBoundingClientRect();
+const worldPos = toWorld(touch.clientX - svgRect.left, touch.clientY - svgRect.top);
 
-    // Mode DELETE : tap = suppression directe
-    if (tool === 'DELETE') {
-      const target = findDeleteTarget(worldPos);
-      if (target) {
-        deleteTarget(target);
-      } else {
-        setTool('SELECT');
-        setDeleteHover(null);
-      }
-      return;
-    }
+// Mode DELETE : tap = suppression directe
+if (tool === 'DELETE') {
+  const target = findDeleteTarget(worldPos);
+  if (target) {
+    deleteTarget(target);
+  } else {
+    setTool('SELECT');
+    setDeleteHover(null);
+  }
+  return;
+}
 
-    if (tool !== 'SELECT') return;
-    // … reste du code handleTouchEnd existant (zone SELECT) …
+if (tool !== 'SELECT') return;
+// … reste du code handleTouchEnd existant (zone SELECT) …
 ```
 
 - [ ] **Step 10 : Ajouter setDeleteHover(null) dans le handler Escape**
@@ -696,7 +791,7 @@ Dans `handleTouchEnd`, trouver le bloc `if (tool !== 'SELECT' || !ref || ref.dis
 Dans le handler clavier (vers la ligne 539), dans le bloc `if (e.key === 'Escape')`, ajouter :
 
 ```typescript
-        setDeleteHover(null);
+setDeleteHover(null);
 ```
 
 (juste après `setTool('SELECT')`)
@@ -728,23 +823,26 @@ Dans `PlanEditor.tsx` :
 Trouver l'appel `<PlanToolbar …>` et supprimer les props `onDelete`, `canDelete`, `deleteTooltipLabel` :
 
 ```tsx
-      <PlanToolbar
-        tool={tool}
-        canUndo={past.length > 0}
-        canRedo={future.length > 0}
-        onChangeTool={(t) => {
-          setTool(t);
-          setDeleteHover(null);
-          setCoincideSource(null); setDimensionSource(null); setPartitionOrigin(null);
-          setExcludePoints([]); setEditingPartitionDimension(null);
-        }}
-        onUndo={handleUndo}
-        onRedo={handleRedo}
-        wallThickness={wallThickness}
-        onWallThicknessChange={setWallThickness}
-        tutorialMode={tutorialMode}
-        onToggleTutorial={() => setTutorialMode((v) => !v)}
-      />
+<PlanToolbar
+  tool={tool}
+  canUndo={past.length > 0}
+  canRedo={future.length > 0}
+  onChangeTool={(t) => {
+    setTool(t);
+    setDeleteHover(null);
+    setCoincideSource(null);
+    setDimensionSource(null);
+    setPartitionOrigin(null);
+    setExcludePoints([]);
+    setEditingPartitionDimension(null);
+  }}
+  onUndo={handleUndo}
+  onRedo={handleRedo}
+  wallThickness={wallThickness}
+  onWallThicknessChange={setWallThickness}
+  tutorialMode={tutorialMode}
+  onToggleTutorial={() => setTutorialMode((v) => !v)}
+/>
 ```
 
 - [ ] **Step 14 : Ajouter deleteHover à l'appel DrawingCanvas**
@@ -752,7 +850,7 @@ Trouver l'appel `<PlanToolbar …>` et supprimer les props `onDelete`, `canDelet
 Dans l'appel `<DrawingCanvas …>`, ajouter :
 
 ```tsx
-        deleteHover={deleteHover}
+deleteHover = { deleteHover };
 ```
 
 - [ ] **Step 15 : TypeScript check**
@@ -783,6 +881,7 @@ git commit -m "feat(drawing): mode DELETE complet — findDeleteTarget, deleteTa
 ### Task 5 : Nettoyage tests obsolètes
 
 **Files:**
+
 - Modify: `src/components/plan/PlanEditor.toolbar.test.ts`
 
 Les describe `canDelete` et `editingContext` (lignes 158–223) ont déjà été remplacés en Task 4, Step 1. Cette tâche vérifie qu'aucun test ne référence `onDelete`, `canDelete`, `deleteTooltipLabel`.

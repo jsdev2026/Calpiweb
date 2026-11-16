@@ -27,7 +27,7 @@ Le graphe se retrouve avec deux murs M-N → `wallsToRooms` produit des demi-ar�
 Dans le bloc chain-extension de `WallDrawingCanvas.tsx`, avant d'appeler `onAddWall`, vérifier si le split va créer lui-même le lien `prevNodeId → targetNodeId` :
 
 ```ts
-const snapWallObj = splitWallId !== null ? walls.find(w => w.id === splitWallId) : null;
+const snapWallObj = splitWallId !== null ? walls.find((w) => w.id === splitWallId) : null;
 const splitWillCreateLink =
   snapWallObj !== null &&
   (snapWallObj.node1Id === prevNodeId || snapWallObj.node2Id === prevNodeId);
@@ -35,7 +35,12 @@ const splitWillCreateLink =
 // ...
 
 if (!alreadyConnected && !splitWillCreateLink) {
-  onAddWall({ id: generateId(), node1Id: prevNodeId, node2Id: targetNodeId, thickness: chain.thickness });
+  onAddWall({
+    id: generateId(),
+    node1Id: prevNodeId,
+    node2Id: targetNodeId,
+    thickness: chain.thickness,
+  });
 }
 ```
 
@@ -50,24 +55,24 @@ Nouvelle fonction exportée réutilisant exactement le même algorithme half-edg
 ```ts
 export interface FaceCycle {
   nodeIds: string[];
-  wallIds: string[];  // wallId[i] = mur entre nodeIds[i] et nodeIds[(i+1) % n]
+  wallIds: string[]; // wallId[i] = mur entre nodeIds[i] et nodeIds[(i+1) % n]
 }
 
-export function wallFaceCycles(
-  walls: Wall[],
-  nodes: WallNode[],
-): FaceCycle[]
+export function wallFaceCycles(walls: Wall[], nodes: WallNode[]): FaceCycle[];
 ```
 
 Pour chaque demi-arête du cycle, retrouver le wallId via :
+
 ```ts
-walls.find(w =>
-  (w.node1Id === he.from && w.node2Id === he.to) ||
-  (w.node1Id === he.to   && w.node2Id === he.from)
-)
+walls.find(
+  (w) =>
+    (w.node1Id === he.from && w.node2Id === he.to) ||
+    (w.node1Id === he.to && w.node2Id === he.from),
+);
 ```
 
 `wallsToRooms` est refactoré pour appeler `wallFaceCycles` :
+
 ```ts
 export function wallsToRooms(walls, nodes, excludedZones): Room[] {
   const cycles = wallFaceCycles(walls, nodes);
@@ -83,12 +88,12 @@ Remplace l'appel interne à `detectClosedPolygons` par `wallFaceCycles`. Pour ch
 
 ## Fichiers
 
-| Fichier | Changement |
-|---------|-----------|
-| `src/components/plan/WallDrawingCanvas.tsx` | `splitWillCreateLink` + condition `onAddWall` |
-| `src/engine/geometry/wallFaces.ts` | Extraire `wallFaceCycles`, refactorer `wallsToRooms` |
-| `src/engine/geometry/wallCotation.ts` | Remplacer `detectClosedPolygons` par `wallFaceCycles` |
-| `src/engine/geometry/wallCotation.test.ts` | Supprimer tests `detectClosedPolygons`, ajouter tests cotations multi-pièces |
+| Fichier                                     | Changement                                                                   |
+| ------------------------------------------- | ---------------------------------------------------------------------------- |
+| `src/components/plan/WallDrawingCanvas.tsx` | `splitWillCreateLink` + condition `onAddWall`                                |
+| `src/engine/geometry/wallFaces.ts`          | Extraire `wallFaceCycles`, refactorer `wallsToRooms`                         |
+| `src/engine/geometry/wallCotation.ts`       | Remplacer `detectClosedPolygons` par `wallFaceCycles`                        |
+| `src/engine/geometry/wallCotation.test.ts`  | Supprimer tests `detectClosedPolygons`, ajouter tests cotations multi-pièces |
 
 ## Tests
 

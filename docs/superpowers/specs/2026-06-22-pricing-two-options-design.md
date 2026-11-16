@@ -12,10 +12,10 @@ L'application est en phase d'accès anticipé. Les prix ne sont pas encore publi
 
 Deux offres coexistent, présentées sans prix :
 
-| Offre | Description | Statut |
-|---|---|---|
-| **+1 projet** | Crédit unitaire — débloque un projet supplémentaire, sans engagement | Disponible prochainement |
-| **Projets illimités** | Abonnement — projets illimités, sauvegarde cloud, tous appareils | Disponible prochainement |
+| Offre                 | Description                                                          | Statut                   |
+| --------------------- | -------------------------------------------------------------------- | ------------------------ |
+| **+1 projet**         | Crédit unitaire — débloque un projet supplémentaire, sans engagement | Disponible prochainement |
+| **Projets illimités** | Abonnement — projets illimités, sauvegarde cloud, tous appareils     | Disponible prochainement |
 
 L'offre "Projets illimités" est mise en avant (badge "Recommandé").
 
@@ -28,6 +28,7 @@ La logique de limite (1 projet pour les utilisateurs Free) reste inchangée.
 **Avant :** une option "Passez au plan Pro" avec le prix "9 €/mois" et un bouton "Voir les offres Pro →".
 
 **Après :**
+
 - Titre : "Limite atteinte"
 - Sous-titre : "Vous avez utilisé votre projet inclus. Comment continuer ?"
 - Deux cartes côte à côte :
@@ -41,6 +42,7 @@ La logique de limite (1 projet pour les utilisateurs Free) reste inchangée.
 **Avant :** un seul bloc "Passez Pro — 9 €/mois" avec "Paiement disponible prochainement".
 
 **Après :** deux blocs côte à côte dans la section "Plan actuel" (visible uniquement pour les utilisateurs Free) :
+
 - **+1 projet** — description + "Disponible prochainement"
 - **Projets illimités** — description + "Disponible prochainement" (bordure verte)
 - Note de bas de section : "Contactez-nous pour un accès anticipé."

@@ -34,8 +34,8 @@ interface QuantityPlanSvgProps {
   config: TilingConfig;
   rooms: Room[];
   highlightGroup?: number | null;
-  width?: number;   // optionnel, défaut: 100%
-  height?: number;  // optionnel, défaut: auto
+  width?: number; // optionnel, défaut: 100%
+  height?: number; // optionnel, défaut: auto
 }
 ```
 
@@ -115,20 +115,20 @@ Le composant appelle lui-même `analyzeQuantities` pour obtenir les résultats (
 
 Grille 4 colonnes, cartes à bordure colorée :
 
-| Carte | Valeur | Couleur accent |
-|---|---|---|
-| Total posés | `result.totalTiles` | gris neutre |
-| Carreaux entiers | `result.wholeCount` | bleu `#3b82f6` |
-| Coupes | `result.cuts.length` | orange `#f97316` |
-| À commander | `result.toOrder` | vert `#16a34a` |
+| Carte            | Valeur               | Couleur accent   |
+| ---------------- | -------------------- | ---------------- |
+| Total posés      | `result.totalTiles`  | gris neutre      |
+| Carreaux entiers | `result.wholeCount`  | bleu `#3b82f6`   |
+| Coupes           | `result.cuts.length` | orange `#f97316` |
+| À commander      | `result.toOrder`     | vert `#16a34a`   |
 
 #### ⑥ Tableau des coupes
 
 Tableau HTML (pas de librairie) avec colonnes :
 
-| Couleur | Dimension de coupe | Qté | Chute récupérable | Carreaux source |
-|---|---|---|---|---|
-| `<div>` carré coloré (couleur du groupe, `GROUP_COLORS[i]`) | `{usedW} × {usedH} cm` | `×{netTiles}` | `{chuteW} × {chuteH} cm (×{netTiles})` si chute > 0, sinon `—` | `{netTiles}` |
+| Couleur                                                     | Dimension de coupe     | Qté           | Chute récupérable                                              | Carreaux source |
+| ----------------------------------------------------------- | ---------------------- | ------------- | -------------------------------------------------------------- | --------------- |
+| `<div>` carré coloré (couleur du groupe, `GROUP_COLORS[i]`) | `{usedW} × {usedH} cm` | `×{netTiles}` | `{chuteW} × {chuteH} cm (×{netTiles})` si chute > 0, sinon `—` | `{netTiles}`    |
 
 - Alternance de fond de ligne (`#fff` / `#fafafa`).
 - En-têtes de colonne en `#6b7280`, fond `#f8fafc`.
@@ -143,6 +143,7 @@ Tableau HTML (pas de librairie) avec colonnes :
 ### Multi-pièces
 
 Pour un projet avec N pièces valides :
+
 - `analyzeQuantities([room], config, wallThickness)` est appelé pour chaque pièce individuellement.
 - Les sections ③→⑥ sont rendues N fois, séparées par le séparateur ③.
 - Si une pièce n'a pas de tuiles (`totalTiles === 0`), elle est ignorée dans l'impression.
@@ -191,19 +192,19 @@ Toutes les couleurs du composant sont des hexadécimaux fixes pour garantir l'im
 </div>
 ```
 
-  Positionné en dehors du `<main>`, après `</main>`, avant `{showSettings && ...}`.
+Positionné en dehors du `<main>`, après `</main>`, avant `{showSettings && ...}`.
 
 ---
 
 ## Fichiers modifiés/créés
 
-| Fichier | Changement |
-|---|---|
-| `src/components/quantities/QuantityPlanSvg.tsx` | **Créé** — SVG statique pur extrait de `QuantityPlanView` |
-| `src/components/quantities/QuantityPlanView.tsx` | **Modifié** — utilise `QuantityPlanSvg`, comportement inchangé |
-| `src/components/quantities/QuantitiesPrintView.tsx` | **Créé** — composant d'impression complet |
-| `src/app/globals.css` | **Modifié** — bloc `@media print` |
-| `src/app/project/[id]/page.tsx` | **Modifié** — rend `QuantitiesPrintView`, simplifie `handlePrint`, active PDF sur tous onglets |
+| Fichier                                             | Changement                                                                                     |
+| --------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `src/components/quantities/QuantityPlanSvg.tsx`     | **Créé** — SVG statique pur extrait de `QuantityPlanView`                                      |
+| `src/components/quantities/QuantityPlanView.tsx`    | **Modifié** — utilise `QuantityPlanSvg`, comportement inchangé                                 |
+| `src/components/quantities/QuantitiesPrintView.tsx` | **Créé** — composant d'impression complet                                                      |
+| `src/app/globals.css`                               | **Modifié** — bloc `@media print`                                                              |
+| `src/app/project/[id]/page.tsx`                     | **Modifié** — rend `QuantitiesPrintView`, simplifie `handlePrint`, active PDF sur tous onglets |
 
 ## Tests
 

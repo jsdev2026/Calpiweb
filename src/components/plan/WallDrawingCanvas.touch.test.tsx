@@ -2,7 +2,9 @@ import { render, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { WallDrawingCanvas } from './WallDrawingCanvas';
 
-function renderCanvas(opts: { onPanChange?: ReturnType<typeof vi.fn>; onScaleChange?: ReturnType<typeof vi.fn> } = {}) {
+function renderCanvas(
+  opts: { onPanChange?: ReturnType<typeof vi.fn>; onScaleChange?: ReturnType<typeof vi.fn> } = {},
+) {
   const onPanChange = opts.onPanChange ?? vi.fn();
   const onScaleChange = opts.onScaleChange ?? vi.fn();
   const { container } = render(

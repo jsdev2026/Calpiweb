@@ -9,14 +9,16 @@ import { getBoundingBox } from '@/engine/geometry/polygon';
 import { GROUP_COLORS } from './CutGroupCard';
 
 function doorRectPath(door: DoorOpening): string {
-  const dx = door.to.x - door.from.x, dy = door.to.y - door.from.y;
+  const dx = door.to.x - door.from.x,
+    dy = door.to.y - door.from.y;
   const L = Math.sqrt(dx * dx + dy * dy);
   if (L < 1) return '';
-  const px = (-dy / L) * (door.thickness / 2), py = (dx / L) * (door.thickness / 2);
+  const px = (-dy / L) * (door.thickness / 2),
+    py = (dx / L) * (door.thickness / 2);
   const pts = [
     { x: door.from.x + px, y: door.from.y + py },
-    { x: door.to.x   + px, y: door.to.y   + py },
-    { x: door.to.x   - px, y: door.to.y   - py },
+    { x: door.to.x + px, y: door.to.y + py },
+    { x: door.to.x - px, y: door.to.y - py },
     { x: door.from.x - px, y: door.from.y - py },
   ];
   return `M ${pts.map((p) => `${p.x},${p.y}`).join(' L ')} Z`;
@@ -62,9 +64,8 @@ export const QuantityPlanSvg = ({
 
   if (validRooms.length === 0 || result.tiles.length === 0) return null;
 
-  const bbox = allPoints.length > 0
-    ? getBoundingBox(allPoints)
-    : { minX: 0, minY: 0, maxX: 1000, maxY: 1000 };
+  const bbox =
+    allPoints.length > 0 ? getBoundingBox(allPoints) : { minX: 0, minY: 0, maxX: 1000, maxY: 1000 };
   const pad = Math.max(bbox.maxX - bbox.minX, bbox.maxY - bbox.minY) * 0.1;
   const initX = bbox.minX - pad;
   const initY = bbox.minY - pad;
@@ -90,18 +91,11 @@ export const QuantityPlanSvg = ({
   const labelSize = Math.min(config.width, config.height) * 0.15;
 
   return (
-    <svg
-      viewBox={viewBox}
-      className={className}
-      style={{ display: 'block', ...style }}
-    >
+    <svg viewBox={viewBox} className={className} style={{ display: 'block', ...style }}>
       <defs>
         <clipPath id={clipId}>
           {validRooms.map((room) => (
-            <polygon
-              key={room.id}
-              points={room.points.map((p) => `${p.x},${p.y}`).join(' ')}
-            />
+            <polygon key={room.id} points={room.points.map((p) => `${p.x},${p.y}`).join(' ')} />
           ))}
         </clipPath>
       </defs>
@@ -134,13 +128,10 @@ export const QuantityPlanSvg = ({
             if (highlightGroup !== null) {
               dimOpacity = !isWhole && groupNumber === highlightGroup ? 1 : 0.12;
             }
-            const isHighlighted = highlightGroup !== null && !isWhole && groupNumber === highlightGroup;
+            const isHighlighted =
+              highlightGroup !== null && !isWhole && groupNumber === highlightGroup;
 
-            const fill = isWhole
-              ? config.color
-              : isReused && groupColor
-                ? groupColor
-                : cutBgColor;
+            const fill = isWhole ? config.color : isReused && groupColor ? groupColor : cutBgColor;
             const fillOpacity = isWhole ? 0.7 : isReused ? 0.28 : 1;
 
             return (
@@ -149,7 +140,10 @@ export const QuantityPlanSvg = ({
                 style={{
                   opacity: dimOpacity,
                   transition: 'opacity 0.15s ease, filter 0.15s ease',
-                  filter: isHighlighted && groupColor ? `drop-shadow(0 0 8px ${groupColor}88)` : undefined,
+                  filter:
+                    isHighlighted && groupColor
+                      ? `drop-shadow(0 0 8px ${groupColor}88)`
+                      : undefined,
                 }}
               >
                 {tile.points ? (
@@ -176,7 +170,12 @@ export const QuantityPlanSvg = ({
                 )}
                 {cut && groupInfo && (
                   <>
-                    <circle cx={cut.clipCx} cy={cut.clipCy} r={labelSize * 0.62} fill="rgba(0,0,0,0.50)" />
+                    <circle
+                      cx={cut.clipCx}
+                      cy={cut.clipCy}
+                      r={labelSize * 0.62}
+                      fill="rgba(0,0,0,0.50)"
+                    />
                     <text
                       x={cut.clipCx}
                       y={cut.clipCy}

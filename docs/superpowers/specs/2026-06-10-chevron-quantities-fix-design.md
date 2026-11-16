@@ -59,6 +59,7 @@ s'applique sans changement**, appliquée à `(u, v)` au lieu de `(x, y)`.
 
 Désactiver complètement chutes/réutilisation pour CHEVRON (toujours
 `chuteW=chuteH=0`). Plus simple à coder, mais :
+
 - ne corrige pas `usedW/usedH` (toujours faux)
 - ne corrige pas `totalTiles/toOrder`
 - supprime une fonctionnalité utile (réemploi des chutes)
@@ -78,7 +79,7 @@ marginal.
 
 2. **Extraction de la logique bbox → cut/chute/edges** dans une fonction
    partagée `computeCutFromBBox(width: number, height: number, bbox: {minX,
-   minY, maxX, maxY}, refX: number, refY: number)` qui reproduit exactement
+minY, maxX, maxY}, refX: number, refY: number)` qui reproduit exactement
    la logique actuelle (lignes ~65-113 de `buildCutTable.ts` :
    `usedW/usedH`, `isCutLeft/Right/Top/Bottom`, `pieceEdges`, calcul de
    `chuteW/chuteH/chuteEdges`, test `viable`).
@@ -94,18 +95,19 @@ marginal.
    - Calculer la bbox locale `(minU, minV, maxU, maxV)`
    - `tileW = Wlen`, `tileH = Hlen`
    - Appeler `computeCutFromBBox(Wlen, Hlen, {minX:minU, minY:minV, maxX:maxU,
-     maxY:maxV}, 0, 0)` (référence = origine du repère local)
+maxY:maxV}, 0, 0)` (référence = origine du repère local)
    - `clipCx, clipCy` : calculer le centre de la bbox locale `(uc, vc)`, puis
      `toGlobal(uc, vc)` pour l'annotation sur le plan
    - `roomId` : centroïde global = `origin + 0.5·eH + 0.5·eW`
    - Cas "aucune intersection" (clip vide) : fallback avec `tileW=Wlen,
-     tileH=Hlen, usedW=Wlen, usedH=Hlen` (au lieu de `w,h` actuels)
+tileH=Hlen, usedW=Wlen, usedH=Hlen` (au lieu de `w,h` actuels)
 
 4. **Branche STRAIGHT/HERRINGBONE** (`tile.points` undefined) : comportement
    **inchangé**, ré-exprimé via `computeCutFromBBox(w, h, clippedBboxGlobal,
-   x, y)` pour partager le code (refactor pur, aucun changement de résultat).
+x, y)` pour partager le code (refactor pur, aucun changement de résultat).
 
 ### `src/engine/quantities/assignOffcuts.ts`, `groupCuts.ts`,
+
 ### `src/components/quantities/CutGroupCard.tsx`
 
 Aucun changement. Ces modules manipulent uniquement des champs numériques
@@ -127,6 +129,7 @@ cohérence garantie par le fix géométrique CHEVRON précédent
 
 Cas CHEVRON construit à partir de l'exemple validé visuellement
 (Largeur=300mm, Longueur=600mm, angle=45°) :
+
 - `tile.points` = parallélogramme avec `eW=(0,300)`, `eH≈(424.26,424.26)`
 - Polygone de pièce coupant le carreau à `x=300` (mur vertical)
 - Assertions attendues :
@@ -141,6 +144,7 @@ après refactor de `computeCutFromBBox`).
 ### `quantityEngine.integration.test.ts`
 
 Nouveau test avec une pièce rectangulaire et `layout: 'CHEVRON'` :
+
 - `totalTiles`, `toOrder`, `cutGroups` ne contiennent pas de `NaN`/valeurs
   négatives
 - Au moins un groupe de découpe a un `chuteW/chuteH` non nul et plausible
@@ -151,7 +155,7 @@ Nouveau test avec une pièce rectangulaire et `layout: 'CHEVRON'` :
 
 - Le rendu visuel des miniatures de découpe (`CutGroupCard`) reste un
   rectangle simple (pas de parallélogramme dessiné) — cohérent avec le repère
-  local où le carreau CHEVRON *est* un rectangle 300×600.
+  local où le carreau CHEVRON _est_ un rectangle 300×600.
 - Pas de nesting/bin-packing avancé pour les chutes : la logique de réemploi
   reste celle existante (correspondance dimensionnelle simple via
   `REUSE_TOLERANCE_MM`).

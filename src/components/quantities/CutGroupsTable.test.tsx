@@ -59,7 +59,9 @@ describe('CutGroupsTable', () => {
   });
 
   it('renders the net tile count, styled green when reuseCount > 0', () => {
-    render(<CutGroupsTable {...defaultProps} groups={[makeGroup({ netTiles: 5, reuseCount: 2 })]} />);
+    render(
+      <CutGroupsTable {...defaultProps} groups={[makeGroup({ netTiles: 5, reuseCount: 2 })]} />,
+    );
     const cell = screen.getByText('5');
     expect(cell.className).toContain('text-emerald-500');
   });

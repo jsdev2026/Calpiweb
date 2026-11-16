@@ -11,15 +11,31 @@ import type { TilingConfig } from '@/types/tiling';
 import type { Room } from '@/types/project';
 
 const config: TilingConfig = {
-  layout: 'STRAIGHT', width: 300, height: 300, joint: 3,
-  angle: 0, offsetX: 0, offsetY: 0, stagger: 0, chevronAngle: 45, color: '#93c5fd',
+  layout: 'STRAIGHT',
+  width: 300,
+  height: 300,
+  joint: 3,
+  angle: 0,
+  offsetX: 0,
+  offsetY: 0,
+  stagger: 0,
+  chevronAngle: 45,
+  color: '#93c5fd',
 };
 
 const makeResult = (overrides: Partial<QuantityResult> = {}): QuantityResult => ({
-  tileW: 300, tileH: 300, joint: 3,
-  wholeCount: 5, cuts: [], cutGroups: [],
-  totalReuseCount: 0, tilesForCuts: 0, totalTiles: 5, toOrder: 6,
-  roomArea: 5_000_000, tiles: [],
+  tileW: 300,
+  tileH: 300,
+  joint: 3,
+  wholeCount: 5,
+  cuts: [],
+  cutGroups: [],
+  totalReuseCount: 0,
+  tilesForCuts: 0,
+  totalTiles: 5,
+  toOrder: 6,
+  roomArea: 5_000_000,
+  tiles: [],
   margin: 0.05,
   consumables: {
     colle: { total: 0, bags: 0, bagSize: 25, rendement: 4 },
@@ -30,8 +46,15 @@ const makeResult = (overrides: Partial<QuantityResult> = {}): QuantityResult => 
 });
 
 const room: Room = {
-  id: 'r1', name: 'Salle', edges: [],
-  points: [{ x: 0, y: 0 }, { x: 1000, y: 0 }, { x: 1000, y: 1000 }, { x: 0, y: 1000 }],
+  id: 'r1',
+  name: 'Salle',
+  edges: [],
+  points: [
+    { x: 0, y: 0 },
+    { x: 1000, y: 0 },
+    { x: 1000, y: 1000 },
+    { x: 0, y: 1000 },
+  ],
 };
 
 describe('QuantityPlanView', () => {
@@ -44,7 +67,12 @@ describe('QuantityPlanView', () => {
 
   it('returns null when tiles array is empty', () => {
     const { container } = render(
-      <QuantityPlanView result={makeResult({ tiles: [] })} config={config} rooms={[room]} highlightGroup={null} />,
+      <QuantityPlanView
+        result={makeResult({ tiles: [] })}
+        config={config}
+        rooms={[room]}
+        highlightGroup={null}
+      />,
     );
     expect(container.firstChild).toBeNull();
   });
@@ -78,7 +106,12 @@ describe('QuantityPlanView', () => {
   it('plan-wrapper has data-testid and cursor-grab class', () => {
     const tile = { id: 't1', type: 'WHOLE' as const, rect: { x: 0, y: 0, w: 300, h: 300 } };
     const { container } = render(
-      <QuantityPlanView result={makeResult({ tiles: [tile] })} config={config} rooms={[room]} highlightGroup={null} />,
+      <QuantityPlanView
+        result={makeResult({ tiles: [tile] })}
+        config={config}
+        rooms={[room]}
+        highlightGroup={null}
+      />,
     );
     const wrapper = container.querySelector('[data-testid="plan-wrapper"]');
     expect(wrapper).not.toBeNull();
@@ -88,7 +121,12 @@ describe('QuantityPlanView', () => {
   it('⊙ Ajuster button is absent by default', () => {
     const tile = { id: 't1', type: 'WHOLE' as const, rect: { x: 0, y: 0, w: 300, h: 300 } };
     const { queryByLabelText } = render(
-      <QuantityPlanView result={makeResult({ tiles: [tile] })} config={config} rooms={[room]} highlightGroup={null} />,
+      <QuantityPlanView
+        result={makeResult({ tiles: [tile] })}
+        config={config}
+        rooms={[room]}
+        highlightGroup={null}
+      />,
     );
     expect(queryByLabelText('Ajuster la vue')).toBeNull();
   });
@@ -96,11 +134,26 @@ describe('QuantityPlanView', () => {
   it('⊙ Ajuster button appears after wheel event changes viewBox', () => {
     const tile = { id: 't1', type: 'WHOLE' as const, rect: { x: 0, y: 0, w: 300, h: 300 } };
     const { container, getByLabelText } = render(
-      <QuantityPlanView result={makeResult({ tiles: [tile] })} config={config} rooms={[room]} highlightGroup={null} />,
+      <QuantityPlanView
+        result={makeResult({ tiles: [tile] })}
+        config={config}
+        rooms={[room]}
+        highlightGroup={null}
+      />,
     );
     const wrapper = container.querySelector('[data-testid="plan-wrapper"]')!;
     Object.defineProperty(wrapper, 'getBoundingClientRect', {
-      value: () => ({ left: 0, top: 0, width: 400, height: 400, right: 400, bottom: 400, x: 0, y: 0, toJSON: () => ({}) }),
+      value: () => ({
+        left: 0,
+        top: 0,
+        width: 400,
+        height: 400,
+        right: 400,
+        bottom: 400,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      }),
       configurable: true,
     });
     fireEvent.wheel(wrapper, { deltaY: 100 });
@@ -110,11 +163,26 @@ describe('QuantityPlanView', () => {
   it('clicking ⊙ Ajuster resets viewBox (button disappears)', () => {
     const tile = { id: 't1', type: 'WHOLE' as const, rect: { x: 0, y: 0, w: 300, h: 300 } };
     const { container, getByLabelText, queryByLabelText } = render(
-      <QuantityPlanView result={makeResult({ tiles: [tile] })} config={config} rooms={[room]} highlightGroup={null} />,
+      <QuantityPlanView
+        result={makeResult({ tiles: [tile] })}
+        config={config}
+        rooms={[room]}
+        highlightGroup={null}
+      />,
     );
     const wrapper = container.querySelector('[data-testid="plan-wrapper"]')!;
     Object.defineProperty(wrapper, 'getBoundingClientRect', {
-      value: () => ({ left: 0, top: 0, width: 400, height: 400, right: 400, bottom: 400, x: 0, y: 0, toJSON: () => ({}) }),
+      value: () => ({
+        left: 0,
+        top: 0,
+        width: 400,
+        height: 400,
+        right: 400,
+        bottom: 400,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      }),
       configurable: true,
     });
     fireEvent.wheel(wrapper, { deltaY: 100 });

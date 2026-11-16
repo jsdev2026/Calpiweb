@@ -26,10 +26,10 @@ Converted to m² via the existing `mm2ToM2` utility (already imported in both ta
 
 No new types, no new store actions, no new components. Pure display changes to two existing files.
 
-| File | Change |
-|------|--------|
-| `src/components/quantities/QuantitiesPanel.tsx` | Extend `sub` prop of two StatCards |
-| `src/components/results/ResultsPanel.tsx` | Add m² line under the `toOrder` count |
+| File                                            | Change                                |
+| ----------------------------------------------- | ------------------------------------- |
+| `src/components/quantities/QuantitiesPanel.tsx` | Extend `sub` prop of two StatCards    |
+| `src/components/results/ResultsPanel.tsx`       | Add m² line under the `toOrder` count |
 
 ---
 
@@ -38,15 +38,13 @@ No new types, no new store actions, no new components. Pure display changes to t
 ### StatCard: Carreaux entiers
 
 **Before:**
+
 ```tsx
-<StatCard
-  label="Carreaux entiers"
-  value={result.wholeCount}
-  accent="zinc"
-/>
+<StatCard label="Carreaux entiers" value={result.wholeCount} accent="zinc" />
 ```
 
 **After:**
+
 ```tsx
 <StatCard
   label="Carreaux entiers"
@@ -59,6 +57,7 @@ No new types, no new store actions, no new components. Pure display changes to t
 ### StatCard: Total à commander
 
 **Before:**
+
 ```tsx
 <StatCard
   label="Total à commander"
@@ -69,6 +68,7 @@ No new types, no new store actions, no new components. Pure display changes to t
 ```
 
 **After:**
+
 ```tsx
 <StatCard
   label="Total à commander"
@@ -88,8 +88,7 @@ The "Total à commander" block currently renders:
 
 ```tsx
 <div className="text-2xl font-black tracking-tight text-emerald-400">
-  {result.toOrder}{' '}
-  <span className="text-sm font-medium opacity-60">carreaux</span>
+  {result.toOrder} <span className="text-sm font-medium opacity-60">carreaux</span>
 </div>
 ```
 

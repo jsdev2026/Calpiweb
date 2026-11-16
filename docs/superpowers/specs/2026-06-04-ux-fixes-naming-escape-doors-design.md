@@ -25,6 +25,7 @@ Trois améliorations indépendantes :
 Ajouter `wallRoomNames: Record<string, string>` dans `WallEngine` (interface + état initial).
 
 Ajouter action `renameWallRoom(roomId: string, name: string) => void` :
+
 ```ts
 renameWallRoom: (roomId, name) => {
   set((s) => updateActive(s, (we) => ({
@@ -37,6 +38,7 @@ renameWallRoom: (roomId, name) => {
 #### Sélecteur `selectRooms`
 
 Après `wallsToRooms`, écraser `room.name` si une entrée existe :
+
 ```ts
 export function selectRooms(s: ProjectState): Room[] {
   const we = s.projects[s.activeId]?.wallEngine;
@@ -98,8 +100,8 @@ Les carreaux de la grille dont la dimension s'inscrit **entièrement** dans la l
 ```ts
 // src/types/wall.ts (ou src/engine/tiling/types.ts)
 export interface DoorOpening {
-  from: Point;      // nœud 1 du mur porte (coords monde)
-  to: Point;        // nœud 2 du mur porte (coords monde)
+  from: Point; // nœud 1 du mur porte (coords monde)
+  to: Point; // nœud 2 du mur porte (coords monde)
   thickness: number; // épaisseur du mur (mm)
 }
 ```
@@ -112,10 +114,10 @@ Dans `src/store/projectStore.ts`, nouveau sélecteur `selectDoorOpenings` :
 export function selectDoorOpenings(s: ProjectState): DoorOpening[] {
   const we = s.projects[s.activeId]?.wallEngine;
   if (!we) return [];
-  const nodeMap = new Map(we.nodes.map(n => [n.id, n]));
+  const nodeMap = new Map(we.nodes.map((n) => [n.id, n]));
   return we.walls
-    .filter(w => w.isDoor)
-    .map(w => {
+    .filter((w) => w.isDoor)
+    .map((w) => {
       const n1 = nodeMap.get(w.node1Id)!;
       const n2 = nodeMap.get(w.node2Id)!;
       return { from: { x: n1.x, y: n1.y }, to: { x: n2.x, y: n2.y }, thickness: w.thickness };
@@ -133,10 +135,11 @@ export function computeDoorOpeningTiles(
   config: TileConfig,
   gridOrigin: Point,
   angle: number,
-): Tile[]
+): Tile[];
 ```
 
 Algorithme :
+
 1. Calculer la direction du mur porte : `dir = normalize(to - from)`, `perp = rotate90(dir)`
 2. Générer la grille de carreaux (même origine `gridOrigin`, même angle `angle`) dans le rectangle de l'ouverture : largeur = `|to - from|`, profondeur = `thickness`
 3. Retenir uniquement les carreaux dont la projection sur `dir` est **entièrement** contenue dans `[0, |to - from|]` (carreau entier dans la largeur)
@@ -147,6 +150,7 @@ L'`angle` et `gridOrigin` sont ceux de la pièce adjacente — cela garantit l'a
 ### Intégration dans le rendu
 
 Dans le composant qui rend le calepinage (canvas ou vue dédiée) :
+
 - Appeler `selectDoorOpenings` pour obtenir les ouvertures
 - Pour chaque ouverture, appeler `computeDoorOpeningTiles` avec les paramètres de grille de la pièce adjacente
 - Rendre ces carreaux avec le même style (couleur, joints) que les carreaux de pièce
@@ -155,14 +159,14 @@ Dans le composant qui rend le calepinage (canvas ou vue dédiée) :
 
 ## Fichiers modifiés
 
-| Fichier | Changement |
-|---------|-----------|
-| `src/types/wall.ts` | Ajouter `DoorOpening` interface |
-| `src/store/projectStore.ts` | `wallRoomNames` dans `WallEngine`, `renameWallRoom` action, `selectRooms` mis à jour, `selectDoorOpenings` |
-| `src/components/plan/WallRoomPanel.tsx` | UI de renommage inline (double-clic) |
-| `src/components/plan/PlanEditor.tsx` | `Escape` → `setTool('SELECT')` |
-| `src/engine/tiling/tilingEngine.ts` | `computeDoorOpeningTiles` |
-| `src/engine/tiling/tilingEngine.test.ts` | Tests pour `computeDoorOpeningTiles` |
+| Fichier                                  | Changement                                                                                                 |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `src/types/wall.ts`                      | Ajouter `DoorOpening` interface                                                                            |
+| `src/store/projectStore.ts`              | `wallRoomNames` dans `WallEngine`, `renameWallRoom` action, `selectRooms` mis à jour, `selectDoorOpenings` |
+| `src/components/plan/WallRoomPanel.tsx`  | UI de renommage inline (double-clic)                                                                       |
+| `src/components/plan/PlanEditor.tsx`     | `Escape` → `setTool('SELECT')`                                                                             |
+| `src/engine/tiling/tilingEngine.ts`      | `computeDoorOpeningTiles`                                                                                  |
+| `src/engine/tiling/tilingEngine.test.ts` | Tests pour `computeDoorOpeningTiles`                                                                       |
 
 ---
 

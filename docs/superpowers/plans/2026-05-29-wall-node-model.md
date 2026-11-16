@@ -12,24 +12,25 @@
 
 ## File map
 
-| File | Change |
-|------|--------|
-| `src/types/wall.ts` | New `WallNode`; `Wall` uses `node1Id/node2Id`; `SnapResult` gains `'hv'` type + `nodeId`; `DrawingChain` uses `nodeIds` |
-| `src/types/project.ts` | `walls?: Wall[]` → `wallEngine?: { nodes: WallNode[]; walls: Wall[] }` |
-| `src/lib/supabase/db.ts` | `migrateProject` reads `wallEngine`; detects old format → `undefined` |
-| `src/store/projectStore.ts` | New node actions; wall actions operate on `wallEngine`; `initWallEngine` sets `{ nodes:[], walls:[] }`; `restoreSnapshot` takes optional `wallEngine` |
-| `src/engine/geometry/wallGeometry.ts` | Signatures take `(walls, nodes)`; extension + joint computed by line-line intersection |
-| `src/engine/geometry/wallGeometry.test.ts` | Update all 13 tests; add 45° and 120° angle cases |
-| `src/engine/geometry/wallSnap.ts` | New `nodes` param; endpoint snap returns `nodeId`; new H/V snap type `'hv'` |
-| `src/engine/geometry/wallSnap.test.ts` | Update existing tests; add H/V snap tests |
-| `src/components/plan/WallDrawingCanvas.tsx` | Complete rewrite: node-based drawing chain, node drag, H/V snap rendering, handles |
-| `src/components/plan/PlanEditor.tsx` | Subscribe to `wallEngine`; pass nodes+walls; update history; update canvas condition |
+| File                                        | Change                                                                                                                                                |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/types/wall.ts`                         | New `WallNode`; `Wall` uses `node1Id/node2Id`; `SnapResult` gains `'hv'` type + `nodeId`; `DrawingChain` uses `nodeIds`                               |
+| `src/types/project.ts`                      | `walls?: Wall[]` → `wallEngine?: { nodes: WallNode[]; walls: Wall[] }`                                                                                |
+| `src/lib/supabase/db.ts`                    | `migrateProject` reads `wallEngine`; detects old format → `undefined`                                                                                 |
+| `src/store/projectStore.ts`                 | New node actions; wall actions operate on `wallEngine`; `initWallEngine` sets `{ nodes:[], walls:[] }`; `restoreSnapshot` takes optional `wallEngine` |
+| `src/engine/geometry/wallGeometry.ts`       | Signatures take `(walls, nodes)`; extension + joint computed by line-line intersection                                                                |
+| `src/engine/geometry/wallGeometry.test.ts`  | Update all 13 tests; add 45° and 120° angle cases                                                                                                     |
+| `src/engine/geometry/wallSnap.ts`           | New `nodes` param; endpoint snap returns `nodeId`; new H/V snap type `'hv'`                                                                           |
+| `src/engine/geometry/wallSnap.test.ts`      | Update existing tests; add H/V snap tests                                                                                                             |
+| `src/components/plan/WallDrawingCanvas.tsx` | Complete rewrite: node-based drawing chain, node drag, H/V snap rendering, handles                                                                    |
+| `src/components/plan/PlanEditor.tsx`        | Subscribe to `wallEngine`; pass nodes+walls; update history; update canvas condition                                                                  |
 
 ---
 
 ## Task 1 — Types (`src/types/wall.ts`)
 
 **Files:**
+
 - Modify: `src/types/wall.ts`
 
 - [ ] **Step 1: Write the complete new file**
@@ -55,12 +56,12 @@ export interface SnapResult {
   point: Point;
   type: 'endpoint' | 'face' | 'hv';
   wallId?: string;
-  nodeId?: string;   // set when type === 'endpoint'
+  nodeId?: string; // set when type === 'endpoint'
   axis?: 'h' | 'v'; // set when type === 'hv'
 }
 
 export type DrawingChain = {
-  nodeIds: string[];   // IDs of nodes already placed in the chain
+  nodeIds: string[]; // IDs of nodes already placed in the chain
   thickness: number;
 } | null;
 ```
@@ -85,25 +86,32 @@ git commit -m "refactor(wall-engine): WallNode + Wall{node1Id,node2Id} — types
 ## Task 2 — Project types + DB migration
 
 **Files:**
+
 - Modify: `src/types/project.ts` (line 98)
 - Modify: `src/lib/supabase/db.ts` (lines 5, 56)
 
 - [ ] **Step 1: Update `src/types/project.ts`**
 
 Replace line 98:
+
 ```typescript
   walls?: Wall[];     // wall-segment engine (Phase 1+)
 ```
+
 with:
+
 ```typescript
   wallEngine?: { nodes: WallNode[]; walls: Wall[] }; // wall-segment engine (node model)
 ```
 
 Also update the import at line 5:
+
 ```typescript
 import type { Wall } from './wall';
 ```
+
 to:
+
 ```typescript
 import type { Wall, WallNode } from './wall';
 ```
@@ -111,15 +119,19 @@ import type { Wall, WallNode } from './wall';
 - [ ] **Step 2: Update `migrateProject` in `src/lib/supabase/db.ts`**
 
 Update line 2 import:
+
 ```typescript
 import type { Wall, WallNode } from '@/types/wall';
 ```
 
 Replace line 56:
+
 ```typescript
     walls: p.walls as Wall[] | undefined,
 ```
+
 with:
+
 ```typescript
     wallEngine: (() => {
       // New format: { nodes: WallNode[], walls: Wall[] }
@@ -151,6 +163,7 @@ git commit -m "refactor(wall-engine): Project.wallEngine — types + db migratio
 ## Task 3 — Store (`src/store/projectStore.ts`)
 
 **Files:**
+
 - Modify: `src/store/projectStore.ts`
 
 Context: currently the store has `addWall/removeWall/updateWall/setWalls/initWallEngine` operating on `p.walls`. These must now operate on `p.wallEngine.walls` and `p.wallEngine.nodes`.
@@ -158,10 +171,13 @@ Context: currently the store has `addWall/removeWall/updateWall/setWalls/initWal
 - [ ] **Step 1: Update imports at top of store**
 
 Replace:
+
 ```typescript
 import type { Wall } from '@/types/wall';
 ```
+
 with:
+
 ```typescript
 import type { Wall, WallNode } from '@/types/wall';
 ```
@@ -169,6 +185,7 @@ import type { Wall, WallNode } from '@/types/wall';
 - [ ] **Step 2: Update `ProjectState` interface**
 
 Replace the wall engine actions block (lines 62-68):
+
 ```typescript
   // Wall engine actions
   addWall: (wall: Wall) => void;
@@ -177,7 +194,9 @@ Replace the wall engine actions block (lines 62-68):
   setWalls: (walls: Wall[]) => void;
   initWallEngine: () => void;
 ```
+
 with:
+
 ```typescript
   // Wall engine — node actions
   addNode: (node: WallNode) => void;
@@ -196,10 +215,13 @@ with:
 - [ ] **Step 3: Update `restoreSnapshot` signature**
 
 Replace:
+
 ```typescript
   restoreSnapshot: (rooms: Room[], constraints: Constraint[], walls?: Wall[]) => void;
 ```
+
 with:
+
 ```typescript
   restoreSnapshot: (rooms: Room[], constraints: Constraint[], wallEngine?: { nodes: WallNode[]; walls: Wall[] }) => void;
 ```
@@ -339,6 +361,7 @@ git commit -m "refactor(wall-engine): store — nodes slice + wallEngine actions
 ## Task 4 — Geometry engine
 
 **Files:**
+
 - Modify: `src/engine/geometry/wallGeometry.ts`
 - Modify: `src/engine/geometry/wallGeometry.test.ts`
 
@@ -354,8 +377,14 @@ import { describe, it, expect } from 'vitest';
 import { computeCornerGeometry, computeJointLines } from './wallGeometry';
 import type { Wall, WallNode } from '@/types/wall';
 
-function nd(id: string, x: number, y: number): WallNode { return { id, x, y }; }
-function near(a: { x: number; y: number } | undefined, b: { x: number; y: number }, eps = 0.1): boolean {
+function nd(id: string, x: number, y: number): WallNode {
+  return { id, x, y };
+}
+function near(
+  a: { x: number; y: number } | undefined,
+  b: { x: number; y: number },
+  eps = 0.1,
+): boolean {
   if (!a) return false;
   return Math.abs(a.x - b.x) < eps && Math.abs(a.y - b.y) < eps;
 }
@@ -364,66 +393,66 @@ function near(a: { x: number; y: number } | undefined, b: { x: number; y: number
 
 describe('computeCornerGeometry', () => {
   it('preserves wallId', () => {
-    const nodes = [nd('a', 0,0), nd('b', 100,0)];
-    const walls: Wall[] = [{ id: 'abc', node1Id:'a', node2Id:'b', thickness:10 }];
+    const nodes = [nd('a', 0, 0), nd('b', 100, 0)];
+    const walls: Wall[] = [{ id: 'abc', node1Id: 'a', node2Id: 'b', thickness: 10 }];
     expect(computeCornerGeometry(walls, nodes)[0]!.wallId).toBe('abc');
   });
 
   it('returns empty points for zero-length wall (same node)', () => {
-    const nodes = [nd('a', 0,0)];
-    const walls: Wall[] = [{ id: 'z', node1Id:'a', node2Id:'a', thickness:10 }];
+    const nodes = [nd('a', 0, 0)];
+    const walls: Wall[] = [{ id: 'z', node1Id: 'a', node2Id: 'a', thickness: 10 }];
     expect(computeCornerGeometry(walls, nodes)[0]!.points).toHaveLength(0);
   });
 
   it('single horizontal wall — flat caps at both ends', () => {
-    const nodes = [nd('a', 0,0), nd('b', 100,0)];
-    const walls: Wall[] = [{ id: 'h', node1Id:'a', node2Id:'b', thickness:10 }];
+    const nodes = [nd('a', 0, 0), nd('b', 100, 0)];
+    const walls: Wall[] = [{ id: 'h', node1Id: 'a', node2Id: 'b', thickness: 10 }];
     const pts = computeCornerGeometry(walls, nodes)[0]!.points;
     expect(pts).toHaveLength(4);
-    expect(near(pts[0], { x:0,   y:5  })).toBe(true);
-    expect(near(pts[1], { x:100, y:5  })).toBe(true);
-    expect(near(pts[2], { x:100, y:-5 })).toBe(true);
-    expect(near(pts[3], { x:0,   y:-5 })).toBe(true);
+    expect(near(pts[0], { x: 0, y: 5 })).toBe(true);
+    expect(near(pts[1], { x: 100, y: 5 })).toBe(true);
+    expect(near(pts[2], { x: 100, y: -5 })).toBe(true);
+    expect(near(pts[3], { x: 0, y: -5 })).toBe(true);
   });
 
   it('single vertical wall — flat caps', () => {
-    const nodes = [nd('a', 0,0), nd('b', 0,100)];
-    const walls: Wall[] = [{ id: 'v', node1Id:'a', node2Id:'b', thickness:10 }];
+    const nodes = [nd('a', 0, 0), nd('b', 0, 100)];
+    const walls: Wall[] = [{ id: 'v', node1Id: 'a', node2Id: 'b', thickness: 10 }];
     const pts = computeCornerGeometry(walls, nodes)[0]!.points;
-    expect(near(pts[0], { x:-5, y:0   })).toBe(true);
-    expect(near(pts[1], { x:-5, y:100 })).toBe(true);
-    expect(near(pts[2], { x:5,  y:100 })).toBe(true);
-    expect(near(pts[3], { x:5,  y:0   })).toBe(true);
+    expect(near(pts[0], { x: -5, y: 0 })).toBe(true);
+    expect(near(pts[1], { x: -5, y: 100 })).toBe(true);
+    expect(near(pts[2], { x: 5, y: 100 })).toBe(true);
+    expect(near(pts[3], { x: 5, y: 0 })).toBe(true);
   });
 
   it('two walls at 90° — correct extensions', () => {
     // W1 horizontal (0,0)→(100,0) h=5; W2 vertical (100,0)→(100,100) h=5
-    const nodes = [nd('n1',0,0), nd('n2',100,0), nd('n3',100,100)];
+    const nodes = [nd('n1', 0, 0), nd('n2', 100, 0), nd('n3', 100, 100)];
     const walls: Wall[] = [
-      { id:'w1', node1Id:'n1', node2Id:'n2', thickness:10 },
-      { id:'w2', node1Id:'n2', node2Id:'n3', thickness:10 },
+      { id: 'w1', node1Id: 'n1', node2Id: 'n2', thickness: 10 },
+      { id: 'w2', node1Id: 'n2', node2Id: 'n3', thickness: 10 },
     ];
     const polys = computeCornerGeometry(walls, nodes);
-    const p1 = polys.find(p => p.wallId==='w1')!;
-    const p2 = polys.find(p => p.wallId==='w2')!;
-    expect(near(p1.points[0]!, { x:0,   y:5  })).toBe(true);
-    expect(near(p1.points[3]!, { x:0,   y:-5 })).toBe(true);
-    expect(near(p1.points[1]!, { x:105, y:5  })).toBe(true);
-    expect(near(p1.points[2]!, { x:105, y:-5 })).toBe(true);
-    expect(near(p2.points[0]!, { x:95,  y:-5 })).toBe(true);
-    expect(near(p2.points[3]!, { x:105, y:-5 })).toBe(true);
+    const p1 = polys.find((p) => p.wallId === 'w1')!;
+    const p2 = polys.find((p) => p.wallId === 'w2')!;
+    expect(near(p1.points[0]!, { x: 0, y: 5 })).toBe(true);
+    expect(near(p1.points[3]!, { x: 0, y: -5 })).toBe(true);
+    expect(near(p1.points[1]!, { x: 105, y: 5 })).toBe(true);
+    expect(near(p1.points[2]!, { x: 105, y: -5 })).toBe(true);
+    expect(near(p2.points[0]!, { x: 95, y: -5 })).toBe(true);
+    expect(near(p2.points[3]!, { x: 105, y: -5 })).toBe(true);
   });
 
   it('45° corner — correct extension (not T/2)', () => {
     // W1 horizontal (0,0)→(100,0) h=5; W2 at 45° from (100,0) h=5
     // correct ext = approx 2.07 (not 5)
-    const nodes = [nd('n1',0,0), nd('n2',100,0), nd('n3',170,70)];
+    const nodes = [nd('n1', 0, 0), nd('n2', 100, 0), nd('n3', 170, 70)];
     const walls: Wall[] = [
-      { id:'w1', node1Id:'n1', node2Id:'n2', thickness:10 },
-      { id:'w2', node1Id:'n2', node2Id:'n3', thickness:10 },
+      { id: 'w1', node1Id: 'n1', node2Id: 'n2', thickness: 10 },
+      { id: 'w2', node1Id: 'n2', node2Id: 'n3', thickness: 10 },
     ];
     const polys = computeCornerGeometry(walls, nodes);
-    const p1 = polys.find(p => p.wallId==='w1')!;
+    const p1 = polys.find((p) => p.wallId === 'w1')!;
     // Extension of w1 at n2: must be approx 2.07, not 5
     // Check that p1.points[1] is NOT at x=105 (which is the old wrong formula)
     const extX = p1.points[1]!.x - 100;
@@ -437,14 +466,14 @@ describe('computeCornerGeometry', () => {
     const nodes = [
       nd('n1', 0, 0),
       nd('n2', 100, 0),
-      nd('n3', 100 + Math.cos(angle)*80, Math.sin(angle)*80),
+      nd('n3', 100 + Math.cos(angle) * 80, Math.sin(angle) * 80),
     ];
     const walls: Wall[] = [
-      { id:'w1', node1Id:'n1', node2Id:'n2', thickness:10 },
-      { id:'w2', node1Id:'n2', node2Id:'n3', thickness:10 },
+      { id: 'w1', node1Id: 'n1', node2Id: 'n2', thickness: 10 },
+      { id: 'w2', node1Id: 'n2', node2Id: 'n3', thickness: 10 },
     ];
     const polys = computeCornerGeometry(walls, nodes);
-    const p1 = polys.find(p => p.wallId==='w1')!;
+    const p1 = polys.find((p) => p.wallId === 'w1')!;
     const extX = p1.points[1]!.x - 100;
     expect(extX).toBeGreaterThan(5); // must be greater than T/2=5
   });
@@ -454,52 +483,52 @@ describe('computeCornerGeometry', () => {
 
 describe('computeJointLines', () => {
   it('returns no lines for isolated walls', () => {
-    const nodes = [nd('a',0,0), nd('b',100,0), nd('c',200,0), nd('d',300,0)];
+    const nodes = [nd('a', 0, 0), nd('b', 100, 0), nd('c', 200, 0), nd('d', 300, 0)];
     const walls: Wall[] = [
-      { id:'w1', node1Id:'a', node2Id:'b', thickness:10 },
-      { id:'w2', node1Id:'c', node2Id:'d', thickness:10 },
+      { id: 'w1', node1Id: 'a', node2Id: 'b', thickness: 10 },
+      { id: 'w2', node1Id: 'c', node2Id: 'd', thickness: 10 },
     ];
     expect(computeJointLines(walls, nodes)).toHaveLength(0);
   });
 
   it('returns one line for two connected walls', () => {
-    const nodes = [nd('n1',0,0), nd('n2',100,0), nd('n3',100,100)];
+    const nodes = [nd('n1', 0, 0), nd('n2', 100, 0), nd('n3', 100, 100)];
     const walls: Wall[] = [
-      { id:'w1', node1Id:'n1', node2Id:'n2', thickness:10 },
-      { id:'w2', node1Id:'n2', node2Id:'n3', thickness:10 },
+      { id: 'w1', node1Id: 'n1', node2Id: 'n2', thickness: 10 },
+      { id: 'w2', node1Id: 'n2', node2Id: 'n3', thickness: 10 },
     ];
     expect(computeJointLines(walls, nodes)).toHaveLength(1);
   });
 
   it('does not duplicate lines', () => {
-    const nodes = [nd('a',0,0), nd('b',100,0), nd('c',100,100), nd('d',0,100)];
+    const nodes = [nd('a', 0, 0), nd('b', 100, 0), nd('c', 100, 100), nd('d', 0, 100)];
     const walls: Wall[] = [
-      { id:'w1', node1Id:'a', node2Id:'b', thickness:10 },
-      { id:'w2', node1Id:'b', node2Id:'c', thickness:10 },
-      { id:'w3', node1Id:'c', node2Id:'d', thickness:10 },
+      { id: 'w1', node1Id: 'a', node2Id: 'b', thickness: 10 },
+      { id: 'w2', node1Id: 'b', node2Id: 'c', thickness: 10 },
+      { id: 'w3', node1Id: 'c', node2Id: 'd', thickness: 10 },
     ];
     expect(computeJointLines(walls, nodes)).toHaveLength(2);
   });
 
   it('90° equal-thickness — joint at (95,5) and (105,-5)', () => {
-    const nodes = [nd('n1',0,0), nd('n2',100,0), nd('n3',100,100)];
+    const nodes = [nd('n1', 0, 0), nd('n2', 100, 0), nd('n3', 100, 100)];
     const walls: Wall[] = [
-      { id:'w1', node1Id:'n1', node2Id:'n2', thickness:10 },
-      { id:'w2', node1Id:'n2', node2Id:'n3', thickness:10 },
+      { id: 'w1', node1Id: 'n1', node2Id: 'n2', thickness: 10 },
+      { id: 'w2', node1Id: 'n2', node2Id: 'n3', thickness: 10 },
     ];
     const lines = computeJointLines(walls, nodes);
     expect(lines).toHaveLength(1);
     const l = lines[0]!;
-    const a = near(l.p1, {x:95,y:5}) && near(l.p2, {x:105,y:-5});
-    const b = near(l.p1, {x:105,y:-5}) && near(l.p2, {x:95,y:5});
+    const a = near(l.p1, { x: 95, y: 5 }) && near(l.p2, { x: 105, y: -5 });
+    const b = near(l.p1, { x: 105, y: -5 }) && near(l.p2, { x: 95, y: 5 });
     expect(a || b).toBe(true);
   });
 
   it('45° — joint endpoints stay within wall boundaries (|y|≤5)', () => {
-    const nodes = [nd('n1',0,0), nd('n2',100,0), nd('n3',170,70)];
+    const nodes = [nd('n1', 0, 0), nd('n2', 100, 0), nd('n3', 170, 70)];
     const walls: Wall[] = [
-      { id:'w1', node1Id:'n1', node2Id:'n2', thickness:10 },
-      { id:'w2', node1Id:'n2', node2Id:'n3', thickness:10 },
+      { id: 'w1', node1Id: 'n1', node2Id: 'n2', thickness: 10 },
+      { id: 'w2', node1Id: 'n2', node2Id: 'n3', thickness: 10 },
     ];
     const lines = computeJointLines(walls, nodes);
     expect(lines).toHaveLength(1);
@@ -510,17 +539,17 @@ describe('computeJointLines', () => {
   });
 
   it('different thicknesses — angle = arctan(h1/h2)', () => {
-    const nodes = [nd('n1',0,0), nd('n2',100,0), nd('n3',100,100)];
+    const nodes = [nd('n1', 0, 0), nd('n2', 100, 0), nd('n3', 100, 100)];
     const walls: Wall[] = [
-      { id:'w1', node1Id:'n1', node2Id:'n2', thickness:10 },
-      { id:'w2', node1Id:'n2', node2Id:'n3', thickness:20 },
+      { id: 'w1', node1Id: 'n1', node2Id: 'n2', thickness: 10 },
+      { id: 'w2', node1Id: 'n2', node2Id: 'n3', thickness: 20 },
     ];
     const lines = computeJointLines(walls, nodes);
     const l = lines[0]!;
     const dx = Math.abs(l.p2.x - l.p1.x);
     const dy = Math.abs(l.p2.y - l.p1.y);
-    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-    expect(angle).toBeCloseTo(Math.atan2(5, 10) * 180 / Math.PI, 1);
+    const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
+    expect(angle).toBeCloseTo((Math.atan2(5, 10) * 180) / Math.PI, 1);
   });
 });
 ```
@@ -563,7 +592,8 @@ function nodePos(id: string, nodes: WallNode[]): Point {
 function wallDir(wall: Wall, nodes: WallNode[]): Point {
   const p1 = nodePos(wall.node1Id, nodes);
   const p2 = nodePos(wall.node2Id, nodes);
-  const dx = p2.x - p1.x, dy = p2.y - p1.y;
+  const dx = p2.x - p1.x,
+    dy = p2.y - p1.y;
   const len = Math.sqrt(dx * dx + dy * dy);
   return len < 1e-10 ? { x: 1, y: 0 } : { x: dx / len, y: dy / len };
 }
@@ -572,9 +602,7 @@ function wallDir(wall: Wall, nodes: WallNode[]): Point {
  * Find walls (other than wallId) that share nodeId.
  */
 function findNeighborsByNode(wallId: string, nodeId: string, walls: Wall[]): Wall[] {
-  return walls.filter(
-    (w) => w.id !== wallId && (w.node1Id === nodeId || w.node2Id === nodeId),
-  );
+  return walls.filter((w) => w.id !== wallId && (w.node1Id === nodeId || w.node2Id === nodeId));
 }
 
 /**
@@ -585,8 +613,12 @@ function findNeighborsByNode(wallId: string, nodeId: string, walls: Wall[]): Wal
  * Returns null if walls are nearly parallel (|cross(dA,dB)| < 1e-6).
  */
 function jointParam(
-  nA: Point, hA: number, dA: Point,
-  nB: Point, hB: number, dB: Point,
+  nA: Point,
+  hA: number,
+  dA: Point,
+  nB: Point,
+  hB: number,
+  dB: Point,
 ): number | null {
   const denom = cross(dA, dB);
   if (Math.abs(denom) < 1e-6) return null;
@@ -605,7 +637,8 @@ export function computeCornerGeometry(walls: Wall[], nodes: WallNode[]): WallPol
   return walls.map((wall) => {
     const p1 = nodePos(wall.node1Id, nodes);
     const p2 = nodePos(wall.node2Id, nodes);
-    const dx = p2.x - p1.x, dy = p2.y - p1.y;
+    const dx = p2.x - p1.x,
+      dy = p2.y - p1.y;
     const len = Math.sqrt(dx * dx + dy * dy);
     if (len < 0.1) return { wallId: wall.id, points: [] };
 
@@ -719,6 +752,7 @@ git commit -m "refactor(wall-engine): wallGeometry — node lookup + line-line i
 ## Task 5 — Snap engine
 
 **Files:**
+
 - Modify: `src/engine/geometry/wallSnap.ts`
 - Modify: `src/engine/geometry/wallSnap.test.ts`
 
@@ -739,49 +773,51 @@ const EP_R = 12;
 const FA_R = 8;
 const HV_R = 8;
 
-function nd(id: string, x: number, y: number): WallNode { return { id, x, y }; }
+function nd(id: string, x: number, y: number): WallNode {
+  return { id, x, y };
+}
 
 // Two walls sharing node 'n2' at (100,0)
-const nodes: WallNode[] = [nd('n1',0,0), nd('n2',100,0), nd('n3',100,200)];
-const horizontal: Wall = { id:'h', node1Id:'n1', node2Id:'n2', thickness:20 };
-const vertical:   Wall = { id:'v', node1Id:'n2', node2Id:'n3', thickness:20 };
+const nodes: WallNode[] = [nd('n1', 0, 0), nd('n2', 100, 0), nd('n3', 100, 200)];
+const horizontal: Wall = { id: 'h', node1Id: 'n1', node2Id: 'n2', thickness: 20 };
+const vertical: Wall = { id: 'v', node1Id: 'n2', node2Id: 'n3', thickness: 20 };
 
 describe('snapToWalls — endpoint', () => {
   it('snaps to node1 position within radius', () => {
-    const r = snapToWalls({ x:5, y:3 }, [horizontal], nodes, SCALE, EP_R, FA_R, HV_R);
+    const r = snapToWalls({ x: 5, y: 3 }, [horizontal], nodes, SCALE, EP_R, FA_R, HV_R);
     expect(r?.type).toBe('endpoint');
-    expect(r?.point).toEqual({ x:0, y:0 });
+    expect(r?.point).toEqual({ x: 0, y: 0 });
     expect(r?.nodeId).toBe('n1');
   });
 
   it('snaps to node2 position within radius', () => {
-    const r = snapToWalls({ x:197, y:-2 }, [horizontal], nodes, SCALE, EP_R, FA_R, HV_R);
+    const r = snapToWalls({ x: 197, y: -2 }, [horizontal], nodes, SCALE, EP_R, FA_R, HV_R);
     expect(r?.type).toBe('endpoint');
-    expect(r?.point).toEqual({ x:100, y:0 });
+    expect(r?.point).toEqual({ x: 100, y: 0 });
     expect(r?.nodeId).toBe('n2');
   });
 
   it('returns null far from all walls', () => {
-    const r = snapToWalls({ x:500, y:500 }, [horizontal], nodes, SCALE, EP_R, FA_R, HV_R);
+    const r = snapToWalls({ x: 500, y: 500 }, [horizontal], nodes, SCALE, EP_R, FA_R, HV_R);
     expect(r).toBeNull();
   });
 
   it('endpoint snap takes priority over face snap', () => {
-    const r = snapToWalls({ x:100, y:5 }, [horizontal], nodes, SCALE, EP_R, FA_R, HV_R);
+    const r = snapToWalls({ x: 100, y: 5 }, [horizontal], nodes, SCALE, EP_R, FA_R, HV_R);
     expect(r?.type).toBe('endpoint');
   });
 });
 
 describe('snapToWalls — face', () => {
   it('snaps to projected point on centerline within face radius', () => {
-    const r = snapToWalls({ x:50, y:5 }, [horizontal], nodes, SCALE, EP_R, FA_R, HV_R);
+    const r = snapToWalls({ x: 50, y: 5 }, [horizontal], nodes, SCALE, EP_R, FA_R, HV_R);
     expect(r?.type).toBe('face');
     expect(r?.point.x).toBeCloseTo(50);
     expect(r?.point.y).toBeCloseTo(0);
   });
 
   it('does not snap to face beyond wall bounds', () => {
-    const r = snapToWalls({ x:300, y:2 }, [horizontal], nodes, SCALE, EP_R, FA_R, HV_R);
+    const r = snapToWalls({ x: 300, y: 2 }, [horizontal], nodes, SCALE, EP_R, FA_R, HV_R);
     expect(r).toBeNull();
   });
 });
@@ -789,7 +825,7 @@ describe('snapToWalls — face', () => {
 describe('snapToWalls — H/V snap', () => {
   it('snaps horizontally when cursor is near same Y as a node', () => {
     // cursor at (150, 3) — near y=0 of n1/n2 but far from endpoint and face
-    const r = snapToWalls({ x:150, y:3 }, [horizontal], nodes, SCALE, EP_R, FA_R, HV_R);
+    const r = snapToWalls({ x: 150, y: 3 }, [horizontal], nodes, SCALE, EP_R, FA_R, HV_R);
     expect(r?.type).toBe('hv');
     expect(r?.axis).toBe('h');
     expect(r?.point.y).toBeCloseTo(0);
@@ -798,7 +834,7 @@ describe('snapToWalls — H/V snap', () => {
 
   it('snaps vertically when cursor is near same X as a node', () => {
     // cursor at (3, 150) — near x=0 of n1
-    const r = snapToWalls({ x:3, y:150 }, [horizontal], nodes, SCALE, EP_R, FA_R, HV_R);
+    const r = snapToWalls({ x: 3, y: 150 }, [horizontal], nodes, SCALE, EP_R, FA_R, HV_R);
     expect(r?.type).toBe('hv');
     expect(r?.axis).toBe('v');
     expect(r?.point.x).toBeCloseTo(0);
@@ -806,13 +842,13 @@ describe('snapToWalls — H/V snap', () => {
   });
 
   it('H/V snap does not activate when cursor is beyond snap radius', () => {
-    const r = snapToWalls({ x:150, y:20 }, [horizontal], nodes, SCALE, EP_R, FA_R, HV_R);
+    const r = snapToWalls({ x: 150, y: 20 }, [horizontal], nodes, SCALE, EP_R, FA_R, HV_R);
     expect(r).toBeNull();
   });
 
   it('endpoint snap takes priority over H/V snap', () => {
     // near n2=(100,0) but also near y=0 axis
-    const r = snapToWalls({ x:100, y:3 }, [horizontal, vertical], nodes, SCALE, EP_R, FA_R, HV_R);
+    const r = snapToWalls({ x: 100, y: 3 }, [horizontal, vertical], nodes, SCALE, EP_R, FA_R, HV_R);
     expect(r?.type).toBe('endpoint');
   });
 });
@@ -838,7 +874,8 @@ function dist(a: Point, b: Point): number {
 }
 
 function projectOntoSegment(cursor: Point, p1: Point, p2: Point) {
-  const dx = p2.x - p1.x, dy = p2.y - p1.y;
+  const dx = p2.x - p1.x,
+    dy = p2.y - p1.y;
   const lenSq = dx * dx + dy * dy;
   if (lenSq === 0) return null;
   const t = ((cursor.x - p1.x) * dx + (cursor.y - p1.y) * dy) / lenSq;
@@ -863,9 +900,9 @@ export function snapToWalls(
   faceRadiusPx: number,
   hvSnapPx: number,
 ): SnapResult | null {
-  const epR  = endpointRadiusPx / scale;
-  const faR  = faceRadiusPx / scale;
-  const hvR  = hvSnapPx / scale;
+  const epR = endpointRadiusPx / scale;
+  const faR = faceRadiusPx / scale;
+  const hvR = hvSnapPx / scale;
 
   // Collect node IDs actually used by walls
   const usedNodeIds = new Set(walls.flatMap((w) => [w.node1Id, w.node2Id]));
@@ -953,6 +990,7 @@ git commit -m "refactor(wall-engine): wallSnap — nodes param + H/V snap type"
 ## Task 6 — WallDrawingCanvas
 
 **Files:**
+
 - Modify: `src/components/plan/WallDrawingCanvas.tsx`
 
 Context: Full rewrite. Props now receive `nodes: WallNode[]` and `walls: Wall[]` separately, plus node actions. Drawing chain uses `nodeIds`. SELECT mode adds node drag handles. H/V snap gets guide-line rendering.
@@ -1417,6 +1455,7 @@ git commit -m "refactor(wall-engine): WallDrawingCanvas — node model, drag, H/
 ## Task 7 — PlanEditor
 
 **Files:**
+
 - Modify: `src/components/plan/PlanEditor.tsx`
 
 Context: PlanEditor subscribes to `project.walls` (line ~234) and passes `walls` to `WallDrawingCanvas` (line ~1860). History uses `wallsRef` (line ~473). All must be updated to use `wallEngine`.
@@ -1424,10 +1463,13 @@ Context: PlanEditor subscribes to `project.walls` (line ~234) and passes `walls`
 - [ ] **Step 1: Update imports (line 33)**
 
 Replace:
+
 ```typescript
 import type { Wall } from '@/types/wall';
 ```
+
 with:
+
 ```typescript
 import type { Wall, WallNode } from '@/types/wall';
 ```
@@ -1435,10 +1477,17 @@ import type { Wall, WallNode } from '@/types/wall';
 - [ ] **Step 2: Update `HistoryEntry` (line 37)**
 
 Replace:
+
 ```typescript
-interface HistoryEntry { rooms: Room[]; constraints: Constraint[]; walls: Wall[]; }
+interface HistoryEntry {
+  rooms: Room[];
+  constraints: Constraint[];
+  walls: Wall[];
+}
 ```
+
 with:
+
 ```typescript
 interface HistoryEntry {
   rooms: Room[];
@@ -1450,153 +1499,184 @@ interface HistoryEntry {
 - [ ] **Step 3: Update store subscriptions (lines ~234–238)**
 
 Replace:
+
 ```typescript
-  const walls          = useProjectStore((s) => selectActiveProject(s)?.walls);
-  const addWall        = useProjectStore((s) => s.addWall);
-  const removeWall     = useProjectStore((s) => s.removeWall);
-  const updateWall     = useProjectStore((s) => s.updateWall);
-  const initWallEngine = useProjectStore((s) => s.initWallEngine);
+const walls = useProjectStore((s) => selectActiveProject(s)?.walls);
+const addWall = useProjectStore((s) => s.addWall);
+const removeWall = useProjectStore((s) => s.removeWall);
+const updateWall = useProjectStore((s) => s.updateWall);
+const initWallEngine = useProjectStore((s) => s.initWallEngine);
 ```
+
 with:
+
 ```typescript
-  const wallEngine     = useProjectStore((s) => selectActiveProject(s)?.wallEngine);
-  const addNode        = useProjectStore((s) => s.addNode);
-  const updateNode     = useProjectStore((s) => s.updateNode);
-  const mergeNodes     = useProjectStore((s) => s.mergeNodes);
-  const addWall        = useProjectStore((s) => s.addWall);
-  const removeWall     = useProjectStore((s) => s.removeWall);
-  const updateWall     = useProjectStore((s) => s.updateWall);
-  const initWallEngine = useProjectStore((s) => s.initWallEngine);
+const wallEngine = useProjectStore((s) => selectActiveProject(s)?.wallEngine);
+const addNode = useProjectStore((s) => s.addNode);
+const updateNode = useProjectStore((s) => s.updateNode);
+const mergeNodes = useProjectStore((s) => s.mergeNodes);
+const addWall = useProjectStore((s) => s.addWall);
+const removeWall = useProjectStore((s) => s.removeWall);
+const updateWall = useProjectStore((s) => s.updateWall);
+const initWallEngine = useProjectStore((s) => s.initWallEngine);
 ```
 
 - [ ] **Step 4: Replace `wallsRef` with `wallEngineRef` (lines ~473, 480)**
 
 Replace:
+
 ```typescript
-  const wallsRef = useRef(walls);
+const wallsRef = useRef(walls);
 ```
+
 with:
+
 ```typescript
-  const wallEngineRef = useRef(wallEngine);
+const wallEngineRef = useRef(wallEngine);
 ```
 
 Replace:
+
 ```typescript
-  useEffect(() => { wallsRef.current = walls; }, [walls]);
+useEffect(() => {
+  wallsRef.current = walls;
+}, [walls]);
 ```
+
 with:
+
 ```typescript
-  useEffect(() => { wallEngineRef.current = wallEngine; }, [wallEngine]);
+useEffect(() => {
+  wallEngineRef.current = wallEngine;
+}, [wallEngine]);
 ```
 
 - [ ] **Step 5: Update `pushHistory` (lines ~523–530)**
 
 Replace:
+
 ```typescript
-  const pushHistory = useCallback(() => {
-    setPast((prev) => [{
+const pushHistory = useCallback(() => {
+  setPast((prev) => [
+    {
       rooms: deepCloneRooms(roomsRef.current),
       constraints: [...constraintsRef.current],
       walls: wallsRef.current ? [...wallsRef.current] : [],
-    }, ...prev.slice(0, 49)]);
-    setFuture([]);
-  }, []);
+    },
+    ...prev.slice(0, 49),
+  ]);
+  setFuture([]);
+}, []);
 ```
+
 with:
+
 ```typescript
-  const pushHistory = useCallback(() => {
-    setPast((prev) => [{
+const pushHistory = useCallback(() => {
+  setPast((prev) => [
+    {
       rooms: deepCloneRooms(roomsRef.current),
       constraints: [...constraintsRef.current],
       wallEngine: wallEngineRef.current
         ? { nodes: [...wallEngineRef.current.nodes], walls: [...wallEngineRef.current.walls] }
         : undefined,
-    }, ...prev.slice(0, 49)]);
-    setFuture([]);
-  }, []);
+    },
+    ...prev.slice(0, 49),
+  ]);
+  setFuture([]);
+}, []);
 ```
 
 - [ ] **Step 6: Update `handleUndo` (lines ~1587–1599)**
 
 Replace:
+
 ```typescript
-  const handleUndo = () => {
-    const p = pastRef.current;
-    if (!p.length) return;
-    const [entry, ...rest] = p;
-    const current: HistoryEntry = {
-      rooms: deepCloneRooms(roomsRef.current),
-      constraints: [...constraintsRef.current],
-      walls: wallsRef.current ? [...wallsRef.current] : [],
-    };
-    setFuture((f) => [current, ...f.slice(0, 49)]);
-    setPast(rest);
-    restoreSnapshot(entry!.rooms, entry!.constraints, entry!.walls);
+const handleUndo = () => {
+  const p = pastRef.current;
+  if (!p.length) return;
+  const [entry, ...rest] = p;
+  const current: HistoryEntry = {
+    rooms: deepCloneRooms(roomsRef.current),
+    constraints: [...constraintsRef.current],
+    walls: wallsRef.current ? [...wallsRef.current] : [],
   };
+  setFuture((f) => [current, ...f.slice(0, 49)]);
+  setPast(rest);
+  restoreSnapshot(entry!.rooms, entry!.constraints, entry!.walls);
+};
 ```
+
 with:
+
 ```typescript
-  const handleUndo = () => {
-    const p = pastRef.current;
-    if (!p.length) return;
-    const [entry, ...rest] = p;
-    const current: HistoryEntry = {
-      rooms: deepCloneRooms(roomsRef.current),
-      constraints: [...constraintsRef.current],
-      wallEngine: wallEngineRef.current
-        ? { nodes: [...wallEngineRef.current.nodes], walls: [...wallEngineRef.current.walls] }
-        : undefined,
-    };
-    setFuture((f) => [current, ...f.slice(0, 49)]);
-    setPast(rest);
-    restoreSnapshot(entry!.rooms, entry!.constraints, entry!.wallEngine);
+const handleUndo = () => {
+  const p = pastRef.current;
+  if (!p.length) return;
+  const [entry, ...rest] = p;
+  const current: HistoryEntry = {
+    rooms: deepCloneRooms(roomsRef.current),
+    constraints: [...constraintsRef.current],
+    wallEngine: wallEngineRef.current
+      ? { nodes: [...wallEngineRef.current.nodes], walls: [...wallEngineRef.current.walls] }
+      : undefined,
   };
+  setFuture((f) => [current, ...f.slice(0, 49)]);
+  setPast(rest);
+  restoreSnapshot(entry!.rooms, entry!.constraints, entry!.wallEngine);
+};
 ```
 
 - [ ] **Step 7: Update `handleRedo` (lines ~1601–1613)**
 
 Replace:
+
 ```typescript
-  const handleRedo = () => {
-    const f = futureRef.current;
-    if (!f.length) return;
-    const [entry, ...rest] = f;
-    const current: HistoryEntry = {
-      rooms: deepCloneRooms(roomsRef.current),
-      constraints: [...constraintsRef.current],
-      walls: wallsRef.current ? [...wallsRef.current] : [],
-    };
-    setPast((p) => [current, ...p.slice(0, 49)]);
-    setFuture(rest);
-    restoreSnapshot(entry!.rooms, entry!.constraints, entry!.walls);
+const handleRedo = () => {
+  const f = futureRef.current;
+  if (!f.length) return;
+  const [entry, ...rest] = f;
+  const current: HistoryEntry = {
+    rooms: deepCloneRooms(roomsRef.current),
+    constraints: [...constraintsRef.current],
+    walls: wallsRef.current ? [...wallsRef.current] : [],
   };
+  setPast((p) => [current, ...p.slice(0, 49)]);
+  setFuture(rest);
+  restoreSnapshot(entry!.rooms, entry!.constraints, entry!.walls);
+};
 ```
+
 with:
+
 ```typescript
-  const handleRedo = () => {
-    const f = futureRef.current;
-    if (!f.length) return;
-    const [entry, ...rest] = f;
-    const current: HistoryEntry = {
-      rooms: deepCloneRooms(roomsRef.current),
-      constraints: [...constraintsRef.current],
-      wallEngine: wallEngineRef.current
-        ? { nodes: [...wallEngineRef.current.nodes], walls: [...wallEngineRef.current.walls] }
-        : undefined,
-    };
-    setPast((p) => [current, ...p.slice(0, 49)]);
-    setFuture(rest);
-    restoreSnapshot(entry!.rooms, entry!.constraints, entry!.wallEngine);
+const handleRedo = () => {
+  const f = futureRef.current;
+  if (!f.length) return;
+  const [entry, ...rest] = f;
+  const current: HistoryEntry = {
+    rooms: deepCloneRooms(roomsRef.current),
+    constraints: [...constraintsRef.current],
+    wallEngine: wallEngineRef.current
+      ? { nodes: [...wallEngineRef.current.nodes], walls: [...wallEngineRef.current.walls] }
+      : undefined,
   };
+  setPast((p) => [current, ...p.slice(0, 49)]);
+  setFuture(rest);
+  restoreSnapshot(entry!.rooms, entry!.constraints, entry!.wallEngine);
+};
 ```
 
 - [ ] **Step 8: Update "Nouveau moteur" button (line ~1750)**
 
 Replace:
+
 ```typescript
       {walls === undefined && (
 ```
+
 with:
+
 ```typescript
       {wallEngine === undefined && (
 ```
@@ -1604,6 +1684,7 @@ with:
 - [ ] **Step 9: Update `WallDrawingCanvas` render (lines ~1859–1867)**
 
 Replace:
+
 ```typescript
       {walls !== undefined ? (
         <WallDrawingCanvas
@@ -1615,7 +1696,9 @@ Replace:
           onPushHistory={pushHistory}
         />
 ```
+
 with:
+
 ```typescript
       {wallEngine !== undefined ? (
         <WallDrawingCanvas

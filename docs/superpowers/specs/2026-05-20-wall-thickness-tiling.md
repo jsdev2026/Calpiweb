@@ -16,6 +16,7 @@ Tile computation and the room outline visual both operate on the wall interior f
 A new pure function `insetRoomPolygon(room, defaultThickness): Point[]` in `src/engine/geometry/polygon.ts` offsets each room edge inward by `edgeThicknesses[i] / 2` (or `defaultThickness / 2` when no per-edge override exists) and recomputes each vertex as the intersection of its two adjacent offset edges.
 
 This function is applied in three places:
+
 - `computeTilingMultiRoom` (tile generation and clipping)
 - `tileSpaceRooms` inside `analyzeQuantities` (cut table geometry)
 - `TilingCanvas` room outline drawing
@@ -79,12 +80,18 @@ Requires `Room` import from `@/types/project` (add if not already present).
 ### `src/components/tiling/TilingEditor.tsx`
 
 Replace:
+
 ```ts
 const result = useMemo(() => analyzeQuantities(rooms, config), [rooms, config]);
 ```
+
 With:
+
 ```ts
-const result = useMemo(() => analyzeQuantities(rooms, config, wallThickness), [rooms, config, wallThickness]);
+const result = useMemo(
+  () => analyzeQuantities(rooms, config, wallThickness),
+  [rooms, config, wallThickness],
+);
 ```
 
 ### `src/components/tiling/TilingCanvas.tsx`

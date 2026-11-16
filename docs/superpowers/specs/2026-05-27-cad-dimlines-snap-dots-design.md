@@ -29,11 +29,11 @@ Un troisième problème identifié en code review :
 
 Les rayons actuels (`baseR: 120` world units pour inactif, `baseR * 1.6 = 192` pour actif) varient avec le zoom. Le correctif divise tous les rayons par `scale` pour obtenir des tailles constantes en pixels-écran.
 
-| État | Rayon world → écran |
-|------|---------------------|
-| Inactif | `3.5 / scale` px |
-| Actif | `6 / scale` px |
-| Point source confirmé | `8 / scale` px |
+| État                  | Rayon world → écran |
+| --------------------- | ------------------- |
+| Inactif               | `3.5 / scale` px    |
+| Actif                 | `6 / scale` px      |
+| Point source confirmé | `8 / scale` px      |
 
 ### 2.2 Rendu des snap dots (3 dots sur hover)
 
@@ -62,6 +62,7 @@ const sw = isActive ? 1 / scale : 0.8 / scale;
 ### 3.1 Style retenu : flèches ouvertes + label encadré (Style C)
 
 Éléments par côte :
+
 - **Lignes d'extension** : 2 lignes fines (opacity 0.7) depuis les points de référence vers la ligne de cote, avec un gap de `50` unités avant le point et un dépassement de `80` unités après.
 - **Ligne de cote** : entre les deux extrémités, avec marqueurs SVG de flèches ouvertes aux deux bouts.
 - **Label encadré** : `<rect>` + `<text>` centrés sur la ligne de cote. Contient `"I→E  285.0 cm"` (face label + valeur).
@@ -95,7 +96,7 @@ function resolveDisplayCoord(
   wallThickness: number,
   axis: 'H' | 'V',
 ): number | null {
-  const room = rooms.find(r => r.id === pt.roomId);
+  const room = rooms.find((r) => r.id === pt.roomId);
   const vertex = room?.points[pt.vertexIdx];
   if (!room || !vertex) return null;
 
@@ -108,21 +109,29 @@ function resolveDisplayCoord(
   // Find the most aligned adjacent edge and read its normal direction.
   const n = room.points.length;
   const edgeIndices = [(pt.vertexIdx - 1 + n) % n, pt.vertexIdx];
-  let bestEdge = -1, bestScore = -1;
+  let bestEdge = -1,
+    bestScore = -1;
   for (const eIdx of edgeIndices) {
-    const p1 = room.points[eIdx]!, p2 = room.points[(eIdx + 1) % n]!;
-    const adx = Math.abs(p2.x - p1.x), ady = Math.abs(p2.y - p1.y);
+    const p1 = room.points[eIdx]!,
+      p2 = room.points[(eIdx + 1) % n]!;
+    const adx = Math.abs(p2.x - p1.x),
+      ady = Math.abs(p2.y - p1.y);
     const total = adx + ady;
     if (total < 0.001) continue;
     const score = preferVertical ? ady / total : adx / total;
-    if (score > bestScore) { bestScore = score; bestEdge = eIdx; }
+    if (score > bestScore) {
+      bestScore = score;
+      bestEdge = eIdx;
+    }
   }
   if (bestEdge === -1 || bestScore < 0.5) {
     return axis === 'H' ? vertex.x : vertex.y;
   }
 
-  const ep1 = room.points[bestEdge]!, ep2 = room.points[(bestEdge + 1) % n]!;
-  const edgeDx = ep2.x - ep1.x, edgeDy = ep2.y - ep1.y;
+  const ep1 = room.points[bestEdge]!,
+    ep2 = room.points[(bestEdge + 1) % n]!;
+  const edgeDx = ep2.x - ep1.x,
+    edgeDy = ep2.y - ep1.y;
   // Normal perpendicular to edge, signed by room interior direction
   // For a vertical edge (dx≈0), normal is (±1, 0). Sign determined by room centroid.
   const centroidX = room.points.reduce((s, p) => s + p.x, 0) / n;
@@ -160,15 +169,15 @@ Pour chaque contrainte `c` de type `H_DISTANCE` :
 ```typescript
 const xA = resolveDisplayCoord(c.pts[0]!, rooms, wallThickness, 'H') ?? 0;
 const xB = resolveDisplayCoord(c.pts[1]!, rooms, wallThickness, 'H') ?? 0;
-const roomA = rooms.find(r => r.id === c.pts[0]!.roomId);
+const roomA = rooms.find((r) => r.id === c.pts[0]!.roomId);
 const yA = roomA?.points[c.pts[0]!.vertexIdx]?.y ?? 0;
-const roomB = rooms.find(r => r.id === c.pts[1]!.roomId);
+const roomB = rooms.find((r) => r.id === c.pts[1]!.roomId);
 const yB = roomB?.points[c.pts[1]!.vertexIdx]?.y ?? 0;
 
-const topY  = Math.min(yA, yB);
-const dimY  = topY - DIM_OFFSET;         // ligne de cote au-dessus
-const extY0 = topY - EXT_GAP;           // début ligne d'extension (juste sous le point)
-const extY1 = dimY + EXT_OVER;          // dépassement au-dessus de la cote
+const topY = Math.min(yA, yB);
+const dimY = topY - DIM_OFFSET; // ligne de cote au-dessus
+const extY0 = topY - EXT_GAP; // début ligne d'extension (juste sous le point)
+const extY1 = dimY + EXT_OVER; // dépassement au-dessus de la cote
 
 // SVG à rendre :
 // ligne extension A : x1={xA} y1={extY0} x2={xA} y2={extY1}
@@ -178,16 +187,18 @@ const extY1 = dimY + EXT_OVER;          // dépassement au-dessus de la cote
 ```
 
 Valeur affichée :
+
 ```typescript
 const displayedMm = (c.value ?? 0) - constraintFaceOffset(c, roomA!, wallThickness);
 const displayedCm = (displayedMm / 10).toFixed(1);
-const faceLabel   = `${FACE_LABEL[c.pts[0]!.face ?? 'INSIDE']}→${FACE_LABEL[c.pts[1]!.face ?? 'INSIDE']}`;
-const labelText   = `${faceLabel}  ${displayedCm} cm`;
+const faceLabel = `${FACE_LABEL[c.pts[0]!.face ?? 'INSIDE']}→${FACE_LABEL[c.pts[1]!.face ?? 'INSIDE']}`;
+const labelText = `${faceLabel}  ${displayedCm} cm`;
 ```
 
 ### 3.5 Rendu V_DISTANCE
 
 Identique, axes pivotés de 90° :
+
 - Points de référence : `yA = resolveDisplayCoord(..., 'V')`, `yB` idem
 - `xA/xB` = coordonnée X des vertices (axiale)
 - `dimX = Math.max(xA, xB) + DIM_OFFSET` (à droite)
@@ -196,6 +207,7 @@ Identique, axes pivotés de 90° :
 ### 3.6 Rendu LENGTH
 
 Pour une contrainte LENGTH (longueur réelle, sans offset) :
+
 - Pas de `resolveDisplayCoord` nécessaire (offset = 0)
 - Ligne de cote **parallèle** à l'arête, décalée de `DIM_OFFSET` perpendiculairement
 - Flèches ouvertes + label au milieu
@@ -234,12 +246,14 @@ Dans `PlanEditor.tsx`, ce callback ouvre `DimensionPopup` avec les valeurs exist
 ### 4.1 Problème
 
 `constraintFaceOffset` retourne **+100** pour I→I (INSIDE=+halfThick, positif). La relation correcte est :
+
 ```
 displayed = stored − offset
 stored    = displayed + offset
 ```
 
 Mais l'implémentation actuelle utilise :
+
 - `openDimensionPopup` : `displayed = stored + offset` ← **inversé**
 - `submitDimensionPopup` : `stored = displayed − offset` ← **inversé**
 
@@ -275,7 +289,7 @@ it('openDimensionPopup: displayed = stored - offset (not + offset)', () => {
   // displayed should be 3000 - 100 = 2900mm = 290cm
   const stored = 3000;
   const offset = 100; // I→I, half=50 each
-  expect((stored - offset) / 10).toBe(290);   // correct
+  expect((stored - offset) / 10).toBe(290); // correct
   expect((stored + offset) / 10).not.toBe(290); // the bug
 });
 
@@ -294,16 +308,19 @@ it('submitDimensionPopup: stored = displayed + offset (not - offset)', () => {
 Nouveau handler passé à `DrawingCanvas` :
 
 ```typescript
-const handleDimensionClick = useCallback((c: Constraint) => {
-  const fromRef = c.pts[0]!;
-  const toRef   = c.pts[1]!;
-  const fromRoom = rooms.find(r => r.id === fromRef.roomId);
-  const toRoom   = rooms.find(r => r.id === toRef.roomId);
-  const fromVertex = fromRoom?.points[fromRef.vertexIdx];
-  const toVertex   = toRoom?.points[toRef.vertexIdx];
-  if (!fromVertex || !toVertex) return;
-  openDimensionPopup(fromRef, toRef, fromVertex, toVertex);
-}, [rooms, openDimensionPopup]);
+const handleDimensionClick = useCallback(
+  (c: Constraint) => {
+    const fromRef = c.pts[0]!;
+    const toRef = c.pts[1]!;
+    const fromRoom = rooms.find((r) => r.id === fromRef.roomId);
+    const toRoom = rooms.find((r) => r.id === toRef.roomId);
+    const fromVertex = fromRoom?.points[fromRef.vertexIdx];
+    const toVertex = toRoom?.points[toRef.vertexIdx];
+    if (!fromVertex || !toVertex) return;
+    openDimensionPopup(fromRef, toRef, fromVertex, toVertex);
+  },
+  [rooms, openDimensionPopup],
+);
 ```
 
 Passé via `<DrawingCanvas onDimensionClick={handleDimensionClick} ... />`.
@@ -312,11 +329,11 @@ Passé via `<DrawingCanvas onDimensionClick={handleDimensionClick} ... />`.
 
 ## 6. Fichiers touchés
 
-| Fichier | Action |
-|---------|--------|
-| `src/components/plan/DrawingCanvas.tsx` | Modifier — snap dots, `resolveDisplayCoord`, CAD dim lines, badge suppression, `onDimensionClick` prop ; **ajouter import** `halfThicknessAt` from `@/engine/constraints/faceOffset` |
-| `src/components/plan/PlanEditor.tsx` | Modifier — fix signe `openDimensionPopup` + `submitDimensionPopup`, `handleDimensionClick` |
-| `src/components/plan/PlanEditor.toolbar.test.ts` | Modifier — 2 tests bug fix |
+| Fichier                                          | Action                                                                                                                                                                               |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `src/components/plan/DrawingCanvas.tsx`          | Modifier — snap dots, `resolveDisplayCoord`, CAD dim lines, badge suppression, `onDimensionClick` prop ; **ajouter import** `halfThicknessAt` from `@/engine/constraints/faceOffset` |
+| `src/components/plan/PlanEditor.tsx`             | Modifier — fix signe `openDimensionPopup` + `submitDimensionPopup`, `handleDimensionClick`                                                                                           |
+| `src/components/plan/PlanEditor.toolbar.test.ts` | Modifier — 2 tests bug fix                                                                                                                                                           |
 
 ---
 

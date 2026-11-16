@@ -42,10 +42,7 @@ export const useUiStore = create<UiState>((set, get) => ({
     }
 
     // Read plan from profiles table
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('plan')
-      .single();
+    const { data: profile } = await supabase.from('profiles').select('plan').single();
 
     set({
       user: {

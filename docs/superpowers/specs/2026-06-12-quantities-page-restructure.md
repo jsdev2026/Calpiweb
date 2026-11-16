@@ -26,15 +26,15 @@ The current `QuantitiesPanel` (per [2026-05-22-quantities-panel-redesign.md](202
 
 No new store actions, no new types, no engine changes. Pure presentation restructure of `QuantitiesPanel` and its children.
 
-| Action | File | Responsibility |
-|--------|------|-----------------|
-| Rewrite | `src/components/quantities/QuantitiesPanel.tsx` | Page shell: thin header, main area (plan + cuts band), recap column |
-| Create | `src/components/quantities/QuantitiesRecapColumn.tsx` | Right-hand recap column: order hero, stat list, consumables accordion |
-| Create | `src/components/quantities/CutGroupCardCompact.tsx` | Horizontal-scroll card variant of cut group info, imports `TileThumbnail`/`GROUP_COLORS` from `CutGroupCard.tsx` |
-| Modify | `src/components/quantities/CutGroupCard.tsx` | Export `TileThumbnail` (currently a private function) alongside the existing `GROUP_COLORS` export; remove the now-unused `CutGroupCard` component and its props interface |
-| Delete | `src/components/quantities/CutGroupCard.test.tsx` | Tests the removed `CutGroupCard` component; replaced by `CutGroupCardCompact.test.tsx` |
-| Unchanged | `src/components/quantities/QuantityPlanView.tsx`, `QuantityPlanSvg.tsx` | Plan rendering; only the container size around it changes |
-| Unchanged | `src/components/quantities/QuantitiesPrintView.tsx` | Print layout is independent of the on-screen restructure |
+| Action    | File                                                                    | Responsibility                                                                                                                                                             |
+| --------- | ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Rewrite   | `src/components/quantities/QuantitiesPanel.tsx`                         | Page shell: thin header, main area (plan + cuts band), recap column                                                                                                        |
+| Create    | `src/components/quantities/QuantitiesRecapColumn.tsx`                   | Right-hand recap column: order hero, stat list, consumables accordion                                                                                                      |
+| Create    | `src/components/quantities/CutGroupCardCompact.tsx`                     | Horizontal-scroll card variant of cut group info, imports `TileThumbnail`/`GROUP_COLORS` from `CutGroupCard.tsx`                                                           |
+| Modify    | `src/components/quantities/CutGroupCard.tsx`                            | Export `TileThumbnail` (currently a private function) alongside the existing `GROUP_COLORS` export; remove the now-unused `CutGroupCard` component and its props interface |
+| Delete    | `src/components/quantities/CutGroupCard.test.tsx`                       | Tests the removed `CutGroupCard` component; replaced by `CutGroupCardCompact.test.tsx`                                                                                     |
+| Unchanged | `src/components/quantities/QuantityPlanView.tsx`, `QuantityPlanSvg.tsx` | Plan rendering; only the container size around it changes                                                                                                                  |
+| Unchanged | `src/components/quantities/QuantitiesPrintView.tsx`                     | Print layout is independent of the on-screen restructure                                                                                                                   |
 
 `ConsumableCard` and `PinButton` currently live inline in `QuantitiesPanel.tsx`. `ConsumableCard` moves into `QuantitiesRecapColumn.tsx` (it's only used there). `PinButton` and all `collapsed`/`pinned`/`sidebarOpen`/`mobileTab` state are deleted — no longer needed.
 
@@ -129,12 +129,14 @@ No print button is added — printing is already handled by the existing global 
 ## Removed Interaction / State
 
 From `QuantitiesPanel.tsx`, delete:
+
 - `collapsed`, `pinned`, `handleCoupesScroll`, `handlePin`, `PinButton` component
 - `sidebarOpen` and the `‹›` sidebar collapse toggle
 - `mobileTab` and the Plan/Coupes tab bar
 - `data-testid="bandeaux-wrapper"`, `"collapsed-bar"`, `"plan-section"`, `"coupes-section"` (replace with new test ids matching the new structure, e.g. `"plan-section"` can stay on the plan container, `"cuts-band"` and `"recap-column"` are new)
 
 Kept:
+
 - `highlightGroup` state and hover wiring
 - `editingMargin` / `marginInput` and margin edit handlers
 - `consumablesOpen` and consumables content

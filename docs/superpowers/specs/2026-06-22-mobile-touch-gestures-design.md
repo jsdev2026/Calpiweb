@@ -9,11 +9,11 @@ Sur smartphone, glisser un nœud ou un mur déjà placé est impossible : le ges
 
 ## Modèle de gestes cible
 
-| Geste | Comportement |
-|---|---|
-| 1 doigt | Interaction : déplacer nœud/mur, dessiner, sélectionner, verrouiller |
-| 1 doigt sur zone vide | Pan de la vue (géré naturellement par le handler pointer existant) |
-| 2 doigts | Navigation uniquement : pinch-to-zoom + pan |
+| Geste                 | Comportement                                                         |
+| --------------------- | -------------------------------------------------------------------- |
+| 1 doigt               | Interaction : déplacer nœud/mur, dessiner, sélectionner, verrouiller |
+| 1 doigt sur zone vide | Pan de la vue (géré naturellement par le handler pointer existant)   |
+| 2 doigts              | Navigation uniquement : pinch-to-zoom + pan                          |
 
 ## Architecture
 
@@ -32,6 +32,7 @@ Ces handlers reçoivent les `PointerEvent` générés par le navigateur à parti
 Dans `handleTouchStart` (WallDrawingCanvas.tsx) :
 
 **Avant :**
+
 ```ts
 const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
   e.preventDefault();            // ← bloque les pointer events 1 doigt
@@ -44,10 +45,11 @@ const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
 ```
 
 **Après :**
+
 ```ts
 const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
   if (e.touches.length >= 2) {
-    e.preventDefault();          // ← seulement pour 2 doigts (empêche le zoom navigateur)
+    e.preventDefault(); // ← seulement pour 2 doigts (empêche le zoom navigateur)
     // ... pinch setup ... (inchangé)
   }
   // 1 doigt : rien — les pointer events prennent le relais

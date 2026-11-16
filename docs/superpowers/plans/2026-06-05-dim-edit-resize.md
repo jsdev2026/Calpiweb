@@ -12,24 +12,25 @@
 
 ## Fichiers
 
-| Fichier | Action |
-|---------|--------|
-| `src/types/tilingDimension.ts` | Modifier — ajouter `p2NodeId?: string` |
-| `src/store/projectStore.ts` | Modifier — ajouter `updateTilingDimension` action |
-| `src/engine/tiling/snapTiling.ts` | Modifier — snap wall-node priorité 0 + `nodeId` dans SnapResult |
-| `src/engine/tiling/snapTiling.test.ts` | Modifier — tests snap wall-node |
-| `src/hooks/useTilingDimension.ts` | Modifier — passer nodes, enregistrer p2NodeId |
-| `src/components/tiling/DimLine.tsx` | Modifier — ajouter `onLabelClick` |
-| `src/components/tiling/TilingDimensionLayer.tsx` | Modifier — ajouter `onSelect` |
-| `src/components/tiling/DimPropertiesPanel.tsx` | Créer — panneau propriétés côte |
-| `src/components/tiling/TilingEditor.tsx` | Modifier — câblage selectedDimId + panneau |
-| `src/store/projectStore.test.ts` | Modifier — test updateTilingDimension |
+| Fichier                                          | Action                                                          |
+| ------------------------------------------------ | --------------------------------------------------------------- |
+| `src/types/tilingDimension.ts`                   | Modifier — ajouter `p2NodeId?: string`                          |
+| `src/store/projectStore.ts`                      | Modifier — ajouter `updateTilingDimension` action               |
+| `src/engine/tiling/snapTiling.ts`                | Modifier — snap wall-node priorité 0 + `nodeId` dans SnapResult |
+| `src/engine/tiling/snapTiling.test.ts`           | Modifier — tests snap wall-node                                 |
+| `src/hooks/useTilingDimension.ts`                | Modifier — passer nodes, enregistrer p2NodeId                   |
+| `src/components/tiling/DimLine.tsx`              | Modifier — ajouter `onLabelClick`                               |
+| `src/components/tiling/TilingDimensionLayer.tsx` | Modifier — ajouter `onSelect`                                   |
+| `src/components/tiling/DimPropertiesPanel.tsx`   | Créer — panneau propriétés côte                                 |
+| `src/components/tiling/TilingEditor.tsx`         | Modifier — câblage selectedDimId + panneau                      |
+| `src/store/projectStore.test.ts`                 | Modifier — test updateTilingDimension                           |
 
 ---
 
 ## Task 1 : TilingDimension type + action store `updateTilingDimension`
 
 **Files:**
+
 - Modify: `src/types/tilingDimension.ts`
 - Modify: `src/store/projectStore.ts`
 - Modify: `src/store/projectStore.test.ts`
@@ -125,8 +126,8 @@ describe('projectStore — updateTilingDimension', () => {
     const dims = selectActiveProject(useProjectStore.getState())?.tilingDimensions ?? [];
     expect(dims).toHaveLength(1);
     expect(dims[0]?.p2.x).toBe(300);
-    expect(dims[0]?.p2NodeId).toBe('n2');    // préservé
-    expect(dims[0]?.perpOffset).toBe(600);   // préservé
+    expect(dims[0]?.p2NodeId).toBe('n2'); // préservé
+    expect(dims[0]?.perpOffset).toBe(600); // préservé
   });
 
   it('ignore un id inexistant sans erreur', async () => {
@@ -164,6 +165,7 @@ git commit -m "feat(dim): ajouter p2NodeId à TilingDimension + action updateTil
 ## Task 2 : `snapToTiling` — snap wall-node avec priorité 0
 
 **Files:**
+
 - Modify: `src/engine/tiling/snapTiling.ts`
 - Modify: `src/engine/tiling/snapTiling.test.ts`
 
@@ -172,6 +174,7 @@ git commit -m "feat(dim): ajouter p2NodeId à TilingDimension + action updateTil
 `snapToTiling` snap aux sommets/milieux du polygone inset et aux coins/milieux des tuiles. Il faut ajouter un snap de priorité 0 (la plus haute) sur les positions brutes des `WallNode`, et inclure `nodeId` dans `SnapResult` quand le snap est de type `'wall-node'`.
 
 Interface actuelle de `SnapResult` dans ce fichier (distincte du `SnapResult` de `@/types/wall`) :
+
 ```ts
 export interface SnapResult {
   point: Point;
@@ -192,7 +195,7 @@ describe('snapToTiling — wall-node snap', () => {
     { id: 'n2', x: 3000, y: 0 },
   ];
 
-  it('retourne kind wall-node et nodeId quand le curseur est proche d\'un nœud', () => {
+  it("retourne kind wall-node et nodeId quand le curseur est proche d'un nœud", () => {
     // n1 est à (0,0), curseur à (5, 3) — dist ~5.8 < rayon 15/1
     const result = snapToTiling({ x: 5, y: 3 }, [room300], [], 0, 1, nodes);
     expect(result).not.toBeNull();
@@ -309,7 +312,10 @@ export function snapToTiling(
   for (const tile of tiles) {
     const { x, y, w, h } = tile.rect;
     for (const pt of [
-      { x, y }, { x: x + w, y }, { x: x + w, y: y + h }, { x, y: y + h },
+      { x, y },
+      { x: x + w, y },
+      { x: x + w, y: y + h },
+      { x, y: y + h },
     ]) {
       consider(pt, 'tile-corner', 3);
     }
@@ -319,8 +325,10 @@ export function snapToTiling(
   for (const tile of tiles) {
     const { x, y, w, h } = tile.rect;
     for (const pt of [
-      { x: x + w / 2, y }, { x: x + w, y: y + h / 2 },
-      { x: x + w / 2, y: y + h }, { x, y: y + h / 2 },
+      { x: x + w / 2, y },
+      { x: x + w, y: y + h / 2 },
+      { x: x + w / 2, y: y + h },
+      { x, y: y + h / 2 },
     ]) {
       consider(pt, 'tile-midpoint', 4);
     }
@@ -329,11 +337,7 @@ export function snapToTiling(
   return state.best ? state.best.result : null;
 }
 
-export function getParallelAngle(
-  p1: Point,
-  rooms: Room[],
-  wallThickness: number,
-): number | null {
+export function getParallelAngle(p1: Point, rooms: Room[], wallThickness: number): number | null {
   let bestDist = Infinity;
   let bestAngle: number | null = null;
 
@@ -383,6 +387,7 @@ git commit -m "feat(snap): snap wall-node priorité 0 avec nodeId dans SnapResul
 ## Task 3 : `useTilingDimension` — passer les nœuds et enregistrer `p2NodeId`
 
 **Files:**
+
 - Modify: `src/hooks/useTilingDimension.ts`
 
 ### Contexte
@@ -413,7 +418,10 @@ const PERP_OFFSET = 600;
 const DIR_CYCLE: DimDirection[] = ['H', 'V', 'parallel'];
 
 function computePerpOffset(
-  rx1: number, ry1: number, rx2: number, ry2: number,
+  rx1: number,
+  ry1: number,
+  rx2: number,
+  ry2: number,
   rooms: Room[],
 ): number {
   const dx = rx2 - rx1;
@@ -426,7 +434,8 @@ function computePerpOffset(
   const midY = (ry1 + ry2) / 2;
   const validRooms = rooms.filter((r) => r.points.length >= 3);
   if (validRooms.length === 0) return PERP_OFFSET;
-  let cx = 0, cy = 0;
+  let cx = 0,
+    cy = 0;
   for (const r of validRooms) {
     const bb = getBoundingBox(r.points);
     cx += (bb.minX + bb.maxX) / 2;
@@ -485,13 +494,16 @@ export function useTilingDimension(
     if (phase !== 'picking_end' || p1 === null || hoverSnap === null) return null;
     const dir = effectiveDirection;
     const target = hoverSnap.point;
-    const parallelAngle = dir === 'parallel' ? (getParallelAngle(p1, rooms, wallThickness) ?? 0) : undefined;
+    const parallelAngle =
+      dir === 'parallel' ? (getParallelAngle(p1, rooms, wallThickness) ?? 0) : undefined;
 
     let rx2: number, ry2: number;
     if (dir === 'H') {
-      rx2 = target.x; ry2 = p1.y;
+      rx2 = target.x;
+      ry2 = p1.y;
     } else if (dir === 'V') {
-      rx2 = p1.x; ry2 = target.y;
+      rx2 = p1.x;
+      ry2 = target.y;
     } else {
       const angle = parallelAngle ?? 0;
       const cos = Math.cos(angle);
@@ -553,9 +565,11 @@ export function useTilingDimension(
 
       let rx2: number, ry2: number;
       if (dir === 'H') {
-        rx2 = target.x; ry2 = p1.y;
+        rx2 = target.x;
+        ry2 = p1.y;
       } else if (dir === 'V') {
-        rx2 = p1.x; ry2 = target.y;
+        rx2 = p1.x;
+        ry2 = target.y;
       } else {
         const angle = parallelAngle ?? 0;
         const cos = Math.cos(angle);
@@ -584,7 +598,19 @@ export function useTilingDimension(
       setManualDirection(null);
       setAutoDirection('H');
     },
-    [active, rooms, tiles, wallThickness, scale, nodes, phase, p1, manualDirection, autoDirection, addTilingDimension],
+    [
+      active,
+      rooms,
+      tiles,
+      wallThickness,
+      scale,
+      nodes,
+      phase,
+      p1,
+      manualDirection,
+      autoDirection,
+      addTilingDimension,
+    ],
   );
 
   const onContextMenu = useCallback(
@@ -626,6 +652,7 @@ git commit -m "feat(dim): passer nodes au snap + enregistrer p2NodeId dans Tilin
 ## Task 4 : `DimLine.onLabelClick` + `TilingDimensionLayer.onSelect`
 
 **Files:**
+
 - Modify: `src/components/tiling/DimLine.tsx`
 - Modify: `src/components/tiling/TilingDimensionLayer.tsx`
 
@@ -634,10 +661,13 @@ git commit -m "feat(dim): passer nodes au snap + enregistrer p2NodeId dans Tilin
 `DimLine` rend la pill label dans un `<g transform="translate(...) rotate(...)">`. Il faut ajouter `onClick` sur ce groupe pour déclencher la sélection. `TilingDimensionLayer` orchestre les `DimLine` et doit exposer un callback `onSelect(id)`.
 
 Interface actuelle de `DimLine` :
+
 ```ts
 interface DimLineProps {
-  x1: number; y1: number;
-  x2: number; y2: number;
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
   label: string;
   perpOffset?: number;
   scale?: number;
@@ -656,8 +686,10 @@ Remplacer le contenu de `src/components/tiling/DimLine.tsx` :
 import type { MouseEvent, PointerEvent } from 'react';
 
 interface DimLineProps {
-  x1: number; y1: number;
-  x2: number; y2: number;
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
   label: string;
   perpOffset?: number;
   scale?: number;
@@ -667,40 +699,55 @@ interface DimLineProps {
 }
 
 export const DimLine = ({
-  x1, y1, x2, y2, label,
-  perpOffset = 500, scale = 1,
-  onContextMenu, onPointerDown, onLabelClick,
+  x1,
+  y1,
+  x2,
+  y2,
+  label,
+  perpOffset = 500,
+  scale = 1,
+  onContextMenu,
+  onPointerDown,
+  onLabelClick,
 }: DimLineProps) => {
-  const dx = x2 - x1, dy = y2 - y1;
+  const dx = x2 - x1,
+    dy = y2 - y1;
   const len = Math.hypot(dx, dy);
   if (len < 10) return null;
 
-  const ux = dx / len, uy = dy / len;
-  const nx = -dy / len, ny = dx / len;
+  const ux = dx / len,
+    uy = dy / len;
+  const nx = -dy / len,
+    ny = dx / len;
 
-  const ox = nx * perpOffset, oy = ny * perpOffset;
-  const dlx1 = x1 + ox, dly1 = y1 + oy;
-  const dlx2 = x2 + ox, dly2 = y2 + oy;
+  const ox = nx * perpOffset,
+    oy = ny * perpOffset;
+  const dlx1 = x1 + ox,
+    dly1 = y1 + oy;
+  const dlx2 = x2 + ox,
+    dly2 = y2 + oy;
 
   const perpSign = perpOffset >= 0 ? 1 : -1;
   const absPerp = Math.abs(perpOffset);
-  const enx = nx * perpSign, eny = ny * perpSign;
+  const enx = nx * perpSign,
+    eny = ny * perpSign;
 
   const S = scale;
-  const ARROW_L  = 12 / S;
-  const ARROW_W  = 6  / S;
-  const EXT_GAP  = 6  / S;
-  const EXT_OVER = 8  / S;
-  const FONT_PX  = 12 / S;
-  const PILL_H   = 20 / S;
-  const PILL_W   = (label.length * 7.5 + 16) / S;
+  const ARROW_L = 12 / S;
+  const ARROW_W = 6 / S;
+  const EXT_GAP = 6 / S;
+  const EXT_OVER = 8 / S;
+  const FONT_PX = 12 / S;
+  const PILL_H = 20 / S;
+  const PILL_W = (label.length * 7.5 + 16) / S;
   const LABEL_GAP = 8 / S;
 
-  const a1 = `${dlx1},${dly1} ${dlx1 + ARROW_L*ux + ARROW_W*nx},${dly1 + ARROW_L*uy + ARROW_W*ny} ${dlx1 + ARROW_L*ux - ARROW_W*nx},${dly1 + ARROW_L*uy - ARROW_W*ny}`;
-  const a2 = `${dlx2},${dly2} ${dlx2 - ARROW_L*ux + ARROW_W*nx},${dly2 - ARROW_L*uy + ARROW_W*ny} ${dlx2 - ARROW_L*ux - ARROW_W*nx},${dly2 - ARROW_L*uy - ARROW_W*ny}`;
+  const a1 = `${dlx1},${dly1} ${dlx1 + ARROW_L * ux + ARROW_W * nx},${dly1 + ARROW_L * uy + ARROW_W * ny} ${dlx1 + ARROW_L * ux - ARROW_W * nx},${dly1 + ARROW_L * uy - ARROW_W * ny}`;
+  const a2 = `${dlx2},${dly2} ${dlx2 - ARROW_L * ux + ARROW_W * nx},${dly2 - ARROW_L * uy + ARROW_W * ny} ${dlx2 - ARROW_L * ux - ARROW_W * nx},${dly2 - ARROW_L * uy - ARROW_W * ny}`;
 
-  const midX = (dlx1 + dlx2) / 2, midY = (dly1 + dly2) / 2;
-  const ang = Math.atan2(dy, dx) * 180 / Math.PI;
+  const midX = (dlx1 + dlx2) / 2,
+    midY = (dly1 + dly2) / 2;
+  const ang = (Math.atan2(dy, dx) * 180) / Math.PI;
 
   const labelOffset = LABEL_GAP + PILL_H / 2;
   const lx = midX + nx * perpSign * labelOffset;
@@ -714,21 +761,30 @@ export const DimLine = ({
     >
       {/* Extension lines */}
       <line
-        x1={x1 + enx * EXT_GAP} y1={y1 + eny * EXT_GAP}
-        x2={x1 + enx * (absPerp + EXT_OVER)} y2={y1 + eny * (absPerp + EXT_OVER)}
-        stroke="#94a3b8" strokeWidth={1 / S}
+        x1={x1 + enx * EXT_GAP}
+        y1={y1 + eny * EXT_GAP}
+        x2={x1 + enx * (absPerp + EXT_OVER)}
+        y2={y1 + eny * (absPerp + EXT_OVER)}
+        stroke="#94a3b8"
+        strokeWidth={1 / S}
       />
       <line
-        x1={x2 + enx * EXT_GAP} y1={y2 + eny * EXT_GAP}
-        x2={x2 + enx * (absPerp + EXT_OVER)} y2={y2 + eny * (absPerp + EXT_OVER)}
-        stroke="#94a3b8" strokeWidth={1 / S}
+        x1={x2 + enx * EXT_GAP}
+        y1={y2 + eny * EXT_GAP}
+        x2={x2 + enx * (absPerp + EXT_OVER)}
+        y2={y2 + eny * (absPerp + EXT_OVER)}
+        stroke="#94a3b8"
+        strokeWidth={1 / S}
       />
       {/* Dim line between arrowhead bases */}
       {len > 2 * ARROW_L && (
         <line
-          x1={dlx1 + ARROW_L * ux} y1={dly1 + ARROW_L * uy}
-          x2={dlx2 - ARROW_L * ux} y2={dly2 - ARROW_L * uy}
-          stroke="#f97316" strokeWidth={2 / S}
+          x1={dlx1 + ARROW_L * ux}
+          y1={dly1 + ARROW_L * uy}
+          x2={dlx2 - ARROW_L * ux}
+          y2={dly2 - ARROW_L * uy}
+          stroke="#f97316"
+          strokeWidth={2 / S}
         />
       )}
       {/* Arrowheads */}
@@ -737,18 +793,32 @@ export const DimLine = ({
       {/* Label: translucent pill */}
       <g
         transform={`translate(${lx}, ${ly}) rotate(${ang})`}
-        onClick={onLabelClick ? (e) => { e.stopPropagation(); onLabelClick(); } : undefined}
+        onClick={
+          onLabelClick
+            ? (e) => {
+                e.stopPropagation();
+                onLabelClick();
+              }
+            : undefined
+        }
         style={onLabelClick ? { cursor: 'pointer' } : undefined}
       >
         <rect
-          x={-PILL_W / 2} y={-PILL_H / 2}
-          width={PILL_W} height={PILL_H}
-          fill="rgba(255,255,255,0.82)" rx={PILL_H / 2}
+          x={-PILL_W / 2}
+          y={-PILL_H / 2}
+          width={PILL_W}
+          height={PILL_H}
+          fill="rgba(255,255,255,0.82)"
+          rx={PILL_H / 2}
         />
         <text
-          x="0" y="1"
-          textAnchor="middle" dominantBaseline="middle"
-          fontSize={FONT_PX} fill="#475569" fontWeight="600"
+          x="0"
+          y="1"
+          textAnchor="middle"
+          dominantBaseline="middle"
+          fontSize={FONT_PX}
+          fill="#475569"
+          fontWeight="600"
         >
           {label}
         </text>
@@ -783,7 +853,8 @@ interface TilingDimensionLayerProps {
   onContextMenu: (dimId: string) => void;
   onDimDragStart: (
     id: string,
-    nx: number, ny: number,
+    nx: number,
+    ny: number,
     startPerp: number,
     e: PointerEvent<SVGGElement>,
   ) => void;
@@ -791,8 +862,10 @@ interface TilingDimensionLayerProps {
 }
 
 interface ProjectedDim {
-  x1: number; y1: number;
-  x2: number; y2: number;
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
   label: string;
   perpOffset: number;
 }
@@ -805,18 +878,34 @@ function projectDim(
   perpOffset: number,
 ): ProjectedDim {
   if (direction === 'H') {
-    return { x1: p1.x, y1: p1.y, x2: p2.x, y2: p1.y, label: formatCm(Math.abs(p2.x - p1.x)), perpOffset };
+    return {
+      x1: p1.x,
+      y1: p1.y,
+      x2: p2.x,
+      y2: p1.y,
+      label: formatCm(Math.abs(p2.x - p1.x)),
+      perpOffset,
+    };
   }
   if (direction === 'V') {
-    return { x1: p1.x, y1: p1.y, x2: p1.x, y2: p2.y, label: formatCm(Math.abs(p2.y - p1.y)), perpOffset };
+    return {
+      x1: p1.x,
+      y1: p1.y,
+      x2: p1.x,
+      y2: p2.y,
+      label: formatCm(Math.abs(p2.y - p1.y)),
+      perpOffset,
+    };
   }
   const angle = parallelAngle ?? 0;
   const cos = Math.cos(angle);
   const sin = Math.sin(angle);
   const proj = (p2.x - p1.x) * cos + (p2.y - p1.y) * sin;
   return {
-    x1: p1.x, y1: p1.y,
-    x2: p1.x + proj * cos, y2: p1.y + proj * sin,
+    x1: p1.x,
+    y1: p1.y,
+    x2: p1.x + proj * cos,
+    y2: p1.y + proj * sin,
     label: formatCm(Math.abs(proj)),
     perpOffset,
   };
@@ -853,25 +942,44 @@ export const TilingDimensionLayer = ({
       )}
 
       {/* Preview dimension (during picking_end) */}
-      {preview && (() => {
-        const pd = projectDim(preview.p1, preview.p2, preview.direction, preview.parallelAngle, preview.perpOffset);
-        if (!hasLength(pd)) return null;
-        return (
-          <g className="pointer-events-none" opacity={0.6}>
-            <DimLine x1={pd.x1} y1={pd.y1} x2={pd.x2} y2={pd.y2} label={pd.label} perpOffset={pd.perpOffset} scale={scale} />
-          </g>
-        );
-      })()}
+      {preview &&
+        (() => {
+          const pd = projectDim(
+            preview.p1,
+            preview.p2,
+            preview.direction,
+            preview.parallelAngle,
+            preview.perpOffset,
+          );
+          if (!hasLength(pd)) return null;
+          return (
+            <g className="pointer-events-none" opacity={0.6}>
+              <DimLine
+                x1={pd.x1}
+                y1={pd.y1}
+                x2={pd.x2}
+                y2={pd.y2}
+                label={pd.label}
+                perpOffset={pd.perpOffset}
+                scale={scale}
+              />
+            </g>
+          );
+        })()}
 
       {/* Placed dimensions */}
       {dimensions.map((dim) => {
-        const effectivePerp = livePerpOverride?.id === dim.id ? livePerpOverride.perpOffset : dim.perpOffset;
+        const effectivePerp =
+          livePerpOverride?.id === dim.id ? livePerpOverride.perpOffset : dim.perpOffset;
         const pd = projectDim(dim.p1, dim.p2, dim.direction, dim.parallelAngle, effectivePerp);
         if (!hasLength(pd)) return null;
         return (
           <DimLine
             key={dim.id}
-            x1={pd.x1} y1={pd.y1} x2={pd.x2} y2={pd.y2}
+            x1={pd.x1}
+            y1={pd.y1}
+            x2={pd.x2}
+            y2={pd.y2}
             label={pd.label}
             perpOffset={effectivePerp}
             scale={scale}
@@ -885,7 +993,7 @@ export const TilingDimensionLayer = ({
               const segLen = Math.hypot(x2 - x1, y2 - y1);
               if (segLen < 1) return;
               const snx = -(y2 - y1) / segLen;
-              const sny =  (x2 - x1) / segLen;
+              const sny = (x2 - x1) / segLen;
               onDimDragStart(dim.id, snx, sny, effectivePerp, e);
             }}
             onLabelClick={onSelect ? () => onSelect(dim.id) : undefined}
@@ -917,11 +1025,13 @@ git commit -m "feat(dim): ajouter onLabelClick à DimLine + onSelect à TilingDi
 ## Task 5 : Créer `DimPropertiesPanel`
 
 **Files:**
+
 - Create: `src/components/tiling/DimPropertiesPanel.tsx`
 
 ### Contexte
 
 Le panneau affiche : longueur (champ éditable si `p2NodeId` présent), direction (lecture seule), ancre fixe (lecture seule). On apply :
+
 1. Convertit cm → mm (`cmToMm`)
 2. Calcule `newP2` selon la direction (formules spec)
 3. Appelle `updateNode(p2NodeId, newP2)` — action store déjà existante (`updateNode: (id, patch) => void`)
@@ -949,15 +1059,11 @@ function projectedLengthMm(dim: TilingDimension): number {
   if (dim.direction === 'V') return Math.abs(dim.p2.y - dim.p1.y);
   const angle = dim.parallelAngle ?? 0;
   return Math.abs(
-    (dim.p2.x - dim.p1.x) * Math.cos(angle) +
-    (dim.p2.y - dim.p1.y) * Math.sin(angle),
+    (dim.p2.x - dim.p1.x) * Math.cos(angle) + (dim.p2.y - dim.p1.y) * Math.sin(angle),
   );
 }
 
-export function computeNewP2(
-  dim: TilingDimension,
-  newDistMm: number,
-): { x: number; y: number } {
+export function computeNewP2(dim: TilingDimension, newDistMm: number): { x: number; y: number } {
   if (dim.direction === 'H') {
     return {
       x: dim.p1.x + Math.sign(dim.p2.x - dim.p1.x) * newDistMm,
@@ -984,9 +1090,7 @@ function dirLabel(dir: TilingDimension['direction']): string {
 }
 
 export const DimPropertiesPanel = ({ dim, onClose }: DimPropertiesPanelProps) => {
-  const [rawValue, setRawValue] = useState(
-    () => mmToCm(projectedLengthMm(dim)).toFixed(1),
-  );
+  const [rawValue, setRawValue] = useState(() => mmToCm(projectedLengthMm(dim)).toFixed(1));
   const [error, setError] = useState<string | null>(null);
 
   const updateNode = useProjectStore((s) => s.updateNode);
@@ -1010,7 +1114,7 @@ export const DimPropertiesPanel = ({ dim, onClose }: DimPropertiesPanelProps) =>
   };
 
   return (
-    <div className="border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3">
+    <div className="border-b border-gray-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-900">
       <div className="mb-2 flex items-center justify-between">
         <span className="text-[10px] font-bold uppercase tracking-wider text-orange-400">
           Côte sélectionnée
@@ -1033,9 +1137,14 @@ export const DimPropertiesPanel = ({ dim, onClose }: DimPropertiesPanelProps) =>
             min="0.1"
             value={rawValue}
             disabled={!canEdit}
-            onChange={(e) => { setRawValue(e.target.value); setError(null); }}
-            onKeyDown={(e) => { if (e.key === 'Enter') handleApply(); }}
-            className="w-20 rounded border border-orange-500 bg-gray-50 dark:bg-zinc-800 px-2 py-1 text-sm font-bold disabled:border-gray-300 dark:disabled:border-zinc-700 disabled:cursor-not-allowed disabled:text-gray-400"
+            onChange={(e) => {
+              setRawValue(e.target.value);
+              setError(null);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleApply();
+            }}
+            className="w-20 rounded border border-orange-500 bg-gray-50 px-2 py-1 text-sm font-bold disabled:cursor-not-allowed disabled:border-gray-300 disabled:text-gray-400 dark:bg-zinc-800 dark:disabled:border-zinc-700"
           />
           <span className="text-xs text-gray-500 dark:text-zinc-500">cm</span>
           {canEdit && (
@@ -1109,7 +1218,7 @@ describe('computeNewP2', () => {
     expect(result.y).toBeCloseTo(4000);
   });
 
-  it('direction parallel — suit l\'angle', () => {
+  it("direction parallel — suit l'angle", () => {
     const angle = Math.PI / 4; // 45°
     const dim: TilingDimension = {
       ...base,
@@ -1153,11 +1262,13 @@ git commit -m "feat(dim): créer DimPropertiesPanel avec édition de longueur et
 ## Task 6 : Câbler `TilingEditor` — `selectedDimId` + panneau dans le sidebar
 
 **Files:**
+
 - Modify: `src/components/tiling/TilingEditor.tsx`
 
 ### Contexte
 
 `TilingEditor` gère l'état global du mode côtes. Il faut :
+
 1. Ajouter `selectedDimId: string | null` state
 2. Déselectionner quand on quitte le mode Côtes (Échap ou bouton)
 3. Passer `onSelect` et les nœuds à `useTilingDimension` + `TilingDimensionLayer`
@@ -1214,7 +1325,10 @@ La ligne `const dimHook = useTilingDimension(...)` (~ligne 102) devient :
 
 ```ts
 const dimHook = useTilingDimension(
-  rooms, result.tiles, wallThickness, scale,
+  rooms,
+  result.tiles,
+  wallThickness,
+  scale,
   activeTool === 'dimension',
   wallEngine?.nodes ?? [],
 );
@@ -1245,16 +1359,14 @@ const dimensionLayer = (
 Dans l'élément `<aside>` (~ligne 338), juste avant `<TilingControls>` :
 
 ```tsx
-<aside className={`z-20 flex w-full flex-col overflow-y-auto dark:bg-zinc-900 bg-white shadow-2xl md:w-80 ${mobileTab === 'apercu' ? 'hidden md:flex' : 'flex'}`}>
-  {selectedDimId && (() => {
-    const dim = dimensions.find((d) => d.id === selectedDimId);
-    return dim ? (
-      <DimPropertiesPanel
-        dim={dim}
-        onClose={() => setSelectedDimId(null)}
-      />
-    ) : null;
-  })()}
+<aside
+  className={`z-20 flex w-full flex-col overflow-y-auto bg-white shadow-2xl md:w-80 dark:bg-zinc-900 ${mobileTab === 'apercu' ? 'hidden md:flex' : 'flex'}`}
+>
+  {selectedDimId &&
+    (() => {
+      const dim = dimensions.find((d) => d.id === selectedDimId);
+      return dim ? <DimPropertiesPanel dim={dim} onClose={() => setSelectedDimId(null)} /> : null;
+    })()}
   <TilingControls config={config} onChange={setConfig} />
   <ResultsPanel result={result} />
 </aside>

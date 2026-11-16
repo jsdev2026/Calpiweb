@@ -20,11 +20,11 @@ Le système manuel `TilingDimension` (session précédente) est abandonné côt�
 
 La valeur affichée dans le label est la distance anchor1→anchor2 (pas nécessairement la distance nœud à nœud). La conversion :
 
-| `side` | Formule | Raison |
-|--------|---------|--------|
+| `side`     | Formule                            | Raison                                                            |
+| ---------- | ---------------------------------- | ----------------------------------------------------------------- |
 | `exterior` | `node_dist = label_mm − thickness` | Les coins du polygone extérieur débordent de `t/2` de chaque côté |
-| `interior` | `node_dist = label_mm + thickness` | Les coins intérieurs sont en retrait de `t/2` de chaque côté |
-| `isolated` | `node_dist = label_mm` | `anchor1 = node1`, `anchor2 = node2` (direct) |
+| `interior` | `node_dist = label_mm + thickness` | Les coins intérieurs sont en retrait de `t/2` de chaque côté      |
+| `isolated` | `node_dist = label_mm`             | `anchor1 = node1`, `anchor2 = node2` (direct)                     |
 
 Approximation exacte pour les coins à 90°, acceptable pour les autres angles.
 
@@ -39,17 +39,17 @@ const newNode2 = { x: node1.x + dir.x * node_dist, y: node1.y + dir.y * node_dis
 
 ### Fichiers créés
 
-| Fichier | Rôle |
-|---------|------|
-| `src/components/plan/AutoCotationPanel.tsx` | Panneau flottant d'édition + fonction pure `computeNewNode2` |
-| `src/components/plan/AutoCotationPanel.test.ts` | Tests unitaires de `computeNewNode2` |
+| Fichier                                         | Rôle                                                         |
+| ----------------------------------------------- | ------------------------------------------------------------ |
+| `src/components/plan/AutoCotationPanel.tsx`     | Panneau flottant d'édition + fonction pure `computeNewNode2` |
+| `src/components/plan/AutoCotationPanel.test.ts` | Tests unitaires de `computeNewNode2`                         |
 
 ### Fichiers modifiés
 
-| Fichier | Changement |
-|---------|-----------|
+| Fichier                                     | Changement                                              |
+| ------------------------------------------- | ------------------------------------------------------- |
 | `src/components/plan/WallDrawingCanvas.tsx` | État `selectedCot`, labels cliquables, rendu du panneau |
-| `src/components/tiling/TilingEditor.tsx` | Masquer le bouton "Côtes" (ancien système) |
+| `src/components/tiling/TilingEditor.tsx`    | Masquer le bouton "Côtes" (ancien système)              |
 
 ## Détail d'implémentation
 
@@ -59,8 +59,8 @@ Props :
 
 ```ts
 interface AutoCotationPanelProps {
-  cot: AutoCotation;       // wallId, side, label, anchor1, anchor2
-  wall: Wall;              // node1Id, node2Id, thickness
+  cot: AutoCotation; // wallId, side, label, anchor1, anchor2
+  wall: Wall; // node1Id, node2Id, thickness
   nodes: WallNode[];
   onApply: (nodeId: string, newPos: Point) => void;
   onClose: () => void;
@@ -78,15 +78,14 @@ export function computeNewNode2(
 ): Point {
   const n1 = nodes.find((n) => n.id === wall.node1Id)!;
   const n2 = nodes.find((n) => n.id === wall.node2Id)!;
-  const dx = n2.x - n1.x, dy = n2.y - n1.y;
+  const dx = n2.x - n1.x,
+    dy = n2.y - n1.y;
   const len = Math.sqrt(dx * dx + dy * dy);
   const dir = { x: dx / len, y: dy / len };
 
   const t = wall.thickness;
   const nodeDist =
-    side === 'exterior' ? newLabelMm - t :
-    side === 'interior' ? newLabelMm + t :
-    newLabelMm;
+    side === 'exterior' ? newLabelMm - t : side === 'interior' ? newLabelMm + t : newLabelMm;
 
   return { x: n1.x + dir.x * nodeDist, y: n1.y + dir.y * nodeDist };
 }
@@ -118,8 +117,10 @@ Position : panneau HTML absolu, ancré en haut à droite du canvas (`position: a
 Nouvel état :
 
 ```tsx
-const [selectedCot, setSelectedCot] =
-  useState<{ wallId: string; side: AutoCotation['side'] } | null>(null);
+const [selectedCot, setSelectedCot] = useState<{
+  wallId: string;
+  side: AutoCotation['side'];
+} | null>(null);
 ```
 
 Dans le rendu des autoCotations, le **groupe parent** reste `pointer-events-none`, mais le groupe `<g>` du label reçoit `pointerEvents: 'auto'` et un `onClick` :
@@ -136,26 +137,29 @@ Dans le rendu des autoCotations, le **groupe parent** reste `pointer-events-none
 Rendu du panneau (après la balise SVG, dans le div parent) :
 
 ```tsx
-{selectedCot && (() => {
-  const cot = autoCotations.find(
-    (c) => c.wallId === selectedCot.wallId && c.side === selectedCot.side
-  );
-  const wall = walls.find((w) => w.id === selectedCot.wallId);
-  return cot && wall ? (
-    <AutoCotationPanel
-      key={`${selectedCot.wallId}-${selectedCot.side}`}
-      cot={cot}
-      wall={wall}
-      nodes={nodes}
-      onApply={(nodeId, newPos) => {
-        onPushHistory();
-        onUpdateNode(nodeId, newPos);
-        setSelectedCot(null);
-      }}
-      onClose={() => setSelectedCot(null)}
-    />
-  ) : null;
-})()}
+{
+  selectedCot &&
+    (() => {
+      const cot = autoCotations.find(
+        (c) => c.wallId === selectedCot.wallId && c.side === selectedCot.side,
+      );
+      const wall = walls.find((w) => w.id === selectedCot.wallId);
+      return cot && wall ? (
+        <AutoCotationPanel
+          key={`${selectedCot.wallId}-${selectedCot.side}`}
+          cot={cot}
+          wall={wall}
+          nodes={nodes}
+          onApply={(nodeId, newPos) => {
+            onPushHistory();
+            onUpdateNode(nodeId, newPos);
+            setSelectedCot(null);
+          }}
+          onClose={() => setSelectedCot(null)}
+        />
+      ) : null;
+    })();
+}
 ```
 
 Désélection : Échap (dans `handleKeyDown` existant) ajoute `setSelectedCot(null)`.

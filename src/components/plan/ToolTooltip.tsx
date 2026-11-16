@@ -38,7 +38,12 @@ export const ToolTooltip = ({ label, description, children }: ToolTooltipProps) 
   };
 
   return (
-    <div ref={wrapRef} data-testid="tooltip-wrapper" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+    <div
+      ref={wrapRef}
+      data-testid="tooltip-wrapper"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
       {children}
       {visible &&
         createPortal(
@@ -52,7 +57,9 @@ export const ToolTooltip = ({ label, description, children }: ToolTooltipProps) 
               maxWidth: 220,
             }}
           >
-            <p className="mb-0.5 font-bold" style={{ color: 'var(--text)' }}>{label}</p>
+            <p className="mb-0.5 font-bold" style={{ color: 'var(--text)' }}>
+              {label}
+            </p>
             <p style={{ color: 'var(--text2)' }}>{description}</p>
           </div>,
           document.body,

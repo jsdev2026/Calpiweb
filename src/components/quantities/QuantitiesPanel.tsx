@@ -2,7 +2,12 @@
 
 import { useMemo, useState } from 'react';
 import type { ConsumableParams } from '@/types/tiling';
-import { selectActiveProject, selectDoorOpenings, selectRooms, useProjectStore } from '@/store/projectStore';
+import {
+  selectActiveProject,
+  selectDoorOpenings,
+  selectRooms,
+  useProjectStore,
+} from '@/store/projectStore';
 import { useShallow } from 'zustand/react/shallow';
 import { computeCornerGeometry } from '@/engine/geometry/wallGeometry';
 import { analyzeQuantities } from '@/engine/quantities/quantityEngine';
@@ -27,7 +32,11 @@ export const QuantitiesPanel = () => {
 
   const wallEngine = project?.wallEngine;
   const wallPolygons = useMemo(
-    () => computeCornerGeometry((wallEngine?.walls ?? []).filter((w) => !w.isDoor), wallEngine?.nodes ?? []),
+    () =>
+      computeCornerGeometry(
+        (wallEngine?.walls ?? []).filter((w) => !w.isDoor),
+        wallEngine?.nodes ?? [],
+      ),
     [wallEngine],
   );
 
@@ -40,7 +49,7 @@ export const QuantitiesPanel = () => {
 
   if (result.totalTiles === 0) {
     return (
-      <div className="flex flex-1 items-center justify-center bg-gray-50 dark:bg-zinc-950 text-gray-400 dark:text-zinc-500">
+      <div className="flex flex-1 items-center justify-center bg-gray-50 text-gray-400 dark:bg-zinc-950 dark:text-zinc-500">
         Tracez au moins une pièce fermée pour voir le quantitatif.
       </div>
     );
@@ -67,12 +76,27 @@ export const QuantitiesPanel = () => {
   return (
     <div className="flex flex-1 flex-col overflow-hidden bg-gray-50 dark:bg-zinc-950">
       {/* Header */}
-      <div className="flex shrink-0 flex-wrap items-baseline justify-between gap-2 border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-5 md:px-8 py-3">
-        <h2 className="text-lg font-black text-gray-900 dark:text-zinc-100">Tableau des quantités</h2>
+      <div className="flex shrink-0 flex-wrap items-baseline justify-between gap-2 border-b border-gray-200 bg-white px-5 py-3 md:px-8 dark:border-zinc-800 dark:bg-zinc-900">
+        <h2 className="text-lg font-black text-gray-900 dark:text-zinc-100">
+          Tableau des quantités
+        </h2>
         <div className="flex flex-wrap gap-x-3 text-xs text-gray-400 dark:text-zinc-500">
-          <span>Format&nbsp;: <span className="font-bold text-gray-700 dark:text-zinc-300">{tileLabel}</span></span>
-          <span>Joint&nbsp;: <span className="font-bold text-gray-700 dark:text-zinc-300">{result.joint}&nbsp;mm</span></span>
-          <span>Surface&nbsp;: <span className="font-bold text-gray-700 dark:text-zinc-300">{formatM2(result.roomArea)}</span></span>
+          <span>
+            Format&nbsp;:{' '}
+            <span className="font-bold text-gray-700 dark:text-zinc-300">{tileLabel}</span>
+          </span>
+          <span>
+            Joint&nbsp;:{' '}
+            <span className="font-bold text-gray-700 dark:text-zinc-300">
+              {result.joint}&nbsp;mm
+            </span>
+          </span>
+          <span>
+            Surface&nbsp;:{' '}
+            <span className="font-bold text-gray-700 dark:text-zinc-300">
+              {formatM2(result.roomArea)}
+            </span>
+          </span>
         </div>
       </div>
 
@@ -110,7 +134,8 @@ export const QuantitiesPanel = () => {
             >
               <span>{cutsOpen ? '▾' : '▸'}</span>
               <span>
-                Groupes de coupes ({mergedCutGroups.length}) — {result.cuts.length} carreaux à couper, {result.totalReuseCount} récupérées
+                Groupes de coupes ({mergedCutGroups.length}) — {result.cuts.length} carreaux à
+                couper, {result.totalReuseCount} récupérées
               </span>
             </button>
 

@@ -13,6 +13,7 @@
 ### Task 1 — Type extensions: WallNode, store, canvas props
 
 **Files:**
+
 - Modify: `src/types/wall.ts`
 - Modify: `src/store/projectStore.ts` (line 70)
 - Modify: `src/components/plan/WallDrawingCanvas.tsx` (line 41)
@@ -52,7 +53,8 @@ describe('updateNode — locked field', () => {
   it('persists locked: true on a node', () => {
     const { updateNode } = useProjectStore.getState();
     updateNode('n1', { locked: true });
-    const node = useProjectStore.getState()
+    const node = useProjectStore
+      .getState()
       .projects[0]!.wallEngine!.nodes.find((n) => n.id === 'n1');
     expect(node?.locked).toBe(true);
   });
@@ -73,7 +75,8 @@ describe('updateNode — locked field', () => {
     }));
     const { updateNode } = useProjectStore.getState();
     updateNode('n1', { locked: false });
-    const node = useProjectStore.getState()
+    const node = useProjectStore
+      .getState()
       .projects[0]!.wallEngine!.nodes.find((n) => n.id === 'n1');
     expect(node?.locked).toBe(false);
   });
@@ -157,6 +160,7 @@ git commit -m "feat(lock): add locked field to WallNode and extend updateNode ty
 ### Task 2 — First node auto-lock
 
 **Files:**
+
 - Modify: `src/components/plan/WallDrawingCanvas.tsx`
 - Test: `src/components/plan/WallDrawingCanvas.test.tsx` (add test)
 
@@ -259,6 +263,7 @@ Expected: "creates the first node with locked: true" FAILS — `locked` not pres
 In `src/components/plan/WallDrawingCanvas.tsx`, in `handlePointerDown`, find the WALL tool branch where a brand-new node is created (the final `else` inside `if (!chain)`):
 
 Current code (around line 324):
+
 ```typescript
 } else {
   nodeId = generateId();
@@ -267,6 +272,7 @@ Current code (around line 324):
 ```
 
 Replace with:
+
 ```typescript
 } else {
   nodeId = generateId();
@@ -296,6 +302,7 @@ git commit -m "feat(lock): premier nœud tracé automatiquement verrouillé"
 ### Task 3 — LOCK tool in PlanToolbar
 
 **Files:**
+
 - Modify: `src/components/plan/PlanToolbar.tsx`
 - Modify: `src/components/plan/PlanEditor.tsx` (line 203 — extend cast)
 - Modify: `src/components/plan/WallDrawingCanvas.tsx` (line 18 — local PlanTool type)
@@ -351,18 +358,31 @@ Expected: FAIL — button not found.
 In `src/components/plan/PlanToolbar.tsx`:
 
 **3a.** Change the type export (line 8):
+
 ```typescript
 export type PlanTool = 'SELECT' | 'WALL' | 'DOOR' | 'EXCLUDE' | 'DELETE' | 'LOCK';
 ```
 
 **3b.** Add to `TOOL_TOOLTIPS` (after the `DELETE` entry):
+
 ```typescript
 LOCK: { label: 'Verrouiller', description: 'Cliquer un nœud ou un mur pour verrouiller / libérer sa position' },
 ```
 
 **3c.** Import the Lock icon. At the top of the file, add `Lock` to the lucide-react import:
+
 ```typescript
-import { DoorOpen, HelpCircle, Lock, MousePointer2, PenTool, Redo2, Square, Trash2, Undo } from 'lucide-react';
+import {
+  DoorOpen,
+  HelpCircle,
+  Lock,
+  MousePointer2,
+  PenTool,
+  Redo2,
+  Square,
+  Trash2,
+  Undo,
+} from 'lucide-react';
 ```
 
 **3d.** In the desktop toolbar, add the LOCK button right before the `<div className="mx-auto h-px w-6" .../>` separator before Undo/Redo/DELETE. Insert after the EXCLUDE button block (after its closing `</div>`):
@@ -370,22 +390,38 @@ import { DoorOpen, HelpCircle, Lock, MousePointer2, PenTool, Redo2, Square, Tras
 ```tsx
 <div className="flex items-center">
   <ToolTooltip {...TOOL_TOOLTIPS.LOCK}>
-    <button type="button" onClick={() => onChangeTool('LOCK')}
+    <button
+      type="button"
+      onClick={() => onChangeTool('LOCK')}
       className={`flex h-8 w-8 items-center justify-center rounded-xl transition-all ${tool === 'LOCK' ? 'text-white shadow-md' : `${TB_CARD} hover:text-green-600 dark:hover:text-green-300`}`}
-      style={tool === 'LOCK' ? { background: '#27ae60', boxShadow: '0 4px 10px rgba(39,174,96,0.3)' } : { color: 'var(--text2)' }}
-      aria-label="Verrouiller">
+      style={
+        tool === 'LOCK'
+          ? { background: '#27ae60', boxShadow: '0 4px 10px rgba(39,174,96,0.3)' }
+          : { color: 'var(--text2)' }
+      }
+      aria-label="Verrouiller"
+    >
       <Lock size={16} />
     </button>
   </ToolTooltip>
-  {tutorialMode && <span className="ml-2 whitespace-nowrap text-xs" style={{ color: 'var(--text2)' }}>Verrouiller</span>}
+  {tutorialMode && (
+    <span className="ml-2 whitespace-nowrap text-xs" style={{ color: 'var(--text2)' }}>
+      Verrouiller
+    </span>
+  )}
 </div>
 ```
 
 **3e.** In the mobile toolbar (inside the bottom strip), add after the EXCLUDE button:
+
 ```tsx
-<button type="button" aria-label="Verrouiller" onClick={() => onChangeTool('LOCK')}
+<button
+  type="button"
+  aria-label="Verrouiller"
+  onClick={() => onChangeTool('LOCK')}
   className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${tool === 'LOCK' ? 'text-white shadow-md' : TB_CARD}`}
-  style={tool === 'LOCK' ? { background: '#27ae60' } : { color: 'var(--text2)' }}>
+  style={tool === 'LOCK' ? { background: '#27ae60' } : { color: 'var(--text2)' }}
+>
   <Lock size={18} />
 </button>
 ```
@@ -393,6 +429,7 @@ import { DoorOpen, HelpCircle, Lock, MousePointer2, PenTool, Redo2, Square, Tras
 - [ ] **Step 4: Update WallDrawingCanvas local PlanTool type**
 
 In `src/components/plan/WallDrawingCanvas.tsx` line 18:
+
 ```typescript
 type PlanTool = 'WALL' | 'SELECT' | 'DELETE' | 'DOOR' | 'EXCLUDE' | 'LOCK';
 ```
@@ -400,10 +437,13 @@ type PlanTool = 'WALL' | 'SELECT' | 'DELETE' | 'DOOR' | 'EXCLUDE' | 'LOCK';
 - [ ] **Step 5: Update PlanEditor cast**
 
 In `src/components/plan/PlanEditor.tsx` line 203, change:
+
 ```typescript
 tool={tool as 'WALL' | 'SELECT' | 'DELETE' | 'DOOR' | 'EXCLUDE'}
 ```
+
 to:
+
 ```typescript
 tool={tool as 'WALL' | 'SELECT' | 'DELETE' | 'DOOR' | 'EXCLUDE' | 'LOCK'}
 ```
@@ -429,10 +469,12 @@ git commit -m "feat(lock): outil LOCK dans la barre d'outils"
 ### Task 4 — LOCK tool interaction + double-click on node
 
 **Files:**
+
 - Modify: `src/components/plan/WallDrawingCanvas.tsx`
 - Test: `src/components/plan/WallDrawingCanvas.test.tsx` (add tests)
 
 Two interactions:
+
 1. With `tool='LOCK'`: single click on a node → toggle `locked`; single click on a wall → toggle both endpoint nodes.
 2. With `tool='SELECT'`: double-click on a node → toggle `locked`.
 
@@ -630,6 +672,7 @@ git commit -m "feat(lock): outil LOCK et double-clic nœud pour verrouiller/lib�
 ### Task 5 — Drag guards: prevent moving locked nodes
 
 **Files:**
+
 - Modify: `src/components/plan/WallDrawingCanvas.tsx`
 - Test: `src/components/plan/WallDrawingCanvas.test.tsx` (add tests)
 
@@ -775,6 +818,7 @@ git commit -m "feat(lock): gardes de drag pour les nœuds verrouillés"
 ### Task 6 — Visual rendering: green nodes, lock icon, green segment stroke
 
 **Files:**
+
 - Modify: `src/components/plan/WallDrawingCanvas.tsx` (SVG render section)
 
 No new tests needed — visual rendering is confirmed in the browser. The implementation follows precisely from the spec.
@@ -784,47 +828,65 @@ No new tests needed — visual rendering is confirmed in the browser. The implem
 In `src/components/plan/WallDrawingCanvas.tsx`, find the `{/* Node handles (SELECT mode) */}` block (around line 1231):
 
 Replace:
+
 ```tsx
-{tool === 'SELECT' && nodes.map((n) => {
-  const sp = worldToScreen({ x: n.x, y: n.y });
-  const isDragging = n.id === draggingNodeId;
-  return (
-    <circle key={n.id}
-      cx={sp.x} cy={sp.y} r={5}
-      fill={isDragging ? '#e67e22' : 'none'}
-      stroke="#e67e22"
-      strokeWidth={isDragging ? 2 : 1.5}
-      style={{ cursor: 'grab' }}
-    />
-  );
-})}
+{
+  tool === 'SELECT' &&
+    nodes.map((n) => {
+      const sp = worldToScreen({ x: n.x, y: n.y });
+      const isDragging = n.id === draggingNodeId;
+      return (
+        <circle
+          key={n.id}
+          cx={sp.x}
+          cy={sp.y}
+          r={5}
+          fill={isDragging ? '#e67e22' : 'none'}
+          stroke="#e67e22"
+          strokeWidth={isDragging ? 2 : 1.5}
+          style={{ cursor: 'grab' }}
+        />
+      );
+    });
+}
 ```
 
 With:
+
 ```tsx
-{(tool === 'SELECT' || tool === 'LOCK') && nodes.map((n) => {
-  const sp = worldToScreen({ x: n.x, y: n.y });
-  const isDragging = n.id === draggingNodeId;
-  const isLocked = n.locked === true;
-  const nodeColor = isLocked ? '#27ae60' : '#e67e22';
-  return (
-    <g key={n.id}>
-      <circle
-        cx={sp.x} cy={sp.y} r={5}
-        fill={isDragging ? nodeColor : (isLocked ? '#eafaf1' : 'none')}
-        stroke={nodeColor}
-        strokeWidth={isDragging ? 2 : 1.5}
-        style={{ cursor: isLocked ? 'default' : 'grab' }}
-      />
-      {isLocked && (
-        <g transform={`translate(${sp.x - 4.5}, ${sp.y - 17})`} className="pointer-events-none">
-          <rect x="0.5" y="4.5" width="8" height="6" rx="1.2" fill="#27ae60" />
-          <path d="M2 4.5 V3 a2.5 2.5 0 0 1 5 0 V4.5" fill="none" stroke="#27ae60" strokeWidth="1.3" />
+{
+  (tool === 'SELECT' || tool === 'LOCK') &&
+    nodes.map((n) => {
+      const sp = worldToScreen({ x: n.x, y: n.y });
+      const isDragging = n.id === draggingNodeId;
+      const isLocked = n.locked === true;
+      const nodeColor = isLocked ? '#27ae60' : '#e67e22';
+      return (
+        <g key={n.id}>
+          <circle
+            cx={sp.x}
+            cy={sp.y}
+            r={5}
+            fill={isDragging ? nodeColor : isLocked ? '#eafaf1' : 'none'}
+            stroke={nodeColor}
+            strokeWidth={isDragging ? 2 : 1.5}
+            style={{ cursor: isLocked ? 'default' : 'grab' }}
+          />
+          {isLocked && (
+            <g transform={`translate(${sp.x - 4.5}, ${sp.y - 17})`} className="pointer-events-none">
+              <rect x="0.5" y="4.5" width="8" height="6" rx="1.2" fill="#27ae60" />
+              <path
+                d="M2 4.5 V3 a2.5 2.5 0 0 1 5 0 V4.5"
+                fill="none"
+                stroke="#27ae60"
+                strokeWidth="1.3"
+              />
+            </g>
+          )}
         </g>
-      )}
-    </g>
-  );
-})}
+      );
+    });
+}
 ```
 
 - [ ] **Step 2: Add green stroke to wall polygons when both nodes are locked**
@@ -832,44 +894,50 @@ With:
 Find the `{/* Wall polygons */}` block (around line 986):
 
 Replace:
+
 ```tsx
-{wallPolygons.map((poly) => {
-  if (!poly.points.length) return null;
-  const isSelected = poly.wallId === selectedWallId;
-  const color = isSelected ? WALL_SELECTED_COLOR : WALL_COLOR;
-  const screenPts = poly.points
-    .map((p) => worldToScreen(p))
-    .map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`)
-    .join(' ');
-  return <polygon key={poly.wallId} points={screenPts} fill={color} />;
-})}
+{
+  wallPolygons.map((poly) => {
+    if (!poly.points.length) return null;
+    const isSelected = poly.wallId === selectedWallId;
+    const color = isSelected ? WALL_SELECTED_COLOR : WALL_COLOR;
+    const screenPts = poly.points
+      .map((p) => worldToScreen(p))
+      .map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`)
+      .join(' ');
+    return <polygon key={poly.wallId} points={screenPts} fill={color} />;
+  });
+}
 ```
 
 With:
+
 ```tsx
-{wallPolygons.map((poly) => {
-  if (!poly.points.length) return null;
-  const isSelected = poly.wallId === selectedWallId;
-  const color = isSelected ? WALL_SELECTED_COLOR : WALL_COLOR;
-  const wall = walls.find((w) => w.id === poly.wallId);
-  const isWallLocked = wall
-    ? nodes.find((n) => n.id === wall.node1Id)?.locked === true &&
-      nodes.find((n) => n.id === wall.node2Id)?.locked === true
-    : false;
-  const screenPts = poly.points
-    .map((p) => worldToScreen(p))
-    .map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`)
-    .join(' ');
-  return (
-    <polygon
-      key={poly.wallId}
-      points={screenPts}
-      fill={color}
-      stroke={isWallLocked ? '#27ae60' : undefined}
-      strokeWidth={isWallLocked ? 1.5 : undefined}
-    />
-  );
-})}
+{
+  wallPolygons.map((poly) => {
+    if (!poly.points.length) return null;
+    const isSelected = poly.wallId === selectedWallId;
+    const color = isSelected ? WALL_SELECTED_COLOR : WALL_COLOR;
+    const wall = walls.find((w) => w.id === poly.wallId);
+    const isWallLocked = wall
+      ? nodes.find((n) => n.id === wall.node1Id)?.locked === true &&
+        nodes.find((n) => n.id === wall.node2Id)?.locked === true
+      : false;
+    const screenPts = poly.points
+      .map((p) => worldToScreen(p))
+      .map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`)
+      .join(' ');
+    return (
+      <polygon
+        key={poly.wallId}
+        points={screenPts}
+        fill={color}
+        stroke={isWallLocked ? '#27ae60' : undefined}
+        strokeWidth={isWallLocked ? 1.5 : undefined}
+      />
+    );
+  });
+}
 ```
 
 - [ ] **Step 3: Type check + full test suite**
@@ -893,6 +961,7 @@ git commit -m "feat(lock): rendu visuel vert pour nœuds et segments verrouillé
 ## Self-Review
 
 **Spec coverage:**
+
 - `locked?: boolean` on `WallNode` → Task 1 ✅
 - First node auto-locked → Task 2 ✅
 - LOCK tool in toolbar → Task 3 ✅

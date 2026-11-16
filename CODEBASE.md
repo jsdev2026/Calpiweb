@@ -34,15 +34,15 @@ L'application fonctionne **entièrement dans le navigateur** — aucun serveur, 
 
 **Technologies principales :**
 
-| Technologie | Rôle |
-|---|---|
-| **Next.js 14** | Cadre applicatif React (routage, pages) |
-| **React 18** | Bibliothèque d'interface utilisateur |
-| **TypeScript** | JavaScript avec types stricts (moins de bugs) |
-| **Tailwind CSS** | Styles visuels écrits directement dans le code |
-| **Zustand** | Gestion de l'état global (mémoire partagée entre composants) |
-| **IndexedDB / idb** | Base de données locale dans le navigateur |
-| **Vitest** | Tests automatiques |
+| Technologie         | Rôle                                                         |
+| ------------------- | ------------------------------------------------------------ |
+| **Next.js 14**      | Cadre applicatif React (routage, pages)                      |
+| **React 18**        | Bibliothèque d'interface utilisateur                         |
+| **TypeScript**      | JavaScript avec types stricts (moins de bugs)                |
+| **Tailwind CSS**    | Styles visuels écrits directement dans le code               |
+| **Zustand**         | Gestion de l'état global (mémoire partagée entre composants) |
+| **IndexedDB / idb** | Base de données locale dans le navigateur                    |
+| **Vitest**          | Tests automatiques                                           |
 
 ---
 
@@ -163,14 +163,14 @@ TilingStats  →  résultats globaux :
 
 Ce fichier centralise les **règles métier** modifiables sans toucher à la logique :
 
-| Constante | Valeur | Signification |
-|---|---|---|
-| `SNAP_GRID_MM` | 50 mm | Pas de la grille d'aimantation dans l'éditeur de plan |
-| `CLOSING_TOLERANCE_MM` | 200 mm | Distance maximale pour fermer automatiquement une forme |
-| `ORDER_MARGIN_RATIO` | 0.10 | Majoration de 10 % sur la quantité à commander |
-| `WASTE_WARNING_THRESHOLD` | 15 % | Seuil d'alerte chute (non encore utilisé visuellement) |
-| `WALL_THICKNESS_MM` | 100 mm | Épaisseur des murs par défaut |
-| `DOOR_DEFAULT_WIDTH_MM` | 900 mm | Largeur d'une porte insérée par défaut |
+| Constante                 | Valeur | Signification                                           |
+| ------------------------- | ------ | ------------------------------------------------------- |
+| `SNAP_GRID_MM`            | 50 mm  | Pas de la grille d'aimantation dans l'éditeur de plan   |
+| `CLOSING_TOLERANCE_MM`    | 200 mm | Distance maximale pour fermer automatiquement une forme |
+| `ORDER_MARGIN_RATIO`      | 0.10   | Majoration de 10 % sur la quantité à commander          |
+| `WASTE_WARNING_THRESHOLD` | 15 %   | Seuil d'alerte chute (non encore utilisé visuellement)  |
+| `WALL_THICKNESS_MM`       | 100 mm | Épaisseur des murs par défaut                           |
+| `DOOR_DEFAULT_WIDTH_MM`   | 900 mm | Largeur d'une porte insérée par défaut                  |
 
 > **Pour modifier la marge de commande**, changer `ORDER_MARGIN_RATIO`. Ex : `0.15` = 15 %.
 
@@ -190,6 +190,7 @@ DEFAULT_TILING_CONFIG :
 ```
 
 Contient aussi les listes de presets affichés dans l'interface :
+
 - `STAGGER_PRESETS` : 0 %, 33 %, 50 %
 - `COLOR_PRESETS` : 5 couleurs proposées
 - `LAYOUT_PRESETS` : Droit, Bâton rompu, Pte de hongrie
@@ -206,12 +207,12 @@ La base s'appelle `TileLayoutProDB` et contient une seule table (`projects`), in
 
 **Quatre opérations disponibles :**
 
-| Méthode | Action |
-|---|---|
-| `projectsDb.getAll()` | Récupère tous les projets |
-| `projectsDb.get(id)` | Récupère un projet par son id |
-| `projectsDb.save(project)` | Crée ou met à jour un projet |
-| `projectsDb.delete(id)` | Supprime un projet |
+| Méthode                    | Action                        |
+| -------------------------- | ----------------------------- |
+| `projectsDb.getAll()`      | Récupère tous les projets     |
+| `projectsDb.get(id)`       | Récupère un projet par son id |
+| `projectsDb.save(project)` | Crée ou met à jour un projet  |
+| `projectsDb.delete(id)`    | Supprime un projet            |
 
 > Ce fichier ne se modifie que si la structure des données change (ajout d'un nouveau champ obligatoire nécessitant une migration de schéma).
 
@@ -224,25 +225,26 @@ La base s'appelle `TileLayoutProDB` et contient une seule table (`projects`), in
 C'est le **cerveau de l'application**. Il centralise l'état (les données en cours d'utilisation) et expose des actions pour le modifier. Tous les composants d'interface y accèdent via le hook `useProjectStore`.
 
 **État stocké :**
+
 - `projects` : liste de tous les projets chargés
 - `activeProjectId` : l'id du projet actuellement ouvert
 - `hydrated` : booléen indiquant si les données ont été chargées depuis IndexedDB
 
 **Actions disponibles :**
 
-| Action | Effet |
-|---|---|
-| `hydrate()` | Charge les projets depuis IndexedDB au démarrage |
-| `create()` | Crée un nouveau projet vide et le sauvegarde |
-| `rename(id, name)` | Renomme un projet |
-| `remove(id)` | Supprime un projet |
-| `setActive(id)` | Définit le projet actif |
-| `addRoom()` | Ajoute une pièce vide au projet actif |
-| `removeRoom(roomId)` | Supprime une pièce |
+| Action                              | Effet                                                   |
+| ----------------------------------- | ------------------------------------------------------- |
+| `hydrate()`                         | Charge les projets depuis IndexedDB au démarrage        |
+| `create()`                          | Crée un nouveau projet vide et le sauvegarde            |
+| `rename(id, name)`                  | Renomme un projet                                       |
+| `remove(id)`                        | Supprime un projet                                      |
+| `setActive(id)`                     | Définit le projet actif                                 |
+| `addRoom()`                         | Ajoute une pièce vide au projet actif                   |
+| `removeRoom(roomId)`                | Supprime une pièce                                      |
 | `updateRoom(roomId, points, edges)` | Met à jour le contour et les types de bords d'une pièce |
-| `renameRoom(roomId, name)` | Renomme une pièce |
-| `setConfig(config)` | Met à jour la configuration de calepinage |
-| `setWallThickness(mm)` | Change l'épaisseur des murs |
+| `renameRoom(roomId, name)`          | Renomme une pièce                                       |
+| `setConfig(config)`                 | Met à jour la configuration de calepinage               |
+| `setWallThickness(mm)`              | Change l'épaisseur des murs                             |
 
 **Fonction `migrateProject`** : lors du chargement depuis IndexedDB, cette fonction assure la **compatibilité avec d'anciens formats** de données. Elle reconstitue les champs manquants (ex. : un projet sans `rooms` est converti depuis l'ancien format `plan`). Elle ajoute aussi `chevronAngle` et `layout` s'ils manquent (anciens projets sans ces champs).
 
@@ -256,16 +258,16 @@ Ces fichiers contiennent la **logique mathématique pure** : pas d'interface, pa
 
 Boîte à outils de **géométrie plane** :
 
-| Fonction | Rôle |
-|---|---|
-| `distance(p1, p2)` | Distance euclidienne entre deux points |
-| `angle(p1, p2)` | Angle en radians entre deux points |
-| `getPolygonArea(pts)` | Aire d'un polygone (formule du lacet de Shoelace) |
-| `pointInPolygon(point, vs)` | Test d'inclusion point-dans-polygone (ray casting) |
-| `getIntersection(A,B,C,D)` | Calcule l'intersection de deux segments |
-| `rotatePoint(x,y,angle,cx,cy)` | Rotation d'un point autour d'un centre |
-| `getPointOnSegment(p,a,b)` | Projection d'un point sur un segment (pour l'aimantation) |
-| `getBoundingBox(pts)` | Rectangle englobant une liste de points |
+| Fonction                       | Rôle                                                      |
+| ------------------------------ | --------------------------------------------------------- |
+| `distance(p1, p2)`             | Distance euclidienne entre deux points                    |
+| `angle(p1, p2)`                | Angle en radians entre deux points                        |
+| `getPolygonArea(pts)`          | Aire d'un polygone (formule du lacet de Shoelace)         |
+| `pointInPolygon(point, vs)`    | Test d'inclusion point-dans-polygone (ray casting)        |
+| `getIntersection(A,B,C,D)`     | Calcule l'intersection de deux segments                   |
+| `rotatePoint(x,y,angle,cx,cy)` | Rotation d'un point autour d'un centre                    |
+| `getPointOnSegment(p,a,b)`     | Projection d'un point sur un segment (pour l'aimantation) |
+| `getBoundingBox(pts)`          | Rectangle englobant une liste de points                   |
 
 ### `engine/geometry/clipping.ts`
 
@@ -291,6 +293,7 @@ Calcule les bornes de la grille à générer : assez grande pour couvrir toute l
 
 **`buildHerringbonePositions(centerX, centerY, maxRadius, config)`**  
 Génère les positions des carreaux en **bâton rompu** via un réseau diagonal :
+
 - Vecteurs de base : `(H, H)` et `(W, -W)` où W = largeur, H = longueur du carreau
 - Chaque cellule du réseau place 2 carreaux formant un L :
   - Carreau 1 (horizontal) : largeur H, hauteur W
@@ -298,6 +301,7 @@ Génère les positions des carreaux en **bâton rompu** via un réseau diagonal 
 
 **`computeTiling(plan, config)`**  
 Calcule le calepinage pour **une seule pièce** :
+
 1. Calcule le centre et le rayon maximal de la pièce
 2. Si l'angle ≠ 0, fait pivoter la pièce dans le repère inverse (pour aligner la grille avec les axes)
 3. Selon le layout (`STRAIGHT` / `HERRINGBONE` / `CHEVRON`), génère les positions des carreaux
@@ -309,6 +313,7 @@ Même logique mais pour **plusieurs pièces** simultanément. La grille est comm
 
 **Géométrie CHEVRON :**  
 Les carreaux sont des parallélogrammes. L'inclinaison est controlée par `chevronAngle` :
+
 - `dy = height × tan(chevronAngle)` : décalage vertical entre les deux extrémités horizontales
 - Colonnes paires : inclinées à droite. Colonnes impaires : inclinées à gauche.
 - Les dimensions `width` et `height` restent constantes quelle que soit la valeur de l'angle.
@@ -317,6 +322,7 @@ Les carreaux sont des parallélogrammes. L'inclinaison est controlée par `chevr
 
 **`computeStats(tiles, roomArea, tileWidth, tileHeight)`**  
 Calcule les statistiques globales à partir de la liste des carreaux :
+
 - Compte les carreaux entiers et coupés
 - Calcule le pourcentage de chute (surface achetée − surface utile)
 - Ajoute la marge de commande (`ORDER_MARGIN_RATIO`)
@@ -331,6 +337,7 @@ Analyse avancée des **coupes** pour le quantitatif :
 
 **`computeCutDimensions(tile, roomPolygons, tileW, tileH)`**  
 Pour un carreau coupé, calcule :
+
 - `usedW × usedH` : dimensions du morceau réellement utilisé
 - `chuteW × chuteH` : dimensions de la plus grande chute rectangulaire récupérable
 
@@ -353,14 +360,15 @@ Adaptateur pour l'export (PDF, impression). Prépare les données dans un format
 
 ### `formatters.ts`
 
-| Fonction | Entrée | Sortie |
-|---|---|---|
-| `formatCm(mm)` | 3050 mm | `"305.0 cm"` |
+| Fonction        | Entrée       | Sortie       |
+| --------------- | ------------ | ------------ |
+| `formatCm(mm)`  | 3050 mm      | `"305.0 cm"` |
 | `formatM2(mm2)` | 12500000 mm² | `"12.50 m²"` |
 
 ### `units.ts`
 
 Conversions entre unités :
+
 - `mmToCm(mm)` : divise par 10
 - `mm2ToM2(mm2)` : divise par 1 000 000
 - `screenToWorld(screenCoord, scale, panOffset)` : convertit une coordonnée écran en coordonnée monde (tient compte du zoom et du déplacement)
@@ -384,10 +392,12 @@ Variables CSS globales (couleurs Tailwind, police) + reset de base.
 ### `page.tsx` — Page d'accueil
 
 Affiche :
+
 - Une barre latérale (logo TILEA, navigation, bouton "Nouveau projet")
 - La liste des projets existants (`ProjectList`)
 
 Comportement :
+
 - Au chargement, appelle `hydrate()` pour récupérer les projets depuis IndexedDB
 - "Nouveau projet" → crée un projet et navigue vers son espace de travail
 - Clic sur un projet → ouvre l'espace de travail
@@ -397,11 +407,11 @@ Comportement :
 
 C'est la page principale. Elle contient 3 onglets :
 
-| Onglet | Composant | Condition d'accès |
-|---|---|---|
-| 1. Plan 2D | `PlanEditor` | Toujours accessible |
-| 2. Calepinage | `TilingEditor` | Au moins une pièce avec ≥ 3 points |
-| 3. Quantitatif | `QuantitiesPanel` | Même condition |
+| Onglet         | Composant         | Condition d'accès                  |
+| -------------- | ----------------- | ---------------------------------- |
+| 1. Plan 2D     | `PlanEditor`      | Toujours accessible                |
+| 2. Calepinage  | `TilingEditor`    | Au moins une pièce avec ≥ 3 points |
+| 3. Quantitatif | `QuantitiesPanel` | Même condition                     |
 
 En-tête : nom du projet (éditable en ligne), indicateur "Sauvegardé", bouton PDF.
 
@@ -439,6 +449,7 @@ Liste les projets avec `ProjectCard`. Si la liste est vide, affiche un écran d'
 **`PlanEditor.tsx`** — Chef d'orchestre du dessin
 
 Gère tout l'état local du dessin :
+
 - `tool` : outil actif (`WALL` pour dessiner, `SELECT` pour sélectionner/déplacer, `DOOR` pour placer une porte)
 - `scale` / `pan` : zoom et déplacement de la vue
 - `draggedVertex` : sommet en cours de déplacement
@@ -447,6 +458,7 @@ Gère tout l'état local du dessin :
 - `originPoint` : repère d'origine placé par Alt+clic
 
 Logique d'aimantation (`snapPos`) :
+
 1. Aimantation sur les sommets existants (si distance < 30 px / scale)
 2. Aimantation sur les bords des pièces fermées
 3. Aimantation sur la grille (pas de 50 mm)
@@ -455,6 +467,7 @@ Logique d'aimantation (`snapPos`) :
 **`DrawingCanvas.tsx`** — Surface SVG de dessin
 
 Reçoit toutes les données calculées par `PlanEditor` et les dessine en SVG :
+
 - La grille de fond (lignes tous les 50 mm, marqueurs kilométriques tous les 500 mm)
 - Le contour de chaque pièce (murs en orange, portes en tirets)
 - Les sommets (cercles déplaçables)
@@ -485,6 +498,7 @@ Popover flottant qui apparaît quand on clique sur un côté. Permet de saisir u
 **`TilingCanvas.tsx`** — Rendu SVG du calepinage
 
 Affiche en SVG :
+
 - Les fonds de pièce (polygones noirs)
 - Les carreaux via `<clipPath>` (les carreaux sont dessinés "infinis", le clipPath les masque hors pièce)
 - Les carreaux entiers dans la couleur configurée, les coupés en gris zinc
@@ -496,6 +510,7 @@ Le composant `DimLine` dessine une ligne de cote SVG avec extrémités en T, lig
 **`TilingControls.tsx`** — Panneau de paramètres droite
 
 Contient tous les champs de configuration :
+
 - Largeur et longueur du carreau (en mm)
 - Largeur du joint
 - Sélecteur du mode de pose (3 boutons)
@@ -511,6 +526,7 @@ Chaque champ numérique valide la saisie **au blur (perte de focus) ou à la tou
 **`QuantitiesPanel.tsx`**
 
 Appelle `analyzeQuantities` et affiche :
+
 - Un résumé (carreaux entiers, coupes, total, à commander)
 - Un tableau détaillé des coupes par groupe de dimensions identiques
 - Les informations de chute et de réutilisation
@@ -529,12 +545,12 @@ Affiche le résumé rapide des statistiques de calepinage : carreaux entiers / c
 
 Les fichiers `.test.ts` contiennent des **tests unitaires** vérifiables automatiquement avec `npm test`.
 
-| Fichier de test | Ce qu'il teste |
-|---|---|
-| `polygon.test.ts` | Les fonctions géométriques (distance, aire, intersection…) |
-| `clipping.test.ts` | La classification WHOLE/CUT/OUTSIDE des carreaux |
-| `tilingEngine.test.ts` | La génération correcte de grilles de carreaux |
-| `formatters.test.ts` | La mise en forme des valeurs (cm, m²) |
+| Fichier de test        | Ce qu'il teste                                             |
+| ---------------------- | ---------------------------------------------------------- |
+| `polygon.test.ts`      | Les fonctions géométriques (distance, aire, intersection…) |
+| `clipping.test.ts`     | La classification WHOLE/CUT/OUTSIDE des carreaux           |
+| `tilingEngine.test.ts` | La génération correcte de grilles de carreaux              |
+| `formatters.test.ts`   | La mise en forme des valeurs (cm, m²)                      |
 
 Pour lancer les tests : `npm test`  
 Pour les lancer en mode surveillance (relance automatique) : `npm run test:watch`
@@ -632,4 +648,4 @@ Le fichier à consulter est [src/engine/geometry/clipping.ts](src/engine/geometr
 
 ---
 
-*Document généré le 2026-04-24 pour la version du projet sur la branche `claude/analyze-test-coverage-053gw`.*
+_Document généré le 2026-04-24 pour la version du projet sur la branche `claude/analyze-test-coverage-053gw`._

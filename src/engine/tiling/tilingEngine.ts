@@ -2,7 +2,15 @@ import type { Point } from '@/types/plan';
 import type { DoorOpening } from '@/types/wall';
 import type { EdgeType, ExcludedZone, Partition, Room } from '@/types/project';
 import type { Tile, TileType, TilingConfig, TilingResult } from '@/types/tiling';
-import { getBoundingBox, distance, rotatePoint, getPolygonArea, pointInPolygon, getIntersection, insetRoomPolygon } from '@/engine/geometry/polygon';
+import {
+  getBoundingBox,
+  distance,
+  rotatePoint,
+  getPolygonArea,
+  pointInPolygon,
+  getIntersection,
+  insetRoomPolygon,
+} from '@/engine/geometry/polygon';
 import { classifyTile, classifyPolygonTile } from '@/engine/geometry/clipping';
 import { computeStats } from './cutCalculator';
 
@@ -30,7 +38,10 @@ export function partitionToPolygon(p: Partition): Point[] {
 function tileStraddles(tile: Tile, poly: Point[]): boolean {
   const { x, y, w, h } = tile.rect;
   const corners: Point[] = [
-    { x, y }, { x: x + w, y }, { x: x + w, y: y + h }, { x, y: y + h },
+    { x, y },
+    { x: x + w, y },
+    { x: x + w, y: y + h },
+    { x, y: y + h },
   ];
   // Any tile corner inside the polygon
   if (corners.some((c) => pointInPolygon(c, poly))) return true;
@@ -38,7 +49,8 @@ function tileStraddles(tile: Tile, poly: Point[]): boolean {
   if (poly.some((p) => p.x > x && p.x < x + w && p.y > y && p.y < y + h)) return true;
   // Any tile edge intersects any polygon edge
   for (let i = 0; i < 4; i++) {
-    const t1 = corners[i]!, t2 = corners[(i + 1) % 4]!;
+    const t1 = corners[i]!,
+      t2 = corners[(i + 1) % 4]!;
     for (let j = 0; j < poly.length; j++) {
       if (getIntersection(t1, t2, poly[j]!, poly[(j + 1) % poly.length]!)) return true;
     }
@@ -66,25 +78,30 @@ function filterExcluded(
   return tiles
     .map((tile): Tile | null => {
       const { x, y, w, h } = tile.rect;
-      const cx = x + w / 2, cy = y + h / 2;
-      const worldPt = angle !== 0
-        ? rotatePoint(cx, cy, angle, centerX, centerY)
-        : { x: cx, y: cy };
+      const cx = x + w / 2,
+        cy = y + h / 2;
+      const worldPt = angle !== 0 ? rotatePoint(cx, cy, angle, centerX, centerY) : { x: cx, y: cy };
 
       // World-space bounding box for straddle checks (un-rotate when needed)
-      const wRect = angle !== 0
-        ? (() => {
-            const cs = [
-              { x, y }, { x: x + w, y }, { x: x + w, y: y + h }, { x, y: y + h },
-            ].map((c) => rotatePoint(c.x, c.y, angle, centerX, centerY));
-            const wxs = cs.map((c) => c.x), wys = cs.map((c) => c.y);
-            return {
-              x: Math.min(...wxs), y: Math.min(...wys),
-              w: Math.max(...wxs) - Math.min(...wxs),
-              h: Math.max(...wys) - Math.min(...wys),
-            };
-          })()
-        : tile.rect;
+      const wRect =
+        angle !== 0
+          ? (() => {
+              const cs = [
+                { x, y },
+                { x: x + w, y },
+                { x: x + w, y: y + h },
+                { x, y: y + h },
+              ].map((c) => rotatePoint(c.x, c.y, angle, centerX, centerY));
+              const wxs = cs.map((c) => c.x),
+                wys = cs.map((c) => c.y);
+              return {
+                x: Math.min(...wxs),
+                y: Math.min(...wys),
+                w: Math.max(...wxs) - Math.min(...wxs),
+                h: Math.max(...wys) - Math.min(...wys),
+              };
+            })()
+          : tile.rect;
       const wTile: Tile = { ...tile, rect: wRect };
 
       // Centre inside exclusion → remove entirely
@@ -175,9 +192,7 @@ export const computeTiling = (
   }
 
   const testPlan =
-    angle !== 0
-      ? plan.map((p) => rotatePoint(p.x, p.y, -angle, centerX, centerY))
-      : plan;
+    angle !== 0 ? plan.map((p) => rotatePoint(p.x, p.y, -angle, centerX, centerY)) : plan;
 
   if (layout === 'STRAIGHT') {
     const staggerRatio = stagger / 100;
@@ -198,7 +213,14 @@ export const computeTiling = (
       rowIndex += 1;
     }
 
-    const filtered = filterExcluded(tiles, excludedZones ?? [], partitionPolygons, angle, centerX, centerY);
+    const filtered = filterExcluded(
+      tiles,
+      excludedZones ?? [],
+      partitionPolygons,
+      angle,
+      centerX,
+      centerY,
+    );
     return { tiles: filtered, stats: computeStats(filtered, netArea, width, height) };
   }
 
@@ -214,7 +236,14 @@ export const computeTiling = (
       }
     }
 
-    const filtered = filterExcluded(tiles, excludedZones ?? [], partitionPolygons, angle, centerX, centerY);
+    const filtered = filterExcluded(
+      tiles,
+      excludedZones ?? [],
+      partitionPolygons,
+      angle,
+      centerX,
+      centerY,
+    );
     return { tiles: filtered, stats: computeStats(filtered, netArea, width, height) };
   }
 
@@ -223,16 +252,17 @@ export const computeTiling = (
   // span/dy = horizontal/vertical projections of the oblique edge, whose length is
   //           config.height (Longueur), also fixed regardless of angle
   const rotatedBbox = getBoundingBox(testPlan);
-  const cosB = Math.cos(config.chevronAngle * Math.PI / 180);
-  const sinB = Math.sin(config.chevronAngle * Math.PI / 180);
-  const side = width;              // vertical edge length
-  const span = height * cosB;      // horizontal projection of the oblique edge
-  const dy = height * sinB;        // vertical projection of the oblique edge
+  const cosB = Math.cos((config.chevronAngle * Math.PI) / 180);
+  const sinB = Math.sin((config.chevronAngle * Math.PI) / 180);
+  const side = width; // vertical edge length
+  const span = height * cosB; // horizontal projection of the oblique edge
+  const dy = height * sinB; // vertical projection of the oblique edge
   const colStepX = span + joint;
   const rowStepY = side + joint;
   const margin = Math.max(span, side) * 2;
   const cRange = Math.ceil((rotatedBbox.maxX - rotatedBbox.minX + margin * 2) / colStepX) + 2;
-  const rRange = Math.ceil((rotatedBbox.maxY - rotatedBbox.minY + margin * 2 + dy * 2) / rowStepY) + 2;
+  const rRange =
+    Math.ceil((rotatedBbox.maxY - rotatedBbox.minY + margin * 2 + dy * 2) / rowStepY) + 2;
 
   const tiles: Tile[] = [];
 
@@ -244,17 +274,17 @@ export const computeTiling = (
       let pts: Point[];
       if (isEven) {
         pts = [
-          { x: xBase,          y: yBase },
-          { x: xBase + span,   y: yBase + dy },
-          { x: xBase + span,   y: yBase + dy + side },
-          { x: xBase,          y: yBase + side },
+          { x: xBase, y: yBase },
+          { x: xBase + span, y: yBase + dy },
+          { x: xBase + span, y: yBase + dy + side },
+          { x: xBase, y: yBase + side },
         ];
       } else {
         pts = [
-          { x: xBase,          y: yBase + dy },
-          { x: xBase + span,   y: yBase },
-          { x: xBase + span,   y: yBase + side },
-          { x: xBase,          y: yBase + dy + side },
+          { x: xBase, y: yBase + dy },
+          { x: xBase + span, y: yBase },
+          { x: xBase + span, y: yBase + side },
+          { x: xBase, y: yBase + dy + side },
         ];
       }
       const type = classifyPolygonTile(pts, testPlan);
@@ -270,20 +300,37 @@ export const computeTiling = (
     }
   }
 
-  const filtered = filterExcluded(tiles, excludedZones ?? [], partitionPolygons, angle, centerX, centerY);
+  const filtered = filterExcluded(
+    tiles,
+    excludedZones ?? [],
+    partitionPolygons,
+    angle,
+    centerX,
+    centerY,
+  );
   return { tiles: filtered, stats: computeStats(filtered, netArea, width, height) };
 };
 
-export const computeTilingMultiRoom = (rooms: Room[], config: TilingConfig, wallThickness = 0, doorOpenings: DoorOpening[] = []): TilingResult => {
+export const computeTilingMultiRoom = (
+  rooms: Room[],
+  config: TilingConfig,
+  wallThickness = 0,
+  doorOpenings: DoorOpening[] = [],
+): TilingResult => {
   const valid = rooms.filter((r) => r.points.length >= 3);
   if (valid.length === 0) return { tiles: [], stats: null };
   // Note: computeTiling derives its rotation pivot from the inset polygon bbox.
   // For rectangular rooms this equals the raw bbox center (symmetric inset).
   // For irregular rooms with asymmetric wall thickness and angle !== 0, a small
   // pivot offset may occur. Acceptable for current use cases.
-  if (valid.length === 1 && doorOpenings.length === 0) return computeTiling(
-    insetRoomPolygon(valid[0]!, wallThickness), config, valid[0]!.edges, valid[0]!.excludedZones, valid[0]!.partitions,
-  );
+  if (valid.length === 1 && doorOpenings.length === 0)
+    return computeTiling(
+      insetRoomPolygon(valid[0]!, wallThickness),
+      config,
+      valid[0]!.edges,
+      valid[0]!.excludedZones,
+      valid[0]!.partitions,
+    );
 
   const { width, height, stagger, angle, layout, joint, offsetX, offsetY } = config;
   const allPoints = valid.flatMap((r) => r.points);
@@ -301,9 +348,7 @@ export const computeTilingMultiRoom = (rooms: Room[], config: TilingConfig, wall
     const inset = insetRoomPolygon(r, wallThickness);
     return {
       testPoints:
-        angle !== 0
-          ? inset.map((p) => rotatePoint(p.x, p.y, -angle, centerX, centerY))
-          : inset,
+        angle !== 0 ? inset.map((p) => rotatePoint(p.x, p.y, -angle, centerX, centerY)) : inset,
       edges: r.edges,
     };
   });
@@ -324,7 +369,10 @@ export const computeTilingMultiRoom = (rooms: Room[], config: TilingConfig, wall
         let bestType: TileType = 'OUTSIDE';
         for (const { testPoints, edges } of testRooms) {
           const t = classifyTile(rect, testPoints, edges);
-          if (t === 'WHOLE') { bestType = 'WHOLE'; break; }
+          if (t === 'WHOLE') {
+            bestType = 'WHOLE';
+            break;
+          }
           if (t === 'CUT') bestType = 'CUT';
         }
         if (bestType !== 'OUTSIDE') {
@@ -337,19 +385,24 @@ export const computeTilingMultiRoom = (rooms: Room[], config: TilingConfig, wall
     // Carreaux dans les ouvertures de porte (STRAIGHT, angle = 0 uniquement)
     if (angle === 0 && doorOpenings.length > 0) {
       for (const door of doorOpenings) {
-        const dx = door.to.x - door.from.x, dy = door.to.y - door.from.y;
+        const dx = door.to.x - door.from.x,
+          dy = door.to.y - door.from.y;
         const L = Math.sqrt(dx * dx + dy * dy);
         if (L < 1) continue;
-        const dirX = dx / L, dirY = dy / L;
-        const perpX = -dirY, perpY = dirX;
+        const dirX = dx / L,
+          dirY = dy / L;
+        const perpX = -dirY,
+          perpY = dirX;
         const halfGap = wallThickness;
         let ri = 0;
         for (let y = startY - stepY; y < endY + stepY; y += stepY) {
           const rowStagger = (ri % 2) * (stepX * staggerRatio);
           for (let x = startX - stepX - rowStagger; x < endX + stepX; x += stepX) {
             const corners = [
-              { x, y }, { x: x + width, y },
-              { x: x + width, y: y + height }, { x, y: y + height },
+              { x, y },
+              { x: x + width, y },
+              { x: x + width, y: y + height },
+              { x, y: y + height },
             ];
             const fits = corners.every((c) => {
               const t = (c.x - door.from.x) * dirX + (c.y - door.from.y) * dirY;
@@ -375,11 +428,18 @@ export const computeTilingMultiRoom = (rooms: Room[], config: TilingConfig, wall
       let bestType: TileType = 'OUTSIDE';
       for (const { testPoints, edges } of testRooms) {
         const t = classifyTile(rect, testPoints, edges);
-        if (t === 'WHOLE') { bestType = 'WHOLE'; break; }
+        if (t === 'WHOLE') {
+          bestType = 'WHOLE';
+          break;
+        }
         if (t === 'CUT') bestType = 'CUT';
       }
       if (bestType !== 'OUTSIDE') {
-        tiles.push({ id: `${pos.x.toFixed(1)}-${pos.y.toFixed(1)}-${pos.w}`, rect, type: bestType });
+        tiles.push({
+          id: `${pos.x.toFixed(1)}-${pos.y.toFixed(1)}-${pos.w}`,
+          rect,
+          type: bestType,
+        });
       }
     }
   } else {
@@ -389,16 +449,17 @@ export const computeTilingMultiRoom = (rooms: Room[], config: TilingConfig, wall
     //           config.height (Longueur), also fixed regardless of angle
     const rotatedAllPoints = testRooms.flatMap((r) => r.testPoints);
     const rotatedBbox = getBoundingBox(rotatedAllPoints);
-    const cosB = Math.cos(config.chevronAngle * Math.PI / 180);
-    const sinB = Math.sin(config.chevronAngle * Math.PI / 180);
-    const side = width;              // vertical edge length
-    const span = height * cosB;      // horizontal projection of the oblique edge
-    const dy = height * sinB;        // vertical projection of the oblique edge
+    const cosB = Math.cos((config.chevronAngle * Math.PI) / 180);
+    const sinB = Math.sin((config.chevronAngle * Math.PI) / 180);
+    const side = width; // vertical edge length
+    const span = height * cosB; // horizontal projection of the oblique edge
+    const dy = height * sinB; // vertical projection of the oblique edge
     const colStepX = span + joint;
     const rowStepY = side + joint;
     const margin = Math.max(span, side) * 2;
     const cRange = Math.ceil((rotatedBbox.maxX - rotatedBbox.minX + margin * 2) / colStepX) + 2;
-    const rRange = Math.ceil((rotatedBbox.maxY - rotatedBbox.minY + margin * 2 + dy * 2) / rowStepY) + 2;
+    const rRange =
+      Math.ceil((rotatedBbox.maxY - rotatedBbox.minY + margin * 2 + dy * 2) / rowStepY) + 2;
 
     for (let c = -cRange; c <= cRange; c++) {
       const isEven = Math.abs(c) % 2 === 0;
@@ -408,29 +469,34 @@ export const computeTilingMultiRoom = (rooms: Room[], config: TilingConfig, wall
         let pts: Point[];
         if (isEven) {
           pts = [
-            { x: xBase,          y: yBase },
-            { x: xBase + span,   y: yBase + dy },
-            { x: xBase + span,   y: yBase + dy + side },
-            { x: xBase,          y: yBase + side },
+            { x: xBase, y: yBase },
+            { x: xBase + span, y: yBase + dy },
+            { x: xBase + span, y: yBase + dy + side },
+            { x: xBase, y: yBase + side },
           ];
         } else {
           pts = [
-            { x: xBase,          y: yBase + dy },
-            { x: xBase + span,   y: yBase },
-            { x: xBase + span,   y: yBase + side },
-            { x: xBase,          y: yBase + dy + side },
+            { x: xBase, y: yBase + dy },
+            { x: xBase + span, y: yBase },
+            { x: xBase + span, y: yBase + side },
+            { x: xBase, y: yBase + dy + side },
           ];
         }
 
         let bestType: TileType = 'OUTSIDE';
         for (const { testPoints } of testRooms) {
           const t = classifyPolygonTile(pts, testPoints);
-          if (t === 'WHOLE') { bestType = 'WHOLE'; break; }
+          if (t === 'WHOLE') {
+            bestType = 'WHOLE';
+            break;
+          }
           if (t === 'CUT') bestType = 'CUT';
         }
 
         if (bestType === 'CUT') {
-          const allInUnion = pts.every((p) => testRooms.some(({ testPoints }) => pointInPolygon(p, testPoints)));
+          const allInUnion = pts.every((p) =>
+            testRooms.some(({ testPoints }) => pointInPolygon(p, testPoints)),
+          );
           if (allInUnion) {
             const ptEdges = pts.map((p, i) => [p, pts[(i + 1) % pts.length]!] as [Point, Point]);
             const wallCuts = testRooms.some(({ testPoints, edges }) =>
@@ -464,12 +530,22 @@ export const computeTilingMultiRoom = (rooms: Room[], config: TilingConfig, wall
   );
 
   // Net area for statistics
-  const totalRoomArea = valid.reduce((sum, r) => sum + getPolygonArea(insetRoomPolygon(r, wallThickness)), 0);
+  const totalRoomArea = valid.reduce(
+    (sum, r) => sum + getPolygonArea(insetRoomPolygon(r, wallThickness)),
+    0,
+  );
   const excArea =
     allExcludedZones.reduce((s, z) => s + getPolygonArea(z.points), 0) +
     allPartitionPolygons.reduce((s, p) => s + getPolygonArea(p), 0);
   const netArea = Math.max(0, totalRoomArea - excArea);
 
-  const finalTiles = filterExcluded(tiles, allExcludedZones, allPartitionPolygons, angle, centerX, centerY);
+  const finalTiles = filterExcluded(
+    tiles,
+    allExcludedZones,
+    allPartitionPolygons,
+    angle,
+    centerX,
+    centerY,
+  );
   return { tiles: finalTiles, stats: computeStats(finalTiles, netArea, width, height) };
 };

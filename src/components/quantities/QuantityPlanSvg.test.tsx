@@ -11,15 +11,31 @@ import type { TilingConfig } from '@/types/tiling';
 import type { Room } from '@/types/project';
 
 const config: TilingConfig = {
-  layout: 'STRAIGHT', width: 300, height: 300, joint: 3,
-  angle: 0, offsetX: 0, offsetY: 0, stagger: 0, chevronAngle: 45, color: '#93c5fd',
+  layout: 'STRAIGHT',
+  width: 300,
+  height: 300,
+  joint: 3,
+  angle: 0,
+  offsetX: 0,
+  offsetY: 0,
+  stagger: 0,
+  chevronAngle: 45,
+  color: '#93c5fd',
 };
 
 const makeResult = (overrides: Partial<QuantityResult> = {}): QuantityResult => ({
-  tileW: 300, tileH: 300, joint: 3,
-  wholeCount: 5, cuts: [], cutGroups: [],
-  totalReuseCount: 0, tilesForCuts: 0, totalTiles: 5, toOrder: 6,
-  roomArea: 5_000_000, tiles: [],
+  tileW: 300,
+  tileH: 300,
+  joint: 3,
+  wholeCount: 5,
+  cuts: [],
+  cutGroups: [],
+  totalReuseCount: 0,
+  tilesForCuts: 0,
+  totalTiles: 5,
+  toOrder: 6,
+  roomArea: 5_000_000,
+  tiles: [],
   margin: 0.05,
   consumables: {
     colle: { total: 0, bags: 0, bagSize: 25, rendement: 4 },
@@ -30,8 +46,15 @@ const makeResult = (overrides: Partial<QuantityResult> = {}): QuantityResult => 
 });
 
 const room: Room = {
-  id: 'r1', name: 'Salle', edges: [],
-  points: [{ x: 0, y: 0 }, { x: 1000, y: 0 }, { x: 1000, y: 1000 }, { x: 0, y: 1000 }],
+  id: 'r1',
+  name: 'Salle',
+  edges: [],
+  points: [
+    { x: 0, y: 0 },
+    { x: 1000, y: 0 },
+    { x: 1000, y: 1000 },
+    { x: 0, y: 1000 },
+  ],
 };
 
 const wholeTile = { id: 't1', type: 'WHOLE' as const, rect: { x: 0, y: 0, w: 300, h: 300 } };
@@ -53,7 +76,11 @@ describe('QuantityPlanSvg', () => {
 
   it('renders an svg element when rooms and tiles are present', () => {
     const { container } = render(
-      <QuantityPlanSvg result={makeResult({ tiles: [wholeTile] })} config={config} rooms={[room]} />,
+      <QuantityPlanSvg
+        result={makeResult({ tiles: [wholeTile] })}
+        config={config}
+        rooms={[room]}
+      />,
     );
     expect(container.querySelector('svg')).not.toBeNull();
   });
@@ -74,7 +101,11 @@ describe('QuantityPlanSvg', () => {
     // getBoundingBox mock returns { minX:0, minY:0, maxX:1000, maxY:1000 }
     // pad = max(1000,1000)*0.1 = 100 → viewBox = "-100 -100 1200 1200"
     const { container } = render(
-      <QuantityPlanSvg result={makeResult({ tiles: [wholeTile] })} config={config} rooms={[room]} />,
+      <QuantityPlanSvg
+        result={makeResult({ tiles: [wholeTile] })}
+        config={config}
+        rooms={[room]}
+      />,
     );
     const vb = container.querySelector('svg')!.getAttribute('viewBox')!;
     expect(vb).toBe('-100 -100 1200 1200');
@@ -93,9 +124,15 @@ describe('QuantityPlanSvg', () => {
       ],
     };
     const { container } = render(
-      <QuantityPlanSvg result={makeResult({ tiles: [chevronTile] })} config={config} rooms={[room]} />,
+      <QuantityPlanSvg
+        result={makeResult({ tiles: [chevronTile] })}
+        config={config}
+        rooms={[room]}
+      />,
     );
-    const polygon = container.querySelector('polygon[points="0,0 424.26,424.26 424.26,724.26 0,300"]');
+    const polygon = container.querySelector(
+      'polygon[points="0,0 424.26,424.26 424.26,724.26 0,300"]',
+    );
     expect(polygon).not.toBeNull();
   });
 });

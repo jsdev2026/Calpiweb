@@ -14,21 +14,22 @@
 
 ## Fichiers concernés
 
-| Fichier | Action |
-|---------|--------|
-| `src/types/wall.ts` | Ajouter `isDoor?` sur `Wall` + interface `WallExcludedZone` |
-| `src/types/project.ts` | Étendre `wallEngine` avec `excludedZones: WallExcludedZone[]` |
-| `src/engine/geometry/wallFaces.ts` | `wallsToRooms` : 3e param + point-in-polygon assignment |
-| `src/engine/geometry/wallFaces.test.ts` | 3 nouveaux tests zones exclues |
-| `src/store/projectStore.ts` | 2 nouvelles actions + MAJ `initWallEngine` + `restoreSnapshot` + `selectRooms` |
-| `src/components/plan/PlanEditor.tsx` | `HistoryEntry` étendu + nouvelles props WallDrawingCanvas |
-| `src/components/plan/WallDrawingCanvas.tsx` | Tools DOOR + EXCLUDE, props, rendu |
+| Fichier                                     | Action                                                                         |
+| ------------------------------------------- | ------------------------------------------------------------------------------ |
+| `src/types/wall.ts`                         | Ajouter `isDoor?` sur `Wall` + interface `WallExcludedZone`                    |
+| `src/types/project.ts`                      | Étendre `wallEngine` avec `excludedZones: WallExcludedZone[]`                  |
+| `src/engine/geometry/wallFaces.ts`          | `wallsToRooms` : 3e param + point-in-polygon assignment                        |
+| `src/engine/geometry/wallFaces.test.ts`     | 3 nouveaux tests zones exclues                                                 |
+| `src/store/projectStore.ts`                 | 2 nouvelles actions + MAJ `initWallEngine` + `restoreSnapshot` + `selectRooms` |
+| `src/components/plan/PlanEditor.tsx`        | `HistoryEntry` étendu + nouvelles props WallDrawingCanvas                      |
+| `src/components/plan/WallDrawingCanvas.tsx` | Tools DOOR + EXCLUDE, props, rendu                                             |
 
 ---
 
 ### Task 1 : Types — Wall.isDoor, WallExcludedZone, Project.wallEngine
 
 **Files:**
+
 - Modify: `src/types/wall.ts`
 - Modify: `src/types/project.ts`
 
@@ -49,10 +50,11 @@ export interface Wall {
   node1Id: string;
   node2Id: string;
   thickness: number;
-  isDoor?: boolean;  // ← NOUVEAU : true = ouverture (non rendue comme mur épais)
+  isDoor?: boolean; // ← NOUVEAU : true = ouverture (non rendue comme mur épais)
 }
 
-export interface WallExcludedZone {  // ← NOUVELLE interface
+export interface WallExcludedZone {
+  // ← NOUVELLE interface
   id: string;
   points: Point[];
   label?: string;
@@ -122,6 +124,7 @@ git commit -m "feat(wall-engine): types — Wall.isDoor, WallExcludedZone, wallE
 ### Task 2 : wallFaces.ts — wallsToRooms avec excludedZones (TDD)
 
 **Files:**
+
 - Modify: `src/engine/geometry/wallFaces.ts`
 - Modify: `src/engine/geometry/wallFaces.test.ts`
 
@@ -148,10 +151,17 @@ describe('wallsToRooms — excludedZones', () => {
   });
 
   it('assigns zone to room when zone centroid is inside the room', () => {
-    const zones: WallExcludedZone[] = [{
-      id: 'z1',
-      points: [{ x: 30, y: 30 }, { x: 70, y: 30 }, { x: 70, y: 70 }, { x: 30, y: 70 }],
-    }];
+    const zones: WallExcludedZone[] = [
+      {
+        id: 'z1',
+        points: [
+          { x: 30, y: 30 },
+          { x: 70, y: 30 },
+          { x: 70, y: 70 },
+          { x: 30, y: 70 },
+        ],
+      },
+    ];
     const rooms = wallsToRooms(rectWalls, rectNodes, zones);
     expect(rooms).toHaveLength(1);
     expect(rooms[0]!.excludedZones).toHaveLength(1);
@@ -159,10 +169,17 @@ describe('wallsToRooms — excludedZones', () => {
   });
 
   it('ignores zone whose centroid is outside all rooms', () => {
-    const zones: WallExcludedZone[] = [{
-      id: 'z2',
-      points: [{ x: 200, y: 200 }, { x: 250, y: 200 }, { x: 250, y: 250 }, { x: 200, y: 250 }],
-    }];
+    const zones: WallExcludedZone[] = [
+      {
+        id: 'z2',
+        points: [
+          { x: 200, y: 200 },
+          { x: 250, y: 200 },
+          { x: 250, y: 250 },
+          { x: 200, y: 250 },
+        ],
+      },
+    ];
     const rooms = wallsToRooms(rectWalls, rectNodes, zones);
     expect(rooms[0]!.excludedZones).toHaveLength(0);
   });
@@ -194,15 +211,15 @@ export function wallsToRooms(
   walls: Wall[],
   nodes: WallNode[],
   excludedZones: WallExcludedZone[] = [],
-): Room[]
+): Room[];
 ```
 
 Dans le `.map((pts, idx) => ...)` final (qui construit les Room[]), remplacer `excludedZones: []` par :
 
 ```typescript
 // Assigner les zones dont le centroïde est dans cette face
-const facePts = pts.map(p => ({ x: p.x, y: p.y }));
-const roomZones = excludedZones.filter(zone => {
+const facePts = pts.map((p) => ({ x: p.x, y: p.y }));
+const roomZones = excludedZones.filter((zone) => {
   if (zone.points.length < 3) return false;
   const cx = zone.points.reduce((s, p) => s + p.x, 0) / zone.points.length;
   const cy = zone.points.reduce((s, p) => s + p.y, 0) / zone.points.length;
@@ -210,12 +227,12 @@ const roomZones = excludedZones.filter(zone => {
 });
 
 return {
-  id: faceId(pts.map(p => p.nodeId)),
+  id: faceId(pts.map((p) => p.nodeId)),
   name: `Pièce ${idx + 1}`,
-  points: pts.map(p => ({ x: p.x, y: p.y })),
+  points: pts.map((p) => ({ x: p.x, y: p.y })),
   edges: pts.map(() => 'WALL' as EdgeType),
   partitions: [],
-  excludedZones: roomZones,  // ← CHANGÉ
+  excludedZones: roomZones, // ← CHANGÉ
 };
 ```
 
@@ -239,6 +256,7 @@ git commit -m "feat(wall-engine): wallsToRooms — assigner excludedZones via po
 ### Task 3 : Store — nouvelles actions + initWallEngine + restoreSnapshot + selectRooms
 
 **Files:**
+
 - Modify: `src/store/projectStore.ts`
 
 - [ ] **Step 3.1 : Ajouter les actions à l'interface `ProjectState`**
@@ -376,6 +394,7 @@ git commit -m "feat(wall-engine): store — addWallExcludedZone, removeWallExclu
 ### Task 4 : PlanEditor — HistoryEntry + nouvelles props WallDrawingCanvas
 
 **Files:**
+
 - Modify: `src/components/plan/PlanEditor.tsx`
 
 - [ ] **Step 4.1 : Mettre à jour `HistoryEntry`**
@@ -435,7 +454,7 @@ Il y a exactement 3 occurrences (dans `pushHistory`, `handleUndo`, `handleRedo`)
 Après les hooks existants `const addWall = useProjectStore(s => s.addWall);` etc., ajouter :
 
 ```typescript
-const addWallExcludedZone    = useProjectStore((s) => s.addWallExcludedZone);
+const addWallExcludedZone = useProjectStore((s) => s.addWallExcludedZone);
 const removeWallExcludedZone = useProjectStore((s) => s.removeWallExcludedZone);
 ```
 
@@ -487,6 +506,7 @@ git commit -m "feat(wall-engine): PlanEditor — HistoryEntry étend wallEngine.
 ### Task 5 : WallDrawingCanvas — outil DOOR
 
 **Files:**
+
 - Modify: `src/components/plan/WallDrawingCanvas.tsx`
 
 - [ ] **Step 5.1 : Mettre à jour `PlanTool` et l'interface des props**
@@ -535,7 +555,7 @@ Après les constantes existantes (`SNAP_INDICATOR_R` etc.), ajouter :
 
 ```typescript
 const DOOR_DEFAULT_WIDTH_MM = 900;
-const DOOR_MIN_WALL_MM      = 600; // longueur minimale du mur pour y insérer une porte
+const DOOR_MIN_WALL_MM = 600; // longueur minimale du mur pour y insérer une porte
 ```
 
 - [ ] **Step 5.3 : Filtrer les murs isDoor pour la géométrie épaisse**
@@ -543,9 +563,12 @@ const DOOR_MIN_WALL_MM      = 600; // longueur minimale du mur pour y insérer u
 Localiser les `useMemo` de géométrie (lignes ~278-280). Les mettre à jour :
 
 ```typescript
-const nonDoorWalls = useMemo(() => walls.filter(w => !w.isDoor), [walls]);
-const wallPolygons = useMemo(() => computeCornerGeometry(nonDoorWalls, nodes), [nonDoorWalls, nodes]);
-const jointLines   = useMemo(() => computeJointLines(nonDoorWalls, nodes),     [nonDoorWalls, nodes]);
+const nonDoorWalls = useMemo(() => walls.filter((w) => !w.isDoor), [walls]);
+const wallPolygons = useMemo(
+  () => computeCornerGeometry(nonDoorWalls, nodes),
+  [nonDoorWalls, nodes],
+);
+const jointLines = useMemo(() => computeJointLines(nonDoorWalls, nodes), [nonDoorWalls, nodes]);
 const autoCotations = useMemo(() => computeAutoCotations(walls, nodes), [walls, nodes]); // inclut les portes
 ```
 
@@ -568,14 +591,13 @@ if (tool === 'DOOR') {
     return;
   }
 
-  const dx = n2.x - n1.x, dy = n2.y - n1.y;
+  const dx = n2.x - n1.x,
+    dy = n2.y - n1.y;
   const len = Math.hypot(dx, dy);
   if (len < DOOR_MIN_WALL_MM) return;
 
   const halfW = Math.min(DOOR_DEFAULT_WIDTH_MM / 2, len * 0.4);
-  const t = Math.max(0, Math.min(1,
-    ((world.x - n1.x) * dx + (world.y - n1.y) * dy) / (len * len),
-  ));
+  const t = Math.max(0, Math.min(1, ((world.x - n1.x) * dx + (world.y - n1.y) * dy) / (len * len)));
   const tCenter = Math.max(halfW / len, Math.min(1 - halfW / len, t));
 
   const d1: Point = {
@@ -587,16 +609,23 @@ if (tool === 'DOOR') {
     y: n1.y + (dy / len) * (tCenter * len + halfW),
   };
 
-  const id1 = generateId(), id2 = generateId();
+  const id1 = generateId(),
+    id2 = generateId();
 
   // Ordre critique : ajouter d1/d2 et les 3 nouveaux murs AVANT de supprimer
   // l'original — sinon removeWall élaguerait n1/n2 comme orphelins.
   onPushHistory();
   onAddNode({ id: id1, x: d1.x, y: d1.y });
   onAddNode({ id: id2, x: d2.x, y: d2.y });
-  onAddWall({ id: generateId(), node1Id: hit.node1Id, node2Id: id1,         thickness: hit.thickness });
-  onAddWall({ id: generateId(), node1Id: id1,          node2Id: id2,         thickness: hit.thickness, isDoor: true });
-  onAddWall({ id: generateId(), node1Id: id2,          node2Id: hit.node2Id, thickness: hit.thickness });
+  onAddWall({ id: generateId(), node1Id: hit.node1Id, node2Id: id1, thickness: hit.thickness });
+  onAddWall({
+    id: generateId(),
+    node1Id: id1,
+    node2Id: id2,
+    thickness: hit.thickness,
+    isDoor: true,
+  });
+  onAddWall({ id: generateId(), node1Id: id2, node2Id: hit.node2Id, thickness: hit.thickness });
   onRemoveWall(hit.id); // n1/n2 sont toujours référencés → non élagués
   return;
 }
@@ -643,6 +672,7 @@ git commit -m "feat(wall-engine): WallDrawingCanvas — outil DOOR (ouverture, r
 ### Task 6 : WallDrawingCanvas — outil EXCLUDE
 
 **Files:**
+
 - Modify: `src/components/plan/WallDrawingCanvas.tsx`
 
 - [ ] **Step 6.1 : Ajouter les états et refs pour EXCLUDE**
@@ -663,7 +693,7 @@ useEffect(() => {
   setSelectedWallId(null);
   setEditingWallId(null);
   setChain(null);
-  setExcludePoints([]);  // ← AJOUTÉ
+  setExcludePoints([]); // ← AJOUTÉ
 }, [tool]);
 ```
 
@@ -701,11 +731,12 @@ if (e.key === 'Escape') {
   setChain(null);
   setSelectedWallId(null);
   setEditingWallId(null);
-  setExcludePoints([]);  // ← AJOUTÉ
+  setExcludePoints([]); // ← AJOUTÉ
 }
 if (e.key === 'Enter') {
   tryCloseChain();
-  if (excludePoints.length >= 3) {  // ← AJOUTÉ
+  if (excludePoints.length >= 3) {
+    // ← AJOUTÉ
     onPushHistory();
     onAddExcludedZone([...excludePoints]);
     setExcludePoints([]);
@@ -724,6 +755,7 @@ excludePointsRef.current = excludePoints;
 ```
 
 Et dans le useEffect clavier :
+
 ```typescript
 if (e.key === 'Enter') {
   tryCloseChain();
@@ -734,7 +766,10 @@ if (e.key === 'Enter') {
   }
 }
 if (e.key === 'Escape') {
-  setChain(null); setSelectedWallId(null); setEditingWallId(null); setExcludePoints([]);
+  setChain(null);
+  setSelectedWallId(null);
+  setEditingWallId(null);
+  setExcludePoints([]);
 }
 ```
 

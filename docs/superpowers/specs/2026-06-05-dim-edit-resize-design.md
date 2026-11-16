@@ -8,7 +8,8 @@ Dans la vue calepinage, les côtes (`TilingDimension`) sont des annotations plac
 
 ## Contrainte technique clé
 
-Le snap actuel s'accroche aux sommets du *polygone inset* (pièce décalée vers l'intérieur), pas aux nœuds bruts du mur. Pour savoir quel nœud déplacer, il faut :
+Le snap actuel s'accroche aux sommets du _polygone inset_ (pièce décalée vers l'intérieur), pas aux nœuds bruts du mur. Pour savoir quel nœud déplacer, il faut :
+
 1. Ajouter un snap de priorité maximale sur les nœuds de mur bruts (`WallNode`)
 2. Enregistrer l'ID du nœud snapé dans `TilingDimension.p2NodeId` au moment du placement
 
@@ -18,11 +19,11 @@ Le snap actuel s'accroche aux sommets du *polygone inset* (pièce décalée vers
 
 ## Calcul du déplacement
 
-| Direction | Coordonnée modifiée | Formule |
-|-----------|--------------------|---------| 
-| `H` (horizontal) | X seulement | `newX = p1.x + newDistance` |
-| `V` (vertical) | Y seulement | `newY = p1.y + newDistance` |
-| `parallel` | X et Y | `newP2 = p1 + normalize(wallDir) * newDistance` |
+| Direction        | Coordonnée modifiée | Formule                                         |
+| ---------------- | ------------------- | ----------------------------------------------- |
+| `H` (horizontal) | X seulement         | `newX = p1.x + newDistance`                     |
+| `V` (vertical)   | Y seulement         | `newY = p1.y + newDistance`                     |
+| `parallel`       | X et Y              | `newP2 = p1 + normalize(wallDir) * newDistance` |
 
 `newDistance` = valeur saisie en cm × 10 (conversion en unités monde, 1 unité = 1 mm).
 
@@ -30,20 +31,20 @@ Le snap actuel s'accroche aux sommets du *polygone inset* (pièce décalée vers
 
 ### Fichiers modifiés
 
-| Fichier | Changement |
-|---------|-----------|
-| `src/types/tilingDimension.ts` | Ajouter `p2NodeId?: string` |
-| `src/engine/tiling/snapTiling.ts` | Ajouter `nodeId?: string` à `SnapResult` ; ajouter snap priorité 0 sur `WallNode[]` |
-| `src/hooks/useTilingDimension.ts` | Accepter `WallNode[]` ; passer à `snapToTiling` ; enregistrer `p2NodeId` à la création |
-| `src/store/projectStore.ts` | Ajouter action `updateTilingDimension(id, patch: Partial<TilingDimension>)` |
-| `src/components/tiling/DimLine.tsx` | Ajouter prop `onLabelClick?: () => void` sur la pill label |
-| `src/components/tiling/TilingDimensionLayer.tsx` | Ajouter props `onSelect?: (id: string) => void` et `nodes?: WallNode[]` |
-| `src/components/tiling/TilingEditor.tsx` | Gérer `selectedDimId: string \| null`, passer `nodes` et `onSelect` ; afficher le panneau |
+| Fichier                                          | Changement                                                                                |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| `src/types/tilingDimension.ts`                   | Ajouter `p2NodeId?: string`                                                               |
+| `src/engine/tiling/snapTiling.ts`                | Ajouter `nodeId?: string` à `SnapResult` ; ajouter snap priorité 0 sur `WallNode[]`       |
+| `src/hooks/useTilingDimension.ts`                | Accepter `WallNode[]` ; passer à `snapToTiling` ; enregistrer `p2NodeId` à la création    |
+| `src/store/projectStore.ts`                      | Ajouter action `updateTilingDimension(id, patch: Partial<TilingDimension>)`               |
+| `src/components/tiling/DimLine.tsx`              | Ajouter prop `onLabelClick?: () => void` sur la pill label                                |
+| `src/components/tiling/TilingDimensionLayer.tsx` | Ajouter props `onSelect?: (id: string) => void` et `nodes?: WallNode[]`                   |
+| `src/components/tiling/TilingEditor.tsx`         | Gérer `selectedDimId: string \| null`, passer `nodes` et `onSelect` ; afficher le panneau |
 
 ### Fichiers créés
 
-| Fichier | Rôle |
-|---------|------|
+| Fichier                                        | Rôle                                          |
+| ---------------------------------------------- | --------------------------------------------- |
 | `src/components/tiling/DimPropertiesPanel.tsx` | Panneau de propriétés d'une côte sélectionnée |
 
 ## Détail d'implémentation
@@ -65,6 +66,7 @@ export interface TilingDimension {
 ### `src/engine/tiling/snapTiling.ts`
 
 Ajouter `nodeId?: string` à `SnapResult` :
+
 ```ts
 export interface SnapResult {
   point: Point;
@@ -74,6 +76,7 @@ export interface SnapResult {
 ```
 
 Ajouter paramètre optionnel `nodes: WallNode[] = []` à `snapToTiling`. Avant les snaps existants (priorité 0, la plus haute) :
+
 ```ts
 // Priority 0: wall-node (nœuds de mur bruts)
 for (const node of nodes) {
@@ -86,6 +89,7 @@ La fonction `consider` existante est étendue avec un `nodeId` optionnel.
 ### `src/hooks/useTilingDimension.ts`
 
 Ajouter `nodes: WallNode[]` comme paramètre. Passer à `snapToTiling`. À la création de la côte :
+
 ```ts
 const dim: TilingDimension = {
   id: generateId(),
@@ -101,6 +105,7 @@ const dim: TilingDimension = {
 ### `src/store/projectStore.ts`
 
 Nouvelle action :
+
 ```ts
 updateTilingDimension: (id, patch) => get().updateActive((p) => ({
   tilingDimensions: (p.tilingDimensions ?? []).map((d) =>
@@ -112,6 +117,7 @@ updateTilingDimension: (id, patch) => get().updateActive((p) => ({
 ### `src/components/tiling/DimLine.tsx`
 
 Ajouter `onLabelClick?: () => void`. Sur le groupe label (`<g transform="translate...">`), ajouter :
+
 ```tsx
 onClick={(e) => { e.stopPropagation(); onLabelClick?.(); }}
 style={{ cursor: onLabelClick ? 'pointer' : undefined }}
@@ -120,6 +126,7 @@ style={{ cursor: onLabelClick ? 'pointer' : undefined }}
 ### `src/components/tiling/DimPropertiesPanel.tsx`
 
 Props :
+
 ```ts
 interface DimPropertiesPanelProps {
   dim: TilingDimension;
@@ -129,6 +136,7 @@ interface DimPropertiesPanelProps {
 ```
 
 Logique :
+
 - Valeur affichée : `formatCm(projectedLength)`, convertie en nombre pour le champ
 - Si `dim.p2NodeId` absent : champ en lecture seule + note "Ancrez p2 sur un nœud de mur pour éditer"
 - Bouton Appliquer (et touche Entrée) :
@@ -142,6 +150,7 @@ Logique :
   5. Appeler `onClose()`
 
 Contenu affiché :
+
 ```
 CÔTE SÉLECTIONNÉE                         [✕]
 Longueur  [  320  ] cm    [Appliquer ↵]
@@ -153,6 +162,7 @@ Ancre fixe  p1 (première ancre placée)
 
 Ajouter props `onSelect?: (id: string) => void` et `nodes?: WallNode[]`.  
 Dans le rendu de chaque `DimLine`, passer :
+
 ```tsx
 onLabelClick={onSelect ? () => onSelect(dim.id) : undefined}
 ```
@@ -169,16 +179,19 @@ onLabelClick={onSelect ? () => onSelect(dim.id) : undefined}
   ```
 - Dans le sidebar droit (au-dessus de `TilingControls`) :
   ```tsx
-  {selectedDimId && (() => {
-    const dim = dimensions.find(d => d.id === selectedDimId);
-    return dim ? (
-      <DimPropertiesPanel
-        dim={dim}
-        nodes={wallEngine?.nodes ?? []}
-        onClose={() => setSelectedDimId(null)}
-      />
-    ) : null;
-  })()}
+  {
+    selectedDimId &&
+      (() => {
+        const dim = dimensions.find((d) => d.id === selectedDimId);
+        return dim ? (
+          <DimPropertiesPanel
+            dim={dim}
+            nodes={wallEngine?.nodes ?? []}
+            onClose={() => setSelectedDimId(null)}
+          />
+        ) : null;
+      })();
+  }
   ```
 
 ## UX

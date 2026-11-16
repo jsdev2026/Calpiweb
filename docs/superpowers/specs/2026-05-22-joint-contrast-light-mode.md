@@ -18,9 +18,9 @@ Le dark mode n'est pas affecté : `--tile-joint` vaut `#09090b` (quasi-noir), le
 
 Modifier deux tokens CSS dans `:root` uniquement. Aucun changement JS/TSX.
 
-| Variable | Avant | Après |
-|---|---|---|
-| `--tile-joint` | `#d1d5db` (gray-300) | `#94a3b8` (slate-400) |
+| Variable        | Avant                | Après                 |
+| --------------- | -------------------- | --------------------- |
+| `--tile-joint`  | `#d1d5db` (gray-300) | `#94a3b8` (slate-400) |
 | `--tile-cut-bg` | `#d1d5db` (gray-300) | `#cbd5e1` (slate-300) |
 
 ### Justification des valeurs

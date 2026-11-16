@@ -34,10 +34,10 @@ export interface PointRef {
 
 Les vertices sont positionnés sur l'**axe** des murs (centre de l'épaisseur). L'offset par endpoint selon la face :
 
-| `face` | offset |
-|--------|--------|
+| `face`      | offset                                          |
+| ----------- | ----------------------------------------------- |
 | `'INSIDE'`  | `−halfThickness` (vers l'intérieur de la pièce) |
-| `'AXIS'`    | `0` |
+| `'AXIS'`    | `0`                                             |
 | `'OUTSIDE'` | `+halfThickness` (vers l'extérieur du bâtiment) |
 
 ```
@@ -47,12 +47,12 @@ stored    = displayed − offset(face_A) − offset(face_B)
 
 Exemples pour deux murs d'épaisseur 10 cm chacun (halfThick = 5 cm), axe-à-axe = 300 cm :
 
-| Référence | displayed |
-|-----------|-----------|
-| I → I | 300 − 5 − 5 = 290 cm |
-| A → A | 300 cm |
-| E → E | 300 + 5 + 5 = 310 cm |
-| I → E | 300 − 5 + 5 = 300 cm |
+| Référence | displayed            |
+| --------- | -------------------- |
+| I → I     | 300 − 5 − 5 = 290 cm |
+| A → A     | 300 cm               |
+| E → E     | 300 + 5 + 5 = 310 cm |
+| I → E     | 300 − 5 + 5 = 300 cm |
 
 ### Fichier remplacé
 
@@ -64,7 +64,7 @@ export function constraintFaceOffset(
   constraint: Constraint,
   rooms: Room[],
   defaultThickness: number,
-): number
+): number;
 ```
 
 Signature identique à `constraintInteriorOffset` pour faciliter la migration. Lit `constraint.pts[i].face` pour chaque endpoint ; `undefined` → `'INSIDE'`.
@@ -78,10 +78,10 @@ Défini et exporté depuis `DrawingCanvas.tsx` :
 ```typescript
 export interface FaceSnapPoint {
   roomId: string;
-  vertexIdx: number;                       // vertex de référence (pour le solver)
+  vertexIdx: number; // vertex de référence (pour le solver)
   face: 'INSIDE' | 'AXIS' | 'OUTSIDE';
-  worldPos: Point;                         // position réelle du snap (pour dessin + clic)
-  wallNormal: Point;                       // vecteur unitaire perpendiculaire au segment
+  worldPos: Point; // position réelle du snap (pour dessin + clic)
+  wallNormal: Point; // vecteur unitaire perpendiculaire au segment
 }
 ```
 
@@ -94,12 +94,13 @@ Fonction dans `PlanEditor.tsx`, appelée dans `handlePointerMove` quand `tool ==
 ### Algorithme
 
 Pour chaque segment de mur/porte/cloison/zone :
+
 1. Calculer `proj` = projection du curseur sur le segment
 2. Si `distance(cursor, proj) > 80/scale` → ignorer
 3. Calculer `normal` = vecteur unitaire perpendiculaire au segment (rotated 90°), orienté vers l'intérieur de la pièce
 4. Générer 3 candidats :
-   - `INSIDE`  : `worldPos = proj + normal × halfThickness`
-   - `AXIS`    : `worldPos = proj`
+   - `INSIDE` : `worldPos = proj + normal × halfThickness`
+   - `AXIS` : `worldPos = proj`
    - `OUTSIDE` : `worldPos = proj − normal × halfThickness`
 5. Retenir le candidat dont `distance(cursor, worldPos)` est minimal
 
@@ -130,9 +131,10 @@ dimensionSource: {                        // 1er point confirmé
 **Dots snap sur le hover (`faceSnapHover` non null) :**
 
 Pour le segment survolé, afficher 3 cercles perpendiculaires au mur :
+
 - `OUTSIDE` : `r=120`, `fill='#3b82f6'` (bleu)
-- `AXIS`    : `r=100`, `fill='#a855f7'` (violet)
-- `INSIDE`  : `r=120`, `fill='#22c55e'` (vert)
+- `AXIS` : `r=100`, `fill='#a855f7'` (violet)
+- `INSIDE` : `r=120`, `fill='#22c55e'` (vert)
 
 Le dot correspondant à `faceSnapHover.face` est agrandi (`r×1.6`) et opaque ; les deux autres sont à `opacity=0.5`.
 
@@ -155,9 +157,9 @@ Comportement existant conservé : ligne H ou V en tirets oranges de `dimensionSo
 ### State
 
 ```typescript
-const [faceSnapHover, setFaceSnapHover]   = useState<FaceSnapPoint | null>(null);
+const [faceSnapHover, setFaceSnapHover] = useState<FaceSnapPoint | null>(null);
 const [dimensionSource, setDimensionSource] = useState<{
-  ref:      PointRef;
+  ref: PointRef;
   worldPos: Point;
 } | null>(null);
 // Les états existants editingEdgeConstraintType, etc. restent pour SELECT/thickness
@@ -178,18 +180,29 @@ if (tool === 'DIMENSION') {
 if (tool === 'DIMENSION') {
   if (!dimensionSource) {
     if (faceSnapHover) {
-      setDimensionSource({ ref: { roomId: faceSnapHover.roomId, vertexIdx: faceSnapHover.vertexIdx, face: faceSnapHover.face }, worldPos: faceSnapHover.worldPos });
+      setDimensionSource({
+        ref: {
+          roomId: faceSnapHover.roomId,
+          vertexIdx: faceSnapHover.vertexIdx,
+          face: faceSnapHover.face,
+        },
+        worldPos: faceSnapHover.worldPos,
+      });
     }
     // clic dans le vide → ignorer
     return;
   }
   // 2e clic
   if (faceSnapHover) {
-    openDimensionPopup(dimensionSource.ref, {
-      roomId: faceSnapHover.roomId,
-      vertexIdx: faceSnapHover.vertexIdx,
-      face: faceSnapHover.face,
-    }, faceSnapHover.worldPos);
+    openDimensionPopup(
+      dimensionSource.ref,
+      {
+        roomId: faceSnapHover.roomId,
+        vertexIdx: faceSnapHover.vertexIdx,
+        face: faceSnapHover.face,
+      },
+      faceSnapHover.worldPos,
+    );
     setDimensionSource(null);
   } else {
     // clic dans le vide → annuler
@@ -203,14 +216,15 @@ if (tool === 'DIMENSION') {
 
 ```typescript
 const [dimensionPopup, setDimensionPopup] = useState<{
-  fromRef:  PointRef;
-  toRef:    PointRef;
-  dimType:  'H_DISTANCE' | 'V_DISTANCE' | 'LENGTH';
-  value:    string; // valeur affichée en cm
+  fromRef: PointRef;
+  toRef: PointRef;
+  dimType: 'H_DISTANCE' | 'V_DISTANCE' | 'LENGTH';
+  value: string; // valeur affichée en cm
 } | null>(null);
 ```
 
 Calcul à l'ouverture :
+
 1. Auto-détecter `dimType` : H si `|Δx| ≥ |Δy|`, sinon V (comportement existant)
 2. Calculer `rawValue = dimType === 'H_DISTANCE' ? |Δx| : |Δy|`
 3. Calculer `displayed = (rawValue + faceOffset(fromRef, from_room) + faceOffset(toRef, to_room)) / 10` (en cm)
@@ -237,7 +251,7 @@ interface DimensionPopupProps {
   screenY?: number;
   above?: boolean;
   fromFace: 'INSIDE' | 'AXIS' | 'OUTSIDE';
-  toFace:   'INSIDE' | 'AXIS' | 'OUTSIDE';
+  toFace: 'INSIDE' | 'AXIS' | 'OUTSIDE';
   dimType: 'H_DISTANCE' | 'V_DISTANCE' | 'LENGTH';
   onDimTypeChange: (t: 'H_DISTANCE' | 'V_DISTANCE' | 'LENGTH') => void;
   value: string;
@@ -265,10 +279,12 @@ Le label est affiché en lecture seule à côté du type H/V/L — la face est f
 En mode SELECT, cliquer sur un mur ouvre toujours `WallEdgeEditor`, mais la popup ne gère plus que l'épaisseur.
 
 **Props supprimées :**
+
 - `dimValue`, `onDimChange`
 - `constraintType`, `onConstraintTypeChange`
 
 **Props conservées :**
+
 - `thicknessValue`, `onThicknessChange`
 - `hasExistingConstraint` (pour afficher un indicateur "cote posée" en lecture seule)
 - `onSubmit`, `onCancel`, `onRelease`, `screenX/Y`, `above`
@@ -280,12 +296,14 @@ Les contraintes existantes sur le mur restent visibles sous forme d'annotation s
 ## 9. Mode SELECT — épaisseur seulement
 
 Dans `tapActivateEdge`, supprimer tout le code qui :
+
 - Cherche des contraintes H/V/L existantes (`edgeDimConstraintIds`, `hDist`, `vDist`, `lenC`)
 - Calcule `displayOffset`
 - Remplit `editValue` avec la valeur de cote
 - Positionne `editingEdgeConstraintType`
 
 Conserver :
+
 - `setEditingEdge({ roomId, edgeIndex })`
 - `setEditingEdgeThicknessValue(...)`
 
@@ -311,13 +329,13 @@ Après validation de la `DimensionPopup`, la ligne de cote annotée est position
 
 ## 12. Fichiers touchés
 
-| Fichier | Action |
-|---------|--------|
-| `src/types/project.ts` | Modifier — ajouter `face?` à `PointRef` |
-| `src/engine/constraints/interiorOffset.ts` | Remplacer par `faceOffset.ts` |
-| `src/components/plan/DimensionPopup.tsx` | Créer |
-| `src/components/plan/DrawingCanvas.tsx` | Modifier — `FaceSnapPoint`, props snap, rendu dots |
-| `src/components/plan/PlanEditor.tsx` | Modifier — `findNearestFaceSnap`, DIMENSION flow, SELECT thickness only |
-| `src/components/plan/WallEdgeEditor.tsx` | Modifier — supprimer props dimension |
-| `src/components/plan/PlanEditor.toolbar.test.ts` | Modifier — adapter |
-| `src/components/plan/PlanToolbar.test.tsx` | Modifier — adapter si nécessaire |
+| Fichier                                          | Action                                                                  |
+| ------------------------------------------------ | ----------------------------------------------------------------------- |
+| `src/types/project.ts`                           | Modifier — ajouter `face?` à `PointRef`                                 |
+| `src/engine/constraints/interiorOffset.ts`       | Remplacer par `faceOffset.ts`                                           |
+| `src/components/plan/DimensionPopup.tsx`         | Créer                                                                   |
+| `src/components/plan/DrawingCanvas.tsx`          | Modifier — `FaceSnapPoint`, props snap, rendu dots                      |
+| `src/components/plan/PlanEditor.tsx`             | Modifier — `findNearestFaceSnap`, DIMENSION flow, SELECT thickness only |
+| `src/components/plan/WallEdgeEditor.tsx`         | Modifier — supprimer props dimension                                    |
+| `src/components/plan/PlanEditor.toolbar.test.ts` | Modifier — adapter                                                      |
+| `src/components/plan/PlanToolbar.test.tsx`       | Modifier — adapter si nécessaire                                        |

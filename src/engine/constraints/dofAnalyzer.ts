@@ -40,7 +40,10 @@ export function analyzeDOF(rooms: Room[], constraints: Constraint[]): DOFMap {
   for (const c of constraints) {
     if (c.type === 'FIX' && c.pts[0]) {
       const k = ptKey(c.pts[0].roomId, c.pts[0].vertexIdx);
-      if (cx.has(k)) { cx.set(k, true); cy.set(k, true); }
+      if (cx.has(k)) {
+        cx.set(k, true);
+        cy.set(k, true);
+      }
     }
   }
 
@@ -57,23 +60,39 @@ export function analyzeDOF(rooms: Room[], constraints: Constraint[]): DOFMap {
 
       if (c.type === 'HORIZONTAL') {
         if ((cy.get(k1) || cy.get(k2)) && (!cy.get(k1) || !cy.get(k2))) {
-          cy.set(k1, true); cy.set(k2, true); changed = true;
+          cy.set(k1, true);
+          cy.set(k2, true);
+          changed = true;
         }
       }
 
       if (c.type === 'VERTICAL') {
         if ((cx.get(k1) || cx.get(k2)) && (!cx.get(k1) || !cx.get(k2))) {
-          cx.set(k1, true); cx.set(k2, true); changed = true;
+          cx.set(k1, true);
+          cx.set(k2, true);
+          changed = true;
         }
       }
 
       if (c.type === 'COINCIDENT') {
         const mcx = (cx.get(k1) ?? false) || (cx.get(k2) ?? false);
         const mcy = (cy.get(k1) ?? false) || (cy.get(k2) ?? false);
-        if (mcx && !cx.get(k1)) { cx.set(k1, true); changed = true; }
-        if (mcx && !cx.get(k2)) { cx.set(k2, true); changed = true; }
-        if (mcy && !cy.get(k1)) { cy.set(k1, true); changed = true; }
-        if (mcy && !cy.get(k2)) { cy.set(k2, true); changed = true; }
+        if (mcx && !cx.get(k1)) {
+          cx.set(k1, true);
+          changed = true;
+        }
+        if (mcx && !cx.get(k2)) {
+          cx.set(k2, true);
+          changed = true;
+        }
+        if (mcy && !cy.get(k1)) {
+          cy.set(k1, true);
+          changed = true;
+        }
+        if (mcy && !cy.get(k2)) {
+          cy.set(k2, true);
+          changed = true;
+        }
       }
 
       if (c.type === 'LENGTH') {
@@ -81,19 +100,31 @@ export function analyzeDOF(rooms: Room[], constraints: Constraint[]): DOFMap {
         const p2Full = (cx.get(k2) ?? false) && (cy.get(k2) ?? false);
         const p1Part = (cx.get(k1) ?? false) || (cy.get(k1) ?? false);
         const p2Part = (cx.get(k2) ?? false) || (cy.get(k2) ?? false);
-        if (p1Full && p2Part && !p2Full) { cx.set(k2, true); cy.set(k2, true); changed = true; }
-        if (p2Full && p1Part && !p1Full) { cx.set(k1, true); cy.set(k1, true); changed = true; }
+        if (p1Full && p2Part && !p2Full) {
+          cx.set(k2, true);
+          cy.set(k2, true);
+          changed = true;
+        }
+        if (p2Full && p1Part && !p1Full) {
+          cx.set(k1, true);
+          cy.set(k1, true);
+          changed = true;
+        }
       }
 
       if (c.type === 'H_DISTANCE') {
         if ((cx.get(k1) || cx.get(k2)) && (!cx.get(k1) || !cx.get(k2))) {
-          cx.set(k1, true); cx.set(k2, true); changed = true;
+          cx.set(k1, true);
+          cx.set(k2, true);
+          changed = true;
         }
       }
 
       if (c.type === 'V_DISTANCE') {
         if ((cy.get(k1) || cy.get(k2)) && (!cy.get(k1) || !cy.get(k2))) {
-          cy.set(k1, true); cy.set(k2, true); changed = true;
+          cy.set(k1, true);
+          cy.set(k2, true);
+          changed = true;
         }
       }
     }

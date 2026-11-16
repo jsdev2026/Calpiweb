@@ -6,7 +6,7 @@ import type { Point } from '@/types/plan';
 interface SolverPoint {
   x: number;
   y: number;
-  isFixed: boolean;      // FIX constraint → solver cannot move this point at all
+  isFixed: boolean; // FIX constraint → solver cannot move this point at all
   temporaryFix: boolean; // dragged by mouse → solver must respect user input
 }
 
@@ -110,45 +110,57 @@ function applyConstraint(c: SolverConstraint, pts: SolverPoint[]): void {
 function residualOf(c: SolverConstraint, pts: SolverPoint[]): number {
   switch (c.type) {
     case 'HORIZONTAL': {
-      const p1 = pts[c.pts[0]!], p2 = pts[c.pts[1]!];
+      const p1 = pts[c.pts[0]!],
+        p2 = pts[c.pts[1]!];
       if (!p1 || !p2) return 0;
       return Math.abs(p1.y - p2.y);
     }
     case 'VERTICAL': {
-      const p1 = pts[c.pts[0]!], p2 = pts[c.pts[1]!];
+      const p1 = pts[c.pts[0]!],
+        p2 = pts[c.pts[1]!];
       if (!p1 || !p2) return 0;
       return Math.abs(p1.x - p2.x);
     }
     case 'COINCIDENT': {
-      const p1 = pts[c.pts[0]!], p2 = pts[c.pts[1]!];
+      const p1 = pts[c.pts[0]!],
+        p2 = pts[c.pts[1]!];
       if (!p1 || !p2) return 0;
-      const dx = p1.x - p2.x, dy = p1.y - p2.y;
+      const dx = p1.x - p2.x,
+        dy = p1.y - p2.y;
       return Math.sqrt(dx * dx + dy * dy);
     }
     case 'LENGTH': {
-      const p1 = pts[c.pts[0]!], p2 = pts[c.pts[1]!];
+      const p1 = pts[c.pts[0]!],
+        p2 = pts[c.pts[1]!];
       if (!p1 || !p2 || typeof c.value !== 'number') return 0;
-      const dx = p2.x - p1.x, dy = p2.y - p1.y;
+      const dx = p2.x - p1.x,
+        dy = p2.y - p1.y;
       return Math.abs(Math.sqrt(dx * dx + dy * dy) - c.value);
     }
     case 'H_DISTANCE': {
-      const p1 = pts[c.pts[0]!], p2 = pts[c.pts[1]!];
+      const p1 = pts[c.pts[0]!],
+        p2 = pts[c.pts[1]!];
       if (!p1 || !p2 || typeof c.value !== 'number') return 0;
       return Math.abs(Math.abs(p2.x - p1.x) - c.value);
     }
     case 'V_DISTANCE': {
-      const p1 = pts[c.pts[0]!], p2 = pts[c.pts[1]!];
+      const p1 = pts[c.pts[0]!],
+        p2 = pts[c.pts[1]!];
       if (!p1 || !p2 || typeof c.value !== 'number') return 0;
       return Math.abs(Math.abs(p2.y - p1.y) - c.value);
     }
     case 'POINT_ON_LINE': {
-      const p = pts[c.pts[0]!], lp1 = pts[c.pts[1]!], lp2 = pts[c.pts[2]!];
+      const p = pts[c.pts[0]!],
+        lp1 = pts[c.pts[1]!],
+        lp2 = pts[c.pts[2]!];
       if (!p || !lp1 || !lp2) return 0;
-      const dx = lp2.x - lp1.x, dy = lp2.y - lp1.y;
+      const dx = lp2.x - lp1.x,
+        dy = lp2.y - lp1.y;
       const len2 = dx * dx + dy * dy;
       if (len2 < 0.001) return 0;
       const t = ((p.x - lp1.x) * dx + (p.y - lp1.y) * dy) / len2;
-      const ex = p.x - (lp1.x + t * dx), ey = p.y - (lp1.y + t * dy);
+      const ex = p.x - (lp1.x + t * dx),
+        ey = p.y - (lp1.y + t * dy);
       return Math.sqrt(ex * ex + ey * ey);
     }
     default:
@@ -162,7 +174,11 @@ function buildSolverState(
   rooms: Room[],
   constraints: Constraint[],
   temporaryFixKey: string | null,
-): { solverPts: SolverPoint[]; solverConstraints: SolverConstraint[]; keyToIdx: Map<string, number> } {
+): {
+  solverPts: SolverPoint[];
+  solverConstraints: SolverConstraint[];
+  keyToIdx: Map<string, number>;
+} {
   const solverPts: SolverPoint[] = [];
   const keyToIdx = new Map<string, number>();
 
@@ -209,7 +225,13 @@ function runIterations(
   for (let iter = 0; iter < iterations; iter++) {
     // Restore anchor positions at the start of each iteration (spec FIX behaviour)
     for (const c of fixConstraints) {
-      if (c.type === 'FIX' && c.pts[0] && typeof c.value === 'object' && c.value !== null && 'x' in c.value) {
+      if (
+        c.type === 'FIX' &&
+        c.pts[0] &&
+        typeof c.value === 'object' &&
+        c.value !== null &&
+        'x' in c.value
+      ) {
         const idx = keyToIdx.get(`${c.pts[0].roomId}:${c.pts[0].vertexIdx}`);
         if (idx !== undefined) {
           solverPts[idx]!.x = (c.value as { x: number; y: number }).x;
@@ -251,7 +273,11 @@ export function buildAndSolve(
   temporaryFixKey: string | null = null,
   iterations = 100,
 ): Map<string, Point[]> {
-  const { solverPts, solverConstraints, keyToIdx } = buildSolverState(rooms, constraints, temporaryFixKey);
+  const { solverPts, solverConstraints, keyToIdx } = buildSolverState(
+    rooms,
+    constraints,
+    temporaryFixKey,
+  );
   runIterations(solverPts, solverConstraints, constraints, keyToIdx, iterations);
   return collectPoints(rooms, solverPts, keyToIdx);
 }
@@ -275,7 +301,11 @@ export function solveAndValidate(
   iterations = 100,
   tolerance = RESIDUAL_TOLERANCE_MM,
 ): SolveResult {
-  const { solverPts, solverConstraints, keyToIdx } = buildSolverState(rooms, constraints, temporaryFixKey);
+  const { solverPts, solverConstraints, keyToIdx } = buildSolverState(
+    rooms,
+    constraints,
+    temporaryFixKey,
+  );
   runIterations(solverPts, solverConstraints, constraints, keyToIdx, iterations);
 
   const violatedIds: string[] = [];

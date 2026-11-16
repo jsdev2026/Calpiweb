@@ -12,18 +12,19 @@
 
 ## Fichiers modifiés
 
-| Fichier | Rôle |
-|---|---|
-| `src/components/plan/ToolStatusBar.tsx` | **Créé** — pill de statut contextuelle |
-| `src/components/plan/PlanToolbar.tsx` | Bouton `?` · labels tutorial · suppression THICKNESS · type `PlanTool` |
-| `src/components/plan/PlanEditor.tsx` | Escape → SELECT · tutorialMode · `?` key · ToolStatusBar · partition thickness SELECT · suppression THICKNESS |
-| `src/components/plan/PlanEditor.toolbar.test.ts` | **Créé** — tests logique pure (tous les comportements) |
+| Fichier                                          | Rôle                                                                                                          |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| `src/components/plan/ToolStatusBar.tsx`          | **Créé** — pill de statut contextuelle                                                                        |
+| `src/components/plan/PlanToolbar.tsx`            | Bouton `?` · labels tutorial · suppression THICKNESS · type `PlanTool`                                        |
+| `src/components/plan/PlanEditor.tsx`             | Escape → SELECT · tutorialMode · `?` key · ToolStatusBar · partition thickness SELECT · suppression THICKNESS |
+| `src/components/plan/PlanEditor.toolbar.test.ts` | **Créé** — tests logique pure (tous les comportements)                                                        |
 
 ---
 
 ## Task 1 — `Escape` → SELECT
 
 **Files:**
+
 - Modify: `src/components/plan/PlanEditor.tsx:~429`
 - Create: `src/components/plan/PlanEditor.toolbar.test.ts`
 
@@ -43,8 +44,15 @@ import type { PlanTool } from './PlanToolbar';
 
 describe('Escape key → SELECT', () => {
   const tools: PlanTool[] = [
-    'WALL', 'DOOR', 'PARTITION', 'EXCLUDE',
-    'APPLY_H', 'APPLY_V', 'COINCIDE', 'DIMENSION', 'ANCHOR',
+    'WALL',
+    'DOOR',
+    'PARTITION',
+    'EXCLUDE',
+    'APPLY_H',
+    'APPLY_V',
+    'COINCIDE',
+    'DIMENSION',
+    'ANCHOR',
   ];
 
   it('simule setTool(SELECT) pour chaque outil non-SELECT', () => {
@@ -76,24 +84,42 @@ Expected: PASS — 2 tests.
 Dans `src/components/plan/PlanEditor.tsx`, localiser le bloc `if (e.key === 'Escape')` (vers la ligne 429). Il ressemble à :
 
 ```tsx
-      if (e.key === 'Escape') {
-        setEditingEdge(null); setEditingZoneEdge(null); setEditingPartition(null);
-        setEditingPartitionThickness(null); setEditingThicknessEdge(null); setEditingPartitionDimension(null);
-        setDraggedVertex(null); setDraggedZoneVertex(null); setDraggedPartitionVertex(null);
-        setCoincideSource(null); setDimensionSource(null); setPartitionOrigin(null); setExcludePoints([]);
-      }
+if (e.key === 'Escape') {
+  setEditingEdge(null);
+  setEditingZoneEdge(null);
+  setEditingPartition(null);
+  setEditingPartitionThickness(null);
+  setEditingThicknessEdge(null);
+  setEditingPartitionDimension(null);
+  setDraggedVertex(null);
+  setDraggedZoneVertex(null);
+  setDraggedPartitionVertex(null);
+  setCoincideSource(null);
+  setDimensionSource(null);
+  setPartitionOrigin(null);
+  setExcludePoints([]);
+}
 ```
 
 Le remplacer par :
 
 ```tsx
-      if (e.key === 'Escape') {
-        setTool('SELECT');
-        setEditingEdge(null); setEditingZoneEdge(null); setEditingPartition(null);
-        setEditingPartitionThickness(null); setEditingThicknessEdge(null); setEditingPartitionDimension(null);
-        setDraggedVertex(null); setDraggedZoneVertex(null); setDraggedPartitionVertex(null);
-        setCoincideSource(null); setDimensionSource(null); setPartitionOrigin(null); setExcludePoints([]);
-      }
+if (e.key === 'Escape') {
+  setTool('SELECT');
+  setEditingEdge(null);
+  setEditingZoneEdge(null);
+  setEditingPartition(null);
+  setEditingPartitionThickness(null);
+  setEditingThicknessEdge(null);
+  setEditingPartitionDimension(null);
+  setDraggedVertex(null);
+  setDraggedZoneVertex(null);
+  setDraggedPartitionVertex(null);
+  setCoincideSource(null);
+  setDimensionSource(null);
+  setPartitionOrigin(null);
+  setExcludePoints([]);
+}
 ```
 
 - [ ] **Étape 4 : Vérifier TypeScript + tests**
@@ -115,6 +141,7 @@ cd /workspaces/Calpiweb && git add src/components/plan/PlanEditor.tsx src/compon
 ## Task 2 — Barre de statut contextuelle
 
 **Files:**
+
 - Create: `src/components/plan/ToolStatusBar.tsx`
 - Modify: `src/components/plan/PlanEditor.tsx` (intégration)
 
@@ -132,7 +159,7 @@ import { TOOL_STATUS_TEXTS } from './ToolStatusBar';
 // ── ToolStatusBar ─────────────────────────────────────────────────────────────
 
 describe('ToolStatusBar — STATUS_TEXTS', () => {
-  it('SELECT n\'a pas de texte (invisible)', () => {
+  it("SELECT n'a pas de texte (invisible)", () => {
     expect(TOOL_STATUS_TEXTS['SELECT']).toBeUndefined();
   });
 
@@ -145,12 +172,21 @@ describe('ToolStatusBar — STATUS_TEXTS', () => {
   });
 
   it('COINCIDE a un texte', () => {
-    expect(TOOL_STATUS_TEXTS['COINCIDE']).toBe('Cliquez sur le nœud, puis sur un mur/nœud pour les joindre');
+    expect(TOOL_STATUS_TEXTS['COINCIDE']).toBe(
+      'Cliquez sur le nœud, puis sur un mur/nœud pour les joindre',
+    );
   });
 
   const drawingTools: Array<keyof typeof TOOL_STATUS_TEXTS> = [
-    'WALL', 'DOOR', 'PARTITION', 'EXCLUDE',
-    'APPLY_H', 'APPLY_V', 'COINCIDE', 'DIMENSION', 'ANCHOR',
+    'WALL',
+    'DOOR',
+    'PARTITION',
+    'EXCLUDE',
+    'APPLY_H',
+    'APPLY_V',
+    'COINCIDE',
+    'DIMENSION',
+    'ANCHOR',
   ];
 
   it('tous les outils de dessin ont un texte non vide', () => {
@@ -178,15 +214,15 @@ Créer `src/components/plan/ToolStatusBar.tsx` :
 import type { PlanTool } from './PlanToolbar';
 
 export const TOOL_STATUS_TEXTS: Partial<Record<PlanTool, string>> = {
-  WALL:      'Cliquez pour poser un point',
-  DOOR:      'Cliquez sur un mur pour placer une porte',
+  WALL: 'Cliquez pour poser un point',
+  DOOR: 'Cliquez sur un mur pour placer une porte',
   PARTITION: 'Cliquez pour tracer une cloison',
-  EXCLUDE:   'Délimitez la zone à exclure',
-  APPLY_H:   "Cliquez sur un mur pour le verrouiller à l'horizontale",
-  APPLY_V:   'Cliquez sur un mur pour le verrouiller à la verticale',
-  COINCIDE:  'Cliquez sur le nœud, puis sur un mur/nœud pour les joindre',
+  EXCLUDE: 'Délimitez la zone à exclure',
+  APPLY_H: "Cliquez sur un mur pour le verrouiller à l'horizontale",
+  APPLY_V: 'Cliquez sur un mur pour le verrouiller à la verticale',
+  COINCIDE: 'Cliquez sur le nœud, puis sur un mur/nœud pour les joindre',
   DIMENSION: 'Cliquez sur un premier nœud, puis sur le second',
-  ANCHOR:    'Cliquez sur un nœud pour le figer en place',
+  ANCHOR: 'Cliquez sur un nœud pour le figer en place',
 };
 
 export const ToolStatusBar = ({ tool }: { tool: PlanTool }) => {
@@ -195,7 +231,7 @@ export const ToolStatusBar = ({ tool }: { tool: PlanTool }) => {
   return (
     <div
       data-testid="tool-status-bar"
-      className="pointer-events-none absolute left-1/2 top-3 z-10 hidden -translate-x-1/2 md:block mouse:block"
+      className="pointer-events-none absolute left-1/2 top-3 z-10 hidden -translate-x-1/2 mouse:block md:block"
     >
       <span
         className="rounded-full px-3 py-1 text-xs backdrop-blur-sm"
@@ -223,7 +259,7 @@ import { ToolStatusBar } from './ToolStatusBar';
 **4b — Ajouter le composant** dans le JSX, à l'intérieur du `div` wrapper du canvas (le `div` avec `className="relative flex flex-1 overflow-hidden"` et `style={{ background: 'var(--canvas-bg)', touchAction: 'none' }}`), juste après l'overlay tactile `<div data-testid="mobile-touch-overlay" .../>` :
 
 ```tsx
-      <ToolStatusBar tool={tool} />
+<ToolStatusBar tool={tool} />
 ```
 
 Le bloc JSX ressemblera à :
@@ -268,6 +304,7 @@ cd /workspaces/Calpiweb && git add src/components/plan/ToolStatusBar.tsx src/com
 ## Task 3 — Mode tutorial
 
 **Files:**
+
 - Modify: `src/components/plan/PlanToolbar.tsx`
 - Modify: `src/components/plan/PlanEditor.tsx`
 
@@ -333,7 +370,20 @@ Expected: PASS.
 Localiser la ligne d'import lucide (commence par `import { DoorOpen, ...`). Ajouter `HelpCircle` :
 
 ```tsx
-import { DoorOpen, HelpCircle, Magnet, MousePointer2, PenTool, Pin, Redo2, Ruler, Trash2, Undo, SplitSquareVertical, Square } from 'lucide-react';
+import {
+  DoorOpen,
+  HelpCircle,
+  Magnet,
+  MousePointer2,
+  PenTool,
+  Pin,
+  Redo2,
+  Ruler,
+  Trash2,
+  Undo,
+  SplitSquareVertical,
+  Square,
+} from 'lucide-react';
 ```
 
 **3b — Ajouter `tutorialMode` et `onToggleTutorial` dans l'interface props :**
@@ -421,8 +471,12 @@ Pattern à appliquer pour **chaque** bouton d'outil (ne pas faire pour les sépa
 ```tsx
 <div className="flex items-center">
   <ToolTooltip {...TOOL_TOOLTIPS.SELECT}>
-    <Button variant={tool === 'SELECT' ? 'active' : 'tool'} size="icon" className="h-8 w-8"
-      onClick={() => onChangeTool('SELECT')}>
+    <Button
+      variant={tool === 'SELECT' ? 'active' : 'tool'}
+      size="icon"
+      className="h-8 w-8"
+      onClick={() => onChangeTool('SELECT')}
+    >
       <MousePointer2 size={16} />
     </Button>
   </ToolTooltip>
@@ -436,18 +490,18 @@ Pattern à appliquer pour **chaque** bouton d'outil (ne pas faire pour les sépa
 
 Appliquer ce pattern pour tous les outils avec leurs labels respectifs :
 
-| Outil | Label |
-|---|---|
-| SELECT | Sélectionner |
-| WALL | Tracer des murs |
-| DOOR | Placer une porte |
-| PARTITION | Cloison (pointillés) |
-| EXCLUDE | Zone non carrelée |
-| APPLY_H | Contrainte horizontale |
-| APPLY_V | Contrainte verticale |
-| COINCIDE | Coïncidence |
-| DIMENSION | Cotation |
-| ANCHOR | Ancrer un nœud |
+| Outil     | Label                  |
+| --------- | ---------------------- |
+| SELECT    | Sélectionner           |
+| WALL      | Tracer des murs        |
+| DOOR      | Placer une porte       |
+| PARTITION | Cloison (pointillés)   |
+| EXCLUDE   | Zone non carrelée      |
+| APPLY_H   | Contrainte horizontale |
+| APPLY_V   | Contrainte verticale   |
+| COINCIDE  | Coïncidence            |
+| DIMENSION | Cotation               |
+| ANCHOR    | Ancrer un nœud         |
 
 - [ ] **Étape 5 : Mettre à jour `PlanEditor.tsx`**
 
@@ -464,12 +518,12 @@ const [tutorialMode, setTutorialMode] = useState(false);
 Localiser le `useEffect` qui gère `keydown` (vers ligne 419). Dans la fonction `down`, ajouter à la suite des autres raccourcis (après le bloc Ctrl+Z/Y) :
 
 ```tsx
-      if (e.key === '?') {
-        const tag = (document.activeElement as HTMLElement)?.tagName;
-        if (tag !== 'INPUT' && tag !== 'TEXTAREA') {
-          setTutorialMode((v) => !v);
-        }
-      }
+if (e.key === '?') {
+  const tag = (document.activeElement as HTMLElement)?.tagName;
+  if (tag !== 'INPUT' && tag !== 'TEXTAREA') {
+    setTutorialMode((v) => !v);
+  }
+}
 ```
 
 **5c — Compléter le handler `Escape` avec `setTutorialMode(false)`.**
@@ -477,14 +531,23 @@ Localiser le `useEffect` qui gère `keydown` (vers ligne 419). Dans la fonction 
 Localiser le bloc `if (e.key === 'Escape')` mis à jour en Task 1. Ajouter `setTutorialMode(false)` :
 
 ```tsx
-      if (e.key === 'Escape') {
-        setTool('SELECT');
-        setTutorialMode(false);
-        setEditingEdge(null); setEditingZoneEdge(null); setEditingPartition(null);
-        setEditingPartitionThickness(null); setEditingThicknessEdge(null); setEditingPartitionDimension(null);
-        setDraggedVertex(null); setDraggedZoneVertex(null); setDraggedPartitionVertex(null);
-        setCoincideSource(null); setDimensionSource(null); setPartitionOrigin(null); setExcludePoints([]);
-      }
+if (e.key === 'Escape') {
+  setTool('SELECT');
+  setTutorialMode(false);
+  setEditingEdge(null);
+  setEditingZoneEdge(null);
+  setEditingPartition(null);
+  setEditingPartitionThickness(null);
+  setEditingThicknessEdge(null);
+  setEditingPartitionDimension(null);
+  setDraggedVertex(null);
+  setDraggedZoneVertex(null);
+  setDraggedPartitionVertex(null);
+  setCoincideSource(null);
+  setDimensionSource(null);
+  setPartitionOrigin(null);
+  setExcludePoints([]);
+}
 ```
 
 **5d — Passer `tutorialMode` et `onToggleTutorial` à `<PlanToolbar>`.**
@@ -492,19 +555,19 @@ Localiser le bloc `if (e.key === 'Escape')` mis à jour en Task 1. Ajouter `setT
 Localiser le rendu `<PlanToolbar` dans le JSX de PlanEditor et ajouter les deux props :
 
 ```tsx
-      <PlanToolbar
-        tool={tool}
-        canUndo={canUndo}
-        canRedo={canRedo}
-        onChangeTool={setTool}
-        onUndo={handleUndo}
-        onRedo={handleRedo}
-        onClearRoom={handleClearRoom}
-        wallThickness={wallThickness}
-        onWallThicknessChange={setWallThickness}
-        tutorialMode={tutorialMode}
-        onToggleTutorial={() => setTutorialMode((v) => !v)}
-      />
+<PlanToolbar
+  tool={tool}
+  canUndo={canUndo}
+  canRedo={canRedo}
+  onChangeTool={setTool}
+  onUndo={handleUndo}
+  onRedo={handleRedo}
+  onClearRoom={handleClearRoom}
+  wallThickness={wallThickness}
+  onWallThicknessChange={setWallThickness}
+  tutorialMode={tutorialMode}
+  onToggleTutorial={() => setTutorialMode((v) => !v)}
+/>
 ```
 
 - [ ] **Étape 6 : Vérifier tests + TypeScript**
@@ -526,16 +589,19 @@ cd /workspaces/Calpiweb && git add src/components/plan/PlanToolbar.tsx src/compo
 ## Task 4 — Suppression THICKNESS + épaisseur cloison en SELECT
 
 **Files:**
+
 - Modify: `src/components/plan/PlanToolbar.tsx`
 - Modify: `src/components/plan/PlanEditor.tsx`
 
 **Contexte :** L'outil THICKNESS est retiré complètement. La logique d'édition de l'épaisseur des cloisons (`editingPartitionThickness`) est migrée : elle est désormais déclenchée depuis le handler SELECT de `handlePointerDown` quand on clique sur l'arête d'une cloison.
 
 **États à supprimer** (spécifiques au tool THICKNESS wall edge) :
+
 - `editingThicknessEdge` + `setEditingThicknessEdge`
 - `editThicknessEdgeValue` + `setEditThicknessEdgeValue`
 
 **États à conserver** (déplacés vers SELECT) :
+
 - `editingPartitionThickness` + `setEditingPartitionThickness`
 - `editThicknessValue` + `setEditThicknessValue`
 - calcul `partitionThicknessEditorScreen`
@@ -551,10 +617,18 @@ Dans `src/components/plan/PlanEditor.toolbar.test.ts`, ajouter :
 // ── Suppression THICKNESS ─────────────────────────────────────────────────────
 
 describe('PlanTool type — sans THICKNESS', () => {
-  it('THICKNESS n\'est pas une PlanTool valide', () => {
+  it("THICKNESS n'est pas une PlanTool valide", () => {
     const tools: PlanTool[] = [
-      'SELECT', 'WALL', 'DOOR', 'APPLY_H', 'APPLY_V',
-      'COINCIDE', 'ANCHOR', 'PARTITION', 'EXCLUDE', 'DIMENSION',
+      'SELECT',
+      'WALL',
+      'DOOR',
+      'APPLY_H',
+      'APPLY_V',
+      'COINCIDE',
+      'ANCHOR',
+      'PARTITION',
+      'EXCLUDE',
+      'DIMENSION',
     ];
     expect(tools).not.toContain('THICKNESS' as PlanTool);
   });
@@ -591,17 +665,42 @@ Expected: PASS (les tests de logique pure passent dès maintenant).
 **3a — Retirer `'THICKNESS'` du type `PlanTool` :**
 
 Remplacer :
+
 ```tsx
-export type PlanTool = 'SELECT' | 'WALL' | 'DOOR' | 'APPLY_H' | 'APPLY_V' | 'COINCIDE' | 'ANCHOR' | 'PARTITION' | 'EXCLUDE' | 'DIMENSION' | 'THICKNESS';
+export type PlanTool =
+  | 'SELECT'
+  | 'WALL'
+  | 'DOOR'
+  | 'APPLY_H'
+  | 'APPLY_V'
+  | 'COINCIDE'
+  | 'ANCHOR'
+  | 'PARTITION'
+  | 'EXCLUDE'
+  | 'DIMENSION'
+  | 'THICKNESS';
 ```
+
 par :
+
 ```tsx
-export type PlanTool = 'SELECT' | 'WALL' | 'DOOR' | 'APPLY_H' | 'APPLY_V' | 'COINCIDE' | 'ANCHOR' | 'PARTITION' | 'EXCLUDE' | 'DIMENSION';
+export type PlanTool =
+  | 'SELECT'
+  | 'WALL'
+  | 'DOOR'
+  | 'APPLY_H'
+  | 'APPLY_V'
+  | 'COINCIDE'
+  | 'ANCHOR'
+  | 'PARTITION'
+  | 'EXCLUDE'
+  | 'DIMENSION';
 ```
 
 **3b — Supprimer l'entrée THICKNESS dans `TOOL_TOOLTIPS` :**
 
 Supprimer la ligne :
+
 ```tsx
   THICKNESS: { label: 'Épaisseur',               description: "Modifie l'épaisseur d'un mur ou d'une cloison" },
 ```
@@ -611,24 +710,27 @@ Supprimer la ligne :
 Localiser et supprimer entièrement le bloc suivant (wrapper div + ToolTooltip + button THICKNESS) :
 
 ```tsx
-    <div className="flex items-center">
-      <ToolTooltip {...TOOL_TOOLTIPS.THICKNESS}>
-        <button type="button" onClick={() => onChangeTool('THICKNESS')}
-          className={`flex h-8 w-8 items-center justify-center rounded-xl text-[12px] font-black transition-all ${
-            tool === 'THICKNESS'
-              ? 'bg-slate-500 text-white shadow-md shadow-slate-500/30'
-              : `${TB_CARD} hover:bg-slate-100 dark:hover:bg-slate-900/30 hover:text-slate-600 dark:hover:text-slate-300`
-          }`}
-          style={tool !== 'THICKNESS' ? { color: 'var(--text2)' } : {}}>
-          E
-        </button>
-      </ToolTooltip>
-      {tutorialMode && (
-        <span className="ml-2 whitespace-nowrap text-xs" style={{ color: 'var(--text2)' }}>
-          Épaisseur
-        </span>
-      )}
-    </div>
+<div className="flex items-center">
+  <ToolTooltip {...TOOL_TOOLTIPS.THICKNESS}>
+    <button
+      type="button"
+      onClick={() => onChangeTool('THICKNESS')}
+      className={`flex h-8 w-8 items-center justify-center rounded-xl text-[12px] font-black transition-all ${
+        tool === 'THICKNESS'
+          ? 'bg-slate-500 text-white shadow-md shadow-slate-500/30'
+          : `${TB_CARD} hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-900/30 dark:hover:text-slate-300`
+      }`}
+      style={tool !== 'THICKNESS' ? { color: 'var(--text2)' } : {}}
+    >
+      E
+    </button>
+  </ToolTooltip>
+  {tutorialMode && (
+    <span className="ml-2 whitespace-nowrap text-xs" style={{ color: 'var(--text2)' }}>
+      Épaisseur
+    </span>
+  )}
+</div>
 ```
 
 **3d — Supprimer le bouton THICKNESS dans le toolbar mobile :**
@@ -636,17 +738,17 @@ Localiser et supprimer entièrement le bloc suivant (wrapper div + ToolTooltip +
 Localiser et supprimer le bloc button THICKNESS dans la barre mobile (celui avec `aria-label="Épaisseur"`) :
 
 ```tsx
-    <button
-      type="button"
-      aria-label="Épaisseur"
-      onClick={() => onChangeTool('THICKNESS')}
-      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[13px] font-black transition-all ${
-        tool === 'THICKNESS' ? 'bg-slate-500 text-white shadow-md shadow-slate-500/30' : `${TB_CARD}`
-      }`}
-      style={tool !== 'THICKNESS' ? { color: 'var(--text2)' } : {}}
-    >
-      E
-    </button>
+<button
+  type="button"
+  aria-label="Épaisseur"
+  onClick={() => onChangeTool('THICKNESS')}
+  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[13px] font-black transition-all ${
+    tool === 'THICKNESS' ? 'bg-slate-500 text-white shadow-md shadow-slate-500/30' : `${TB_CARD}`
+  }`}
+  style={tool !== 'THICKNESS' ? { color: 'var(--text2)' } : {}}
+>
+  E
+</button>
 ```
 
 - [ ] **Étape 4 : Mettre à jour `PlanEditor.tsx` — supprimer états THICKNESS wall**
@@ -654,9 +756,13 @@ Localiser et supprimer le bloc button THICKNESS dans la barre mobile (celui avec
 **4a — Supprimer les deux états** (vers ligne 237-239) :
 
 Supprimer ces deux lignes :
+
 ```tsx
-  const [editingThicknessEdge, setEditingThicknessEdge] = useState<{ roomId: string; edgeIndex: number } | null>(null);
-  const [editThicknessEdgeValue, setEditThicknessEdgeValue] = useState('');
+const [editingThicknessEdge, setEditingThicknessEdge] = useState<{
+  roomId: string;
+  edgeIndex: number;
+} | null>(null);
+const [editThicknessEdgeValue, setEditThicknessEdgeValue] = useState('');
 ```
 
 **4b — Retirer `setEditingThicknessEdge(null)` du handler Escape :**
@@ -664,45 +770,59 @@ Supprimer ces deux lignes :
 Dans le bloc `if (e.key === 'Escape')`, supprimer `setEditingThicknessEdge(null)` :
 
 ```tsx
-      if (e.key === 'Escape') {
-        setTool('SELECT');
-        setTutorialMode(false);
-        setEditingEdge(null); setEditingZoneEdge(null); setEditingPartition(null);
-        setEditingPartitionThickness(null); setEditingPartitionDimension(null);
-        setDraggedVertex(null); setDraggedZoneVertex(null); setDraggedPartitionVertex(null);
-        setCoincideSource(null); setDimensionSource(null); setPartitionOrigin(null); setExcludePoints([]);
-      }
+if (e.key === 'Escape') {
+  setTool('SELECT');
+  setTutorialMode(false);
+  setEditingEdge(null);
+  setEditingZoneEdge(null);
+  setEditingPartition(null);
+  setEditingPartitionThickness(null);
+  setEditingPartitionDimension(null);
+  setDraggedVertex(null);
+  setDraggedZoneVertex(null);
+  setDraggedPartitionVertex(null);
+  setCoincideSource(null);
+  setDimensionSource(null);
+  setPartitionOrigin(null);
+  setExcludePoints([]);
+}
 ```
 
 **4c — Supprimer le guard Escape** `if (editingThicknessEdge !== null) { ... }` (vers ligne 618) :
 
 ```tsx
-    if (editingThicknessEdge !== null) { setEditingThicknessEdge(null); return; }
+if (editingThicknessEdge !== null) {
+  setEditingThicknessEdge(null);
+  return;
+}
 ```
 
 **4d — Supprimer le bloc THICKNESS dans `handlePointerDown`** (vers lignes 628-647) :
 
 ```tsx
-    // ── THICKNESS ──
-    if (tool === 'THICKNESS') {
-      const wallEdge = findNearestWallEdge(raw);
-      if (wallEdge) {
-        const room = rooms.find((r) => r.id === wallEdge.roomId); if (!room) return;
-        const currentThickness = room.edgeThicknesses?.[wallEdge.edgeIndex] ?? wallThickness;
-        setEditingThicknessEdge({ roomId: wallEdge.roomId, edgeIndex: wallEdge.edgeIndex });
-        setEditThicknessEdgeValue((currentThickness / 10).toFixed(0));
-        return;
-      }
-      const partEdge = findNearestPartitionEdge(raw);
-      if (partEdge) {
-        const part = rooms.find((r) => r.id === partEdge.roomId)?.partitions?.find((p) => p.id === partEdge.partitionId);
-        if (!part) return;
-        setEditingPartitionThickness({ roomId: partEdge.roomId, partitionId: partEdge.partitionId });
-        setEditThicknessValue((part.thickness / 10).toFixed(0));
-        return;
-      }
-      return;
-    }
+// ── THICKNESS ──
+if (tool === 'THICKNESS') {
+  const wallEdge = findNearestWallEdge(raw);
+  if (wallEdge) {
+    const room = rooms.find((r) => r.id === wallEdge.roomId);
+    if (!room) return;
+    const currentThickness = room.edgeThicknesses?.[wallEdge.edgeIndex] ?? wallThickness;
+    setEditingThicknessEdge({ roomId: wallEdge.roomId, edgeIndex: wallEdge.edgeIndex });
+    setEditThicknessEdgeValue((currentThickness / 10).toFixed(0));
+    return;
+  }
+  const partEdge = findNearestPartitionEdge(raw);
+  if (partEdge) {
+    const part = rooms
+      .find((r) => r.id === partEdge.roomId)
+      ?.partitions?.find((p) => p.id === partEdge.partitionId);
+    if (!part) return;
+    setEditingPartitionThickness({ roomId: partEdge.roomId, partitionId: partEdge.partitionId });
+    setEditThicknessValue((part.thickness / 10).toFixed(0));
+    return;
+  }
+  return;
+}
 ```
 
 **4e — Supprimer les 4 guards `if (tool === 'THICKNESS') return`** dans `handlePointerMove`, `handlePartitionVertexPointerDown`, `handleZoneVertexPointerDown`, et `handleVertexPointerDown` (lignes ~879, ~940, ~1000, ~1058) :
@@ -713,25 +833,31 @@ Dans le bloc `if (e.key === 'Escape')`, supprimer `setEditingThicknessEdge(null)
       setHoveredPartitionEdge(findNearestPartitionEdge(raw));
     }
 ```
+
 → Supprimer entièrement cette branche `else if`.
 
 ```tsx
-    if (tool === 'THICKNESS') return;
+if (tool === 'THICKNESS') return;
 ```
+
 → Supprimer ces 3 occurrences dans les vertex handlers.
 
 **4f — Supprimer le calcul `thicknessEdgeEditorScreen`** (vers lignes 1366-1372) :
 
 ```tsx
-  let thicknessEdgeEditorScreen: { x: number; y: number } | undefined;
-  if (editingThicknessEdge) {
-    const room = rooms.find((r) => r.id === editingThicknessEdge.roomId);
-    if (room) {
-      const p1 = room.points[editingThicknessEdge.edgeIndex];
-      const p2 = room.points[(editingThicknessEdge.edgeIndex + 1) % room.points.length];
-      if (p1 && p2) thicknessEdgeEditorScreen = { x: ((p1.x + p2.x) / 2) * scale + pan.x, y: ((p1.y + p2.y) / 2) * scale + pan.y };
-    }
+let thicknessEdgeEditorScreen: { x: number; y: number } | undefined;
+if (editingThicknessEdge) {
+  const room = rooms.find((r) => r.id === editingThicknessEdge.roomId);
+  if (room) {
+    const p1 = room.points[editingThicknessEdge.edgeIndex];
+    const p2 = room.points[(editingThicknessEdge.edgeIndex + 1) % room.points.length];
+    if (p1 && p2)
+      thicknessEdgeEditorScreen = {
+        x: ((p1.x + p2.x) / 2) * scale + pan.x,
+        y: ((p1.y + p2.y) / 2) * scale + pan.y,
+      };
   }
+}
 ```
 
 **4g — Supprimer le `<DimensionEditor>` pour `editingThicknessEdge`** (vers ligne 1521) :
@@ -749,20 +875,20 @@ Dans le bloc `if (e.key === 'Escape')`, supprimer `setEditingThicknessEdge(null)
 Dans `handlePointerDown`, après le bloc `if (tool === 'DOOR') { ... }` (qui se termine vers ligne 810), ajouter ce nouveau bloc avant la fermeture `};` du handler :
 
 ```tsx
-    // ── SELECT — clic sur une cloison → édition épaisseur ──
-    if (tool === 'SELECT') {
-      const partEdge = findNearestPartitionEdge(raw);
-      if (partEdge) {
-        const part = rooms
-          .find((r) => r.id === partEdge.roomId)
-          ?.partitions?.find((p) => p.id === partEdge.partitionId);
-        if (part) {
-          setEditingPartitionThickness({ roomId: partEdge.roomId, partitionId: partEdge.partitionId });
-          setEditThicknessValue((part.thickness / 10).toFixed(0));
-          return;
-        }
-      }
+// ── SELECT — clic sur une cloison → édition épaisseur ──
+if (tool === 'SELECT') {
+  const partEdge = findNearestPartitionEdge(raw);
+  if (partEdge) {
+    const part = rooms
+      .find((r) => r.id === partEdge.roomId)
+      ?.partitions?.find((p) => p.id === partEdge.partitionId);
+    if (part) {
+      setEditingPartitionThickness({ roomId: partEdge.roomId, partitionId: partEdge.partitionId });
+      setEditThicknessValue((part.thickness / 10).toFixed(0));
+      return;
     }
+  }
+}
 ```
 
 - [ ] **Étape 6 : Vérifier TypeScript + tous les tests**

@@ -7,8 +7,10 @@ import type { WallNode } from '@/types/wall';
 const room300: Room = {
   id: 'r1',
   points: [
-    { x: 0, y: 0 }, { x: 3000, y: 0 },
-    { x: 3000, y: 3000 }, { x: 0, y: 3000 },
+    { x: 0, y: 0 },
+    { x: 3000, y: 0 },
+    { x: 3000, y: 3000 },
+    { x: 0, y: 3000 },
   ],
   edges: ['WALL', 'WALL', 'WALL', 'WALL'],
 };
@@ -84,7 +86,7 @@ describe('snapToTiling — wall-node snap', () => {
     { id: 'n2', x: 3000, y: 0 },
   ];
 
-  it('retourne kind wall-node et nodeId quand le curseur est proche d\'un nœud', () => {
+  it("retourne kind wall-node et nodeId quand le curseur est proche d'un nœud", () => {
     // n1 est à (0,0), curseur à (5, 3) — dist ~5.8 < rayon 15/1
     const result = snapToTiling({ x: 5, y: 3 }, [room300], [], 0, 1, nodes);
     expect(result).not.toBeNull();

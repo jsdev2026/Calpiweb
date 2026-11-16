@@ -13,6 +13,7 @@
 ## Contexte métier (lire avant d'implémenter)
 
 Le moteur de quantitatif calcule le nombre de tuiles à commander pour carreler une pièce. Il distingue :
+
 - **wholeCount** — tuiles entières (sans découpe)
 - **cuts** — tuiles coupées, chacune avec ses dimensions et ses bords (factory = bord d'usine, cut = bord sciée)
 - **totalReuseCount** — coupes dont la chute d'une autre coupe est réutilisée
@@ -23,10 +24,11 @@ Le moteur de quantitatif calcule le nombre de tuiles à commander pour carreler 
 ### Calcul des dimensions
 
 Avec tuile 100×100 mm et joint 2 mm :
+
 - **pitch** (pas de pose) = 102 mm
 - Les tuiles se posent aux positions x = 0, 102, 204, … en coordonnées tile-space
 - Pour une pièce de largeur W :
-  - Tuiles entières : `floor(W / 102)` colonnes complètes  
+  - Tuiles entières : `floor(W / 102)` colonnes complètes
   - Coupe droite si `W mod 102 > 0` → `usedW = W - floor(W / 102) × 102`
 - La pièce parfaite s'arrête exactement au bord de la dernière tuile : largeur = `n × 102 - 2` (n tuiles × pitch − joint final absent)
 
@@ -42,15 +44,16 @@ L'algorithme `assignOffcuts` trie les coupes par aire décroissante. La premièr
 
 ## Structure des fichiers
 
-| Fichier | Action |
-|---|---|
-| `src/engine/quantities/quantityEngine.integration.test.ts` | Créer |
+| Fichier                                                    | Action |
+| ---------------------------------------------------------- | ------ |
+| `src/engine/quantities/quantityEngine.integration.test.ts` | Créer  |
 
 ---
 
 ## Task 1 : Tests d'intégration + invariants
 
 **Files:**
+
 - Create: `src/engine/quantities/quantityEngine.integration.test.ts`
 
 ### Calculs des scénarios
@@ -58,6 +61,7 @@ L'algorithme `assignOffcuts` trie les coupes par aire décroissante. La premièr
 **Scénario 1 — Ajustement parfait (room 304×202)**
 
 3 colonnes × 2 rangées avec pitch=102 :
+
 - x = 0 (0–100), 102 (102–202), 204 (204–304) → room s'arrête à 304 = dernier bord ✓
 - y = 0 (0–100), 102 (102–202) → room s'arrête à 202 = dernier bord ✓
 - Toutes les tuiles sont entièrement dans la pièce → **wholeCount=6, cuts=0**
@@ -65,6 +69,7 @@ L'algorithme `assignOffcuts` trie les coupes par aire décroissante. La premièr
 **Scénario 2 — Coupe droite (room 254×202)**
 
 2 colonnes entières + 1 partielle à x=204 :
+
 - Tuile à x=204 : clippée à x=204..254 → usedW=50, chuteW=50 (≥50 → viable), chuteH=100
 - 2 rangées → **2 coupes identiques** (usedW=50, usedH=100, bord droit=`cut`)
 - Aire de chaque coupe = 5000 mm². Tri décroissant : tie → ordre stable.
@@ -74,6 +79,7 @@ L'algorithme `assignOffcuts` trie les coupes par aire décroissante. La premièr
 **Scénario 3 — Coupe basse (room 202×254)**
 
 Symétrique du scénario 2 sur l'axe vertical :
+
 - Tuile à y=204 : clippée à y=204..254 → usedH=50, chuteH=50 (viable), chuteW=100
 - 2 colonnes → **2 coupes identiques** (usedW=100, usedH=50, bord bas=`cut`)
 - Même raisonnement de réutilisation.
@@ -82,6 +88,7 @@ Symétrique du scénario 2 sur l'axe vertical :
 **Scénario 4 — Coupes en coin (room 254×254)**
 
 2×2 entières + 1 colonne partielle (x=204) + 1 rangée partielle (y=204) :
+
 - 2 coupes droites (usedW=50, usedH=100, aire=5000)
 - 2 coupes basses (usedW=100, usedH=50, aire=5000)
 - 1 coupe coin (usedW=50, usedH=50, aire=2500)
@@ -104,16 +111,27 @@ import type { TilingConfig } from '@/types/tiling';
 const JOINT = 2;
 
 const BASE_CONFIG: TilingConfig = {
-  width: 100, height: 100, joint: JOINT,
-  offsetX: 0, offsetY: 0, stagger: 0,
-  angle: 0, chevronAngle: 45,
-  color: '#ccc', layout: 'STRAIGHT',
+  width: 100,
+  height: 100,
+  joint: JOINT,
+  offsetX: 0,
+  offsetY: 0,
+  stagger: 0,
+  angle: 0,
+  chevronAngle: 45,
+  color: '#ccc',
+  layout: 'STRAIGHT',
 };
 
 function makeRoom(w: number, h: number): Room {
   return {
     id: 'r1',
-    points: [{ x: 0, y: 0 }, { x: w, y: 0 }, { x: w, y: h }, { x: 0, y: h }],
+    points: [
+      { x: 0, y: 0 },
+      { x: w, y: 0 },
+      { x: w, y: h },
+      { x: 0, y: h },
+    ],
     edges: [],
   };
 }
@@ -121,8 +139,17 @@ function makeRoom(w: number, h: number): Room {
 // ─── Invariants ────────────────────────────────────────────────────────────
 
 function checkInvariants(result: QuantityResult): void {
-  const { wholeCount, cuts, cutGroups, totalReuseCount,
-          tilesForCuts, totalTiles, toOrder, tileW, tileH } = result;
+  const {
+    wholeCount,
+    cuts,
+    cutGroups,
+    totalReuseCount,
+    tilesForCuts,
+    totalTiles,
+    toOrder,
+    tileW,
+    tileH,
+  } = result;
 
   // I1 : totalTiles = wholeCount + tilesForCuts
   expect(totalTiles, 'I1').toBe(wholeCount + tilesForCuts);
@@ -131,9 +158,7 @@ function checkInvariants(result: QuantityResult): void {
   expect(tilesForCuts, 'I2').toBe(cuts.length - totalReuseCount);
 
   // I3 : totalReuseCount = nombre de coupes avec coveredById non null
-  expect(totalReuseCount, 'I3').toBe(
-    cuts.filter((c) => c.coveredById !== null).length,
-  );
+  expect(totalReuseCount, 'I3').toBe(cuts.filter((c) => c.coveredById !== null).length);
 
   // I4 : dimensions de chaque coupe dans les bornes
   for (const cut of cuts) {
@@ -250,6 +275,7 @@ cd /workspaces/Calpiweb && npx vitest run src/engine/quantities/quantityEngine.i
 Si tous les tests passent du premier coup → aller directement au Step 4 (commit).
 
 Si certains tests échouent, diagnostiquer :
+
 - Une **erreur de valeur absolue** (ex. `wholeCount` attendu 6, reçu 7) → chercher si le moteur de tiling génère des tuiles supplémentaires au bord de la pièce. Ajuster les dimensions de la room dans le test pour correspondre à ce que le moteur produit réellement, et documenter pourquoi dans un commentaire.
 - Une **erreur d'invariant** → bug dans le moteur ; ne pas modifier le test, signaler avec `DONE_WITH_CONCERNS` et décrire le problème exact.
 
@@ -261,7 +287,11 @@ Pour trouver les vraies valeurs, ajouter temporairement dans le test d'un scéna
 
 ```typescript
 console.log('wholeCount', result.wholeCount);
-console.log('cuts', result.cuts.length, result.cuts.map(c => `${c.usedW}×${c.usedH}`));
+console.log(
+  'cuts',
+  result.cuts.length,
+  result.cuts.map((c) => `${c.usedW}×${c.usedH}`),
+);
 console.log('reuseCount', result.totalReuseCount);
 ```
 

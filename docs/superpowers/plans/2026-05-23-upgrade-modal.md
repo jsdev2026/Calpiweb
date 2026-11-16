@@ -12,17 +12,18 @@
 
 ## File map
 
-| File | Action |
-|------|--------|
-| `src/components/home/UpgradeModal.tsx` | Create — modal component |
-| `src/components/home/UpgradeModal.test.tsx` | Create — tests |
-| `src/app/dashboard/page.tsx` | Modify — wire modal in |
+| File                                        | Action                   |
+| ------------------------------------------- | ------------------------ |
+| `src/components/home/UpgradeModal.tsx`      | Create — modal component |
+| `src/components/home/UpgradeModal.test.tsx` | Create — tests           |
+| `src/app/dashboard/page.tsx`                | Modify — wire modal in   |
 
 ---
 
 ### Task 1: UpgradeModal component + tests
 
 **Files:**
+
 - Create: `src/components/home/UpgradeModal.tsx`
 - Create: `src/components/home/UpgradeModal.test.tsx`
 
@@ -109,7 +110,9 @@ export function UpgradeModal({ onClose }: UpgradeModalProps) {
   const router = useRouter();
 
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
   }, [onClose]);
@@ -136,12 +139,25 @@ export function UpgradeModal({ onClose }: UpgradeModalProps) {
           onClick={onClose}
           aria-label="Fermer"
           className="absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-full text-[18px]"
-          style={{ color: 'var(--muted)', background: 'transparent', border: 'none', cursor: 'pointer' }}
+          style={{
+            color: 'var(--muted)',
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+          }}
         >
           ×
         </button>
 
-        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>
+        <h2
+          style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: 20,
+            fontWeight: 700,
+            color: 'var(--text)',
+            marginBottom: 8,
+          }}
+        >
           Passez au plan Pro
         </h2>
 
@@ -149,9 +165,31 @@ export function UpgradeModal({ onClose }: UpgradeModalProps) {
           Vous avez atteint la limite du plan gratuit (1 projet).
         </p>
 
-        <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {['Projets illimités', 'Sauvegarde cloud automatique', 'Accès depuis tous vos appareils'].map((feat) => (
-            <li key={feat} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13.5, color: 'var(--text)' }}>
+        <ul
+          style={{
+            listStyle: 'none',
+            padding: 0,
+            margin: '0 0 20px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 10,
+          }}
+        >
+          {[
+            'Projets illimités',
+            'Sauvegarde cloud automatique',
+            'Accès depuis tous vos appareils',
+          ].map((feat) => (
+            <li
+              key={feat}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                fontSize: 13.5,
+                color: 'var(--text)',
+              }}
+            >
               <span style={{ color: 'var(--accent)', fontWeight: 700, fontSize: 16 }}>✓</span>
               {feat}
             </li>
@@ -175,7 +213,13 @@ export function UpgradeModal({ onClose }: UpgradeModalProps) {
           type="button"
           onClick={onClose}
           className="w-full text-center text-[13px]"
-          style={{ color: 'var(--muted)', background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px 0' }}
+          style={{
+            color: 'var(--muted)',
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            padding: '4px 0',
+          }}
         >
           Continuer avec le plan gratuit
         </button>
@@ -205,6 +249,7 @@ git commit -m "feat(dashboard): add UpgradeModal component"
 ### Task 2: Wire UpgradeModal into dashboard
 
 **Files:**
+
 - Modify: `src/app/dashboard/page.tsx`
 
 Context: `dashboard/page.tsx` has three "Nouveau projet" click handlers (grid card at ~line 724, list row at ~line 760, mobile FAB at ~line 778). All currently call `setShowNewModal(true)`. We replace them with a `handleNewProject` helper that checks the plan limit first.
@@ -258,9 +303,9 @@ Replace all three occurrences of `onClick={() => setShowNewModal(true)}` with `o
 After the `{showNewModal && <NewProjectModal ... />}` block (~line 786), add:
 
 ```tsx
-{showUpgradeModal && (
-  <UpgradeModal onClose={() => setShowUpgradeModal(false)} />
-)}
+{
+  showUpgradeModal && <UpgradeModal onClose={() => setShowUpgradeModal(false)} />;
+}
 ```
 
 - [ ] **Step 5: Type-check**

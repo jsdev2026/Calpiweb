@@ -25,10 +25,14 @@ describe('localFrameFromPoints', () => {
     const p1 = frame.toLocal(points[1]!);
     const p2 = frame.toLocal(points[2]!);
     const p3 = frame.toLocal(points[3]!);
-    expect(p0.x).toBeCloseTo(0, 6);   expect(p0.y).toBeCloseTo(0, 6);
-    expect(p1.x).toBeCloseTo(0, 6);   expect(p1.y).toBeCloseTo(600, 6);
-    expect(p2.x).toBeCloseTo(300, 6); expect(p2.y).toBeCloseTo(600, 6);
-    expect(p3.x).toBeCloseTo(300, 6); expect(p3.y).toBeCloseTo(0, 6);
+    expect(p0.x).toBeCloseTo(0, 6);
+    expect(p0.y).toBeCloseTo(0, 6);
+    expect(p1.x).toBeCloseTo(0, 6);
+    expect(p1.y).toBeCloseTo(600, 6);
+    expect(p2.x).toBeCloseTo(300, 6);
+    expect(p2.y).toBeCloseTo(600, 6);
+    expect(p3.x).toBeCloseTo(300, 6);
+    expect(p3.y).toBeCloseTo(0, 6);
   });
 
   it('toGlobal is the inverse of toLocal', () => {

@@ -14,10 +14,18 @@ interface ProjectListProps {
   onShare: (project: Project) => void;
 }
 
-export const ProjectList = ({ projects, onCreate, onOpen, onDelete, onShare }: ProjectListProps) => {
+export const ProjectList = ({
+  projects,
+  onCreate,
+  onOpen,
+  onDelete,
+  onShare,
+}: ProjectListProps) => {
   const { unseenCount, loadNotifications, markNotificationsSeen } = useSharingStore();
 
-  useEffect(() => { void loadNotifications(); }, [loadNotifications]);
+  useEffect(() => {
+    void loadNotifications();
+  }, [loadNotifications]);
 
   const ownProjects = projects.filter((p) => !p.myRole || p.myRole === 'owner');
   const sharedProjects = projects.filter((p) => p.myRole === 'viewer' || p.myRole === 'editor');

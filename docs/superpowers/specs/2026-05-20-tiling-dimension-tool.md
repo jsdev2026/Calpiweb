@@ -26,17 +26,18 @@ export type DimDirection = 'H' | 'V' | 'parallel';
 
 export interface TilingDimension {
   id: string;
-  p1: Point;             // world-space coordinates of first snap point
-  p2: Point;             // world-space coordinates of second snap point
+  p1: Point; // world-space coordinates of first snap point
+  p2: Point; // world-space coordinates of second snap point
   direction: DimDirection;
   parallelAngle?: number; // degrees, only when direction === 'parallel'
-  perpOffset: number;    // signed world-space offset for the dim line (positive = above/left of p1→p2)
+  perpOffset: number; // signed world-space offset for the dim line (positive = above/left of p1→p2)
 }
 ```
 
 ### `src/types/project.ts`
 
 Add to `Project` interface:
+
 ```ts
 tilingDimensions?: TilingDimension[];
 ```
@@ -44,12 +45,14 @@ tilingDimensions?: TilingDimension[];
 ### `src/store/projectStore.ts`
 
 Add two actions:
+
 ```ts
 addTilingDimension: (dim: TilingDimension) => void;
 removeTilingDimension: (id: string) => void;
 ```
 
 Implementations use `updateActive`:
+
 ```ts
 addTilingDimension: (dim) => get().updateActive((p) => ({
   ...p,
@@ -77,19 +80,19 @@ export function snapToTiling(
   tiles: Tile[],
   wallThickness: number,
   scale: number,
-): SnapResult | null
+): SnapResult | null;
 ```
 
 **Snap radius:** `15 / scale` world-space units (15 pixels on screen).
 
 **Targets, by priority (first match wins):**
 
-| Priority | Kind | Source |
-|---|---|---|
-| 1 | `wall-vertex` | Vertices of `insetRoomPolygon(room, wallThickness)` for each room |
-| 2 | `wall-midpoint` | Midpoints of each edge of `insetRoomPolygon` |
-| 3 | `tile-corner` | Four corners of each `tile.rect` |
-| 4 | `tile-midpoint` | Four edge midpoints of each `tile.rect` |
+| Priority | Kind            | Source                                                            |
+| -------- | --------------- | ----------------------------------------------------------------- |
+| 1        | `wall-vertex`   | Vertices of `insetRoomPolygon(room, wallThickness)` for each room |
+| 2        | `wall-midpoint` | Midpoints of each edge of `insetRoomPolygon`                      |
+| 3        | `tile-corner`   | Four corners of each `tile.rect`                                  |
+| 4        | `tile-midpoint` | Four edge midpoints of each `tile.rect`                           |
 
 Returns `null` when no target is within snap radius.
 
@@ -104,6 +107,7 @@ Returns `null` when no target is within snap radius.
 ### `src/engine/tiling/snapTiling.test.ts` (new)
 
 Unit tests covering:
+
 - Returns `null` when no point within snap radius
 - Prefers `wall-vertex` over `tile-corner` when both in range
 - Returns `tile-corner` when only tile targets in range
@@ -126,6 +130,7 @@ idle → picking_start → picking_end → idle
 **`perpOffset` auto-computation:** project the center of all room bounding boxes onto the perpendicular of the dim line; choose the sign that places the dim line on the opposite side.
 
 **Hook returns:**
+
 ```ts
 {
   hoverSnap: SnapResult | null;
@@ -143,11 +148,13 @@ idle → picking_start → picking_end → idle
 SVG `<g>` component rendered inside `TilingCanvas`'s `<g transform={translate/scale}>`. Receives world-space coordinates directly; no coordinate transform needed.
 
 **Renders:**
+
 1. **Snap indicators** (when `activeTool === 'dimension'`): small circle at `hoverSnap.point`, radius `40` world units, stroke emerald, fill none
 2. **Preview dimension** (during `picking_end`): `DimLine` rendered at 60% opacity using preview `p1`/`p2` projected by direction
 3. **Placed dimensions**: one `DimLine` per `TilingDimension` in `project.tilingDimensions`; each has `onContextMenu` handler for deletion
 
 **DimLine projection per direction:**
+
 - `'H'`: render from `(p1.x, p1.y)` to `(p2.x, p1.y)` — label = `formatCm(|p2.x - p1.x|)`
 - `'V'`: render from `(p1.x, p1.y)` to `(p1.x, p2.y)` — label = `formatCm(|p2.y - p1.y|)`
 - `'parallel'`: render from `p1` to `p1 + projection * unitVec(parallelAngle)` where `projection = (p2-p1)·unitVec(parallelAngle)` — label = `formatCm(|projection|)`

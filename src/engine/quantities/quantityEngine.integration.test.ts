@@ -9,26 +9,49 @@ import { MARGIN_STRAIGHT, MARGIN_DIAGONAL, MARGIN_CHEVRON } from '@/constants/bu
 const JOINT = 2;
 
 const BASE_CONFIG: TilingConfig = {
-  width: 100, height: 100, joint: JOINT,
-  offsetX: 0, offsetY: 0, stagger: 0,
-  angle: 0, chevronAngle: 45,
-  color: '#ccc', layout: 'STRAIGHT',
+  width: 100,
+  height: 100,
+  joint: JOINT,
+  offsetX: 0,
+  offsetY: 0,
+  stagger: 0,
+  angle: 0,
+  chevronAngle: 45,
+  color: '#ccc',
+  layout: 'STRAIGHT',
 };
 
 function makeRoom(w: number, h: number): Room {
   return {
     id: 'r1',
-    points: [{ x: 0, y: 0 }, { x: w, y: 0 }, { x: w, y: h }, { x: 0, y: h }],
+    points: [
+      { x: 0, y: 0 },
+      { x: w, y: 0 },
+      { x: w, y: h },
+      { x: 0, y: h },
+    ],
     edges: [],
   };
 }
 
 function checkInvariants(result: QuantityResult): void {
-  const { wholeCount, cuts, cutGroups, totalReuseCount,
-          tilesForCuts, totalTiles, toOrder, tileW, tileH, margin } = result;
+  const {
+    wholeCount,
+    cuts,
+    cutGroups,
+    totalReuseCount,
+    tilesForCuts,
+    totalTiles,
+    toOrder,
+    tileW,
+    tileH,
+    margin,
+  } = result;
 
   expect(totalTiles, 'I1: totalTiles = wholeCount + tilesForCuts').toBe(wholeCount + tilesForCuts);
-  expect(tilesForCuts, 'I2: tilesForCuts = cuts.length - totalReuseCount').toBe(cuts.length - totalReuseCount);
+  expect(tilesForCuts, 'I2: tilesForCuts = cuts.length - totalReuseCount').toBe(
+    cuts.length - totalReuseCount,
+  );
   expect(totalReuseCount, 'I3: totalReuseCount matches coveredById count').toBe(
     cuts.filter((c) => c.coveredById !== null).length,
   );
@@ -135,7 +158,11 @@ describe('quantityEngine — scénarios de référence', () => {
 
 describe('quantityEngine — marge auto-calibrée', () => {
   it('STRAIGHT angle=0 → marge 5%', () => {
-    const result = analyzeQuantities([makeRoom(306, 204)], { ...BASE_CONFIG, layout: 'STRAIGHT', angle: 0 });
+    const result = analyzeQuantities([makeRoom(306, 204)], {
+      ...BASE_CONFIG,
+      layout: 'STRAIGHT',
+      angle: 0,
+    });
     expect(result.margin).toBe(MARGIN_STRAIGHT);
     expect(result.toOrder).toBe(Math.ceil(result.totalTiles * (1 + MARGIN_STRAIGHT)));
   });
@@ -147,24 +174,33 @@ describe('quantityEngine — marge auto-calibrée', () => {
   });
 
   it('CHEVRON → marge 15%', () => {
-    const result = analyzeQuantities([makeRoom(306, 204)], { ...BASE_CONFIG, layout: 'CHEVRON', angle: 0 });
+    const result = analyzeQuantities([makeRoom(306, 204)], {
+      ...BASE_CONFIG,
+      layout: 'CHEVRON',
+      angle: 0,
+    });
     expect(result.margin).toBe(MARGIN_CHEVRON);
     expect(result.toOrder).toBe(Math.ceil(result.totalTiles * (1 + MARGIN_CHEVRON)));
   });
 
   it('HERRINGBONE → marge 15%', () => {
-    const result = analyzeQuantities([makeRoom(306, 204)], { ...BASE_CONFIG, layout: 'HERRINGBONE', angle: 0 });
+    const result = analyzeQuantities([makeRoom(306, 204)], {
+      ...BASE_CONFIG,
+      layout: 'HERRINGBONE',
+      angle: 0,
+    });
     expect(result.margin).toBe(MARGIN_CHEVRON);
     expect(result.toOrder).toBe(Math.ceil(result.totalTiles * (1 + MARGIN_CHEVRON)));
   });
 
   it('marginOverride écrase la marge auto', () => {
-    const result = analyzeQuantities(
-      [makeRoom(306, 204)],
-      { ...BASE_CONFIG, layout: 'STRAIGHT', marginOverride: 0.20 },
-    );
-    expect(result.margin).toBe(0.20);
-    expect(result.toOrder).toBe(Math.ceil(result.totalTiles * 1.20));
+    const result = analyzeQuantities([makeRoom(306, 204)], {
+      ...BASE_CONFIG,
+      layout: 'STRAIGHT',
+      marginOverride: 0.2,
+    });
+    expect(result.margin).toBe(0.2);
+    expect(result.toOrder).toBe(Math.ceil(result.totalTiles * 1.2));
   });
 });
 
@@ -174,7 +210,7 @@ describe('quantityEngine — consommables', () => {
     expect(result.consumables.colle.rendement).toBe(4);
     expect(result.consumables.colle.bagSize).toBe(25);
     expect(result.consumables.colle.bags).toBeGreaterThanOrEqual(1);
-    expect(result.consumables.colle.total).toBeCloseTo(result.roomArea / 1_000_000 * 4, 1);
+    expect(result.consumables.colle.total).toBeCloseTo((result.roomArea / 1_000_000) * 4, 1);
   });
 
   it('joint : formule ISO 13007 (100×100mm, joint 2mm, épaisseur 10mm)', () => {
@@ -203,7 +239,7 @@ describe('quantityEngine — consommables', () => {
     const result = analyzeQuantities([makeRoom(3060, 2040)], config);
     expect(result.consumables.colle.rendement).toBe(6);
     expect(result.consumables.colle.bagSize).toBe(20);
-    expect(result.consumables.colle.total).toBeCloseTo(result.roomArea / 1_000_000 * 6, 1);
+    expect(result.consumables.colle.total).toBeCloseTo((result.roomArea / 1_000_000) * 6, 1);
   });
 
   it('consumableParams.jointRendement override remplace ISO', () => {
@@ -220,8 +256,11 @@ describe('quantityEngine — CHEVRON (repère local du carreau)', () => {
   it('pose CHEVRON 300x600 a 45 degres : invariants respectes, pas de NaN', () => {
     const config: TilingConfig = {
       ...BASE_CONFIG,
-      width: 300, height: 600, joint: 3,
-      chevronAngle: 45, layout: 'CHEVRON',
+      width: 300,
+      height: 600,
+      joint: 3,
+      chevronAngle: 45,
+      layout: 'CHEVRON',
     };
     const result = analyzeQuantities([makeRoom(2000, 2000)], config);
     checkInvariants(result);

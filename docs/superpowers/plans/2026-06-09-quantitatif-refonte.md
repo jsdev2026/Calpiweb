@@ -12,21 +12,22 @@
 
 ## Fichiers modifiés
 
-| Fichier | Rôle |
-|---|---|
-| `src/engine/quantities/constants.ts` | `CUT_TOLERANCE_MM` 5→10 |
-| `src/constants/businessRules.ts` | Ajouter constantes de marge par pose |
-| `src/types/tiling.ts` | Ajouter `ConsumableParams`, `marginOverride?`, `consumableParams?` à `TilingConfig` |
-| `src/engine/quantities/types.ts` | Ajouter `ConsumableItem`, `Consumables`, étendre `QuantityResult` |
-| `src/engine/quantities/quantityEngine.ts` | `computeMargin()`, `computeConsumables()`, intégration |
-| `src/components/quantities/QuantitiesPanel.tsx` | Affichage marge éditable + bloc consommables |
-| `src/components/quantities/QuantitiesPrintView.tsx` | Section "Récapitulatif chantier" |
+| Fichier                                             | Rôle                                                                                |
+| --------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `src/engine/quantities/constants.ts`                | `CUT_TOLERANCE_MM` 5→10                                                             |
+| `src/constants/businessRules.ts`                    | Ajouter constantes de marge par pose                                                |
+| `src/types/tiling.ts`                               | Ajouter `ConsumableParams`, `marginOverride?`, `consumableParams?` à `TilingConfig` |
+| `src/engine/quantities/types.ts`                    | Ajouter `ConsumableItem`, `Consumables`, étendre `QuantityResult`                   |
+| `src/engine/quantities/quantityEngine.ts`           | `computeMargin()`, `computeConsumables()`, intégration                              |
+| `src/components/quantities/QuantitiesPanel.tsx`     | Affichage marge éditable + bloc consommables                                        |
+| `src/components/quantities/QuantitiesPrintView.tsx` | Section "Récapitulatif chantier"                                                    |
 
 ---
 
 ## Task 1 : Constants + Types (fondation)
 
 **Files:**
+
 - Modify: `src/engine/quantities/constants.ts`
 - Modify: `src/constants/businessRules.ts`
 - Modify: `src/types/tiling.ts`
@@ -40,18 +41,46 @@ Dans `src/engine/quantities/assignOffcuts.test.ts`, ajouter après les tests exi
 ```typescript
 describe('canReuseFor — tolérance 10mm', () => {
   it('chute 6mm plus petite que le besoin est réutilisable', () => {
-    const FACTORY: PieceEdges = { left: 'factory', right: 'factory', top: 'factory', bottom: 'factory' };
-    const BOTTOM_CUT: PieceEdges = { left: 'factory', right: 'factory', top: 'factory', bottom: 'cut' };
+    const FACTORY: PieceEdges = {
+      left: 'factory',
+      right: 'factory',
+      top: 'factory',
+      bottom: 'factory',
+    };
+    const BOTTOM_CUT: PieceEdges = {
+      left: 'factory',
+      right: 'factory',
+      top: 'factory',
+      bottom: 'cut',
+    };
     // chute 14×200, besoin 20×180 → diff de 6mm en largeur
     // échoue avec tolérance 5mm (14 < 20−5=15), passe avec 10mm (14 >= 20−10=10)
     expect(canReuseFor(14, 200, FACTORY, 20, 180, BOTTOM_CUT)).toBe(true);
   });
 
   it('assignOffcuts : réemploie une chute 6mm plus petite que le besoin', () => {
-    const FACTORY: PieceEdges = { left: 'factory', right: 'factory', top: 'factory', bottom: 'factory' };
-    const BOTTOM_CUT: PieceEdges = { left: 'factory', right: 'factory', top: 'factory', bottom: 'cut' };
+    const FACTORY: PieceEdges = {
+      left: 'factory',
+      right: 'factory',
+      top: 'factory',
+      bottom: 'factory',
+    };
+    const BOTTOM_CUT: PieceEdges = {
+      left: 'factory',
+      right: 'factory',
+      top: 'factory',
+      bottom: 'cut',
+    };
     // src génère une chute 14×200 ; target a besoin de 20×180
-    const src = makeRecord('src', 186, 200, 14, 200, { left: 'factory', right: 'cut', top: 'factory', bottom: 'factory' }, FACTORY);
+    const src = makeRecord(
+      'src',
+      186,
+      200,
+      14,
+      200,
+      { left: 'factory', right: 'cut', top: 'factory', bottom: 'factory' },
+      FACTORY,
+    );
     const target = makeRecord('target', 20, 180, 0, 0, BOTTOM_CUT, FACTORY);
     assignOffcuts([src, target]);
     expect(target.coveredById).toBe('src');
@@ -82,9 +111,9 @@ export const CUT_TOLERANCE_MM = 10;
 export const SNAP_GRID_MM = 50;
 export const CLOSING_TOLERANCE_MM = 200;
 export const ORDER_MARGIN_RATIO = 0.1; // conservé pour compatibilité rétroactive des tests existants
-export const MARGIN_STRAIGHT = 0.05;   // pose droite
-export const MARGIN_DIAGONAL = 0.10;   // pose à 45°
-export const MARGIN_CHEVRON = 0.15;    // chevron / bâton rompu
+export const MARGIN_STRAIGHT = 0.05; // pose droite
+export const MARGIN_DIAGONAL = 0.1; // pose à 45°
+export const MARGIN_CHEVRON = 0.15; // chevron / bâton rompu
 export const WASTE_WARNING_THRESHOLD = 15;
 export const WALL_THICKNESS_MM = 100;
 export const DOOR_DEFAULT_WIDTH_MM = 900;
@@ -99,12 +128,12 @@ import type { Point } from '@/types/plan';
 export type TileLayout = 'STRAIGHT' | 'HERRINGBONE' | 'CHEVRON';
 
 export interface ConsumableParams {
-  tileThickness?: number;       // mm, défaut 10
-  colleRendement?: number;      // kg/m², défaut 4
-  colleBagSize?: number;        // kg/sac, défaut 25
-  jointRendement?: number;      // kg/m², si défini = override ISO 13007
-  jointBagSize?: number;        // kg/sac, défaut 5
-  croisillonsBagSize?: number;  // unités/sachet, défaut 200
+  tileThickness?: number; // mm, défaut 10
+  colleRendement?: number; // kg/m², défaut 4
+  colleBagSize?: number; // kg/sac, défaut 25
+  jointRendement?: number; // kg/m², si défini = override ISO 13007
+  jointBagSize?: number; // kg/sac, défaut 5
+  croisillonsBagSize?: number; // unités/sachet, défaut 200
 }
 
 export interface TilingConfig {
@@ -118,7 +147,7 @@ export interface TilingConfig {
   chevronAngle: number;
   color: string;
   layout: TileLayout;
-  marginOverride?: number;          // si défini, remplace la marge auto-calibrée
+  marginOverride?: number; // si défini, remplace la marge auto-calibrée
   consumableParams?: ConsumableParams;
 }
 
@@ -199,10 +228,10 @@ export interface CutGroup {
 }
 
 export interface ConsumableItem {
-  total: number;       // quantité totale (kg pour colle/joint, unités pour croisillons)
-  bags: number;        // nombre de conditionnements, arrondi au-dessus
-  bagSize: number;     // taille d'un conditionnement (kg ou unités)
-  rendement: number;   // rendement unitaire (kg/m² ou unités/carreau)
+  total: number; // quantité totale (kg pour colle/joint, unités pour croisillons)
+  bags: number; // nombre de conditionnements, arrondi au-dessus
+  bagSize: number; // taille d'un conditionnement (kg ou unités)
+  rendement: number; // rendement unitaire (kg/m² ou unités/carreau)
 }
 
 export interface Consumables {
@@ -222,7 +251,7 @@ export interface QuantityResult {
   tilesForCuts: number;
   totalTiles: number;
   toOrder: number;
-  margin: number;          // marge appliquée, ex. 0.05 pour 5%
+  margin: number; // marge appliquée, ex. 0.05 pour 5%
   roomArea: number;
   tiles: Tile[];
   consumables: Consumables;
@@ -251,6 +280,7 @@ git commit -m "feat(quantities): types consommables + tolérance 10mm + marges p
 ## Task 2 : Engine — marge auto-calibrée
 
 **Files:**
+
 - Modify: `src/engine/quantities/quantityEngine.ts`
 - Modify: `src/engine/quantities/quantityEngine.integration.test.ts`
 
@@ -267,7 +297,11 @@ Ajouter un nouveau `describe` après les scénarios existants :
 ```typescript
 describe('quantityEngine — marge auto-calibrée', () => {
   it('STRAIGHT angle=0 → marge 5%', () => {
-    const result = analyzeQuantities([makeRoom(306, 204)], { ...BASE_CONFIG, layout: 'STRAIGHT', angle: 0 });
+    const result = analyzeQuantities([makeRoom(306, 204)], {
+      ...BASE_CONFIG,
+      layout: 'STRAIGHT',
+      angle: 0,
+    });
     expect(result.margin).toBe(MARGIN_STRAIGHT);
     expect(result.toOrder).toBe(Math.ceil(result.totalTiles * (1 + MARGIN_STRAIGHT)));
   });
@@ -279,23 +313,32 @@ describe('quantityEngine — marge auto-calibrée', () => {
   });
 
   it('CHEVRON → marge 15%', () => {
-    const result = analyzeQuantities([makeRoom(306, 204)], { ...BASE_CONFIG, layout: 'CHEVRON', angle: 0 });
+    const result = analyzeQuantities([makeRoom(306, 204)], {
+      ...BASE_CONFIG,
+      layout: 'CHEVRON',
+      angle: 0,
+    });
     expect(result.margin).toBe(MARGIN_CHEVRON);
     expect(result.toOrder).toBe(Math.ceil(result.totalTiles * (1 + MARGIN_CHEVRON)));
   });
 
   it('HERRINGBONE → marge 15%', () => {
-    const result = analyzeQuantities([makeRoom(306, 204)], { ...BASE_CONFIG, layout: 'HERRINGBONE', angle: 0 });
+    const result = analyzeQuantities([makeRoom(306, 204)], {
+      ...BASE_CONFIG,
+      layout: 'HERRINGBONE',
+      angle: 0,
+    });
     expect(result.margin).toBe(MARGIN_CHEVRON);
   });
 
   it('marginOverride écrase la marge auto', () => {
-    const result = analyzeQuantities(
-      [makeRoom(306, 204)],
-      { ...BASE_CONFIG, layout: 'STRAIGHT', marginOverride: 0.20 },
-    );
-    expect(result.margin).toBe(0.20);
-    expect(result.toOrder).toBe(Math.ceil(result.totalTiles * 1.20));
+    const result = analyzeQuantities([makeRoom(306, 204)], {
+      ...BASE_CONFIG,
+      layout: 'STRAIGHT',
+      marginOverride: 0.2,
+    });
+    expect(result.margin).toBe(0.2);
+    expect(result.toOrder).toBe(Math.ceil(result.totalTiles * 1.2));
   });
 });
 ```
@@ -304,8 +347,18 @@ Mettre à jour l'invariant I7 dans `checkInvariants` pour utiliser `result.margi
 
 ```typescript
 function checkInvariants(result: QuantityResult): void {
-  const { wholeCount, cuts, cutGroups, totalReuseCount,
-          tilesForCuts, totalTiles, toOrder, tileW, tileH, margin } = result;
+  const {
+    wholeCount,
+    cuts,
+    cutGroups,
+    totalReuseCount,
+    tilesForCuts,
+    totalTiles,
+    toOrder,
+    tileW,
+    tileH,
+    margin,
+  } = result;
 
   expect(totalTiles, 'I1').toBe(wholeCount + tilesForCuts);
   expect(tilesForCuts, 'I2').toBe(cuts.length - totalReuseCount);
@@ -392,7 +445,10 @@ function computeConsumables(
   const tileThickness = params.tileThickness ?? 10;
   const isoRendement =
     ((config.width + config.height) / (config.width * config.height)) *
-    config.joint * tileThickness * 1.6 * 1.05;
+    config.joint *
+    tileThickness *
+    1.6 *
+    1.05;
   const jointRendement = params.jointRendement ?? isoRendement;
   const jointBagSize = params.jointBagSize ?? 5;
   const jointTotal = surface * jointRendement;
@@ -422,14 +478,18 @@ function computeConsumables(
   };
 }
 
-function tileSpaceRooms(rooms: Room[], angle: number, cx: number, cy: number, wallThickness = 0): Point[][] {
+function tileSpaceRooms(
+  rooms: Room[],
+  angle: number,
+  cx: number,
+  cy: number,
+  wallThickness = 0,
+): Point[][] {
   return rooms
     .filter((r) => r.points.length >= 3)
     .map((r) => {
       const inset = insetRoomPolygon(r, wallThickness);
-      return angle !== 0
-        ? inset.map((p) => rotatePoint(p.x, p.y, -angle, cx, cy))
-        : inset;
+      return angle !== 0 ? inset.map((p) => rotatePoint(p.x, p.y, -angle, cx, cy)) : inset;
     });
 }
 
@@ -451,10 +511,19 @@ export function analyzeQuantities(
 
   if (validRooms.length === 0 || !stats) {
     return {
-      tileW: config.width, tileH: config.height, joint: config.joint,
-      wholeCount: 0, cuts: [], cutGroups: [],
-      totalReuseCount: 0, tilesForCuts: 0, totalTiles: 0,
-      toOrder: 0, margin, roomArea: 0, tiles: [],
+      tileW: config.width,
+      tileH: config.height,
+      joint: config.joint,
+      wholeCount: 0,
+      cuts: [],
+      cutGroups: [],
+      totalReuseCount: 0,
+      tilesForCuts: 0,
+      totalTiles: 0,
+      toOrder: 0,
+      margin,
+      roomArea: 0,
+      tiles: [],
       consumables: EMPTY_CONSUMABLES,
     };
   }
@@ -478,7 +547,9 @@ export function analyzeQuantities(
   const consumables = computeConsumables(stats.roomArea, totalTiles, config);
 
   return {
-    tileW: config.width, tileH: config.height, joint: config.joint,
+    tileW: config.width,
+    tileH: config.height,
+    joint: config.joint,
     wholeCount: stats.whole,
     cuts,
     cutGroups,
@@ -514,6 +585,7 @@ git commit -m "feat(quantities): marge auto-calibrée par type de pose + compute
 ## Task 3 : Tests consommables
 
 **Files:**
+
 - Modify: `src/engine/quantities/quantityEngine.integration.test.ts`
 
 - [ ] **Step 1 : Ajouter les tests consommables**
@@ -531,7 +603,7 @@ describe('quantityEngine — consommables', () => {
     // colle.total ≈ surface_m2 × 4
     // colle.bags = ceil(total / 25)
     expect(result.consumables.colle.bags).toBeGreaterThanOrEqual(1);
-    expect(result.consumables.colle.total).toBeCloseTo(result.roomArea / 1_000_000 * 4, 1);
+    expect(result.consumables.colle.total).toBeCloseTo((result.roomArea / 1_000_000) * 4, 1);
   });
 
   it('joint : formule ISO 13007 (100×100mm, joint 2mm, épaisseur 10mm)', () => {
@@ -562,7 +634,7 @@ describe('quantityEngine — consommables', () => {
     const result = analyzeQuantities([makeRoom(3060, 2040)], config);
     expect(result.consumables.colle.rendement).toBe(6);
     expect(result.consumables.colle.bagSize).toBe(20);
-    expect(result.consumables.colle.total).toBeCloseTo(result.roomArea / 1_000_000 * 6, 1);
+    expect(result.consumables.colle.total).toBeCloseTo((result.roomArea / 1_000_000) * 6, 1);
   });
 
   it('consumableParams.jointRendement override remplace ISO', () => {
@@ -604,9 +676,11 @@ git commit -m "test(quantities): tests consommables colle / joint ISO / croisill
 ## Task 4 : QuantitiesPanel — marge éditable + bloc consommables
 
 **Files:**
+
 - Modify: `src/components/quantities/QuantitiesPanel.tsx`
 
 **Contexte :**
+
 - `result.margin` : la marge calculée (ex. `0.05`)
 - `result.consumables` : `{ colle, joint, croisillons }` chacun avec `{ total, bags, bagSize, rendement }`
 - `project.config.marginOverride` : override manuel stocké dans le store
@@ -618,7 +692,7 @@ git commit -m "test(quantities): tests consommables colle / joint ISO / croisill
 En haut de `src/components/quantities/QuantitiesPanel.tsx`, ajouter dans la section imports :
 
 ```typescript
-import { useState } from 'react';  // déjà présent
+import { useState } from 'react'; // déjà présent
 // Ajouter après les imports existants :
 import type { ConsumableParams } from '@/types/tiling';
 ```
@@ -670,6 +744,7 @@ const updateConsumableParam = (patch: Partial<ConsumableParams>) => {
 Localiser le bloc "Total à commander" dans le stat strip (ligne `× 1.10` codée en dur) et le remplacer :
 
 Ancien code :
+
 ```tsx
 <div className="mt-0.5 text-[11px] text-gray-400 dark:text-zinc-500">
   {result.wholeCount} + ({result.cuts.length}−{result.totalReuseCount}) = {result.totalTiles} × 1.10
@@ -677,6 +752,7 @@ Ancien code :
 ```
 
 Nouveau code :
+
 ```tsx
 <div className="mt-0.5 flex items-center gap-1 text-[11px] text-gray-400 dark:text-zinc-500">
   <span>
@@ -694,12 +770,21 @@ Nouveau code :
         value={marginInput}
         onChange={(e) => setMarginInput(e.target.value)}
         onBlur={handleMarginCommit}
-        onKeyDown={(e) => { if (e.key === 'Enter') handleMarginCommit(); if (e.key === 'Escape') setEditingMargin(false); }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') handleMarginCommit();
+          if (e.key === 'Escape') setEditingMargin(false);
+        }}
         className="w-12 rounded border border-orange-400 bg-transparent px-1 text-orange-400 outline-none"
       />
       %
       {project.config.marginOverride !== undefined && (
-        <button type="button" onClick={handleMarginReset} className="text-[9px] text-gray-400 underline hover:text-gray-600">auto</button>
+        <button
+          type="button"
+          onClick={handleMarginReset}
+          className="text-[9px] text-gray-400 underline hover:text-gray-600"
+        >
+          auto
+        </button>
       )}
     </span>
   ) : (
@@ -723,33 +808,35 @@ Nouveau code :
 Après la fermeture du div "Stat strip" (après `</div>` du grid), et avant la fermeture du `bandeaux-wrapper`, ajouter le bloc consommables :
 
 ```tsx
-{/* Bloc consommables */}
-<div className="border-t border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+{
+  /* Bloc consommables */
+}
+<div className="border-t border-gray-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
   <button
     type="button"
     onClick={() => setConsumablesOpen((o) => !o)}
-    className="flex w-full items-center justify-between px-5 md:px-8 py-2.5 text-left text-xs font-bold uppercase tracking-wider text-blue-500 hover:bg-gray-50 dark:hover:bg-zinc-800/60 transition-colors"
+    className="flex w-full items-center justify-between px-5 py-2.5 text-left text-xs font-bold uppercase tracking-wider text-blue-500 transition-colors hover:bg-gray-50 md:px-8 dark:hover:bg-zinc-800/60"
   >
     <span>Consommables de pose</span>
     <span className="text-gray-400">{consumablesOpen ? '▲' : '▼'}</span>
   </button>
 
   {consumablesOpen && (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 px-5 md:px-8 pb-4 pt-1">
+    <div className="grid grid-cols-1 gap-3 px-5 pb-4 pt-1 md:grid-cols-3 md:px-8">
       {/* Épaisseur carreau (commune à tout) */}
-      <div className="md:col-span-3 flex items-center gap-2 text-xs text-gray-400 dark:text-zinc-500">
+      <div className="flex items-center gap-2 text-xs text-gray-400 md:col-span-3 dark:text-zinc-500">
         <span>Épaisseur carreau :</span>
         <input
           type="number"
           min="1"
           max="30"
           step="1"
-          defaultValue={(project.config.consumableParams?.tileThickness ?? 10)}
+          defaultValue={project.config.consumableParams?.tileThickness ?? 10}
           onBlur={(e) => {
             const v = parseFloat(e.target.value);
             if (!isNaN(v) && v > 0) updateConsumableParam({ tileThickness: v });
           }}
-          className="w-14 rounded border border-gray-300 dark:border-zinc-600 bg-transparent px-1 text-center text-gray-700 dark:text-zinc-300 outline-none focus:border-blue-400"
+          className="w-14 rounded border border-gray-300 bg-transparent px-1 text-center text-gray-700 outline-none focus:border-blue-400 dark:border-zinc-600 dark:text-zinc-300"
         />
         <span>mm</span>
       </div>
@@ -800,7 +887,7 @@ Après la fermeture du div "Stat strip" (après `</div>` du grid), et avant la f
       />
     </div>
   )}
-</div>
+</div>;
 ```
 
 - [ ] **Step 5 : Ajouter le sous-composant `ConsumableCard`**
@@ -823,8 +910,17 @@ interface ConsumableCardProps {
 }
 
 const ConsumableCard = ({
-  label, unit, bags, bagSize, bagUnit, rendement, rendementUnit,
-  totalKg, onRendementChange, onBagSizeChange, color,
+  label,
+  unit,
+  bags,
+  bagSize,
+  bagUnit,
+  rendement,
+  rendementUnit,
+  totalKg,
+  onRendementChange,
+  onBagSizeChange,
+  color,
 }: ConsumableCardProps) => {
   const accent = color === 'blue' ? 'text-blue-500' : 'text-violet-500';
   const border = color === 'blue' ? 'border-blue-500/30' : 'border-violet-500/30';
@@ -833,9 +929,11 @@ const ConsumableCard = ({
   return (
     <div className={`rounded-xl border ${border} ${bg} px-4 py-3`}>
       <div className={`text-[10px] font-bold uppercase tracking-wider ${accent} mb-2`}>{label}</div>
-      <div className="flex items-end gap-1 mb-2">
-        <span className="text-2xl font-black tabular-nums text-gray-900 dark:text-zinc-100">{bags}</span>
-        <span className="text-xs text-gray-400 dark:text-zinc-500 mb-0.5">{unit}</span>
+      <div className="mb-2 flex items-end gap-1">
+        <span className="text-2xl font-black tabular-nums text-gray-900 dark:text-zinc-100">
+          {bags}
+        </span>
+        <span className="mb-0.5 text-xs text-gray-400 dark:text-zinc-500">{unit}</span>
       </div>
       <div className="space-y-1 text-[11px] text-gray-400 dark:text-zinc-500">
         <div className="flex items-center gap-1">
@@ -849,9 +947,11 @@ const ConsumableCard = ({
               const v = parseFloat(e.target.value);
               if (!isNaN(v) && v > 0) onBagSizeChange(v);
             }}
-            className="w-14 rounded border border-gray-300 dark:border-zinc-600 bg-transparent px-1 text-center text-gray-700 dark:text-zinc-300 outline-none focus:border-blue-400"
+            className="w-14 rounded border border-gray-300 bg-transparent px-1 text-center text-gray-700 outline-none focus:border-blue-400 dark:border-zinc-600 dark:text-zinc-300"
           />
-          <span>{bagUnit}/{unit.slice(0, -1)}</span>
+          <span>
+            {bagUnit}/{unit.slice(0, -1)}
+          </span>
         </div>
         {onRendementChange !== null && (
           <div className="flex items-center gap-1">
@@ -865,12 +965,14 @@ const ConsumableCard = ({
                 const v = parseFloat(e.target.value);
                 if (!isNaN(v) && v > 0) onRendementChange(v);
               }}
-              className="w-14 rounded border border-gray-300 dark:border-zinc-600 bg-transparent px-1 text-center text-gray-700 dark:text-zinc-300 outline-none focus:border-blue-400"
+              className="w-14 rounded border border-gray-300 bg-transparent px-1 text-center text-gray-700 outline-none focus:border-blue-400 dark:border-zinc-600 dark:text-zinc-300"
             />
             <span>{rendementUnit}</span>
           </div>
         )}
-        <div className="text-[10px]">{totalKg.toFixed(1)} {bagUnit} total</div>
+        <div className="text-[10px]">
+          {totalKg.toFixed(1)} {bagUnit} total
+        </div>
       </div>
     </div>
   );
@@ -898,9 +1000,11 @@ git commit -m "feat(quantities): panneau — marge éditable + bloc consommables
 ## Task 5 : QuantitiesPrintView — Récapitulatif chantier
 
 **Files:**
+
 - Modify: `src/components/quantities/QuantitiesPrintView.tsx`
 
 **Contexte :**
+
 - `QuantitiesPrintView` reçoit `project`, `rooms`, `doorOpenings`
 - Il fait actuellement un `analyzeQuantities` par pièce. Il faut ajouter un `analyzeQuantities` global (toutes les pièces) pour les consommables globaux
 - Le résultat global donne `result.consumables`, `result.margin`, `result.totalTiles`, `result.toOrder`, `result.roomArea`
@@ -919,71 +1023,155 @@ const globalResult = analyzeQuantities(validRooms, config, wallThickness, doorOp
 Dans le JSX de `QuantitiesPrintView`, après le bloc `① En-tête CaléPlan` et avant la section info projet, ajouter :
 
 ```tsx
-{/* ② Récapitulatif chantier */}
-{globalResult.totalTiles > 0 && (
-  <div style={{ margin: '16px 24px', border: '2px solid #f97316', borderRadius: 10, overflow: 'hidden' }}>
-    <div style={{ background: '#fff7ed', padding: '8px 16px', borderBottom: '1px solid #fed7aa' }}>
-      <div style={{ fontWeight: 800, fontSize: 13, color: '#ea580c', letterSpacing: '-0.2px' }}>
-        Récapitulatif chantier
+{
+  /* ② Récapitulatif chantier */
+}
+{
+  globalResult.totalTiles > 0 && (
+    <div
+      style={{
+        margin: '16px 24px',
+        border: '2px solid #f97316',
+        borderRadius: 10,
+        overflow: 'hidden',
+      }}
+    >
+      <div
+        style={{ background: '#fff7ed', padding: '8px 16px', borderBottom: '1px solid #fed7aa' }}
+      >
+        <div style={{ fontWeight: 800, fontSize: 13, color: '#ea580c', letterSpacing: '-0.2px' }}>
+          Récapitulatif chantier
+        </div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0 }}>
+        {/* Surface */}
+        <div
+          style={{
+            padding: '10px 16px',
+            borderRight: '1px solid #fed7aa',
+            borderBottom: '1px solid #fed7aa',
+          }}
+        >
+          <div
+            style={{
+              fontSize: 10,
+              color: '#9ca3af',
+              textTransform: 'uppercase' as const,
+              marginBottom: 3,
+            }}
+          >
+            Surface totale
+          </div>
+          <div style={{ fontSize: 18, fontWeight: 900, color: '#111827' }}>
+            {formatM2(globalResult.roomArea)}
+          </div>
+        </div>
+        {/* Carreaux */}
+        <div
+          style={{
+            padding: '10px 16px',
+            borderRight: '1px solid #fed7aa',
+            borderBottom: '1px solid #fed7aa',
+          }}
+        >
+          <div
+            style={{
+              fontSize: 10,
+              color: '#9ca3af',
+              textTransform: 'uppercase' as const,
+              marginBottom: 3,
+            }}
+          >
+            Carreaux à commander
+          </div>
+          <div style={{ fontSize: 18, fontWeight: 900, color: '#f97316' }}>
+            {globalResult.toOrder}
+          </div>
+          <div style={{ fontSize: 9, color: '#9ca3af' }}>
+            {globalResult.totalTiles} + marge {Math.round(globalResult.margin * 100)}%
+          </div>
+        </div>
+        {/* Colle */}
+        <div style={{ padding: '10px 16px', borderBottom: '1px solid #fed7aa' }}>
+          <div
+            style={{
+              fontSize: 10,
+              color: '#9ca3af',
+              textTransform: 'uppercase' as const,
+              marginBottom: 3,
+            }}
+          >
+            Colle
+          </div>
+          <div style={{ fontSize: 18, fontWeight: 900, color: '#3b82f6' }}>
+            {globalResult.consumables.colle.bags} sacs
+          </div>
+          <div style={{ fontSize: 9, color: '#9ca3af' }}>
+            × {globalResult.consumables.colle.bagSize} kg —{' '}
+            {globalResult.consumables.colle.rendement.toFixed(1)} kg/m²
+          </div>
+        </div>
+        {/* Joint */}
+        <div style={{ padding: '10px 16px', borderRight: '1px solid #fed7aa' }}>
+          <div
+            style={{
+              fontSize: 10,
+              color: '#9ca3af',
+              textTransform: 'uppercase' as const,
+              marginBottom: 3,
+            }}
+          >
+            Joint
+          </div>
+          <div style={{ fontSize: 18, fontWeight: 900, color: '#3b82f6' }}>
+            {globalResult.consumables.joint.bags} sacs
+          </div>
+          <div style={{ fontSize: 9, color: '#9ca3af' }}>
+            × {globalResult.consumables.joint.bagSize} kg —{' '}
+            {globalResult.consumables.joint.rendement.toFixed(3)} kg/m²
+          </div>
+        </div>
+        {/* Croisillons */}
+        <div style={{ padding: '10px 16px', borderRight: '1px solid #fed7aa' }}>
+          <div
+            style={{
+              fontSize: 10,
+              color: '#9ca3af',
+              textTransform: 'uppercase' as const,
+              marginBottom: 3,
+            }}
+          >
+            Croisillons
+          </div>
+          <div style={{ fontSize: 18, fontWeight: 900, color: '#8b5cf6' }}>
+            {globalResult.consumables.croisillons.bags} sachets
+          </div>
+          <div style={{ fontSize: 9, color: '#9ca3af' }}>
+            × {globalResult.consumables.croisillons.bagSize} unités —{' '}
+            {globalResult.consumables.croisillons.total} pcs
+          </div>
+        </div>
+        {/* Joint largeur */}
+        <div style={{ padding: '10px 16px' }}>
+          <div
+            style={{
+              fontSize: 10,
+              color: '#9ca3af',
+              textTransform: 'uppercase' as const,
+              marginBottom: 3,
+            }}
+          >
+            Format pose
+          </div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>
+            {formatCm(globalResult.tileW)} × {formatCm(globalResult.tileH)}
+          </div>
+          <div style={{ fontSize: 9, color: '#9ca3af' }}>joint {globalResult.joint} mm</div>
+        </div>
       </div>
     </div>
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0 }}>
-      {/* Surface */}
-      <div style={{ padding: '10px 16px', borderRight: '1px solid #fed7aa', borderBottom: '1px solid #fed7aa' }}>
-        <div style={{ fontSize: 10, color: '#9ca3af', textTransform: 'uppercase' as const, marginBottom: 3 }}>Surface totale</div>
-        <div style={{ fontSize: 18, fontWeight: 900, color: '#111827' }}>{formatM2(globalResult.roomArea)}</div>
-      </div>
-      {/* Carreaux */}
-      <div style={{ padding: '10px 16px', borderRight: '1px solid #fed7aa', borderBottom: '1px solid #fed7aa' }}>
-        <div style={{ fontSize: 10, color: '#9ca3af', textTransform: 'uppercase' as const, marginBottom: 3 }}>
-          Carreaux à commander
-        </div>
-        <div style={{ fontSize: 18, fontWeight: 900, color: '#f97316' }}>{globalResult.toOrder}</div>
-        <div style={{ fontSize: 9, color: '#9ca3af' }}>
-          {globalResult.totalTiles} + marge {Math.round(globalResult.margin * 100)}%
-        </div>
-      </div>
-      {/* Colle */}
-      <div style={{ padding: '10px 16px', borderBottom: '1px solid #fed7aa' }}>
-        <div style={{ fontSize: 10, color: '#9ca3af', textTransform: 'uppercase' as const, marginBottom: 3 }}>Colle</div>
-        <div style={{ fontSize: 18, fontWeight: 900, color: '#3b82f6' }}>
-          {globalResult.consumables.colle.bags} sacs
-        </div>
-        <div style={{ fontSize: 9, color: '#9ca3af' }}>
-          × {globalResult.consumables.colle.bagSize} kg — {globalResult.consumables.colle.rendement.toFixed(1)} kg/m²
-        </div>
-      </div>
-      {/* Joint */}
-      <div style={{ padding: '10px 16px', borderRight: '1px solid #fed7aa' }}>
-        <div style={{ fontSize: 10, color: '#9ca3af', textTransform: 'uppercase' as const, marginBottom: 3 }}>Joint</div>
-        <div style={{ fontSize: 18, fontWeight: 900, color: '#3b82f6' }}>
-          {globalResult.consumables.joint.bags} sacs
-        </div>
-        <div style={{ fontSize: 9, color: '#9ca3af' }}>
-          × {globalResult.consumables.joint.bagSize} kg — {globalResult.consumables.joint.rendement.toFixed(3)} kg/m²
-        </div>
-      </div>
-      {/* Croisillons */}
-      <div style={{ padding: '10px 16px', borderRight: '1px solid #fed7aa' }}>
-        <div style={{ fontSize: 10, color: '#9ca3af', textTransform: 'uppercase' as const, marginBottom: 3 }}>Croisillons</div>
-        <div style={{ fontSize: 18, fontWeight: 900, color: '#8b5cf6' }}>
-          {globalResult.consumables.croisillons.bags} sachets
-        </div>
-        <div style={{ fontSize: 9, color: '#9ca3af' }}>
-          × {globalResult.consumables.croisillons.bagSize} unités — {globalResult.consumables.croisillons.total} pcs
-        </div>
-      </div>
-      {/* Joint largeur */}
-      <div style={{ padding: '10px 16px' }}>
-        <div style={{ fontSize: 10, color: '#9ca3af', textTransform: 'uppercase' as const, marginBottom: 3 }}>Format pose</div>
-        <div style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>
-          {formatCm(globalResult.tileW)} × {formatCm(globalResult.tileH)}
-        </div>
-        <div style={{ fontSize: 9, color: '#9ca3af' }}>joint {globalResult.joint} mm</div>
-      </div>
-    </div>
-  </div>
-)}
+  );
+}
 ```
 
 - [ ] **Step 3 : Vérifier TypeScript et tests**

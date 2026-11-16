@@ -6,14 +6,18 @@ import type { Point } from '@/types/plan';
 
 // Pièce carrée 200×200 en CCW
 const ROOM: Point[] = [
-  { x: 0, y: 0 }, { x: 200, y: 0 },
-  { x: 200, y: 200 }, { x: 0, y: 200 },
+  { x: 0, y: 0 },
+  { x: 200, y: 0 },
+  { x: 200, y: 200 },
+  { x: 0, y: 200 },
 ];
 
 // Pièce 300x1000 en CCW — pour les tuiles CHEVRON (mur vertical à x=300)
 const ROOM_CHEVRON: Point[] = [
-  { x: 0, y: 0 }, { x: 300, y: 0 },
-  { x: 300, y: 1000 }, { x: 0, y: 1000 },
+  { x: 0, y: 0 },
+  { x: 300, y: 0 },
+  { x: 300, y: 1000 },
+  { x: 0, y: 1000 },
 ];
 
 describe('buildCutTable', () => {

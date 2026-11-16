@@ -2,8 +2,18 @@ import { describe, it, expect } from 'vitest';
 import { mergeSimilarCutGroups } from './mergeSimilarCutGroups';
 import type { CutGroup } from './types';
 
-const PE_CUT = { left: 'cut' as const, right: 'factory' as const, top: 'factory' as const, bottom: 'factory' as const };
-const PE_FACT = { left: 'factory' as const, right: 'cut' as const, top: 'factory' as const, bottom: 'factory' as const };
+const PE_CUT = {
+  left: 'cut' as const,
+  right: 'factory' as const,
+  top: 'factory' as const,
+  bottom: 'factory' as const,
+};
+const PE_FACT = {
+  left: 'factory' as const,
+  right: 'cut' as const,
+  top: 'factory' as const,
+  bottom: 'factory' as const,
+};
 
 const g = (usedW: number, usedH: number, extras: Partial<CutGroup> = {}): CutGroup => ({
   usedW,
@@ -107,8 +117,8 @@ describe('mergeSimilarCutGroups', () => {
 
   it('groupes avec pieceEdges différents non fusionnés même si dimensions dans la tolérance', () => {
     const result = mergeSimilarCutGroups([
-      g(600, 300, { pieceEdges: PE_CUT }),   // left=cut
-      g(600, 302, { pieceEdges: PE_FACT }),  // left=factory (different)
+      g(600, 300, { pieceEdges: PE_CUT }), // left=cut
+      g(600, 302, { pieceEdges: PE_FACT }), // left=factory (different)
     ]);
     // |302-300|/302 = 0.66% ≤ 2% — dimensions OK, but edges differ
     expect(result).toHaveLength(2);

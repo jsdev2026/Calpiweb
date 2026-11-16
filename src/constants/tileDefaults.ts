@@ -22,7 +22,7 @@ export const STAGGER_PRESETS = [
 export const COLOR_PRESETS = ['#93c5fd', '#d6d3d1', '#86efac', '#fca5a5', '#c4b5fd'];
 
 export const LAYOUT_PRESETS: { value: TileLayout; label: string; sublabel: string }[] = [
-  { value: 'STRAIGHT',    label: 'Droit',            sublabel: 'Classique'        },
-  { value: 'HERRINGBONE', label: 'Bâton rompu',      sublabel: 'Alterné'          },
-  { value: 'CHEVRON',     label: 'Pte de hongrie',   sublabel: '45°'              },
+  { value: 'STRAIGHT', label: 'Droit', sublabel: 'Classique' },
+  { value: 'HERRINGBONE', label: 'Bâton rompu', sublabel: 'Alterné' },
+  { value: 'CHEVRON', label: 'Pte de hongrie', sublabel: '45°' },
 ];

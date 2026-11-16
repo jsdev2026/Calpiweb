@@ -14,16 +14,17 @@
 
 ## Fichiers concernés
 
-| Fichier | Action |
-|---------|--------|
-| `src/components/plan/WallDrawingCanvas.tsx` | **Modifier** — 4 tâches successives |
-| `src/components/plan/PlanEditor.tsx` | **Modifier** — passer 4 props viewport (Task 1 uniquement) |
+| Fichier                                     | Action                                                     |
+| ------------------------------------------- | ---------------------------------------------------------- |
+| `src/components/plan/WallDrawingCanvas.tsx` | **Modifier** — 4 tâches successives                        |
+| `src/components/plan/PlanEditor.tsx`        | **Modifier** — passer 4 props viewport (Task 1 uniquement) |
 
 ---
 
 ### Task 1 : Lift du viewport — props + scaleRef/panRef + wheel/pan
 
 **Files:**
+
 - Modify: `src/components/plan/WallDrawingCanvas.tsx`
 - Modify: `src/components/plan/PlanEditor.tsx`
 
@@ -68,10 +69,11 @@ export const WallDrawingCanvas = ({
 - [ ] **Step 1.3 : Supprimer les states internes + ajouter les refs mutable**
 
 Supprimer les lignes 51–52 :
+
 ```typescript
 // SUPPRIMER ces deux lignes :
 const [scale, setScale] = useState(0.5);
-const [pan,   setPan]   = useState<Point>({ x: 200, y: 200 });
+const [pan, setPan] = useState<Point>({ x: 200, y: 200 });
 ```
 
 Ajouter immédiatement après `const svgRef = useRef<SVGSVGElement | null>(null);` (ligne 50) :
@@ -79,9 +81,9 @@ Ajouter immédiatement après `const svgRef = useRef<SVGSVGElement | null>(null)
 ```typescript
 // Refs mutable pour wheel/touch — évitent les stale closures
 const scaleRef = useRef(scale);
-const panRef   = useRef(pan);
+const panRef = useRef(pan);
 scaleRef.current = scale; // toujours à jour pendant le rendu
-panRef.current   = pan;
+panRef.current = pan;
 ```
 
 - [ ] **Step 1.4 : Réécrire le wheel zoom useEffect**
@@ -97,13 +99,14 @@ useEffect(() => {
     e.preventDefault();
     const factor = e.deltaY < 0 ? 1.1 : 0.9;
     const rect = svg.getBoundingClientRect();
-    const ox = e.clientX - rect.left, oy = e.clientY - rect.top;
+    const ox = e.clientX - rect.left,
+      oy = e.clientY - rect.top;
     const s = scaleRef.current;
     const p = panRef.current;
     const ns = Math.max(0.005, Math.min(4, s * factor));
     const np = { x: ox - (ox - p.x) * (ns / s), y: oy - (oy - p.y) * (ns / s) };
     scaleRef.current = ns;
-    panRef.current   = np;
+    panRef.current = np;
     onScaleChange(ns);
     onPanChange(np);
   };
@@ -115,6 +118,7 @@ useEffect(() => {
 - [ ] **Step 1.5 : Remplacer `setPan` dans `handlePointerMove`**
 
 Dans `handlePointerMove` (ligne ~214–220), remplacer :
+
 ```typescript
 // AVANT
 if (isPanning && panStart.current) {
@@ -183,6 +187,7 @@ git commit -m "feat(wall-engine): WallDrawingCanvas — viewport partagé via pr
 ### Task 2 : Keyboard — Shift (ortho), Ctrl (no snap), Escape, Enter
 
 **Files:**
+
 - Modify: `src/components/plan/WallDrawingCanvas.tsx`
 
 Contexte : ajouter `isShiftPressed`/`isCtrlPressed`, un useEffect clavier sur `window`, une fonction `applyOrtho`, une callback `tryCloseChain`. Mettre à jour `handlePointerDown` et `handlePointerMove` pour appliquer ortho + no-snap.
@@ -193,7 +198,7 @@ Après la ligne `const [draggingNodeId, setDraggingNodeId] = useState<string | n
 
 ```typescript
 const [isShiftPressed, setIsShiftPressed] = useState(false);
-const [isCtrlPressed,  setIsCtrlPressed]  = useState(false);
+const [isCtrlPressed, setIsCtrlPressed] = useState(false);
 ```
 
 - [ ] **Step 2.2 : Ajouter la fonction `applyOrtho`**
@@ -216,7 +221,7 @@ Après la définition de `submitThickness`, ajouter :
 const tryCloseChain = useCallback(() => {
   if (!chain || chain.nodeIds.length < 2) return;
   const firstId = chain.nodeIds[0]!;
-  const lastId  = chain.nodeIds[chain.nodeIds.length - 1]!;
+  const lastId = chain.nodeIds[chain.nodeIds.length - 1]!;
   if (firstId === lastId) return; // déjà fermé
   onPushHistory();
   onAddWall({ id: generateId(), node1Id: lastId, node2Id: firstId, thickness: chain.thickness });
@@ -231,7 +236,7 @@ Après le `useEffect(() => { setSelectedWallId(null)... }, [tool])` existant, aj
 ```typescript
 useEffect(() => {
   const down = (e: KeyboardEvent) => {
-    if (e.key === 'Shift')   setIsShiftPressed(true);
+    if (e.key === 'Shift') setIsShiftPressed(true);
     if (e.key === 'Control') setIsCtrlPressed(true);
     if (e.key === 'Escape') {
       setChain(null);
@@ -241,14 +246,14 @@ useEffect(() => {
     if (e.key === 'Enter') tryCloseChain();
   };
   const up = (e: KeyboardEvent) => {
-    if (e.key === 'Shift')   setIsShiftPressed(false);
+    if (e.key === 'Shift') setIsShiftPressed(false);
     if (e.key === 'Control') setIsCtrlPressed(false);
   };
   window.addEventListener('keydown', down);
-  window.addEventListener('keyup',   up);
+  window.addEventListener('keyup', up);
   return () => {
     window.removeEventListener('keydown', down);
-    window.removeEventListener('keyup',   up);
+    window.removeEventListener('keyup', up);
   };
 }, [tryCloseChain]);
 ```
@@ -272,7 +277,7 @@ const handlePointerDown = (e: ReactPointerEvent<SVGSVGElement>) => {
 
   // Ortho : contraindre au H/V par rapport au dernier nœud si Shift enfoncé
   if (isShiftPressed && chain && chain.nodeIds.length > 0) {
-    const lastId   = chain.nodeIds[chain.nodeIds.length - 1]!;
+    const lastId = chain.nodeIds[chain.nodeIds.length - 1]!;
     const lastNode = nodes.find((n) => n.id === lastId);
     if (lastNode) world = applyOrtho(world, { x: lastNode.x, y: lastNode.y });
   }
@@ -307,7 +312,12 @@ const handlePointerDown = (e: ReactPointerEvent<SVGSVGElement>) => {
       }
 
       onPushHistory();
-      onAddWall({ id: generateId(), node1Id: prevNodeId, node2Id: targetNodeId, thickness: chain.thickness });
+      onAddWall({
+        id: generateId(),
+        node1Id: prevNodeId,
+        node2Id: targetNodeId,
+        thickness: chain.thickness,
+      });
 
       const startId = chain.nodeIds[0]!;
       if (targetNodeId === startId) {
@@ -340,7 +350,10 @@ const handlePointerDown = (e: ReactPointerEvent<SVGSVGElement>) => {
 
   if (tool === 'DELETE') {
     const hit = hitTestWall(world);
-    if (hit) { onPushHistory(); onRemoveWall(hit.id); }
+    if (hit) {
+      onPushHistory();
+      onRemoveWall(hit.id);
+    }
   }
 };
 ```
@@ -364,10 +377,20 @@ const handlePointerMove = (e: ReactPointerEvent<SVGSVGElement>) => {
 
   if (draggingNodeId) {
     const otherNodes = nodes.filter((n) => n.id !== draggingNodeId);
-    const snapWalls  = walls.filter((w) => w.node1Id !== draggingNodeId && w.node2Id !== draggingNodeId);
+    const snapWalls = walls.filter(
+      (w) => w.node1Id !== draggingNodeId && w.node2Id !== draggingNodeId,
+    );
     const snap = isCtrlPressed
       ? null
-      : snapToWalls(world, snapWalls, otherNodes, scale, ENDPOINT_RADIUS_PX, FACE_RADIUS_PX, HV_SNAP_PX);
+      : snapToWalls(
+          world,
+          snapWalls,
+          otherNodes,
+          scale,
+          ENDPOINT_RADIUS_PX,
+          FACE_RADIUS_PX,
+          HV_SNAP_PX,
+        );
     const pt = snap?.point ?? world;
     dragSnapRef.current = snap;
     onUpdateNode(draggingNodeId, { x: pt.x, y: pt.y });
@@ -377,7 +400,7 @@ const handlePointerMove = (e: ReactPointerEvent<SVGSVGElement>) => {
 
   // Ortho : contraindre au H/V par rapport au dernier nœud si Shift + chaîne active
   if (isShiftPressed && chain && chain.nodeIds.length > 0) {
-    const lastId   = chain.nodeIds[chain.nodeIds.length - 1]!;
+    const lastId = chain.nodeIds[chain.nodeIds.length - 1]!;
     const lastNode = nodes.find((n) => n.id === lastId);
     if (lastNode) world = applyOrtho(world, { x: lastNode.x, y: lastNode.y });
   }
@@ -410,6 +433,7 @@ git commit -m "feat(wall-engine): WallDrawingCanvas — Shift ortho, Ctrl no-sna
 ### Task 3 : Touch — pinch-to-zoom + pan 1 doigt
 
 **Files:**
+
 - Modify: `src/components/plan/WallDrawingCanvas.tsx`
 
 Contexte : le composant n'a aucun gestionnaire touch. Ajouter un `touchRef` et trois handlers sur le div wrapper.
@@ -473,14 +497,15 @@ const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
     const svg = svgRef.current;
     if (svg && ref.prevDist > 0) {
       const ratio = dist2 / ref.prevDist;
-      const rect  = svg.getBoundingClientRect();
-      const mx = midX - rect.left, my = midY - rect.top;
-      const s  = scaleRef.current;
-      const p  = panRef.current;
+      const rect = svg.getBoundingClientRect();
+      const mx = midX - rect.left,
+        my = midY - rect.top;
+      const s = scaleRef.current;
+      const p = panRef.current;
       const ns = Math.max(0.005, Math.min(4, s * ratio));
       const np = { x: mx - (mx - p.x) * (ns / s), y: my - (my - p.y) * (ns / s) };
       scaleRef.current = ns;
-      panRef.current   = np;
+      panRef.current = np;
       onScaleChange(ns);
       onPanChange(np);
     }
@@ -494,7 +519,9 @@ const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
   }
 };
 
-const handleTouchEnd = () => { touchRef.current = null; };
+const handleTouchEnd = () => {
+  touchRef.current = null;
+};
 ```
 
 - [ ] **Step 3.3 : Mettre à jour le div wrapper**
@@ -536,6 +563,7 @@ git commit -m "feat(wall-engine): WallDrawingCanvas — pinch-to-zoom + pan 1 do
 ### Task 4 : Panel raccourcis clavier
 
 **Files:**
+
 - Modify: `src/components/plan/WallDrawingCanvas.tsx`
 
 Contexte : ajouter la même carte de raccourcis que le canvas legacy, adaptée aux shortcuts du moteur de murs. Visible uniquement sur desktop.

@@ -9,6 +9,7 @@ Pendant le drag d'un nœud N connecté aux murs N-A et N-B, l'intersection qui v
 ## Solution
 
 Nouvelle fonction `adjacentAxisSnapForNode(cursor, adjacentNodes, scale, hvSnapPx)` dans `wallSnap.ts` :
+
 - Cherche bestH parmi les Y des nœuds adjacents (A, B, …)
 - Cherche bestV parmi les X des nœuds adjacents
 - Si les deux → retourne intersection {x: bestV.x, y: bestH.y}

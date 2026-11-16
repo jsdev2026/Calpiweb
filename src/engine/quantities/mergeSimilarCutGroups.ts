@@ -10,9 +10,9 @@ export interface MergedCutGroup extends CutGroup {
 
 function edgesMatch(a: CutGroup, b: CutGroup): boolean {
   return (
-    a.pieceEdges.left   === b.pieceEdges.left &&
-    a.pieceEdges.right  === b.pieceEdges.right &&
-    a.pieceEdges.top    === b.pieceEdges.top &&
+    a.pieceEdges.left === b.pieceEdges.left &&
+    a.pieceEdges.right === b.pieceEdges.right &&
+    a.pieceEdges.top === b.pieceEdges.top &&
     a.pieceEdges.bottom === b.pieceEdges.bottom
   );
 }
@@ -37,10 +37,7 @@ function median(sorted: number[]): number {
  * Valeurs représentatives : médiane pour les dimensions numériques,
  * somme pour les compteurs, pieceEdges/chuteEdges du groupe médian.
  */
-export function mergeSimilarCutGroups(
-  groups: CutGroup[],
-  tolerance = 0.02,
-): MergedCutGroup[] {
+export function mergeSimilarCutGroups(groups: CutGroup[], tolerance = 0.02): MergedCutGroup[] {
   if (groups.length === 0) return [];
 
   // Associer chaque groupe à son index original avant le tri
@@ -69,10 +66,10 @@ export function mergeSimilarCutGroups(
     const medianIdx = Math.floor(n / 2);
     const representative = items[medianIdx]!;
 
-    const usedWs = [...items].sort((a, b) => a.g.usedW - b.g.usedW).map(x => x.g.usedW);
-    const usedHs = [...items].sort((a, b) => a.g.usedH - b.g.usedH).map(x => x.g.usedH);
-    const chuteWs = [...items].sort((a, b) => a.g.chuteW - b.g.chuteW).map(x => x.g.chuteW);
-    const chuteHs = [...items].sort((a, b) => a.g.chuteH - b.g.chuteH).map(x => x.g.chuteH);
+    const usedWs = [...items].sort((a, b) => a.g.usedW - b.g.usedW).map((x) => x.g.usedW);
+    const usedHs = [...items].sort((a, b) => a.g.usedH - b.g.usedH).map((x) => x.g.usedH);
+    const chuteWs = [...items].sort((a, b) => a.g.chuteW - b.g.chuteW).map((x) => x.g.chuteW);
+    const chuteHs = [...items].sort((a, b) => a.g.chuteH - b.g.chuteH).map((x) => x.g.chuteH);
 
     return {
       usedW: median(usedWs),
@@ -84,7 +81,7 @@ export function mergeSimilarCutGroups(
       totalCount: items.reduce((s, x) => s + x.g.totalCount, 0),
       reuseCount: items.reduce((s, x) => s + x.g.reuseCount, 0),
       netTiles: items.reduce((s, x) => s + x.g.netTiles, 0),
-      originalIndices: items.map(x => x.origIdx) as [number, ...number[]],
+      originalIndices: items.map((x) => x.origIdx) as [number, ...number[]],
     };
   });
 }

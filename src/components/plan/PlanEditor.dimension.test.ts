@@ -1,30 +1,39 @@
 import { describe, expect, it } from 'vitest';
 import { constraintFaceOffset } from '@/engine/constraints/faceOffset';
-import { bestEdgeNormal, findNearestVertexSnapImpl, computeDimDisplayedValue } from '@/engine/constraints/vertexSnap';
+import {
+  bestEdgeNormal,
+  findNearestVertexSnapImpl,
+  computeDimDisplayedValue,
+} from '@/engine/constraints/vertexSnap';
 import type { Room } from '@/types/project';
 import type { Point } from '@/types/plan';
 
 describe('DIMENSION tool interior round-trip', () => {
   const room: Room = {
     id: 'r1',
-    points: [{ x: 0, y: 0 }, { x: 3100, y: 0 }, { x: 3100, y: 4200 }, { x: 0, y: 4200 }],
+    points: [
+      { x: 0, y: 0 },
+      { x: 3100, y: 0 },
+      { x: 3100, y: 4200 },
+      { x: 0, y: 4200 },
+    ],
     edges: ['WALL', 'WALL', 'WALL', 'WALL'],
   };
 
   it('room-to-room same room: open shows interior, submit stores centerline', () => {
     const fromRef = { roomId: 'r1', vertexIdx: 0 };
-    const toRef   = { roomId: 'r1', vertexIdx: 1 };
+    const toRef = { roomId: 'r1', vertexIdx: 1 };
     const absDx = Math.abs(3100 - 0);
     const syntheticC = { id: '', type: 'H_DISTANCE' as const, pts: [fromRef, toRef] };
     const offset = constraintFaceOffset(syntheticC, room, 100);
     expect(offset).toBe(100);
     expect((absDx - offset) / 10).toBe(300); // shown as 300cm
-    expect(300 * 10 + offset).toBe(3100);    // stored as 3100mm
+    expect(300 * 10 + offset).toBe(3100); // stored as 3100mm
   });
 
   it('cross-entity (different roomIds): offset = 0', () => {
     const fromRef = { roomId: 'r1', vertexIdx: 0 };
-    const toRef   = { roomId: 'partition-1', vertexIdx: 0 };
+    const toRef = { roomId: 'partition-1', vertexIdx: 0 };
     const syntheticC = { id: '', type: 'H_DISTANCE' as const, pts: [fromRef, toRef] };
     const offset = constraintFaceOffset(syntheticC, room, 100);
     expect(offset).toBe(0);
@@ -38,9 +47,9 @@ describe('bestEdgeNormal', () => {
 
   it('picks normal of edge most aligned with cursor direction — above vtx', () => {
     const cursor: Point = { x: 1000, y: -200 }; // au-dessus du vtx
-    const vtx: Point    = { x: 1000, y: 0 };
-    const prev: Point   = { x: 0, y: 0 };
-    const next: Point   = { x: 1000, y: 1000 };
+    const vtx: Point = { x: 1000, y: 0 };
+    const prev: Point = { x: 0, y: 0 };
+    const next: Point = { x: 1000, y: 1000 };
     // toCursor = (0,-200); dot1 with (0,1) = -200 |200|; dot2 with (-1,0) = 0 |0|
     // → picks n1 = (0,1)
     const n = bestEdgeNormal(cursor, vtx, prev, next);
@@ -50,9 +59,9 @@ describe('bestEdgeNormal', () => {
 
   it('picks normal of other edge when cursor is on that side', () => {
     const cursor: Point = { x: 1200, y: 0 }; // à droite du vtx
-    const vtx: Point    = { x: 1000, y: 0 };
-    const prev: Point   = { x: 0, y: 0 };
-    const next: Point   = { x: 1000, y: 1000 };
+    const vtx: Point = { x: 1000, y: 0 };
+    const prev: Point = { x: 0, y: 0 };
+    const next: Point = { x: 1000, y: 1000 };
     // toCursor = (200,0); dot1 with (0,1)=0; dot2 with (-1,0)=-200 |200|
     // → picks n2 = (-1,0)
     const n = bestEdgeNormal(cursor, vtx, prev, next);
@@ -65,10 +74,10 @@ describe('findNearestVertexSnapImpl', () => {
   const room: Room = {
     id: 'r1',
     points: [
-      { x: 0,    y: 0    },
-      { x: 2000, y: 0    },
+      { x: 0, y: 0 },
+      { x: 2000, y: 0 },
       { x: 2000, y: 3000 },
-      { x: 0,    y: 3000 },
+      { x: 0, y: 3000 },
     ],
     edges: ['WALL', 'WALL', 'WALL', 'WALL'],
   };
@@ -102,27 +111,27 @@ describe('findNearestVertexSnapImpl', () => {
 
 describe('computeDimDisplayedValue — rawValue par type', () => {
   it('H_DISTANCE : rawValue = |dx| / 10', () => {
-    const from: Point = { x: 0,    y: 0 };
-    const to:   Point = { x: 3000, y: 1000 };
+    const from: Point = { x: 0, y: 0 };
+    const to: Point = { x: 3000, y: 1000 };
     expect(computeDimDisplayedValue(from, to, 'H_DISTANCE')).toBeCloseTo(300);
   });
 
   it('V_DISTANCE : rawValue = |dy| / 10', () => {
-    const from: Point = { x: 0,    y: 0 };
-    const to:   Point = { x: 3000, y: 1000 };
+    const from: Point = { x: 0, y: 0 };
+    const to: Point = { x: 3000, y: 1000 };
     expect(computeDimDisplayedValue(from, to, 'V_DISTANCE')).toBeCloseTo(100);
   });
 
   it('LENGTH : rawValue = sqrt(dx²+dy²) / 10', () => {
     const from: Point = { x: 0, y: 0 };
-    const to:   Point = { x: 3000, y: 4000 };
+    const to: Point = { x: 3000, y: 4000 };
     // sqrt(9000000+16000000)/10 = 5000/10 = 500
     expect(computeDimDisplayedValue(from, to, 'LENGTH')).toBeCloseTo(500);
   });
 
   it('LENGTH entre deux points alignés H : rawValue = |dx| / 10', () => {
-    const from: Point = { x: 0,    y: 0 };
-    const to:   Point = { x: 2500, y: 0 };
+    const from: Point = { x: 0, y: 0 };
+    const to: Point = { x: 2500, y: 0 };
     expect(computeDimDisplayedValue(from, to, 'LENGTH')).toBeCloseTo(250);
   });
 });

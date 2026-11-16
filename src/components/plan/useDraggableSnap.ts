@@ -8,11 +8,11 @@ export type SnapZone = 'SIDE' | 'TOP' | 'BOTTOM';
 const CANVAS_TOP_PX = 92;
 
 function getZoneCenters(): Record<SnapZone, { x: number; y: number }> {
-  const w = typeof window !== 'undefined' ? window.innerWidth  : 1280;
+  const w = typeof window !== 'undefined' ? window.innerWidth : 1280;
   const h = typeof window !== 'undefined' ? window.innerHeight : 800;
   return {
-    SIDE:   { x: 80,    y: CANVAS_TOP_PX + 68 },
-    TOP:    { x: w / 2, y: CANVAS_TOP_PX + 40 },
+    SIDE: { x: 80, y: CANVAS_TOP_PX + 68 },
+    TOP: { x: w / 2, y: CANVAS_TOP_PX + 40 },
     BOTTOM: { x: w / 2, y: h - 40 },
   };
 }
@@ -23,7 +23,10 @@ function computeNearestZone(x: number, y: number): SnapZone {
   let bestDist = Infinity;
   for (const [zone, c] of Object.entries(centers) as [SnapZone, { x: number; y: number }][]) {
     const d = Math.hypot(x - c.x, y - c.y);
-    if (d < bestDist) { bestDist = d; best = zone; }
+    if (d < bestDist) {
+      bestDist = d;
+      best = zone;
+    }
   }
   return best;
 }
@@ -41,7 +44,9 @@ export function useDraggableSnap({ storageKey, defaultZone }: UseDraggableSnapOp
   const [isDragging, setIsDragging] = useState(false);
   const [nearestZone, setNearestZone] = useState<SnapZone | null>(null);
   const isDraggingRef = useRef(isDragging);
-  useEffect(() => { isDraggingRef.current = isDragging; }, [isDragging]);
+  useEffect(() => {
+    isDraggingRef.current = isDragging;
+  }, [isDragging]);
 
   const handlePointerDown = useCallback((e: ReactPointerEvent) => {
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
@@ -53,22 +58,25 @@ export function useDraggableSnap({ storageKey, defaultZone }: UseDraggableSnapOp
     setNearestZone(computeNearestZone(e.clientX, e.clientY));
   }, []);
 
-  const handlePointerUp = useCallback((e: PointerEvent) => {
-    if (!isDraggingRef.current) return;
-    const snapped = computeNearestZone(e.clientX, e.clientY);
-    setZone(snapped);
-    setNearestZone(null);
-    setIsDragging(false);
-    localStorage.setItem(storageKey, snapped);
-  }, [storageKey]);
+  const handlePointerUp = useCallback(
+    (e: PointerEvent) => {
+      if (!isDraggingRef.current) return;
+      const snapped = computeNearestZone(e.clientX, e.clientY);
+      setZone(snapped);
+      setNearestZone(null);
+      setIsDragging(false);
+      localStorage.setItem(storageKey, snapped);
+    },
+    [storageKey],
+  );
 
   useEffect(() => {
     if (!isDragging) return;
     window.addEventListener('pointermove', handlePointerMove);
-    window.addEventListener('pointerup',   handlePointerUp);
+    window.addEventListener('pointerup', handlePointerUp);
     return () => {
       window.removeEventListener('pointermove', handlePointerMove);
-      window.removeEventListener('pointerup',   handlePointerUp);
+      window.removeEventListener('pointerup', handlePointerUp);
     };
   }, [isDragging, handlePointerMove, handlePointerUp]);
 

@@ -12,11 +12,11 @@
 
 ## Fichiers
 
-| Fichier | Action |
-|---------|--------|
-| `src/engine/geometry/wallFaces.ts` | Propager `isDoor` → `'DOOR'` dans `wallsToRooms` |
-| `src/engine/geometry/wallFaces.test.ts` | Ajouter test pour la propagation `isDoor` |
-| `src/components/tiling/TilingEditor.tsx` | Sélectionner `wallEngine` du store, calculer `wallPolygons`, passer à `TilingCanvas` |
+| Fichier                                  | Action                                                                                        |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `src/engine/geometry/wallFaces.ts`       | Propager `isDoor` → `'DOOR'` dans `wallsToRooms`                                              |
+| `src/engine/geometry/wallFaces.test.ts`  | Ajouter test pour la propagation `isDoor`                                                     |
+| `src/components/tiling/TilingEditor.tsx` | Sélectionner `wallEngine` du store, calculer `wallPolygons`, passer à `TilingCanvas`          |
 | `src/components/tiling/TilingCanvas.tsx` | Ajouter prop `wallPolygons`, remplacer boucle `<line>` par polygones, corriger `doorRectPath` |
 
 ---
@@ -27,8 +27,8 @@
 
 ```ts
 return cycles.map((cycle, idx) => {
-  const facePts = cycle.nodeIds.map(id => getPos(id));
-  const roomZones = excludedZones.filter(zone => {
+  const facePts = cycle.nodeIds.map((id) => getPos(id));
+  const roomZones = excludedZones.filter((zone) => {
     if (zone.points.length < 3) return false;
     const cx = zone.points.reduce((s, p) => s + p.x, 0) / zone.points.length;
     const cy = zone.points.reduce((s, p) => s + p.y, 0) / zone.points.length;
@@ -38,7 +38,7 @@ return cycles.map((cycle, idx) => {
     id: faceId(cycle.nodeIds),
     name: `Pièce ${idx + 1}`,
     points: facePts,
-    edges: facePts.map(() => 'WALL' as EdgeType),  // ← BUG : ignore isDoor
+    edges: facePts.map(() => 'WALL' as EdgeType), // ← BUG : ignore isDoor
     partitions: [],
     excludedZones: roomZones,
   };
@@ -50,38 +50,47 @@ return cycles.map((cycle, idx) => {
 ### `TilingCanvas.tsx` — boucle wall actuelle (lignes 160-177)
 
 ```tsx
-{/* Room walls and doors */}
-{validRooms.map((room) =>
-  room.points.map((p, i) => {
-    const nextP = room.points[(i + 1) % room.points.length]!;
-    const isDoor = (room.edges[i] ?? 'WALL') === 'DOOR';
-    const edgeThick = room.edgeThicknesses?.[i] ?? wallThickness;
-    return (
-      <line
-        key={`edge-${room.id}-${i}`}
-        x1={p.x} y1={p.y} x2={nextP.x} y2={nextP.y}
-        stroke={isDoor ? '#f97316' : '#ea580c'}
-        strokeWidth={isDoor ? edgeThick * 0.5 : edgeThick}
-        strokeLinecap="round"
-        strokeDasharray={isDoor ? `${edgeThick * 1.2},${edgeThick * 0.8}` : undefined}
-      />
-    );
-  }),
-)}
+{
+  /* Room walls and doors */
+}
+{
+  validRooms.map((room) =>
+    room.points.map((p, i) => {
+      const nextP = room.points[(i + 1) % room.points.length]!;
+      const isDoor = (room.edges[i] ?? 'WALL') === 'DOOR';
+      const edgeThick = room.edgeThicknesses?.[i] ?? wallThickness;
+      return (
+        <line
+          key={`edge-${room.id}-${i}`}
+          x1={p.x}
+          y1={p.y}
+          x2={nextP.x}
+          y2={nextP.y}
+          stroke={isDoor ? '#f97316' : '#ea580c'}
+          strokeWidth={isDoor ? edgeThick * 0.5 : edgeThick}
+          strokeLinecap="round"
+          strokeDasharray={isDoor ? `${edgeThick * 1.2},${edgeThick * 0.8}` : undefined}
+        />
+      );
+    }),
+  );
+}
 ```
 
 ### `TilingCanvas.tsx` — `doorRectPath` actuel (lignes 30-42)
 
 ```ts
 function doorRectPath(door: DoorOpening): string {
-  const dx = door.to.x - door.from.x, dy = door.to.y - door.from.y;
+  const dx = door.to.x - door.from.x,
+    dy = door.to.y - door.from.y;
   const L = Math.sqrt(dx * dx + dy * dy);
   if (L < 1) return '';
-  const px = (-dy / L) * door.thickness, py = (dx / L) * door.thickness;  // ← demi-largeur = thickness (trop large)
+  const px = (-dy / L) * door.thickness,
+    py = (dx / L) * door.thickness; // ← demi-largeur = thickness (trop large)
   const pts = [
     { x: door.from.x + px, y: door.from.y + py },
-    { x: door.to.x   + px, y: door.to.y   + py },
-    { x: door.to.x   - px, y: door.to.y   - py },
+    { x: door.to.x + px, y: door.to.y + py },
+    { x: door.to.x - px, y: door.to.y - py },
     { x: door.from.x - px, y: door.from.y - py },
   ];
   return `M ${pts.map((p) => `${p.x},${p.y}`).join(' L ')} Z`;
@@ -102,7 +111,7 @@ export interface WallPolygon {
 ### `computeCornerGeometry` (wallGeometry.ts ligne 60)
 
 ```ts
-export function computeCornerGeometry(walls: Wall[], nodes: WallNode[]): WallPolygon[]
+export function computeCornerGeometry(walls: Wall[], nodes: WallNode[]): WallPolygon[];
 ```
 
 Déjà utilisée dans `WallDrawingCanvas.tsx` avec `walls.filter(w => !w.isDoor)`.
@@ -120,6 +129,7 @@ const dimensions = useProjectStore((s) => selectActiveProject(s)?.tilingDimensio
 ## Task 1 : Propager `isDoor` dans `wallsToRooms`
 
 **Files:**
+
 - Modify: `src/engine/geometry/wallFaces.ts:128-144`
 - Modify: `src/engine/geometry/wallFaces.test.ts` (ajouter 1 test)
 
@@ -129,7 +139,7 @@ Dans `src/engine/geometry/wallFaces.test.ts`, après le `describe('wallsToRooms 
 
 ```ts
 describe('wallsToRooms — isDoor propagation', () => {
-  it('marque l\'arête porte comme DOOR dans le tableau edges de la pièce', () => {
+  it("marque l'arête porte comme DOOR dans le tableau edges de la pièce", () => {
     const nodes = [nd('a', 0, 0), nd('b', 100, 0), nd('c', 100, 100), nd('d', 0, 100)];
     const walls: Wall[] = [
       { id: 'w1', node1Id: 'a', node2Id: 'b', thickness: 20 },
@@ -139,8 +149,8 @@ describe('wallsToRooms — isDoor propagation', () => {
     ];
     const rooms = wallsToRooms(walls, nodes);
     expect(rooms).toHaveLength(1);
-    const doorCount = rooms[0]!.edges.filter(e => e === 'DOOR').length;
-    const wallCount = rooms[0]!.edges.filter(e => e === 'WALL').length;
+    const doorCount = rooms[0]!.edges.filter((e) => e === 'DOOR').length;
+    const wallCount = rooms[0]!.edges.filter((e) => e === 'WALL').length;
     expect(doorCount).toBe(1);
     expect(wallCount).toBe(3);
   });
@@ -149,8 +159,12 @@ describe('wallsToRooms — isDoor propagation', () => {
     // 6 nodes: a(0,0) b(100,0) c(200,0) d(200,100) e(100,100) f(0,100)
     // Room gauche : a-b-e-f   Room droite : b-c-d-e
     const nodes = [
-      nd('a', 0, 0), nd('b', 100, 0), nd('c', 200, 0),
-      nd('d', 200, 100), nd('e', 100, 100), nd('f', 0, 100),
+      nd('a', 0, 0),
+      nd('b', 100, 0),
+      nd('c', 200, 0),
+      nd('d', 200, 100),
+      nd('e', 100, 100),
+      nd('f', 0, 100),
     ];
     const walls: Wall[] = [
       { id: 'w1', node1Id: 'a', node2Id: 'b', thickness: 20 },
@@ -163,7 +177,10 @@ describe('wallsToRooms — isDoor propagation', () => {
     ];
     const rooms = wallsToRooms(walls, nodes);
     expect(rooms).toHaveLength(2);
-    const totalDoorEdges = rooms.reduce((sum, r) => sum + r.edges.filter(e => e === 'DOOR').length, 0);
+    const totalDoorEdges = rooms.reduce(
+      (sum, r) => sum + r.edges.filter((e) => e === 'DOOR').length,
+      0,
+    );
     expect(totalDoorEdges).toBe(2); // chaque pièce voit l'arête porte comme DOOR
   });
 });
@@ -184,7 +201,7 @@ Dans `src/engine/geometry/wallFaces.ts`, modifier `wallsToRooms` :
 Avant la ligne `const cycles = wallFaceCycles(walls, nodes);` (ligne 115), ajouter :
 
 ```ts
-const wallMap = new Map(walls.map(w => [w.id, w]));
+const wallMap = new Map(walls.map((w) => [w.id, w]));
 ```
 
 Remplacer la ligne `edges: facePts.map(() => 'WALL' as EdgeType),` (ligne 140) par :
@@ -201,9 +218,12 @@ export function wallsToRooms(
   nodes: WallNode[],
   excludedZones: WallExcludedZone[] = [],
 ): Room[] {
-  const nodeMap = new Map(nodes.map(n => [n.id, n]));
-  const getPos = (id: string) => { const n = nodeMap.get(id)!; return { x: n.x, y: n.y }; };
-  const wallMap = new Map(walls.map(w => [w.id, w]));
+  const nodeMap = new Map(nodes.map((n) => [n.id, n]));
+  const getPos = (id: string) => {
+    const n = nodeMap.get(id)!;
+    return { x: n.x, y: n.y };
+  };
+  const wallMap = new Map(walls.map((w) => [w.id, w]));
 
   const cycles = wallFaceCycles(walls, nodes);
 
@@ -214,13 +234,15 @@ export function wallsToRooms(
     const cya = ptsA.reduce((s, p) => s + p.y, 0) / ptsA.length;
     const cyb = ptsB.reduce((s, p) => s + p.y, 0) / ptsB.length;
     if (Math.abs(cya - cyb) > 1) return cya - cyb;
-    return (ptsA.reduce((s, p) => s + p.x, 0) / ptsA.length) -
-           (ptsB.reduce((s, p) => s + p.x, 0) / ptsB.length);
+    return (
+      ptsA.reduce((s, p) => s + p.x, 0) / ptsA.length -
+      ptsB.reduce((s, p) => s + p.x, 0) / ptsB.length
+    );
   });
 
   return cycles.map((cycle, idx) => {
-    const facePts = cycle.nodeIds.map(id => getPos(id));
-    const roomZones = excludedZones.filter(zone => {
+    const facePts = cycle.nodeIds.map((id) => getPos(id));
+    const roomZones = excludedZones.filter((zone) => {
       if (zone.points.length < 3) return false;
       const cx = zone.points.reduce((s, p) => s + p.x, 0) / zone.points.length;
       const cy = zone.points.reduce((s, p) => s + p.y, 0) / zone.points.length;
@@ -230,7 +252,7 @@ export function wallsToRooms(
       id: faceId(cycle.nodeIds),
       name: `Pièce ${idx + 1}`,
       points: facePts,
-      edges: cycle.wallIds.map(wid => (wallMap.get(wid)?.isDoor ? 'DOOR' : 'WALL') as EdgeType),
+      edges: cycle.wallIds.map((wid) => (wallMap.get(wid)?.isDoor ? 'DOOR' : 'WALL') as EdgeType),
       partitions: [],
       excludedZones: roomZones,
     };
@@ -274,10 +296,12 @@ git commit -m "fix(wall): propager isDoor dans wallsToRooms — arête porte cor
 ## Task 2 : Remplacer le rendu murs + corriger doorRectPath dans TilingCanvas
 
 **Files:**
+
 - Modify: `src/components/tiling/TilingEditor.tsx`
 - Modify: `src/components/tiling/TilingCanvas.tsx`
 
 Cette tâche :
+
 1. Ajoute un sélecteur `wallEngine` dans `TilingEditor`, calcule `wallPolygons` via `computeCornerGeometry`, les passe à `TilingCanvas`
 2. Dans `TilingCanvas` : remplace la boucle `<line>` par des `<polygon>` de mur (identique au plan editor), corrige la demi-largeur de `doorRectPath` (`door.thickness → door.thickness / 2`)
 
@@ -294,9 +318,13 @@ import { computeCornerGeometry } from '@/engine/geometry/wallGeometry';
 Après la ligne `const doorOpenings = useProjectStore(useShallow(selectDoorOpenings));` (ligne 87), ajouter :
 
 ```ts
-const wallEngine = useProjectStore(s => selectActiveProject(s)?.wallEngine);
+const wallEngine = useProjectStore((s) => selectActiveProject(s)?.wallEngine);
 const wallPolygons = useMemo(
-  () => computeCornerGeometry((wallEngine?.walls ?? []).filter(w => !w.isDoor), wallEngine?.nodes ?? []),
+  () =>
+    computeCornerGeometry(
+      (wallEngine?.walls ?? []).filter((w) => !w.isDoor),
+      wallEngine?.nodes ?? [],
+    ),
   [wallEngine],
 );
 ```
@@ -349,23 +377,27 @@ Remplacer dans `doorRectPath` (ligne 34) :
 
 ```ts
 // Avant :
-const px = (-dy / L) * door.thickness, py = (dx / L) * door.thickness;
+const px = (-dy / L) * door.thickness,
+  py = (dx / L) * door.thickness;
 // Après :
-const px = (-dy / L) * (door.thickness / 2), py = (dx / L) * (door.thickness / 2);
+const px = (-dy / L) * (door.thickness / 2),
+  py = (dx / L) * (door.thickness / 2);
 ```
 
 La fonction `doorRectPath` corrigée :
 
 ```ts
 function doorRectPath(door: DoorOpening): string {
-  const dx = door.to.x - door.from.x, dy = door.to.y - door.from.y;
+  const dx = door.to.x - door.from.x,
+    dy = door.to.y - door.from.y;
   const L = Math.sqrt(dx * dx + dy * dy);
   if (L < 1) return '';
-  const px = (-dy / L) * (door.thickness / 2), py = (dx / L) * (door.thickness / 2);
+  const px = (-dy / L) * (door.thickness / 2),
+    py = (dx / L) * (door.thickness / 2);
   const pts = [
     { x: door.from.x + px, y: door.from.y + py },
-    { x: door.to.x   + px, y: door.to.y   + py },
-    { x: door.to.x   - px, y: door.to.y   - py },
+    { x: door.to.x + px, y: door.to.y + py },
+    { x: door.to.x - px, y: door.to.y - py },
     { x: door.from.x - px, y: door.from.y - py },
   ];
   return `M ${pts.map((p) => `${p.x},${p.y}`).join(' L ')} Z`;
@@ -377,17 +409,21 @@ function doorRectPath(door: DoorOpening): string {
 Remplacer le bloc `{/* Room walls and doors */}` (lignes 160-177) par :
 
 ```tsx
-{/* Wall polygons — même géométrie que le plan editor */}
-{wallPolygons.map((poly) => {
-  if (!poly.points.length) return null;
-  return (
-    <polygon
-      key={`wall-${poly.wallId}`}
-      points={poly.points.map((p) => `${p.x},${p.y}`).join(' ')}
-      fill="var(--canvas-wall)"
-    />
-  );
-})}
+{
+  /* Wall polygons — même géométrie que le plan editor */
+}
+{
+  wallPolygons.map((poly) => {
+    if (!poly.points.length) return null;
+    return (
+      <polygon
+        key={`wall-${poly.wallId}`}
+        points={poly.points.map((p) => `${p.x},${p.y}`).join(' ')}
+        fill="var(--canvas-wall)"
+      />
+    );
+  });
+}
 ```
 
 Les murs `isDoor` ne sont PAS dans `wallPolygons` (filtrés dans TilingEditor) → ouverture visible naturellement.

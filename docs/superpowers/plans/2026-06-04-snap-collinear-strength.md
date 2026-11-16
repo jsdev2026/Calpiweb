@@ -12,11 +12,11 @@
 
 ## Fichiers
 
-| Fichier | Action |
-|---------|--------|
-| `src/types/wall.ts` | Étendre `SnapResult.type` + ajouter `dir?: Point` |
-| `src/engine/geometry/wallSnap.ts` | Ajouter `collinearSnap` + `collinearSnapForNode` |
-| `src/engine/geometry/wallSnap.test.ts` | Ajouter tests pour les deux nouvelles fonctions |
+| Fichier                                     | Action                                                 |
+| ------------------------------------------- | ------------------------------------------------------ |
+| `src/types/wall.ts`                         | Étendre `SnapResult.type` + ajouter `dir?: Point`      |
+| `src/engine/geometry/wallSnap.ts`           | Ajouter `collinearSnap` + `collinearSnapForNode`       |
+| `src/engine/geometry/wallSnap.test.ts`      | Ajouter tests pour les deux nouvelles fonctions        |
 | `src/components/plan/WallDrawingCanvas.tsx` | Constantes + imports + appels snap + indicateur visuel |
 
 ---
@@ -24,6 +24,7 @@
 ### Task 1 : Types + fonctions snap colinéaire + tests
 
 **Files:**
+
 - Modify: `src/types/wall.ts`
 - Modify: `src/engine/geometry/wallSnap.ts`
 - Modify: `src/engine/geometry/wallSnap.test.ts`
@@ -33,7 +34,13 @@
 Dans `src/engine/geometry/wallSnap.test.ts`, modifier la ligne 3 :
 
 ```ts
-import { snapToWalls, perpendicularSnapForNode, adjacentAxisSnapForNode, collinearSnap, collinearSnapForNode } from './wallSnap';
+import {
+  snapToWalls,
+  perpendicularSnapForNode,
+  adjacentAxisSnapForNode,
+  collinearSnap,
+  collinearSnapForNode,
+} from './wallSnap';
 ```
 
 Ajouter à la fin du fichier :
@@ -91,7 +98,8 @@ describe('collinearSnapForNode', () => {
   });
 
   it('fonctionne avec une paire diagonale', () => {
-    const C = nd('c', 0, 0), D = nd('d', 100, 100);
+    const C = nd('c', 0, 0),
+      D = nd('d', 100, 100);
     // Droite y=x. Curseur à (50, 55) → dist = |55-50|/√2 ≈ 3.5 < 12 → snap à (52.5, 52.5)
     const r = collinearSnapForNode({ x: 50, y: 55 }, [C, D], 1, 12);
     expect(r?.type).toBe('collinear');
@@ -136,7 +144,7 @@ export interface SnapResult {
   wallId?: string;
   nodeId?: string;
   axis?: 'h' | 'v';
-  dir?: Point;  // direction normalisée — utilisée par le snap colinéaire
+  dir?: Point; // direction normalisée — utilisée par le snap colinéaire
 }
 ```
 
@@ -160,10 +168,11 @@ export function collinearSnap(
   let best: { point: Point; dist: number; dir: Point } | null = null;
 
   for (const wall of walls) {
-    const n1 = nodes.find(n => n.id === wall.node1Id);
-    const n2 = nodes.find(n => n.id === wall.node2Id);
+    const n1 = nodes.find((n) => n.id === wall.node1Id);
+    const n2 = nodes.find((n) => n.id === wall.node2Id);
     if (!n1 || !n2) continue;
-    const dx = n2.x - n1.x, dy = n2.y - n1.y;
+    const dx = n2.x - n1.x,
+      dy = n2.y - n1.y;
     const lenSq = dx * dx + dy * dy;
     if (lenSq < 1) continue;
     const len = Math.sqrt(lenSq);
@@ -193,8 +202,10 @@ export function collinearSnapForNode(
 
   for (let i = 0; i < adjacentNodes.length; i++) {
     for (let j = i + 1; j < adjacentNodes.length; j++) {
-      const A = adjacentNodes[i]!, B = adjacentNodes[j]!;
-      const dx = B.x - A.x, dy = B.y - A.y;
+      const A = adjacentNodes[i]!,
+        B = adjacentNodes[j]!;
+      const dx = B.x - A.x,
+        dy = B.y - A.y;
       const lenSq = dx * dx + dy * dy;
       if (lenSq < 1) continue;
       const len = Math.sqrt(lenSq);
@@ -238,6 +249,7 @@ git commit -m "feat(wallSnap): collinearSnap + collinearSnapForNode — aimantat
 ### Task 2 : Canvas — constantes + intégration + indicateur visuel
 
 **Files:**
+
 - Modify: `src/components/plan/WallDrawingCanvas.tsx`
 
 - [ ] **Step 1 : Mettre à jour les imports et les constantes**
@@ -245,16 +257,22 @@ git commit -m "feat(wallSnap): collinearSnap + collinearSnapForNode — aimantat
 **Ligne 7** — ajouter `collinearSnap, collinearSnapForNode` à l'import :
 
 ```ts
-import { snapToWalls, perpendicularSnapForNode, adjacentAxisSnapForNode, collinearSnap, collinearSnapForNode } from '@/engine/geometry/wallSnap';
+import {
+  snapToWalls,
+  perpendicularSnapForNode,
+  adjacentAxisSnapForNode,
+  collinearSnap,
+  collinearSnapForNode,
+} from '@/engine/geometry/wallSnap';
 ```
 
 **Lignes 18-20** — remplacer les 3 constantes et ajouter la 4ème :
 
 ```ts
-const HV_SNAP_PX          = 15;  // était 20
-const HV_SNAP_DRAG_PX     = 28;  // était 40
-const PERP_SNAP_PX        = 22;  // était 30
-const COLLINEAR_SNAP_PX   = 12;  // nouveau — snap colinéaire (dessin + drag)
+const HV_SNAP_PX = 15; // était 20
+const HV_SNAP_DRAG_PX = 28; // était 40
+const PERP_SNAP_PX = 22; // était 30
+const COLLINEAR_SNAP_PX = 12; // nouveau — snap colinéaire (dessin + drag)
 ```
 
 - [ ] **Step 2 : Mettre à jour le snap pendant le dessin (handlePointerDown)**
@@ -274,9 +292,10 @@ Remplacer par :
 const baseSnap = isCtrlPressed
   ? null
   : snapToWalls(world, walls, nodes, scale, ENDPOINT_RADIUS_PX, FACE_RADIUS_PX, HV_SNAP_PX);
-const snap = (isCtrlPressed || baseSnap?.type === 'endpoint')
-  ? baseSnap
-  : (collinearSnap(world, walls, nodes, scale, COLLINEAR_SNAP_PX) ?? baseSnap);
+const snap =
+  isCtrlPressed || baseSnap?.type === 'endpoint'
+    ? baseSnap
+    : (collinearSnap(world, walls, nodes, scale, COLLINEAR_SNAP_PX) ?? baseSnap);
 const pt = snap?.point ?? world;
 ```
 
@@ -298,9 +317,10 @@ Remplacer par :
 const baseSnap = isCtrlPressed
   ? null
   : snapToWalls(world, walls, nodes, scale, ENDPOINT_RADIUS_PX, FACE_RADIUS_PX, HV_SNAP_PX);
-const snap = (isCtrlPressed || baseSnap?.type === 'endpoint')
-  ? baseSnap
-  : (collinearSnap(world, walls, nodes, scale, COLLINEAR_SNAP_PX) ?? baseSnap);
+const snap =
+  isCtrlPressed || baseSnap?.type === 'endpoint'
+    ? baseSnap
+    : (collinearSnap(world, walls, nodes, scale, COLLINEAR_SNAP_PX) ?? baseSnap);
 setCursor(snap?.point ?? world);
 setSnapResult(snap);
 ```
@@ -312,19 +332,29 @@ Trouver le bloc autour des lignes 439-462 :
 ```ts
 let snap = null;
 if (!isCtrlPressed) {
-  const wallSnap = snapToWalls(world, snapWalls, otherNodes, scale, ENDPOINT_RADIUS_PX, FACE_RADIUS_PX, HV_SNAP_DRAG_PX);
+  const wallSnap = snapToWalls(
+    world,
+    snapWalls,
+    otherNodes,
+    scale,
+    ENDPOINT_RADIUS_PX,
+    FACE_RADIUS_PX,
+    HV_SNAP_DRAG_PX,
+  );
   if (wallSnap?.type === 'endpoint') {
     snap = wallSnap;
   } else {
-    const adjSnap = adjacentNodes.length > 0
-      ? adjacentAxisSnapForNode(world, adjacentNodes, scale, HV_SNAP_DRAG_PX)
-      : null;
+    const adjSnap =
+      adjacentNodes.length > 0
+        ? adjacentAxisSnapForNode(world, adjacentNodes, scale, HV_SNAP_DRAG_PX)
+        : null;
     if (adjSnap && !adjSnap.axis) {
       snap = adjSnap;
     } else {
-      const perpSnap = adjacentNodes.length >= 2
-        ? perpendicularSnapForNode(world, adjacentNodes, scale, PERP_SNAP_PX)
-        : null;
+      const perpSnap =
+        adjacentNodes.length >= 2
+          ? perpendicularSnapForNode(world, adjacentNodes, scale, PERP_SNAP_PX)
+          : null;
       snap = perpSnap ?? adjSnap ?? wallSnap;
     }
   }
@@ -336,23 +366,34 @@ Remplacer par :
 ```ts
 let snap = null;
 if (!isCtrlPressed) {
-  const wallSnap = snapToWalls(world, snapWalls, otherNodes, scale, ENDPOINT_RADIUS_PX, FACE_RADIUS_PX, HV_SNAP_DRAG_PX);
+  const wallSnap = snapToWalls(
+    world,
+    snapWalls,
+    otherNodes,
+    scale,
+    ENDPOINT_RADIUS_PX,
+    FACE_RADIUS_PX,
+    HV_SNAP_DRAG_PX,
+  );
   if (wallSnap?.type === 'endpoint') {
     snap = wallSnap;
   } else {
-    const adjSnap = adjacentNodes.length > 0
-      ? adjacentAxisSnapForNode(world, adjacentNodes, scale, HV_SNAP_DRAG_PX)
-      : null;
+    const adjSnap =
+      adjacentNodes.length > 0
+        ? adjacentAxisSnapForNode(world, adjacentNodes, scale, HV_SNAP_DRAG_PX)
+        : null;
     if (adjSnap && !adjSnap.axis) {
       // Intersection H+V : priorité max après endpoint
       snap = adjSnap;
     } else {
-      const colSnap = adjacentNodes.length >= 2
-        ? collinearSnapForNode(world, adjacentNodes, scale, COLLINEAR_SNAP_PX)
-        : null;
-      const perpSnap = adjacentNodes.length >= 2
-        ? perpendicularSnapForNode(world, adjacentNodes, scale, PERP_SNAP_PX)
-        : null;
+      const colSnap =
+        adjacentNodes.length >= 2
+          ? collinearSnapForNode(world, adjacentNodes, scale, COLLINEAR_SNAP_PX)
+          : null;
+      const perpSnap =
+        adjacentNodes.length >= 2
+          ? perpendicularSnapForNode(world, adjacentNodes, scale, PERP_SNAP_PX)
+          : null;
       snap = colSnap ?? perpSnap ?? adjSnap ?? wallSnap;
     }
   }
@@ -364,19 +405,31 @@ if (!isCtrlPressed) {
 Dans le rendu SVG, trouver le bloc des guides H/V (autour de la ligne `{/* H/V snap guide lines */}`). Juste AVANT ce bloc, ajouter :
 
 ```tsx
-{/* Snap colinéaire — ligne pointillée violette dans la direction du mur */}
-{snapResult?.type === 'collinear' && snapResult.dir && cursor && (() => {
-  const sc = worldToScreen(cursor);
-  const d = snapResult.dir;
-  const BIG = 2000;
-  return (
-    <line
-      x1={sc.x - d.x * BIG} y1={sc.y - d.y * BIG}
-      x2={sc.x + d.x * BIG} y2={sc.y + d.y * BIG}
-      stroke="#8b5cf6" strokeWidth={1} strokeDasharray="6,3" opacity={0.6}
-    />
-  );
-})()}
+{
+  /* Snap colinéaire — ligne pointillée violette dans la direction du mur */
+}
+{
+  snapResult?.type === 'collinear' &&
+    snapResult.dir &&
+    cursor &&
+    (() => {
+      const sc = worldToScreen(cursor);
+      const d = snapResult.dir;
+      const BIG = 2000;
+      return (
+        <line
+          x1={sc.x - d.x * BIG}
+          y1={sc.y - d.y * BIG}
+          x2={sc.x + d.x * BIG}
+          y2={sc.y + d.y * BIG}
+          stroke="#8b5cf6"
+          strokeWidth={1}
+          strokeDasharray="6,3"
+          opacity={0.6}
+        />
+      );
+    })();
+}
 ```
 
 - [ ] **Step 6 : TypeScript**

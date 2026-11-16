@@ -115,9 +115,7 @@ describe('WallDrawingCanvas — first node auto-lock', () => {
     );
     const svg = document.querySelector('svg')!;
     fireEvent.pointerDown(svg, { button: 0, clientX: 100, clientY: 100 });
-    expect(onAddNode).toHaveBeenCalledWith(
-      expect.objectContaining({ locked: true }),
-    );
+    expect(onAddNode).toHaveBeenCalledWith(expect.objectContaining({ locked: true }));
   });
 
   it('does NOT auto-lock subsequent nodes', () => {
@@ -246,7 +244,10 @@ describe('WallDrawingCanvas — drag guards on locked nodes', () => {
     const svg = document.querySelector('svg')!;
     fireEvent.pointerDown(svg, { button: 0, clientX: 200, clientY: 200 });
     fireEvent.pointerMove(svg, { clientX: 250, clientY: 250 });
-    expect(onUpdateNode).not.toHaveBeenCalledWith('n1', expect.objectContaining({ x: expect.any(Number) }));
+    expect(onUpdateNode).not.toHaveBeenCalledWith(
+      'n1',
+      expect.objectContaining({ x: expect.any(Number) }),
+    );
   });
 
   it('does not merge a locked node on release', () => {

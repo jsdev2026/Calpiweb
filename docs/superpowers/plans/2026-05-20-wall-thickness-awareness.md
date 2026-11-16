@@ -12,21 +12,22 @@
 
 ## File Structure
 
-| Action | File | Purpose |
-|--------|------|---------|
-| Create | `src/engine/constraints/interiorOffset.ts` | Pure utility: `constraintInteriorOffset()` |
-| Create | `src/engine/constraints/interiorOffset.test.ts` | Unit tests for the utility |
-| Modify | `src/components/plan/DrawingCanvas.tsx` | Subtract offset in room wall badge labels (line ≈406) |
-| Modify | `src/components/plan/PlanEditor.tsx` | Apply offset when opening WallEdgeEditor; add offset when submitting; DIMENSION tool open/submit |
-| Create | `src/components/plan/WallThicknessControl.tsx` | Compact cm input for default wall thickness |
-| Modify | `src/components/plan/PlanToolbar.tsx` | Add `wallThickness` + `onWallThicknessChange` props and render `WallThicknessControl` |
-| Modify | `src/constants/businessRules.ts` | Clarifying comment on `DOOR_DEFAULT_WIDTH_MM` |
+| Action | File                                            | Purpose                                                                                          |
+| ------ | ----------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Create | `src/engine/constraints/interiorOffset.ts`      | Pure utility: `constraintInteriorOffset()`                                                       |
+| Create | `src/engine/constraints/interiorOffset.test.ts` | Unit tests for the utility                                                                       |
+| Modify | `src/components/plan/DrawingCanvas.tsx`         | Subtract offset in room wall badge labels (line ≈406)                                            |
+| Modify | `src/components/plan/PlanEditor.tsx`            | Apply offset when opening WallEdgeEditor; add offset when submitting; DIMENSION tool open/submit |
+| Create | `src/components/plan/WallThicknessControl.tsx`  | Compact cm input for default wall thickness                                                      |
+| Modify | `src/components/plan/PlanToolbar.tsx`           | Add `wallThickness` + `onWallThicknessChange` props and render `WallThicknessControl`            |
+| Modify | `src/constants/businessRules.ts`                | Clarifying comment on `DOOR_DEFAULT_WIDTH_MM`                                                    |
 
 ---
 
 ### Task 1: `constraintInteriorOffset` utility + unit tests
 
 **Files:**
+
 - Create: `src/engine/constraints/interiorOffset.ts`
 - Create: `src/engine/constraints/interiorOffset.test.ts`
 
@@ -46,9 +47,22 @@ For cross-entity constraints (pts from different roomIds) → offset = 0.
 
 ```ts
 // src/types/project.ts
-interface Room { id: string; points: Point[]; edges: EdgeType[]; edgeThicknesses?: (number | undefined)[]; }
-interface Constraint { id: string; type: ConstraintType; pts: PointRef[]; value?: number | { x: number; y: number }; }
-interface PointRef { roomId: string; vertexIdx: number; }
+interface Room {
+  id: string;
+  points: Point[];
+  edges: EdgeType[];
+  edgeThicknesses?: (number | undefined)[];
+}
+interface Constraint {
+  id: string;
+  type: ConstraintType;
+  pts: PointRef[];
+  value?: number | { x: number; y: number };
+}
+interface PointRef {
+  roomId: string;
+  vertexIdx: number;
+}
 ```
 
 - [ ] **Step 1: Write failing tests**
@@ -63,33 +77,66 @@ import type { Room, Constraint } from '@/types/project';
 // edges: 0=(0→1 bottom horiz), 1=(1→2 right vert), 2=(2→3 top horiz), 3=(3→0 left vert)
 const room: Room = {
   id: 'r1',
-  points: [{ x: 0, y: 0 }, { x: 3000, y: 0 }, { x: 3000, y: 4000 }, { x: 0, y: 4000 }],
+  points: [
+    { x: 0, y: 0 },
+    { x: 3000, y: 0 },
+    { x: 3000, y: 4000 },
+    { x: 0, y: 4000 },
+  ],
   edges: ['WALL', 'WALL', 'WALL', 'WALL'],
 };
 const DEFAULT_T = 100;
 
 describe('constraintInteriorOffset', () => {
   it('returns 0 for LENGTH constraints', () => {
-    const c: Constraint = { id: 'c', type: 'LENGTH', pts: [{ roomId: 'r1', vertexIdx: 0 }, { roomId: 'r1', vertexIdx: 1 }] };
+    const c: Constraint = {
+      id: 'c',
+      type: 'LENGTH',
+      pts: [
+        { roomId: 'r1', vertexIdx: 0 },
+        { roomId: 'r1', vertexIdx: 1 },
+      ],
+    };
     expect(constraintInteriorOffset(c, room, DEFAULT_T)).toBe(0);
   });
 
   it('returns 0 for cross-entity constraints', () => {
-    const c: Constraint = { id: 'c', type: 'H_DISTANCE', pts: [{ roomId: 'r1', vertexIdx: 0 }, { roomId: 'r2', vertexIdx: 0 }] };
+    const c: Constraint = {
+      id: 'c',
+      type: 'H_DISTANCE',
+      pts: [
+        { roomId: 'r1', vertexIdx: 0 },
+        { roomId: 'r2', vertexIdx: 0 },
+      ],
+    };
     expect(constraintInteriorOffset(c, room, DEFAULT_T)).toBe(0);
   });
 
   it('H_DISTANCE on bottom edge (0→1): offset = left_t/2 + right_t/2 = 50+50 = 100', () => {
     // At vertex 0: edge3 (left vert wall, dx=0,dy=4000) is most vertical → t=100, half=50
     // At vertex 1: edge1 (right vert wall, dx=0,dy=4000) is most vertical → t=100, half=50
-    const c: Constraint = { id: 'c', type: 'H_DISTANCE', pts: [{ roomId: 'r1', vertexIdx: 0 }, { roomId: 'r1', vertexIdx: 1 }] };
+    const c: Constraint = {
+      id: 'c',
+      type: 'H_DISTANCE',
+      pts: [
+        { roomId: 'r1', vertexIdx: 0 },
+        { roomId: 'r1', vertexIdx: 1 },
+      ],
+    };
     expect(constraintInteriorOffset(c, room, DEFAULT_T)).toBe(100);
   });
 
   it('V_DISTANCE on right edge (1→2): offset = bottom_t/2 + top_t/2 = 50+50 = 100', () => {
     // At vertex 1: edge0 (bottom horiz, dx=3000,dy=0) is most horizontal → t=100, half=50
     // At vertex 2: edge2 (top horiz, dx=3000,dy=0) is most horizontal → t=100, half=50
-    const c: Constraint = { id: 'c', type: 'V_DISTANCE', pts: [{ roomId: 'r1', vertexIdx: 1 }, { roomId: 'r1', vertexIdx: 2 }] };
+    const c: Constraint = {
+      id: 'c',
+      type: 'V_DISTANCE',
+      pts: [
+        { roomId: 'r1', vertexIdx: 1 },
+        { roomId: 'r1', vertexIdx: 2 },
+      ],
+    };
     expect(constraintInteriorOffset(c, room, DEFAULT_T)).toBe(100);
   });
 
@@ -98,7 +145,14 @@ describe('constraintInteriorOffset', () => {
       ...room,
       edgeThicknesses: [undefined, 150, undefined, 200], // edge1=150, edge3=200
     };
-    const c: Constraint = { id: 'c', type: 'H_DISTANCE', pts: [{ roomId: 'r1', vertexIdx: 0 }, { roomId: 'r1', vertexIdx: 1 }] };
+    const c: Constraint = {
+      id: 'c',
+      type: 'H_DISTANCE',
+      pts: [
+        { roomId: 'r1', vertexIdx: 0 },
+        { roomId: 'r1', vertexIdx: 1 },
+      ],
+    };
     expect(constraintInteriorOffset(c, roomOverride, DEFAULT_T)).toBe(175); // 100 + 75
   });
 });
@@ -109,6 +163,7 @@ describe('constraintInteriorOffset', () => {
 ```bash
 npm run test -- --run src/engine/constraints/interiorOffset.test.ts
 ```
+
 Expected: FAIL with "Cannot find module './interiorOffset'"
 
 - [ ] **Step 3: Implement the utility**
@@ -137,7 +192,10 @@ function halfThicknessAt(
     const total = adx + ady;
     if (total < 0.001) continue;
     const score = preferVertical ? ady / total : adx / total;
-    if (score > bestScore) { bestScore = score; bestEdge = eIdx; }
+    if (score > bestScore) {
+      bestScore = score;
+      bestEdge = eIdx;
+    }
   }
 
   if (bestEdge === -1 || bestScore < 0.5) return 0;
@@ -171,6 +229,7 @@ export function constraintInteriorOffset(
 ```bash
 npm run test -- --run src/engine/constraints/interiorOffset.test.ts
 ```
+
 Expected: PASS — 5 tests passing
 
 - [ ] **Step 5: Commit**
@@ -185,6 +244,7 @@ git commit -m "feat: constraintInteriorOffset utility for wall thickness awarene
 ### Task 2: DrawingCanvas — subtract offset in room wall badge labels
 
 **Files:**
+
 - Modify: `src/components/plan/DrawingCanvas.tsx:406-409`
 
 #### Background
@@ -211,17 +271,26 @@ import type { Room, Constraint } from '@/types/project';
 it('badge label for H_DISTANCE 3100mm with 100mm walls shows 300cm interior', () => {
   const room: Room = {
     id: 'r1',
-    points: [{ x: 0, y: 0 }, { x: 3100, y: 0 }, { x: 3100, y: 4200 }, { x: 0, y: 4200 }],
+    points: [
+      { x: 0, y: 0 },
+      { x: 3100, y: 0 },
+      { x: 3100, y: 4200 },
+      { x: 0, y: 4200 },
+    ],
     edges: ['WALL', 'WALL', 'WALL', 'WALL'],
   };
   const c: Constraint = {
-    id: 'c1', type: 'H_DISTANCE',
-    pts: [{ roomId: 'r1', vertexIdx: 0 }, { roomId: 'r1', vertexIdx: 1 }],
+    id: 'c1',
+    type: 'H_DISTANCE',
+    pts: [
+      { roomId: 'r1', vertexIdx: 0 },
+      { roomId: 'r1', vertexIdx: 1 },
+    ],
     value: 3100,
   };
   const offset = constraintInteriorOffset(c, room, 100);
   expect(offset).toBe(100);
-  expect(c.value as number - offset).toBe(3000); // 300 cm
+  expect((c.value as number) - offset).toBe(3000); // 300 cm
 });
 ```
 
@@ -230,6 +299,7 @@ it('badge label for H_DISTANCE 3100mm with 100mm walls shows 300cm interior', ()
 ```bash
 npm run test -- --run src/components/plan/DrawingCanvas.badge.test.tsx
 ```
+
 Expected: PASS
 
 - [ ] **Step 3: Update badge display in DrawingCanvas**
@@ -244,18 +314,26 @@ Find the room wall badge block (search for `badge-${room.id}-${i}`). Replace lin
 
 ```ts
 // BEFORE:
-const dimVal = hDistC && typeof hDistC.value === 'number' ? formatCm(hDistC.value)
-  : vDistC && typeof vDistC.value === 'number' ? formatCm(vDistC.value)
-  : lenC && typeof lenC.value === 'number' ? formatCm(lenC.value)
-  : formatCm(edgeLen);
+const dimVal =
+  hDistC && typeof hDistC.value === 'number'
+    ? formatCm(hDistC.value)
+    : vDistC && typeof vDistC.value === 'number'
+      ? formatCm(vDistC.value)
+      : lenC && typeof lenC.value === 'number'
+        ? formatCm(lenC.value)
+        : formatCm(edgeLen);
 
 // AFTER:
 const hvC = hDistC ?? vDistC;
 const hvOffset = hvC ? constraintInteriorOffset(hvC, room, wallThickness) : 0;
-const dimVal = hDistC && typeof hDistC.value === 'number' ? formatCm(hDistC.value - hvOffset)
-  : vDistC && typeof vDistC.value === 'number' ? formatCm(vDistC.value - hvOffset)
-  : lenC && typeof lenC.value === 'number' ? formatCm(lenC.value)
-  : formatCm(edgeLen);
+const dimVal =
+  hDistC && typeof hDistC.value === 'number'
+    ? formatCm(hDistC.value - hvOffset)
+    : vDistC && typeof vDistC.value === 'number'
+      ? formatCm(vDistC.value - hvOffset)
+      : lenC && typeof lenC.value === 'number'
+        ? formatCm(lenC.value)
+        : formatCm(edgeLen);
 ```
 
 - [ ] **Step 4: Typecheck**
@@ -263,6 +341,7 @@ const dimVal = hDistC && typeof hDistC.value === 'number' ? formatCm(hDistC.valu
 ```bash
 npm run typecheck
 ```
+
 Expected: no errors
 
 - [ ] **Step 5: Commit**
@@ -277,6 +356,7 @@ git commit -m "feat: show interior dimensions in wall badge labels"
 ### Task 3: PlanEditor — WallEdgeEditor open + submit with interior offset
 
 **Files:**
+
 - Modify: `src/components/plan/PlanEditor.tsx` (two locations)
 
 #### Background
@@ -286,6 +366,7 @@ When the user clicks a wall edge (SELECT tool), `handleEdgePointerDown` opens th
 When the user presses Validate, `submitDimension` converts `editValue` (cm) back to mm and stores it. We must add offset back before storing.
 
 **Import to add** (top of PlanEditor.tsx, near other engine imports):
+
 ```ts
 import { constraintInteriorOffset } from '@/engine/constraints/interiorOffset';
 ```
@@ -306,7 +387,14 @@ Replace `setEditValue((value / 10).toFixed(1));` with:
 
 ```ts
 const displayOffset = constraintInteriorOffset(
-  { id: '', type: cType, pts: [{ roomId, vertexIdx: a }, { roomId, vertexIdx: b }] },
+  {
+    id: '',
+    type: cType,
+    pts: [
+      { roomId, vertexIdx: a },
+      { roomId, vertexIdx: b },
+    ],
+  },
   room,
   wallThickness,
 );
@@ -362,13 +450,26 @@ import type { Room, Constraint } from '@/types/project';
 describe('WallEdgeEditor interior round-trip', () => {
   const room: Room = {
     id: 'r1',
-    points: [{ x: 0, y: 0 }, { x: 3100, y: 0 }, { x: 3100, y: 4200 }, { x: 0, y: 4200 }],
+    points: [
+      { x: 0, y: 0 },
+      { x: 3100, y: 0 },
+      { x: 3100, y: 4200 },
+      { x: 0, y: 4200 },
+    ],
     edges: ['WALL', 'WALL', 'WALL', 'WALL'],
   };
   const wallThickness = 100;
 
   it('open: stored 3100mm H_DISTANCE → user sees 300cm (interior)', () => {
-    const c: Constraint = { id: 'c', type: 'H_DISTANCE', pts: [{ roomId: 'r1', vertexIdx: 0 }, { roomId: 'r1', vertexIdx: 1 }], value: 3100 };
+    const c: Constraint = {
+      id: 'c',
+      type: 'H_DISTANCE',
+      pts: [
+        { roomId: 'r1', vertexIdx: 0 },
+        { roomId: 'r1', vertexIdx: 1 },
+      ],
+      value: 3100,
+    };
     const offset = constraintInteriorOffset(c, room, wallThickness);
     const displayedCm = (3100 - offset) / 10;
     expect(displayedCm).toBe(300);
@@ -390,6 +491,7 @@ describe('WallEdgeEditor interior round-trip', () => {
 ```bash
 npm run test -- --run src/components/plan/PlanEditor.interior.test.ts
 ```
+
 Expected: PASS (tests verify the formula, not the component behaviour yet)
 
 - [ ] **Step 3: Apply offset in `handleEdgePointerDown`**
@@ -412,7 +514,14 @@ setEditValue((value / 10).toFixed(1));
 setEditingEdgeConstraintType(cType);
 setEditingEdge({ roomId, edgeIndex });
 const displayOffset = constraintInteriorOffset(
-  { id: '', type: cType, pts: [{ roomId, vertexIdx: a }, { roomId, vertexIdx: b }] },
+  {
+    id: '',
+    type: cType,
+    pts: [
+      { roomId, vertexIdx: a },
+      { roomId, vertexIdx: b },
+    ],
+  },
   room,
   wallThickness,
 );
@@ -422,14 +531,18 @@ setEditValue(((value - displayOffset) / 10).toFixed(1));
 - [ ] **Step 4: Apply offset in `submitDimension`**
 
 Find `const submitDimension = () => {`. After these two lines:
+
 ```ts
-const p1Ref = ref(room.id, eIdx), p2Ref = ref(room.id, (eIdx + 1) % n);
+const p1Ref = ref(room.id, eIdx),
+  p2Ref = ref(room.id, (eIdx + 1) % n);
 const valueMm = valCm * 10;
 ```
 
 Replace with:
+
 ```ts
-const p1Ref = ref(room.id, eIdx), p2Ref = ref(room.id, (eIdx + 1) % n);
+const p1Ref = ref(room.id, eIdx),
+  p2Ref = ref(room.id, (eIdx + 1) % n);
 const cType = editingEdgeConstraintType;
 const offset = constraintInteriorOffset(
   { id: '', type: cType as Constraint['type'], pts: [p1Ref, p2Ref] },
@@ -446,6 +559,7 @@ Note: `cType` is already declared after this in the original code — check that
 ```bash
 npm run typecheck
 ```
+
 Expected: no errors
 
 - [ ] **Step 6: Run all tests**
@@ -453,6 +567,7 @@ Expected: no errors
 ```bash
 npm run test -- --run
 ```
+
 Expected: all tests pass
 
 - [ ] **Step 7: Commit**
@@ -467,6 +582,7 @@ git commit -m "feat: WallEdgeEditor displays and submits interior dimensions"
 ### Task 4: PlanEditor — DIMENSION tool with interior offset
 
 **Files:**
+
 - Modify: `src/components/plan/PlanEditor.tsx` (four locations)
 
 #### Background
@@ -474,6 +590,7 @@ git commit -m "feat: WallEdgeEditor displays and submits interior dimensions"
 The DIMENSION tool (tool = `'DIMENSION'`) creates vertex-to-vertex H/V distance constraints. Opening the editor (`handleVertexPointerDown`) shows the current geometric distance. Submitting (`submitPartitionDimensionToElement`) stores it.
 
 There are three `handleVertexPointerDown` contexts:
+
 1. **Room vertex** (roomId ∈ rooms): offset applies when both points in same room
 2. **Partition vertex** (roomId = partitionId, not in rooms): `rooms.find(...)` → undefined → offset = 0
 3. **Zone vertex** (roomId = zoneId, not in rooms): same → offset = 0
@@ -550,24 +667,29 @@ import type { Room } from '@/types/project';
 describe('DIMENSION tool interior round-trip', () => {
   const room: Room = {
     id: 'r1',
-    points: [{ x: 0, y: 0 }, { x: 3100, y: 0 }, { x: 3100, y: 4200 }, { x: 0, y: 4200 }],
+    points: [
+      { x: 0, y: 0 },
+      { x: 3100, y: 0 },
+      { x: 3100, y: 4200 },
+      { x: 0, y: 4200 },
+    ],
     edges: ['WALL', 'WALL', 'WALL', 'WALL'],
   };
 
   it('room-to-room same room: open shows interior, submit stores centerline', () => {
     const fromRef = { roomId: 'r1', vertexIdx: 0 };
-    const toRef   = { roomId: 'r1', vertexIdx: 1 };
+    const toRef = { roomId: 'r1', vertexIdx: 1 };
     const absDx = Math.abs(3100 - 0);
     const syntheticC = { id: '', type: 'H_DISTANCE' as const, pts: [fromRef, toRef] };
     const offset = constraintInteriorOffset(syntheticC, room, 100);
     expect(offset).toBe(100);
     expect((absDx - offset) / 10).toBe(300); // shown as 300cm
-    expect(300 * 10 + offset).toBe(3100);    // stored as 3100mm
+    expect(300 * 10 + offset).toBe(3100); // stored as 3100mm
   });
 
   it('cross-entity (different roomIds): offset = 0', () => {
     const fromRef = { roomId: 'r1', vertexIdx: 0 };
-    const toRef   = { roomId: 'partition-1', vertexIdx: 0 };
+    const toRef = { roomId: 'partition-1', vertexIdx: 0 };
     const syntheticC = { id: '', type: 'H_DISTANCE' as const, pts: [fromRef, toRef] };
     const offset = constraintInteriorOffset(syntheticC, room, 100);
     expect(offset).toBe(0);
@@ -580,6 +702,7 @@ describe('DIMENSION tool interior round-trip', () => {
 ```bash
 npm run test -- --run src/components/plan/PlanEditor.dimension.test.ts
 ```
+
 Expected: PASS (pure logic)
 
 - [ ] **Step 3: Apply all four edits to PlanEditor.tsx**
@@ -591,6 +714,7 @@ Apply the four location edits described above. Use the unique surrounding contex
 ```bash
 npm run typecheck
 ```
+
 Expected: no errors
 
 - [ ] **Step 5: Run all tests**
@@ -598,6 +722,7 @@ Expected: no errors
 ```bash
 npm run test -- --run
 ```
+
 Expected: all passing
 
 - [ ] **Step 6: Commit**
@@ -612,6 +737,7 @@ git commit -m "feat: DIMENSION tool displays and stores interior dimensions"
 ### Task 5: WallThicknessControl + PlanToolbar integration + businessRules comment
 
 **Files:**
+
 - Create: `src/components/plan/WallThicknessControl.tsx`
 - Modify: `src/components/plan/PlanToolbar.tsx`
 - Modify: `src/components/plan/PlanEditor.tsx` (add `setWallThickness` from store + pass new toolbar props)
@@ -676,6 +802,7 @@ describe('WallThicknessControl', () => {
 ```bash
 npm run test -- --run src/components/plan/WallThicknessControl.test.tsx
 ```
+
 Expected: FAIL with "Cannot find module './WallThicknessControl'"
 
 - [ ] **Step 3: Implement WallThicknessControl**
@@ -699,7 +826,10 @@ export const WallThicknessControl = ({ wallThickness, onChange }: WallThicknessC
 
   return (
     <div className="flex items-center gap-1 px-0.5">
-      <span className="text-[9px] font-black uppercase tracking-[0.15em]" style={{ color: 'var(--muted)' }}>
+      <span
+        className="text-[9px] font-black uppercase tracking-[0.15em]"
+        style={{ color: 'var(--muted)' }}
+      >
         ép.
       </span>
       <input
@@ -710,10 +840,12 @@ export const WallThicknessControl = ({ wallThickness, onChange }: WallThicknessC
         defaultValue={defaultCm}
         onBlur={(e) => commit(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && commit((e.target as HTMLInputElement).value)}
-        className="w-10 rounded-md bg-zinc-100 dark:bg-zinc-800 px-1 py-0.5 text-center text-[10px] font-bold outline-none"
+        className="w-10 rounded-md bg-zinc-100 px-1 py-0.5 text-center text-[10px] font-bold outline-none dark:bg-zinc-800"
         style={{ color: 'var(--text1)' }}
       />
-      <span className="text-[9px] font-semibold" style={{ color: 'var(--muted)' }}>cm</span>
+      <span className="text-[9px] font-semibold" style={{ color: 'var(--muted)' }}>
+        cm
+      </span>
     </div>
   );
 };
@@ -724,6 +856,7 @@ export const WallThicknessControl = ({ wallThickness, onChange }: WallThicknessC
 ```bash
 npm run test -- --run src/components/plan/WallThicknessControl.test.tsx
 ```
+
 Expected: PASS — 4 tests passing
 
 - [ ] **Step 5: Update PlanToolbar interface and render WallThicknessControl**
@@ -731,11 +864,13 @@ Expected: PASS — 4 tests passing
 In `src/components/plan/PlanToolbar.tsx`:
 
 Add import at top:
+
 ```ts
 import { WallThicknessControl } from './WallThicknessControl';
 ```
 
 Update `PlanToolbarProps` interface (add two new fields):
+
 ```ts
 interface PlanToolbarProps {
   tool: PlanTool;
@@ -751,6 +886,7 @@ interface PlanToolbarProps {
 ```
 
 Update destructuring in the component signature to include:
+
 ```ts
   wallThickness,
   onWallThicknessChange,
@@ -799,6 +935,7 @@ export const DOOR_DEFAULT_WIDTH_MM = 900;
 ```bash
 npm run typecheck
 ```
+
 Expected: no errors
 
 - [ ] **Step 9: Run all tests**
@@ -806,6 +943,7 @@ Expected: no errors
 ```bash
 npm run test -- --run
 ```
+
 Expected: all passing
 
 - [ ] **Step 10: Commit**

@@ -11,6 +11,7 @@ The current QuantitiesPanel (536 lines, single file) is hard to read for two rea
 2. **Disconnected sections**: the annotated plan, the cut table, and the order summary feel like three independent documents rather than one coherent report.
 
 The page serves two use cases:
+
 - **B — Client presentation**: explain the quote in a clear, professional way
 - **C — Quantity verification**: let the user check that the tile count logic adds up
 
@@ -32,13 +33,13 @@ It is NOT a step-by-step on-site cutting guide (data is theoretical).
 
 No new store actions, no new types. Pure presentation changes.
 
-| Action | File | Responsibility |
-|--------|------|----------------|
-| Rewrite | `src/components/quantities/QuantitiesPanel.tsx` | Page shell, layout, side panel |
+| Action           | File                                             | Responsibility                   |
+| ---------------- | ------------------------------------------------ | -------------------------------- |
+| Rewrite          | `src/components/quantities/QuantitiesPanel.tsx`  | Page shell, layout, side panel   |
 | Extract → Create | `src/components/quantities/QuantityPlanView.tsx` | SVG plan with hover highlighting |
-| Extract → Create | `src/components/quantities/CutGroupCard.tsx` | Individual cut group card |
-| Delete (inline) | `StatCard` sub-component in QuantitiesPanel | Replaced by simpler stat boxes |
-| Delete (inline) | `TileThumbnail` sub-component in QuantitiesPanel | Moved into CutGroupCard |
+| Extract → Create | `src/components/quantities/CutGroupCard.tsx`     | Individual cut group card        |
+| Delete (inline)  | `StatCard` sub-component in QuantitiesPanel      | Replaced by simpler stat boxes   |
+| Delete (inline)  | `TileThumbnail` sub-component in QuantitiesPanel | Moved into CutGroupCard          |
 
 The current `QuantityPlanView` and `TileThumbnail` functions stay in the same repo but are extracted to their own files.
 
@@ -83,11 +84,11 @@ No change from current header.
 
 ### Visual encoding
 
-| Tile type | Fill | Label |
-|-----------|------|-------|
-| Whole tile | `config.color` at 70% opacity | — |
-| Cut — group N | `#1e293b` (dark) | Circle with group number, colored per group |
-| Reused cut | `#052e16` (dark green) | Circle with `↩` + group number in `#4ade80` |
+| Tile type     | Fill                          | Label                                       |
+| ------------- | ----------------------------- | ------------------------------------------- |
+| Whole tile    | `config.color` at 70% opacity | —                                           |
+| Cut — group N | `#1e293b` (dark)              | Circle with group number, colored per group |
+| Reused cut    | `#052e16` (dark green)        | Circle with `↩` + group number in `#4ade80` |
 
 Group colors: a fixed palette of 6 distinct colors (orange, violet, teal, rose, amber, sky), cycling if more than 6 groups.
 
@@ -96,6 +97,7 @@ Group colors: a fixed palette of 6 distinct colors (orange, violet, teal, rose, 
 `QuantityPlanView` accepts a `highlightGroup: number | null` prop (1-indexed group number, `null` = no highlight).
 
 When `highlightGroup` is set:
+
 - Tiles NOT in the highlighted group: `opacity` drops to `0.12`
 - Tiles IN the highlighted group (including reused): remain at full opacity, gain a CSS `filter: drop-shadow(0 0 8px <groupColor>88)`
 - Transition: `opacity 0.15s ease, filter 0.15s ease` on each tile `<rect>`
@@ -103,11 +105,13 @@ When `highlightGroup` is set:
 ### Legend
 
 Below the SVG, a horizontal flex row of legend items:
+
 - One item per used tile type: "Carreau entier", one item per cut group ("Coupe 1", "Coupe 2"…), "↩ Taillée dans une chute" (only if `totalReuseCount > 0`)
 
 ### Print
 
 `@media print`:
+
 - Remove `filter` and transition styles
 - All tiles render at full opacity
 - Legend visible
@@ -120,10 +124,10 @@ Below the SVG, a horizontal flex row of legend items:
 
 Two boxes side by side, replacing the current 4-StatCard grid:
 
-| Box | Value | Sub |
-|-----|-------|-----|
-| Carreaux entiers | `result.wholeCount` | `formatM2(wholeCount × tileW × tileH)` |
-| Carreaux à couper | `result.cuts.length` | `formatM2(totalCutArea)` posés |
+| Box               | Value                | Sub                                    |
+| ----------------- | -------------------- | -------------------------------------- |
+| Carreaux entiers  | `result.wholeCount`  | `formatM2(wholeCount × tileW × tileH)` |
+| Carreaux à couper | `result.cuts.length` | `formatM2(totalCutArea)` posés         |
 
 `totalCutArea = result.cuts.reduce((sum, c) => sum + c.usedW * c.usedH, 0)`
 
@@ -153,14 +157,17 @@ One card per `CutGroup` in `result.cutGroups`.
   - `netTiles nets` — colored green if `reuseCount > 0`, white otherwise
 
 **Hover interaction:**
+
 - Card `onMouseEnter` → call `onHighlight(groupIndex + 1)`
 - Card `onMouseLeave` → call `onHighlight(null)`
 - Card visual: subtle background tint + left border in group color on hover
 
 **Net summary row** (below all cards):
+
 ```
 Carreaux nets pour coupes        9 carreaux
 ```
+
 `result.tilesForCuts` total.
 
 ### 3c — Total à commander block
@@ -185,30 +192,31 @@ The breakdown uses `result.wholeCount`, `result.tilesForCuts`, `result.totalTile
 
 ## What is Removed
 
-| Current element | Replacement |
-|-----------------|-------------|
-| 7-column cut table (`<table>`) | CutGroupCard list |
-| Separate "Récapitulatif de commande" orange block | Integrated into side panel section 3c |
-| 4-StatCard grid at top of page | 2 stat boxes in side panel section 3a |
-| `StatCard` sub-component | Inline stat box markup |
+| Current element                                        | Replacement                                             |
+| ------------------------------------------------------ | ------------------------------------------------------- |
+| 7-column cut table (`<table>`)                         | CutGroupCard list                                       |
+| Separate "Récapitulatif de commande" orange block      | Integrated into side panel section 3c                   |
+| 4-StatCard grid at top of page                         | 2 stat boxes in side panel section 3a                   |
+| `StatCard` sub-component                               | Inline stat box markup                                  |
 | `result.cutGroups.length` "formats distincts" sub text | Now shown implicitly — each distinct format is one card |
 
 ---
 
 ## Language Changes
 
-| Before | After |
-|--------|-------|
-| "Chutes réutilisées" | "Taillée(s) dans une chute" |
+| Before                  | After                                         |
+| ----------------------- | --------------------------------------------- |
+| "Chutes réutilisées"    | "Taillée(s) dans une chute"                   |
 | "N carreaux économisés" | "↩ N taillée(s) dans une chute" (on cut card) |
-| "Aucune économie" | *(absent — no badge shown)* |
-| "Coupes nécessaires" | "Carreaux à couper" |
+| "Aucune économie"       | _(absent — no badge shown)_                   |
+| "Coupes nécessaires"    | "Carreaux à couper"                           |
 
 ---
 
 ## State Management
 
 `QuantitiesPanel` owns `highlightGroup: number | null` via `useState`. It passes:
+
 - `highlightGroup` down to `QuantityPlanView`
 - `onHighlight(n)` callback down to each `CutGroupCard`
 

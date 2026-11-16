@@ -17,7 +17,10 @@ const PERP_OFFSET = 600;
 const DIR_CYCLE: DimDirection[] = ['H', 'V', 'parallel'];
 
 function computePerpOffset(
-  rx1: number, ry1: number, rx2: number, ry2: number,
+  rx1: number,
+  ry1: number,
+  rx2: number,
+  ry2: number,
   rooms: Room[],
 ): number {
   const dx = rx2 - rx1;
@@ -30,7 +33,8 @@ function computePerpOffset(
   const midY = (ry1 + ry2) / 2;
   const validRooms = rooms.filter((r) => r.points.length >= 3);
   if (validRooms.length === 0) return PERP_OFFSET;
-  let cx = 0, cy = 0;
+  let cx = 0,
+    cy = 0;
   for (const r of validRooms) {
     const bb = getBoundingBox(r.points);
     cx += (bb.minX + bb.maxX) / 2;
@@ -89,13 +93,16 @@ export function useTilingDimension(
     if (phase !== 'picking_end' || p1 === null || hoverSnap === null) return null;
     const dir = effectiveDirection;
     const target = hoverSnap.point;
-    const parallelAngle = dir === 'parallel' ? (getParallelAngle(p1, rooms, wallThickness) ?? 0) : undefined;
+    const parallelAngle =
+      dir === 'parallel' ? (getParallelAngle(p1, rooms, wallThickness) ?? 0) : undefined;
 
     let rx2: number, ry2: number;
     if (dir === 'H') {
-      rx2 = target.x; ry2 = p1.y;
+      rx2 = target.x;
+      ry2 = p1.y;
     } else if (dir === 'V') {
-      rx2 = p1.x; ry2 = target.y;
+      rx2 = p1.x;
+      ry2 = target.y;
     } else {
       const angle = parallelAngle ?? 0;
       const cos = Math.cos(angle);
@@ -157,9 +164,11 @@ export function useTilingDimension(
 
       let rx2: number, ry2: number;
       if (dir === 'H') {
-        rx2 = target.x; ry2 = p1.y;
+        rx2 = target.x;
+        ry2 = p1.y;
       } else if (dir === 'V') {
-        rx2 = p1.x; ry2 = target.y;
+        rx2 = p1.x;
+        ry2 = target.y;
       } else {
         const angle = parallelAngle ?? 0;
         const cos = Math.cos(angle);
@@ -188,7 +197,19 @@ export function useTilingDimension(
       setManualDirection(null);
       setAutoDirection('H');
     },
-    [active, rooms, tiles, wallThickness, scale, nodes, phase, p1, manualDirection, autoDirection, addTilingDimension],
+    [
+      active,
+      rooms,
+      tiles,
+      wallThickness,
+      scale,
+      nodes,
+      phase,
+      p1,
+      manualDirection,
+      autoDirection,
+      addTilingDimension,
+    ],
   );
 
   const onContextMenu = useCallback(

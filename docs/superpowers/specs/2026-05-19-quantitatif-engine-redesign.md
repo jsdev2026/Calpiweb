@@ -81,8 +81,8 @@ export interface CutRecord {
   clipCy: number;
 
   // Liens de réutilisation (remplis par assignOffcuts)
-  coveredById: string | null;  // cette coupe utilise la chute de <id>
-  reusedForId: string | null;  // la chute de cette coupe sert pour <id>
+  coveredById: string | null; // cette coupe utilise la chute de <id>
+  reusedForId: string | null; // la chute de cette coupe sert pour <id>
 }
 ```
 
@@ -110,7 +110,7 @@ export interface QuantityResult {
   tileH: number;
   joint: number;
   wholeCount: number;
-  cuts: CutRecord[];          // était CutDetail[]
+  cuts: CutRecord[]; // était CutDetail[]
   cutGroups: CutGroup[];
   totalReuseCount: number;
   tilesForCuts: number;
@@ -126,7 +126,7 @@ export interface QuantityResult {
 ## Constantes
 
 ```typescript
-const MIN_CHUTE_MM = 50;    // seuil de récupérabilité (était 20)
+const MIN_CHUTE_MM = 50; // seuil de récupérabilité (était 20)
 const CUT_TOLERANCE_MM = 5; // tolérance bord factory/cut (inchangé)
 ```
 
@@ -184,6 +184,7 @@ pour chaque record dans records:
 ```
 
 `canReuseFor(chute, target)` — inchangé, essaie les 4 rotations (0°/90°/180°/270°) :
+
 - La chute doit avoir `w ≥ target.usedW - 5` et `h ≥ target.usedH - 5`
 - Pour chaque bord `factory` requis par `target.pieceEdges`, la chute doit aussi avoir `factory` sur ce bord (après rotation)
 
@@ -194,6 +195,7 @@ pour chaque record dans records:
 Clé de groupe : `${usedW}×${usedH}|${edgeKey(pieceEdges)}`
 
 Pour chaque groupe :
+
 - `totalCount` = nombre de records avec cette clé
 - `reuseCount` = nombre de records avec `coveredById !== null`
 - `netTiles = totalCount - reuseCount`
@@ -213,16 +215,16 @@ cutGroups = groupCuts(cuts)
 
 ## Fichiers touchés
 
-| Fichier | Action |
-|---|---|
-| `src/engine/quantities/quantityEngine.ts` | Réécrire : extraire les 3 fonctions, corriger les bugs |
-| `src/engine/quantities/buildCutTable.ts` | Créer : fonction `buildCutTable` |
-| `src/engine/quantities/assignOffcuts.ts` | Créer : fonction `assignOffcuts` + `canReuseFor` |
-| `src/engine/quantities/groupCuts.ts` | Créer : fonction `groupCuts` |
-| `src/engine/quantities/buildCutTable.test.ts` | Créer : tests unitaires |
-| `src/engine/quantities/assignOffcuts.test.ts` | Créer : tests unitaires |
-| `src/engine/quantities/groupCuts.test.ts` | Créer : tests unitaires |
-| `src/components/quantities/QuantitiesPanel.tsx` | Mettre à jour les imports (`CutDetail` → `CutRecord`) |
+| Fichier                                         | Action                                                 |
+| ----------------------------------------------- | ------------------------------------------------------ |
+| `src/engine/quantities/quantityEngine.ts`       | Réécrire : extraire les 3 fonctions, corriger les bugs |
+| `src/engine/quantities/buildCutTable.ts`        | Créer : fonction `buildCutTable`                       |
+| `src/engine/quantities/assignOffcuts.ts`        | Créer : fonction `assignOffcuts` + `canReuseFor`       |
+| `src/engine/quantities/groupCuts.ts`            | Créer : fonction `groupCuts`                           |
+| `src/engine/quantities/buildCutTable.test.ts`   | Créer : tests unitaires                                |
+| `src/engine/quantities/assignOffcuts.test.ts`   | Créer : tests unitaires                                |
+| `src/engine/quantities/groupCuts.test.ts`       | Créer : tests unitaires                                |
+| `src/components/quantities/QuantitiesPanel.tsx` | Mettre à jour les imports (`CutDetail` → `CutRecord`)  |
 
 `cutCalculator.ts` (stats de base) — non touché.
 

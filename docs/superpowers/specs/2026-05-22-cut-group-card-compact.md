@@ -35,6 +35,7 @@ La carte passe d'un `<div>` avec padding uniforme à un conteneur avec `overflow
 ```
 
 **Conteneur outer :**
+
 ```tsx
 <div
   className="rounded-md border border-gray-200 bg-white overflow-hidden transition-colors hover:bg-gray-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800"
@@ -45,6 +46,7 @@ La carte passe d'un `<div>` avec padding uniforme à un conteneur avec `overflow
 ```
 
 **Ligne principale :**
+
 ```tsx
 <div className="flex items-center gap-1.5 px-2 py-1">
   {/* Badge */}
@@ -56,13 +58,18 @@ La carte passe d'un `<div>` avec padding uniforme à un conteneur avec `overflow
 ```
 
 **Micro-ligne conditionnelle :**
+
 ```tsx
-{group.reuseCount > 0 && (
-  <div className="border-t border-emerald-500/10 bg-emerald-500/5 py-0.5 text-[9px] font-semibold text-emerald-400"
-       style={{ paddingLeft: '3.25rem' }}>
-    ↩&nbsp;{group.reuseCount} taillée{group.reuseCount > 1 ? 's' : ''} dans une chute
-  </div>
-)}
+{
+  group.reuseCount > 0 && (
+    <div
+      className="border-t border-emerald-500/10 bg-emerald-500/5 py-0.5 text-[9px] font-semibold text-emerald-400"
+      style={{ paddingLeft: '3.25rem' }}
+    >
+      ↩&nbsp;{group.reuseCount} taillée{group.reuseCount > 1 ? 's' : ''} dans une chute
+    </div>
+  );
+}
 ```
 
 Le `paddingLeft: '3.25rem'` (52 px) aligne le texte sous les dimensions : `px-2` (8 px) + badge (14 px) + gap (6 px) + thumbnail (~18 px) + gap (6 px) = 52 px.
@@ -70,6 +77,7 @@ Le `paddingLeft: '3.25rem'` (52 px) aligne le texte sous les dimensions : `px-2`
 ### Détail des éléments — ligne principale
 
 **Badge :**
+
 ```tsx
 <span
   className="inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full text-[8px] font-black"
@@ -86,6 +94,7 @@ Le `paddingLeft: '3.25rem'` (52 px) aligne le texte sous les dimensions : `px-2`
 **Thumbnail :** `maxDim = 18` dans `TileThumbnail` (au lieu de 32). Tous les calculs internes restent identiques, seul `maxDim` change.
 
 **Dimensions :**
+
 ```tsx
 <span className="shrink-0 font-mono text-[11px] font-bold text-gray-900 dark:text-zinc-100">
   {formatCm(group.usedW)}×{formatCm(group.usedH)}
@@ -93,6 +102,7 @@ Le `paddingLeft: '3.25rem'` (52 px) aligne le texte sous les dimensions : `px-2`
 ```
 
 **Chute (zone centrale flex-1) :**
+
 ```tsx
 <span className="flex-1 truncate text-[9px] text-gray-400 dark:text-zinc-500">
   {hasBigChute ? `Chute ${formatCm(group.chuteW)}×${formatCm(group.chuteH)}` : ''}
@@ -104,9 +114,13 @@ Le `paddingLeft: '3.25rem'` (52 px) aligne le texte sous les dimensions : `px-2`
 "Chute disponible" est remplacé par "Chute" (sans le mot "disponible").
 
 **Nets (droite) :**
+
 ```tsx
-<span className={`shrink-0 text-[11px] font-black tabular-nums ${group.reuseCount > 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-gray-900 dark:text-zinc-100'}`}>
-  {group.netTiles}<span className="text-[8px] font-normal text-gray-400 dark:text-zinc-500">&nbsp;nets</span>
+<span
+  className={`shrink-0 text-[11px] font-black tabular-nums ${group.reuseCount > 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-gray-900 dark:text-zinc-100'}`}
+>
+  {group.netTiles}
+  <span className="text-[8px] font-normal text-gray-400 dark:text-zinc-500">&nbsp;nets</span>
 </span>
 ```
 
@@ -120,11 +134,11 @@ Le `paddingLeft: '3.25rem'` (52 px) aligne le texte sous les dimensions : `px-2`
 
 ## Comportement
 
-| État | Hauteur approx. |
-|------|----------------|
-| Sans chute, sans réutilisation | ~30 px |
-| Avec chute, sans réutilisation | ~30 px |
-| Avec réutilisation (micro-ligne) | ~42 px |
+| État                             | Hauteur approx. |
+| -------------------------------- | --------------- |
+| Sans chute, sans réutilisation   | ~30 px          |
+| Avec chute, sans réutilisation   | ~30 px          |
+| Avec réutilisation (micro-ligne) | ~42 px          |
 
 Le hover et le highlight (`onHighlight`) restent inchangés.
 
@@ -133,6 +147,7 @@ Le hover et le highlight (`onHighlight`) restent inchangés.
 ## Tests à mettre à jour
 
 **`CutGroupCard.test.tsx`** — Les sélecteurs de texte changent :
+
 - `"Chute disponible"` → introuvable ; la chute s'affiche maintenant sous la forme `"Chute 15 × 30"` (via `formatCm`)
 - Le badge vert multilignes `"taillée dans une chute"` disparaît ; remplacé par la micro-ligne `"taillées dans une chute"` (texte identique, structure différente)
 - Vérifier que la micro-ligne n'apparaît pas quand `reuseCount === 0`

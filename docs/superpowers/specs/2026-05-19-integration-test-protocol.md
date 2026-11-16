@@ -22,17 +22,30 @@ const JOINT = 2;
 const PITCH = 102; // tile (100) + joint (2)
 
 const BASE_CONFIG: TilingConfig = {
-  width: 100, height: 100, joint: JOINT,
-  offsetX: 0, offsetY: 0, stagger: 0,
-  angle: 0, chevronAngle: 45,
-  color: '#ccc', layout: 'STRAIGHT',
+  width: 100,
+  height: 100,
+  joint: JOINT,
+  offsetX: 0,
+  offsetY: 0,
+  stagger: 0,
+  angle: 0,
+  chevronAngle: 45,
+  color: '#ccc',
+  layout: 'STRAIGHT',
 };
 
 function makeRoom(w: number, h: number): Room {
   return {
-    id: 'r1', name: 'Test',
-    points: [{ x: 0, y: 0 }, { x: w, y: 0 }, { x: w, y: h }, { x: 0, y: h }],
-    edges: [], edgeThicknesses: [],
+    id: 'r1',
+    name: 'Test',
+    points: [
+      { x: 0, y: 0 },
+      { x: w, y: 0 },
+      { x: w, y: h },
+      { x: 0, y: h },
+    ],
+    edges: [],
+    edgeThicknesses: [],
   };
 }
 ```
@@ -46,6 +59,7 @@ function makeRoom(w: number, h: number): Room {
 **Dimensions :** room 306×204 mm (3 × PITCH × 2 × PITCH)
 
 **Calcul à la main :**
+
 - Colonnes : 3 tuiles entières (0–100, 102–202, 204–304), room se termine à 306 = 304 + 2mm joint → pas de dépassement
 - Rangées : 2 tuiles entières (0–100, 102–202)
 - **wholeCount = 6, cuts = [], totalReuseCount = 0, tilesForCuts = 0, totalTiles = 6**
@@ -66,6 +80,7 @@ it('ajustement parfait : 0 coupe, 6 tuiles entières', () => {
 **Dimensions :** room 254×204 mm
 
 **Calcul à la main :**
+
 - Colonnes : 2 entières (0–100, 102–202) + 1 partielle (204–254)
   - usedW = 254 − 204 = 50 mm, chuteW = 50 mm (≥ MIN_CHUTE_MM=50 → viable)
 - Rangées : 2 entières (0–100, 102–202)
@@ -83,10 +98,10 @@ it('coupe droite : 2 coupes, 1 réutilisée, totalTiles=5', () => {
   expect(result.tilesForCuts).toBe(1);
   expect(result.totalTiles).toBe(5);
   // Dimensions des coupes
-  expect(result.cuts.every(c => c.usedW === 50 && c.usedH === 100)).toBe(true);
+  expect(result.cuts.every((c) => c.usedW === 50 && c.usedH === 100)).toBe(true);
   // Bord droit coupé
-  expect(result.cuts.every(c => c.pieceEdges.right === 'cut')).toBe(true);
-  expect(result.cuts.every(c => c.pieceEdges.left === 'factory')).toBe(true);
+  expect(result.cuts.every((c) => c.pieceEdges.right === 'cut')).toBe(true);
+  expect(result.cuts.every((c) => c.pieceEdges.left === 'factory')).toBe(true);
 });
 ```
 
@@ -95,6 +110,7 @@ it('coupe droite : 2 coupes, 1 réutilisée, totalTiles=5', () => {
 **Dimensions :** room 204×254 mm (symétrique du scénario 2, axe vertical)
 
 **Calcul à la main :**
+
 - Colonnes : 2 entières ; Rangées : 2 entières + 1 partielle (204–254)
   - usedH = 50 mm, chuteH = 50 mm (viable), chuteW = 100 mm
 - **wholeCount = 4, cuts = 2, totalReuseCount = 1, tilesForCuts = 1, totalTiles = 5**
@@ -107,8 +123,8 @@ it('coupe basse : 2 coupes, 1 réutilisée, bord bas cut', () => {
   expect(result.cuts).toHaveLength(2);
   expect(result.totalReuseCount).toBe(1);
   expect(result.totalTiles).toBe(5);
-  expect(result.cuts.every(c => c.usedW === 100 && c.usedH === 50)).toBe(true);
-  expect(result.cuts.every(c => c.pieceEdges.bottom === 'cut')).toBe(true);
+  expect(result.cuts.every((c) => c.usedW === 100 && c.usedH === 50)).toBe(true);
+  expect(result.cuts.every((c) => c.pieceEdges.bottom === 'cut')).toBe(true);
 });
 ```
 
@@ -117,6 +133,7 @@ it('coupe basse : 2 coupes, 1 réutilisée, bord bas cut', () => {
 **Dimensions :** room 254×254 mm
 
 **Calcul à la main :**
+
 - 2 colonnes entières + 1 partielle (usedW=50) ; 2 rangées entières + 1 partielle (usedH=50)
 - Coupes générées :
   - 2 coupes droites (usedW=50, usedH=100) — col partielle, rangées entières
@@ -152,8 +169,17 @@ Ces propriétés sont vérifiées sur **chaque scénario** via une fonction util
 
 ```typescript
 function checkInvariants(result: QuantityResult) {
-  const { wholeCount, cuts, cutGroups, totalReuseCount,
-          tilesForCuts, totalTiles, toOrder, tileW, tileH } = result;
+  const {
+    wholeCount,
+    cuts,
+    cutGroups,
+    totalReuseCount,
+    tilesForCuts,
+    totalTiles,
+    toOrder,
+    tileW,
+    tileH,
+  } = result;
 
   // I1 : décomposition totale
   expect(totalTiles).toBe(wholeCount + tilesForCuts);
@@ -162,7 +188,7 @@ function checkInvariants(result: QuantityResult) {
   expect(tilesForCuts).toBe(cuts.length - totalReuseCount);
 
   // I3 : totalReuseCount = nombre de coupes avec coveredById
-  expect(totalReuseCount).toBe(cuts.filter(c => c.coveredById !== null).length);
+  expect(totalReuseCount).toBe(cuts.filter((c) => c.coveredById !== null).length);
 
   // I4 : dimensions de chaque coupe dans les bornes
   for (const cut of cuts) {
@@ -185,7 +211,7 @@ function checkInvariants(result: QuantityResult) {
   expect(toOrder).toBeGreaterThanOrEqual(totalTiles);
 
   // I8 : liens de réutilisation symétriques
-  const cutById = new Map(cuts.map(c => [c.id, c]));
+  const cutById = new Map(cuts.map((c) => [c.id, c]));
   for (const cut of cuts) {
     if (cut.coveredById !== null) {
       const src = cutById.get(cut.coveredById);

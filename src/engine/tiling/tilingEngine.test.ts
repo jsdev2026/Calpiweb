@@ -49,7 +49,12 @@ describe('computeTilingMultiRoom — ouvertures de porte', () => {
   const room: Room = {
     id: 'r1',
     name: 'Test',
-    points: [{ x: 0, y: 0 }, { x: 3000, y: 0 }, { x: 3000, y: 3000 }, { x: 0, y: 3000 }],
+    points: [
+      { x: 0, y: 0 },
+      { x: 3000, y: 0 },
+      { x: 3000, y: 3000 },
+      { x: 0, y: 3000 },
+    ],
     edges: ['WALL', 'WALL', 'WALL', 'WALL'],
     partitions: [],
     excludedZones: [],

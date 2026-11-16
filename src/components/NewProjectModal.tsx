@@ -39,7 +39,11 @@ const sectionTitleStyle: React.CSSProperties = {
   marginBottom: 10,
 };
 
-export const NewProjectModal = ({ defaultProjectName, onConfirm, onCancel }: NewProjectModalProps) => {
+export const NewProjectModal = ({
+  defaultProjectName,
+  onConfirm,
+  onCancel,
+}: NewProjectModalProps) => {
   const [projectName, setProjectName] = useState(defaultProjectName);
   const [clientName, setClientName] = useState('');
   const [phone, setPhone] = useState('');
@@ -84,7 +88,9 @@ export const NewProjectModal = ({ defaultProjectName, onConfirm, onCancel }: New
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)' }}
-      onClick={(e) => { if (e.target === e.currentTarget) onCancel(); }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onCancel();
+      }}
     >
       <div
         className="w-full max-w-md rounded-2xl shadow-2xl"
@@ -96,16 +102,39 @@ export const NewProjectModal = ({ defaultProjectName, onConfirm, onCancel }: New
           className="flex items-center justify-between px-6 py-4"
           style={{ borderBottom: '1px solid var(--bdr)' }}
         >
-          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 700, color: 'var(--text)', margin: 0 }}>
+          <h2
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 15,
+              fontWeight: 700,
+              color: 'var(--text)',
+              margin: 0,
+            }}
+          >
             Nouveau projet
           </h2>
           <button
             type="button"
             onClick={onCancel}
             aria-label="Fermer"
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 8, border: 'none', background: 'transparent', color: 'var(--muted)', cursor: 'pointer' }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--surf2)'; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 28,
+              height: 28,
+              borderRadius: 8,
+              border: 'none',
+              background: 'transparent',
+              color: 'var(--muted)',
+              cursor: 'pointer',
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = 'var(--surf2)';
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = 'transparent';
+            }}
           >
             <X size={15} />
           </button>
@@ -113,7 +142,6 @@ export const NewProjectModal = ({ defaultProjectName, onConfirm, onCancel }: New
 
         {/* Body */}
         <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 20 }}>
-
           {/* Projet */}
           <section>
             <p style={sectionTitleStyle}>Projet</p>
@@ -138,9 +166,10 @@ export const NewProjectModal = ({ defaultProjectName, onConfirm, onCancel }: New
 
           {/* Client */}
           <section>
-            <p style={sectionTitleStyle}>Client <span style={{ fontWeight: 400, opacity: 0.6 }}>(optionnel)</span></p>
+            <p style={sectionTitleStyle}>
+              Client <span style={{ fontWeight: 400, opacity: 0.6 }}>(optionnel)</span>
+            </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-
               {/* Nom client */}
               <label>
                 <span style={labelStyle}>Nom et prénom</span>
@@ -194,7 +223,6 @@ export const NewProjectModal = ({ defaultProjectName, onConfirm, onCancel }: New
                   onBlur={blurStyle}
                 />
               </label>
-
             </div>
           </section>
         </div>
@@ -221,8 +249,12 @@ export const NewProjectModal = ({ defaultProjectName, onConfirm, onCancel }: New
               fontWeight: 500,
               cursor: 'pointer',
             }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--surf2)'; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--surf)'; }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = 'var(--surf2)';
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = 'var(--surf)';
+            }}
           >
             Annuler
           </button>
@@ -241,8 +273,12 @@ export const NewProjectModal = ({ defaultProjectName, onConfirm, onCancel }: New
               cursor: canSubmit ? 'pointer' : 'not-allowed',
               transition: 'opacity 0.15s',
             }}
-            onMouseEnter={(e) => { if (canSubmit) (e.currentTarget as HTMLButtonElement).style.opacity = '0.85'; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = '1'; }}
+            onMouseEnter={(e) => {
+              if (canSubmit) (e.currentTarget as HTMLButtonElement).style.opacity = '0.85';
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.opacity = '1';
+            }}
           >
             Créer le projet
           </button>

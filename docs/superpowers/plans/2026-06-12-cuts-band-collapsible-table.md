@@ -13,6 +13,7 @@
 ### Task 1: Create `CutGroupsTable` component
 
 **Files:**
+
 - Create: `src/components/quantities/CutGroupsTable.tsx`
 - Test: `src/components/quantities/CutGroupsTable.test.tsx`
 
@@ -84,7 +85,9 @@ describe('CutGroupsTable', () => {
   });
 
   it('renders the net tile count, styled green when reuseCount > 0', () => {
-    render(<CutGroupsTable {...defaultProps} groups={[makeGroup({ netTiles: 5, reuseCount: 2 })]} />);
+    render(
+      <CutGroupsTable {...defaultProps} groups={[makeGroup({ netTiles: 5, reuseCount: 2 })]} />,
+    );
     const cell = screen.getByText('5');
     expect(cell.className).toContain('text-emerald-500');
   });
@@ -137,7 +140,13 @@ export interface CutGroupsTableProps {
   onHighlight: (group: number | null) => void;
 }
 
-export const CutGroupsTable = ({ groups, tileW, tileH, tileColor, onHighlight }: CutGroupsTableProps) => {
+export const CutGroupsTable = ({
+  groups,
+  tileW,
+  tileH,
+  tileColor,
+  onHighlight,
+}: CutGroupsTableProps) => {
   return (
     <table className="w-full text-xs">
       <thead>
@@ -157,7 +166,7 @@ export const CutGroupsTable = ({ groups, tileW, tileH, tileColor, onHighlight }:
           return (
             <tr
               key={group.originalIndices.join(',')}
-              className="border-t border-gray-100 dark:border-zinc-800 hover:bg-gray-50 dark:hover:bg-zinc-800"
+              className="border-t border-gray-100 hover:bg-gray-50 dark:border-zinc-800 dark:hover:bg-zinc-800"
               // Plan highlighting is keyed by the original (pre-merge) cutGroups
               // index, not the merged display index `i` — use originalIndices[0].
               onMouseEnter={() => onHighlight(group.originalIndices[0]! + 1)}
@@ -202,7 +211,9 @@ export const CutGroupsTable = ({ groups, tileW, tileH, tileColor, onHighlight }:
               </td>
               <td
                 className={`px-2 py-1 text-right font-black tabular-nums ${
-                  group.reuseCount > 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-gray-900 dark:text-zinc-100'
+                  group.reuseCount > 0
+                    ? 'text-emerald-500 dark:text-emerald-400'
+                    : 'text-gray-900 dark:text-zinc-100'
                 }`}
               >
                 {group.netTiles}
@@ -233,6 +244,7 @@ git commit -m "feat(quantities): table des groupes de coupes"
 ### Task 2: Rewrite the cuts band in `QuantitiesPanel` as a collapsible accordion
 
 **Files:**
+
 - Modify: `src/components/quantities/QuantitiesPanel.tsx`
 - Modify: `src/components/quantities/QuantitiesPanel.test.tsx`
 
@@ -253,11 +265,13 @@ git commit -m "feat(quantities): table des groupes de coupes"
         tileW={result.tileW}
         tileH={result.tileH}
         tileColor={color}
-        onHighlight={(n) => setHighlightGroup(
-          // Plan highlighting is keyed by the original (pre-merge) cutGroups
-          // index, not the merged display index `i` — use originalIndices[0].
-          n === null ? null : group.originalIndices[0]! + 1,
-        )}
+        onHighlight={(n) =>
+          setHighlightGroup(
+            // Plan highlighting is keyed by the original (pre-merge) cutGroups
+            // index, not the merged display index `i` — use originalIndices[0].
+            n === null ? null : group.originalIndices[0]! + 1,
+          )
+        }
       />
     ))}
   </div>
@@ -269,21 +283,21 @@ This whole block must be replaced with a `▸`/`▾` accordion header (default c
 `QuantitiesPanel.test.tsx` currently has these two tests that reference the old band (lines 92–106):
 
 ```tsx
-  it('renders the cuts band with merged cut groups', () => {
-    render(<QuantitiesPanel />);
-    expect(screen.getByTestId('cuts-band')).toBeDefined();
-    expect(screen.getByText('Groupes de coupes (1)')).toBeDefined();
-  });
+it('renders the cuts band with merged cut groups', () => {
+  render(<QuantitiesPanel />);
+  expect(screen.getByTestId('cuts-band')).toBeDefined();
+  expect(screen.getByText('Groupes de coupes (1)')).toBeDefined();
+});
 
-  it('hovering a compact cut card sets the plan highlight', () => {
-    const { container } = render(<QuantitiesPanel />);
-    const cutsBand = screen.getByTestId('cuts-band');
-    const card = cutsBand.querySelector('div[style*="border-top-color"]') as Element;
-    fireEvent.mouseEnter(card);
-    // No visible assertion on QuantityPlanView (mocked); ensure no crash and plan section still renders
-    expect(screen.getByTestId('plan-section')).toBeDefined();
-    expect(container).toBeDefined();
-  });
+it('hovering a compact cut card sets the plan highlight', () => {
+  const { container } = render(<QuantitiesPanel />);
+  const cutsBand = screen.getByTestId('cuts-band');
+  const card = cutsBand.querySelector('div[style*="border-top-color"]') as Element;
+  fireEvent.mouseEnter(card);
+  // No visible assertion on QuantityPlanView (mocked); ensure no crash and plan section still renders
+  expect(screen.getByTestId('plan-section')).toBeDefined();
+  expect(container).toBeDefined();
+});
 ```
 
 These must be replaced with tests for the new collapsed-by-default / expand-on-click / hover-row behavior. The mocked `analyzeQuantities` (in the same test file) returns `cuts: []` (length 0), `totalReuseCount: 0`, and one `cutGroups` entry — so after merging there is 1 merged group, and the header text is `Groupes de coupes (1) — 0 carreaux à couper, 0 récupérées`.
@@ -293,30 +307,30 @@ These must be replaced with tests for the new collapsed-by-default / expand-on-c
 Replace the two tests shown above (lines 92–106) with:
 
 ```tsx
-  it('renders the cuts band header collapsed by default', () => {
-    render(<QuantitiesPanel />);
-    const cutsBand = screen.getByTestId('cuts-band');
-    expect(cutsBand.textContent).toContain('Groupes de coupes (1)');
-    expect(cutsBand.textContent).toContain('0 carreaux à couper, 0 récupérées');
-    expect(screen.queryByRole('table')).toBeNull();
-  });
+it('renders the cuts band header collapsed by default', () => {
+  render(<QuantitiesPanel />);
+  const cutsBand = screen.getByTestId('cuts-band');
+  expect(cutsBand.textContent).toContain('Groupes de coupes (1)');
+  expect(cutsBand.textContent).toContain('0 carreaux à couper, 0 récupérées');
+  expect(screen.queryByRole('table')).toBeNull();
+});
 
-  it('expands the cuts table when the header is clicked', () => {
-    render(<QuantitiesPanel />);
-    const toggle = screen.getByRole('button', { name: /Groupes de coupes/ });
-    fireEvent.click(toggle);
-    expect(screen.getByRole('table')).toBeDefined();
-  });
+it('expands the cuts table when the header is clicked', () => {
+  render(<QuantitiesPanel />);
+  const toggle = screen.getByRole('button', { name: /Groupes de coupes/ });
+  fireEvent.click(toggle);
+  expect(screen.getByRole('table')).toBeDefined();
+});
 
-  it('hovering a cut row sets the plan highlight', () => {
-    render(<QuantitiesPanel />);
-    const toggle = screen.getByRole('button', { name: /Groupes de coupes/ });
-    fireEvent.click(toggle);
-    const row = screen.getAllByRole('row')[1]!;
-    fireEvent.mouseEnter(row);
-    // No visible assertion on QuantityPlanView (mocked); ensure no crash and plan section still renders
-    expect(screen.getByTestId('plan-section')).toBeDefined();
-  });
+it('hovering a cut row sets the plan highlight', () => {
+  render(<QuantitiesPanel />);
+  const toggle = screen.getByRole('button', { name: /Groupes de coupes/ });
+  fireEvent.click(toggle);
+  const row = screen.getAllByRole('row')[1]!;
+  fireEvent.mouseEnter(row);
+  // No visible assertion on QuantityPlanView (mocked); ensure no crash and plan section still renders
+  expect(screen.getByTestId('plan-section')).toBeDefined();
+});
 ```
 
 - [ ] **Step 2: Run tests to verify they fail**
@@ -348,37 +362,38 @@ import { QuantitiesRecapColumn } from './QuantitiesRecapColumn';
 Add a `cutsOpen` state alongside the existing `highlightGroup` state:
 
 ```typescript
-  const [highlightGroup, setHighlightGroup] = useState<number | null>(null);
-  const [cutsOpen, setCutsOpen] = useState(false);
+const [highlightGroup, setHighlightGroup] = useState<number | null>(null);
+const [cutsOpen, setCutsOpen] = useState(false);
 ```
 
 Replace the entire `data-testid="cuts-band"` block with:
 
 ```tsx
-              <div data-testid="cuts-band" className="flex shrink-0 flex-col gap-2 overflow-hidden">
-                <button
-                  type="button"
-                  onClick={() => setCutsOpen((o) => !o)}
-                  className="flex shrink-0 items-center gap-1 text-left text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 dark:text-zinc-500"
-                >
-                  <span>{cutsOpen ? '▾' : '▸'}</span>
-                  <span>
-                    Groupes de coupes ({mergedCutGroups.length}) — {result.cuts.length} carreaux à couper, {result.totalReuseCount} récupérées
-                  </span>
-                </button>
+<div data-testid="cuts-band" className="flex shrink-0 flex-col gap-2 overflow-hidden">
+  <button
+    type="button"
+    onClick={() => setCutsOpen((o) => !o)}
+    className="flex shrink-0 items-center gap-1 text-left text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 dark:text-zinc-500"
+  >
+    <span>{cutsOpen ? '▾' : '▸'}</span>
+    <span>
+      Groupes de coupes ({mergedCutGroups.length}) — {result.cuts.length} carreaux à couper,{' '}
+      {result.totalReuseCount} récupérées
+    </span>
+  </button>
 
-                {cutsOpen && (
-                  <div className="max-h-[30vh] overflow-y-auto">
-                    <CutGroupsTable
-                      groups={mergedCutGroups}
-                      tileW={result.tileW}
-                      tileH={result.tileH}
-                      tileColor={color}
-                      onHighlight={setHighlightGroup}
-                    />
-                  </div>
-                )}
-              </div>
+  {cutsOpen && (
+    <div className="max-h-[30vh] overflow-y-auto">
+      <CutGroupsTable
+        groups={mergedCutGroups}
+        tileW={result.tileW}
+        tileH={result.tileH}
+        tileColor={color}
+        onHighlight={setHighlightGroup}
+      />
+    </div>
+  )}
+</div>
 ```
 
 - [ ] **Step 4: Run tests to verify they pass**
@@ -398,6 +413,7 @@ git commit -m "feat(quantities): bandeau de coupes repliable avec tableau"
 ### Task 3: Remove the superseded `CutGroupCardCompact` component
 
 **Files:**
+
 - Delete: `src/components/quantities/CutGroupCardCompact.tsx`
 - Delete: `src/components/quantities/CutGroupCardCompact.test.tsx`
 

@@ -18,7 +18,7 @@
 // src/types/project.ts
 export interface PointRef {
   roomId: string;
-  vertexIdx: number;   // ← c'est vertexIdx, pas index
+  vertexIdx: number; // ← c'est vertexIdx, pas index
 }
 
 export interface Constraint {
@@ -33,8 +33,15 @@ export type EdgeType = 'WALL' | 'DOOR';
 
 ```ts
 // src/components/plan/DrawingCanvas.tsx (types exportés)
-export interface EditingEdgeState { roomId: string; edgeIndex: number; } // ← edgeIndex
-export interface EditingZoneEdge  { roomId: string; zoneId: string; edgeIndex: number; }
+export interface EditingEdgeState {
+  roomId: string;
+  edgeIndex: number;
+} // ← edgeIndex
+export interface EditingZoneEdge {
+  roomId: string;
+  zoneId: string;
+  edgeIndex: number;
+}
 // editingPartition : { roomId: string; partitionId: string }
 ```
 
@@ -69,18 +76,19 @@ import type { EdgeType } from '@/types/project';
 
 ## Fichiers modifiés/créés
 
-| Fichier | Changement |
-|---|---|
-| `src/components/plan/PlanEditor.tsx` | Export `computeInitialView` · auto-anchor bloc WALL · `useEffect` centrage · `handleTrashClick` · `editingContext` / `canDelete` / `deleteTooltipLabel` · props `onDelete`+`canDelete`+`deleteTooltipLabel` vers Toolbar |
-| `src/components/plan/PlanToolbar.tsx` | Remplace `onClearRoom` par `onDelete`+`canDelete`+`deleteTooltipLabel` · bouton Trash disabled + tooltip dynamique |
-| `src/components/plan/PlanEditor.toolbar.test.ts` | Nouveaux tests pour les 3 features |
-| `src/components/plan/PlanEditor.viewport.test.ts` | **Créé** — tests `computeInitialView` |
+| Fichier                                           | Changement                                                                                                                                                                                                               |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `src/components/plan/PlanEditor.tsx`              | Export `computeInitialView` · auto-anchor bloc WALL · `useEffect` centrage · `handleTrashClick` · `editingContext` / `canDelete` / `deleteTooltipLabel` · props `onDelete`+`canDelete`+`deleteTooltipLabel` vers Toolbar |
+| `src/components/plan/PlanToolbar.tsx`             | Remplace `onClearRoom` par `onDelete`+`canDelete`+`deleteTooltipLabel` · bouton Trash disabled + tooltip dynamique                                                                                                       |
+| `src/components/plan/PlanEditor.toolbar.test.ts`  | Nouveaux tests pour les 3 features                                                                                                                                                                                       |
+| `src/components/plan/PlanEditor.viewport.test.ts` | **Créé** — tests `computeInitialView`                                                                                                                                                                                    |
 
 ---
 
 ## Task 1 : Auto-anchor premier nœud
 
 **Files:**
+
 - Modify: `src/components/plan/PlanEditor.tsx` (bloc WALL dans `handlePointerDown`, ~ligne 752)
 - Test: `src/components/plan/PlanEditor.toolbar.test.ts` (append)
 
@@ -94,8 +102,12 @@ if (tool === 'WALL') {
   const refPt = activeRoom.points[activeRoom.points.length - 1];
   const { point: snapped } = snapPos(raw, refPt);
   const pts = activeRoom.points;
-  if (canCloseActiveRoom && distance(snapped, pts[0]!) < CLOSING_TOLERANCE_MM) { setTool('SELECT'); return; }
-  pushHistory(); updateRoom(activeRoom.id, [...pts, snapped], [...activeRoom.edges, 'WALL']);
+  if (canCloseActiveRoom && distance(snapped, pts[0]!) < CLOSING_TOLERANCE_MM) {
+    setTool('SELECT');
+    return;
+  }
+  pushHistory();
+  updateRoom(activeRoom.id, [...pts, snapped], [...activeRoom.edges, 'WALL']);
   return;
 }
 ```
@@ -150,12 +162,20 @@ if (tool === 'WALL') {
   const refPt = activeRoom.points[activeRoom.points.length - 1];
   const { point: snapped } = snapPos(raw, refPt);
   const pts = activeRoom.points;
-  if (canCloseActiveRoom && distance(snapped, pts[0]!) < CLOSING_TOLERANCE_MM) { setTool('SELECT'); return; }
+  if (canCloseActiveRoom && distance(snapped, pts[0]!) < CLOSING_TOLERANCE_MM) {
+    setTool('SELECT');
+    return;
+  }
   pushHistory();
   updateRoom(activeRoom.id, [...pts, snapped], [...activeRoom.edges, 'WALL']);
   // Auto-ancrage : premier nœud de la première pièce uniquement
   if (rooms.indexOf(activeRoom) === 0 && pts.length === 0) {
-    addConstraint({ id: generateId(), type: 'FIX', pts: [ref(activeRoom.id, 0)], value: { x: snapped.x, y: snapped.y } });
+    addConstraint({
+      id: generateId(),
+      type: 'FIX',
+      pts: [ref(activeRoom.id, 0)],
+      value: { x: snapped.x, y: snapped.y },
+    });
   }
   return;
 }
@@ -181,6 +201,7 @@ git commit -m "feat(drawing): ancrage automatique du premier nœud de la premiè
 ## Task 2 : Centrage de la vue à l'ouverture
 
 **Files:**
+
 - Modify: `src/components/plan/PlanEditor.tsx` (export `computeInitialView` + nouveau `useEffect`)
 - Create: `src/components/plan/PlanEditor.viewport.test.ts`
 
@@ -210,17 +231,21 @@ describe('computeInitialView', () => {
     expect(computeInitialView([], 800, 600)).toBeNull();
   });
 
-  it('retourne null si les pièces n\'ont pas de points', () => {
+  it("retourne null si les pièces n'ont pas de points", () => {
     const rooms: Room[] = [makeRoom([])];
     expect(computeInitialView(rooms, 800, 600)).toBeNull();
   });
 
   it('centre la bounding box dans le viewport', () => {
     // Pièce 1000×1000 mm centrée en (500, 500)
-    const rooms = [makeRoom([
-      { x: 0, y: 0 }, { x: 1000, y: 0 },
-      { x: 1000, y: 1000 }, { x: 0, y: 1000 },
-    ])];
+    const rooms = [
+      makeRoom([
+        { x: 0, y: 0 },
+        { x: 1000, y: 0 },
+        { x: 1000, y: 1000 },
+        { x: 0, y: 1000 },
+      ]),
+    ];
     const result = computeInitialView(rooms, 800, 600);
     expect(result).not.toBeNull();
     // Centre monde (500, 500) doit mapper au centre viewport (400, 300)
@@ -230,10 +255,14 @@ describe('computeInitialView', () => {
 
   it('scale plafonné à 0.5', () => {
     // Pièce minuscule → scale serait > 0.5 sans cap
-    const rooms = [makeRoom([
-      { x: 0, y: 0 }, { x: 10, y: 0 },
-      { x: 10, y: 10 }, { x: 0, y: 10 },
-    ])];
+    const rooms = [
+      makeRoom([
+        { x: 0, y: 0 },
+        { x: 10, y: 0 },
+        { x: 10, y: 10 },
+        { x: 0, y: 10 },
+      ]),
+    ];
     const result = computeInitialView(rooms, 800, 600);
     expect(result!.scale).toBeLessThanOrEqual(0.5);
   });
@@ -275,19 +304,17 @@ export function computeInitialView(
 
   const xs = allPoints.map((p) => p.x);
   const ys = allPoints.map((p) => p.y);
-  const minX = Math.min(...xs), maxX = Math.max(...xs);
-  const minY = Math.min(...ys), maxY = Math.max(...ys);
+  const minX = Math.min(...xs),
+    maxX = Math.max(...xs);
+  const minY = Math.min(...ys),
+    maxY = Math.max(...ys);
   const bboxW = maxX - minX || 1000;
   const bboxH = maxY - minY || 1000;
   const cx = (minX + maxX) / 2;
   const cy = (minY + maxY) / 2;
 
   const PADDING = 80;
-  const newScale = Math.min(
-    (viewW - PADDING * 2) / bboxW,
-    (viewH - PADDING * 2) / bboxH,
-    0.5,
-  );
+  const newScale = Math.min((viewW - PADDING * 2) / bboxW, (viewH - PADDING * 2) / bboxH, 0.5);
 
   return {
     scale: newScale,
@@ -320,7 +347,7 @@ useEffect(() => {
     setScale(view.scale);
     setPan(view.pan);
   });
-// eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
 }, []);
 ```
 
@@ -346,6 +373,7 @@ git commit -m "feat(drawing): centrage automatique de la vue à l'ouverture du p
 ## Task 3 : Suppression contextuelle (bouton Trash)
 
 **Files:**
+
 - Modify: `src/components/plan/PlanToolbar.tsx` (props + bouton Trash)
 - Modify: `src/components/plan/PlanEditor.tsx` (handler + dérivations + passage des props)
 - Test: `src/components/plan/PlanEditor.toolbar.test.ts` (append)
@@ -353,16 +381,17 @@ git commit -m "feat(drawing): centrage automatique de la vue à l'ouverture du p
 ### Vue d'ensemble de la feature
 
 Le bouton Trash :
+
 - Est **disabled** quand `canDelete === false`
 - Affiche un **tooltip dynamique** via `deleteTooltipLabel`
 - Appelle `onDelete()` qui dispatche selon le contexte :
 
-| `editingContext` | Action dans `handleTrashClick` |
-|---|---|
-| `'partition'` | `removePartition(roomId, partitionId)` |
-| `'zone'` | `removeExcludedZone(roomId, zoneId)` |
-| `'door'` | `removeDoorFromRoom(room, edgeIndex)` + `updateRoom` |
-| `'wall'` | Rotation des points + suppression edge + `updateRoom` + `setTool('WALL')` |
+| `editingContext` | Action dans `handleTrashClick`                                            |
+| ---------------- | ------------------------------------------------------------------------- |
+| `'partition'`    | `removePartition(roomId, partitionId)`                                    |
+| `'zone'`         | `removeExcludedZone(roomId, zoneId)`                                      |
+| `'door'`         | `removeDoorFromRoom(room, edgeIndex)` + `updateRoom`                      |
+| `'wall'`         | Rotation des points + suppression edge + `updateRoom` + `setTool('WALL')` |
 
 ### Partie A — Tests (écrire d'abord)
 
@@ -374,8 +403,10 @@ Ajouter à la fin du fichier :
 // ── canDelete ────────────────────────────────────────────────────────────────
 
 describe('canDelete', () => {
-  it('false quand aucun état d\'édition actif', () => {
-    const editingEdge = null, editingPartition = null, editingZoneEdge = null;
+  it("false quand aucun état d'édition actif", () => {
+    const editingEdge = null,
+      editingPartition = null,
+      editingZoneEdge = null;
     const canDelete = !!(editingEdge ?? editingPartition ?? editingZoneEdge);
     expect(canDelete).toBe(false);
   });
@@ -397,39 +428,45 @@ describe('canDelete', () => {
 // ── editingContext ────────────────────────────────────────────────────────────
 
 describe('editingContext', () => {
-  it('\'partition\' quand editingPartition est défini', () => {
+  it("'partition' quand editingPartition est défini", () => {
     const editingPartition = { roomId: 'r1', partitionId: 'p1' };
     const editingZoneEdge = null;
     const editingEdge = null;
-    const ctx =
-      editingPartition ? 'partition'
-      : editingZoneEdge ? 'zone'
-      : editingEdge
-        ? (('WALL' as EdgeType) === 'DOOR' ? 'door' : 'wall')
-        : null;
+    const ctx = editingPartition
+      ? 'partition'
+      : editingZoneEdge
+        ? 'zone'
+        : editingEdge
+          ? ('WALL' as EdgeType) === 'DOOR'
+            ? 'door'
+            : 'wall'
+          : null;
     expect(ctx).toBe('partition');
   });
 
-  it('\'zone\' quand editingZoneEdge est défini', () => {
+  it("'zone' quand editingZoneEdge est défini", () => {
     const editingPartition = null;
     const editingZoneEdge = { roomId: 'r1', zoneId: 'z1', edgeIndex: 0 };
     const editingEdge = null;
-    const ctx =
-      editingPartition ? 'partition'
-      : editingZoneEdge ? 'zone'
-      : editingEdge
-        ? (('WALL' as EdgeType) === 'DOOR' ? 'door' : 'wall')
-        : null;
+    const ctx = editingPartition
+      ? 'partition'
+      : editingZoneEdge
+        ? 'zone'
+        : editingEdge
+          ? ('WALL' as EdgeType) === 'DOOR'
+            ? 'door'
+            : 'wall'
+          : null;
     expect(ctx).toBe('zone');
   });
 
-  it('\'wall\' quand editingEdge WALL', () => {
+  it("'wall' quand editingEdge WALL", () => {
     const edgeType: EdgeType = 'WALL';
     const ctx = edgeType === 'DOOR' ? 'door' : 'wall';
     expect(ctx).toBe('wall');
   });
 
-  it('\'door\' quand editingEdge DOOR', () => {
+  it("'door' quand editingEdge DOOR", () => {
     const edgeType: EdgeType = 'DOOR';
     const ctx = edgeType === 'DOOR' ? 'door' : 'wall';
     expect(ctx).toBe('door');
@@ -441,10 +478,10 @@ describe('editingContext', () => {
 describe('réouverture pièce sur suppression mur', () => {
   it('rotation correcte des points pour edge 1 sur pièce [A,B,C,D]', () => {
     const points = [
-      { x: 0,   y: 0   },   // A=0
-      { x: 100, y: 0   },   // B=1
-      { x: 100, y: 100 },   // C=2
-      { x: 0,   y: 100 },   // D=3
+      { x: 0, y: 0 }, // A=0
+      { x: 100, y: 0 }, // B=1
+      { x: 100, y: 100 }, // C=2
+      { x: 0, y: 100 }, // D=3
     ];
     const edges: EdgeType[] = ['WALL', 'WALL', 'WALL', 'WALL'];
     // Supprimer edge B→C (index 1) → rotateBy = (1+1)%4 = 2
@@ -457,14 +494,15 @@ describe('réouverture pièce sur suppression mur', () => {
 
     // Nouvel ordre : [C, D, A, B]
     expect(newPoints[0]).toEqual({ x: 100, y: 100 }); // C
-    expect(newPoints[1]).toEqual({ x: 0,   y: 100 }); // D
-    expect(newPoints[2]).toEqual({ x: 0,   y: 0   }); // A
-    expect(newPoints[3]).toEqual({ x: 100, y: 0   }); // B
+    expect(newPoints[1]).toEqual({ x: 0, y: 100 }); // D
+    expect(newPoints[2]).toEqual({ x: 0, y: 0 }); // A
+    expect(newPoints[3]).toEqual({ x: 100, y: 0 }); // B
     expect(newEdges.length).toBe(3);
   });
 
   it('rotation index contrainte : ancien vertexIdx j → (j - rotateBy + n) % n', () => {
-    const n = 4, rotateBy = 2;
+    const n = 4,
+      rotateBy = 2;
     // vertexIdx 0 → (0 - 2 + 4) % 4 = 2
     expect((0 - rotateBy + n) % n).toBe(2);
     // vertexIdx 2 → (2 - 2 + 4) % 4 = 0
@@ -490,6 +528,7 @@ Expected: tous les tests du fichier passent.
 Remplacer l'interface, la destructuration, le tooltip `clear`, et les deux boutons Trash :
 
 **Interface** — remplacer `onClearRoom: () => void` par :
+
 ```tsx
 interface PlanToolbarProps {
   tool: PlanTool;
@@ -509,6 +548,7 @@ interface PlanToolbarProps {
 ```
 
 **Tooltip `clear`** — mettre à jour la description :
+
 ```tsx
 clear: { label: 'Supprimer l\'élément', description: 'Supprime le mur, porte, cloison ou zone sélectionné' },
 ```
@@ -516,6 +556,7 @@ clear: { label: 'Supprimer l\'élément', description: 'Supprime le mur, porte, 
 **Destructuration** — remplacer `onClearRoom,` par `onDelete, canDelete, deleteTooltipLabel,`
 
 **Bouton Trash desktop** (vers ligne 263) — remplacer :
+
 ```tsx
 <ToolTooltip label="Supprimer l'élément" description={deleteTooltipLabel}>
   <Button variant="danger" size="icon" className="h-8 w-8" onClick={onDelete} disabled={!canDelete}>
@@ -525,8 +566,15 @@ clear: { label: 'Supprimer l\'élément', description: 'Supprime le mur, porte, 
 ```
 
 **Bouton Trash mobile** (vers ligne 403) — remplacer :
+
 ```tsx
-<Button variant="danger" size="icon" className="h-10 w-10 shrink-0" onClick={onDelete} disabled={!canDelete}>
+<Button
+  variant="danger"
+  size="icon"
+  className="h-10 w-10 shrink-0"
+  onClick={onDelete}
+  disabled={!canDelete}
+>
   <Trash2 size={18} />
 </Button>
 ```
@@ -541,25 +589,29 @@ Juste avant le `return (` final (vers ligne 1360), ajouter :
 
 ```tsx
 // ── Contexte de suppression contextuelle ─────────────────────────────────────
-const editingContext: 'wall' | 'door' | 'partition' | 'zone' | null =
-  editingPartition ? 'partition'
-  : editingZoneEdge ? 'zone'
-  : editingEdge
-    ? (
-        (rooms.find((r) => r.id === editingEdge.roomId)?.edges[editingEdge.edgeIndex] ?? 'WALL') === 'DOOR'
-          ? 'door'
-          : 'wall'
-      )
-  : null;
+const editingContext: 'wall' | 'door' | 'partition' | 'zone' | null = editingPartition
+  ? 'partition'
+  : editingZoneEdge
+    ? 'zone'
+    : editingEdge
+      ? (rooms.find((r) => r.id === editingEdge.roomId)?.edges[editingEdge.edgeIndex] ?? 'WALL') ===
+        'DOOR'
+        ? 'door'
+        : 'wall'
+      : null;
 
 const canDelete = editingContext !== null;
 
 const deleteTooltipLabel =
-  editingContext === 'wall'       ? 'Supprimer ce mur'
-  : editingContext === 'door'     ? 'Supprimer cette porte'
-  : editingContext === 'partition' ? 'Supprimer cette cloison'
-  : editingContext === 'zone'     ? 'Supprimer cette zone'
-  : 'Sélectionnez un élément pour le supprimer';
+  editingContext === 'wall'
+    ? 'Supprimer ce mur'
+    : editingContext === 'door'
+      ? 'Supprimer cette porte'
+      : editingContext === 'partition'
+        ? 'Supprimer cette cloison'
+        : editingContext === 'zone'
+          ? 'Supprimer cette zone'
+          : 'Sélectionnez un élément pour le supprimer';
 ```
 
 - [ ] **Step 5 : Ajouter `handleTrashClick` dans PlanEditor**
@@ -611,17 +663,13 @@ const handleTrashClick = () => {
     const newEdges = reorderedEdges.slice(0, n - 1) as EdgeType[];
 
     // Mettre à jour les indices de contraintes (rotation)
-    const roomConstraints = constraints.filter((c) =>
-      c.pts.some((r) => r.roomId === room.id),
-    );
+    const roomConstraints = constraints.filter((c) => c.pts.some((r) => r.roomId === room.id));
     roomConstraints.forEach((c) => {
       removeConstraint(c.id);
       addConstraint({
         ...c,
         pts: c.pts.map((r) =>
-          r.roomId === room.id
-            ? { ...r, vertexIdx: (r.vertexIdx - rotateBy + n) % n }
-            : r,
+          r.roomId === room.id ? { ...r, vertexIdx: (r.vertexIdx - rotateBy + n) % n } : r,
         ),
       });
     });
@@ -638,9 +686,9 @@ const handleTrashClick = () => {
 Localiser `<PlanToolbar` (vers ligne 1404) et remplacer `onClearRoom={handleClearRoom}` par :
 
 ```tsx
-onDelete={handleTrashClick}
-canDelete={canDelete}
-deleteTooltipLabel={deleteTooltipLabel}
+onDelete = { handleTrashClick };
+canDelete = { canDelete };
+deleteTooltipLabel = { deleteTooltipLabel };
 ```
 
 - [ ] **Step 7 : Supprimer handleClearRoom de l'interface (optionnel cleanup)**
