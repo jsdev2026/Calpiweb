@@ -1,21 +1,25 @@
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
-import { DM_Serif_Display, DM_Sans } from 'next/font/google';
+import localFont from 'next/font/local';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import './globals.css';
 
-const dmSerifDisplay = DM_Serif_Display({
-  subsets: ['latin'],
+// Polices auto-hébergées (Fontsource) : le build ne dépend plus de Google Fonts,
+// dont le chargeur next/font/google échoue sur Vercel sans cache.
+const dmSerifDisplay = localFont({
+  src: [
+    { path: '../../node_modules/@fontsource/dm-serif-display/files/dm-serif-display-latin-400-normal.woff2', weight: '400', style: 'normal' },
+    { path: '../../node_modules/@fontsource/dm-serif-display/files/dm-serif-display-latin-400-italic.woff2', weight: '400', style: 'italic' },
+  ],
   variable: '--font-display',
-  weight: ['400'],
-  style: ['normal', 'italic'],
   display: 'swap',
 });
 
-const dmSans = DM_Sans({
-  subsets: ['latin'],
+const dmSans = localFont({
+  src: '../../node_modules/@fontsource-variable/dm-sans/files/dm-sans-latin-wght-normal.woff2',
+  weight: '300 600',
+  style: 'normal',
   variable: '--font-body',
-  weight: ['300', '400', '500', '600'],
   display: 'swap',
 });
 
