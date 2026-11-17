@@ -24,7 +24,7 @@ The tiling editor sidebar shows a compact summary sourced exclusively from `anal
 1. Replace import: `computeTilingMultiRoom` → `analyzeQuantities` (from `@/engine/quantities/quantityEngine`)
 2. Remove `TilingStats` import from `@/types/tiling`
 3. Replace state:
-   - Remove: `const [tiles, setTiles] = useState<Tile[]>([])`  and `const [stats, setStats] = useState<TilingStats | null>(null)`
+   - Remove: `const [tiles, setTiles] = useState<Tile[]>([])` and `const [stats, setStats] = useState<TilingStats | null>(null)`
    - Add: `const [result, setResult] = useState<QuantityResult | null>(null)`
 4. Replace computation call:
    - Remove: `const { tiles, stats } = computeTilingMultiRoom(rooms, config); setTiles(tiles); setStats(stats);`
@@ -45,12 +45,12 @@ The tiling editor sidebar shows a compact summary sourced exclusively from `anal
 4. Replace icon: `Calculator` → `BarChart3` (from lucide-react)
 5. Update display — 5 rows, same key-value layout as currently:
 
-   | Label | Value |
-   |-------|-------|
-   | Surface | `formatM2(result.roomArea)` |
-   | Carreaux entiers | `result.wholeCount` |
-   | Coupes | `result.cuts.length` |
-   | Chutes récupérées | `result.totalReuseCount` |
+   | Label             | Value                       |
+   | ----------------- | --------------------------- |
+   | Surface           | `formatM2(result.roomArea)` |
+   | Carreaux entiers  | `result.wholeCount`         |
+   | Coupes            | `result.cuts.length`        |
+   | Chutes récupérées | `result.totalReuseCount`    |
 
    Followed by the highlighted "Total à commander (+10%)" block using `result.toOrder`.
 

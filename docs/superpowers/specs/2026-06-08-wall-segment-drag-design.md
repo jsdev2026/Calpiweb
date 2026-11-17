@@ -6,11 +6,11 @@ In SELECT mode, allow the user to drag any wall segment perpendicular to its axi
 
 ## Interaction Model
 
-| Action | Result |
-|--------|--------|
-| Pointer down on wall body + move > 4px | Segment drag (perpendicular movement) |
-| Pointer down + up without movement | Visual wall selection only |
-| Double-click on wall body | Open thickness editor (previously: single click) |
+| Action                                 | Result                                           |
+| -------------------------------------- | ------------------------------------------------ |
+| Pointer down on wall body + move > 4px | Segment drag (perpendicular movement)            |
+| Pointer down + up without movement     | Visual wall selection only                       |
+| Double-click on wall body              | Open thickness editor (previously: single click) |
 
 - Pointer capture starts on pointer down (same as node drag).
 - `lastClickRef` (already present) detects double-click for thickness editor.
@@ -85,10 +85,10 @@ No new props or store actions required — `onUpdateNode` is already called in r
 ### Cursor on wall body hover (SELECT tool, no active drag)
 
 | Wall orientation | Cursor |
-|-----------------|--------|
-| Horizontal (|dir.y| < 0.1) | `ns-resize` |
-| Vertical (|dir.x| < 0.1) | `ew-resize` |
-| Diagonal | `move` |
+| ---------------- | ------ | ------ | ----------- |
+| Horizontal (     | dir.y  | < 0.1) | `ns-resize` |
+| Vertical (       | dir.x  | < 0.1) | `ew-resize` |
+| Diagonal         | `move` |
 
 Cursor is set on the `<svg>` element via its `style` prop. A `hoveredWallId` state (computed in `handlePointerMove` when no drag is active) drives the cursor change in real time.
 

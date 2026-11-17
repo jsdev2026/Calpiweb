@@ -40,8 +40,8 @@ describe('WallThicknessControl', () => {
 describe('WallThicknessControl compact', () => {
   it('affiche un bouton "−" et un bouton "+"', () => {
     render(<WallThicknessControl wallThickness={100} onChange={() => {}} compact />);
-    expect(screen.getByRole('button', { name: 'Réduire l\'épaisseur' })).toBeDefined();
-    expect(screen.getByRole('button', { name: 'Augmenter l\'épaisseur' })).toBeDefined();
+    expect(screen.getByRole('button', { name: "Réduire l'épaisseur" })).toBeDefined();
+    expect(screen.getByRole('button', { name: "Augmenter l'épaisseur" })).toBeDefined();
   });
 
   it('affiche la valeur en cm (100mm → "10cm")', () => {
@@ -52,27 +52,27 @@ describe('WallThicknessControl compact', () => {
   it('clic "+" appelle onChange avec wallThickness + 5', () => {
     const onChange = vi.fn();
     render(<WallThicknessControl wallThickness={100} onChange={onChange} compact />);
-    fireEvent.click(screen.getByRole('button', { name: 'Augmenter l\'épaisseur' }));
+    fireEvent.click(screen.getByRole('button', { name: "Augmenter l'épaisseur" }));
     expect(onChange).toHaveBeenCalledWith(105);
   });
 
   it('clic "−" appelle onChange avec wallThickness - 5', () => {
     const onChange = vi.fn();
     render(<WallThicknessControl wallThickness={100} onChange={onChange} compact />);
-    fireEvent.click(screen.getByRole('button', { name: 'Réduire l\'épaisseur' }));
+    fireEvent.click(screen.getByRole('button', { name: "Réduire l'épaisseur" }));
     expect(onChange).toHaveBeenCalledWith(95);
   });
 
   it('clic "−" est désactivé à 50mm (minimum)', () => {
     const onChange = vi.fn();
     render(<WallThicknessControl wallThickness={50} onChange={onChange} compact />);
-    const btn = screen.getByRole('button', { name: 'Réduire l\'épaisseur' });
+    const btn = screen.getByRole('button', { name: "Réduire l'épaisseur" });
     expect(btn).toBeDisabled();
     fireEvent.click(btn);
     expect(onChange).not.toHaveBeenCalled();
   });
 
-  it('le mode compact ne rend pas d\'input number (pas de clavier)', () => {
+  it("le mode compact ne rend pas d'input number (pas de clavier)", () => {
     render(<WallThicknessControl wallThickness={100} onChange={() => {}} compact />);
     expect(screen.queryByRole('spinbutton')).toBeNull();
   });

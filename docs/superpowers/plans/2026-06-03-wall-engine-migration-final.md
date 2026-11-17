@@ -14,20 +14,21 @@
 
 ## Fichiers concernés
 
-| Fichier | Action |
-|---------|--------|
-| `src/components/plan/PlanToolbar.tsx` | **Réécrire** — PlanTool simplifié + 5 boutons |
-| `src/components/plan/ToolStatusBar.tsx` | **Modifier** — retirer 6 entrées |
-| `src/store/projectStore.ts` | **Modifier** — create() inclut wallEngine |
-| `src/components/plan/PlanEditor.tsx` | **Réécrire** — ~220 lignes, sans legacy |
-| `src/components/plan/PlanEditor.toolbar.test.ts` | **Modifier** — adapter aux 5 outils |
-| `src/components/plan/PlanEditor.mobile.test.tsx` | **Modifier** — adapter aux 5 outils |
+| Fichier                                          | Action                                        |
+| ------------------------------------------------ | --------------------------------------------- |
+| `src/components/plan/PlanToolbar.tsx`            | **Réécrire** — PlanTool simplifié + 5 boutons |
+| `src/components/plan/ToolStatusBar.tsx`          | **Modifier** — retirer 6 entrées              |
+| `src/store/projectStore.ts`                      | **Modifier** — create() inclut wallEngine     |
+| `src/components/plan/PlanEditor.tsx`             | **Réécrire** — ~220 lignes, sans legacy       |
+| `src/components/plan/PlanEditor.toolbar.test.ts` | **Modifier** — adapter aux 5 outils           |
+| `src/components/plan/PlanEditor.mobile.test.tsx` | **Modifier** — adapter aux 5 outils           |
 
 ---
 
 ### Task 1 : PlanToolbar — simplifier PlanTool + supprimer 6 boutons
 
 **Files:**
+
 - Modify: `src/components/plan/PlanToolbar.tsx`
 
 - [ ] **Step 1.1 : Réécrire entièrement `PlanToolbar.tsx`**
@@ -202,6 +203,7 @@ git commit -m "feat(wall-engine): PlanToolbar — PlanTool simplifié (5 outils)
 ### Task 2 : ToolStatusBar — retirer les entrées obsolètes
 
 **Files:**
+
 - Modify: `src/components/plan/ToolStatusBar.tsx`
 
 - [ ] **Step 2.1 : Réécrire `ToolStatusBar.tsx`**
@@ -253,6 +255,7 @@ git commit -m "feat(wall-engine): ToolStatusBar — retirer textes outils legacy
 ### Task 3 : projectStore — create() inclut wallEngine
 
 **Files:**
+
 - Modify: `src/store/projectStore.ts`
 
 - [ ] **Step 3.1 : Mettre à jour `create()`**
@@ -290,6 +293,7 @@ git commit -m "feat(wall-engine): projectStore — create() initialise wallEngin
 ### Task 4 : PlanEditor — réécriture complète
 
 **Files:**
+
 - Modify: `src/components/plan/PlanEditor.tsx`
 
 Contexte : le fichier actuel fait 1925 lignes. Il est entièrement remplacé par la version ci-dessous (~220 lignes). `computeInitialView` est conservé et exporté (utilisé par les tests de viewport).
@@ -535,17 +539,27 @@ git commit -m "feat(wall-engine): PlanEditor — réécriture complète (suppres
 ### Task 5 : Tests — adapter aux 5 outils
 
 **Files:**
+
 - Modify: `src/components/plan/PlanEditor.toolbar.test.ts`
 - Modify: `src/components/plan/PlanEditor.mobile.test.tsx`
 
 - [ ] **Step 5.1 : Mettre à jour `PlanEditor.toolbar.test.ts`**
 
 **Changement 1** — ligne 9-11, `nonSelectTools` :
+
 ```typescript
 // AVANT
 const nonSelectTools: PlanTool[] = [
-  'WALL', 'DOOR', 'PARTITION', 'EXCLUDE',
-  'APPLY_H', 'APPLY_V', 'COINCIDE', 'DIMENSION', 'ANCHOR', 'DELETE',
+  'WALL',
+  'DOOR',
+  'PARTITION',
+  'EXCLUDE',
+  'APPLY_H',
+  'APPLY_V',
+  'COINCIDE',
+  'DIMENSION',
+  'ANCHOR',
+  'DELETE',
 ];
 // APRÈS
 const nonSelectTools: PlanTool[] = ['WALL', 'DOOR', 'EXCLUDE', 'DELETE'];
@@ -554,19 +568,28 @@ const nonSelectTools: PlanTool[] = ['WALL', 'DOOR', 'EXCLUDE', 'DELETE'];
 **Changement 2** — supprimer le test `'COINCIDE a un texte'` (lignes 50-52).
 
 **Changement 3** — `drawingTools` (lignes 54-63) :
+
 ```typescript
 // AVANT
 const drawingTools: Array<keyof typeof TOOL_STATUS_TEXTS> = [
-  'WALL', 'DOOR', 'PARTITION', 'EXCLUDE',
-  'APPLY_H', 'APPLY_V', 'COINCIDE', 'DIMENSION', 'ANCHOR',
+  'WALL',
+  'DOOR',
+  'PARTITION',
+  'EXCLUDE',
+  'APPLY_H',
+  'APPLY_V',
+  'COINCIDE',
+  'DIMENSION',
+  'ANCHOR',
 ];
 // APRÈS
 const drawingTools: Array<keyof typeof TOOL_STATUS_TEXTS> = ['WALL', 'DOOR', 'EXCLUDE', 'DELETE'];
 ```
 
 **Changement 4** — test `'THICKNESS n\'est pas dans la liste'` (lignes 107-114) :
+
 ```typescript
-it('THICKNESS n\'est pas dans la liste des outils valides', () => {
+it("THICKNESS n'est pas dans la liste des outils valides", () => {
   const tools: PlanTool[] = ['SELECT', 'WALL', 'DOOR', 'EXCLUDE', 'DELETE'];
   // @ts-expect-error — 'THICKNESS' was removed from PlanTool
   const thickness: PlanTool = 'THICKNESS';
@@ -575,6 +598,7 @@ it('THICKNESS n\'est pas dans la liste des outils valides', () => {
 ```
 
 **Changement 5** — test `DELETE tool` (lignes 257-261) :
+
 ```typescript
 it('DELETE fait partie de PlanTool', () => {
   const tools: PlanTool[] = ['SELECT', 'WALL', 'DOOR', 'EXCLUDE', 'DELETE'];
@@ -585,10 +609,20 @@ it('DELETE fait partie de PlanTool', () => {
 - [ ] **Step 5.2 : Mettre à jour `PlanEditor.mobile.test.tsx`**
 
 Ligne 7 — mettre à jour `tools` :
+
 ```typescript
 // AVANT
-const tools: PlanTool[] = ['WALL', 'DOOR', 'PARTITION', 'EXCLUDE', 'APPLY_H', 'APPLY_V',
-                           'DIMENSION', 'COINCIDE', 'ANCHOR'];
+const tools: PlanTool[] = [
+  'WALL',
+  'DOOR',
+  'PARTITION',
+  'EXCLUDE',
+  'APPLY_H',
+  'APPLY_V',
+  'DIMENSION',
+  'COINCIDE',
+  'ANCHOR',
+];
 // APRÈS
 const tools: PlanTool[] = ['WALL', 'DOOR', 'EXCLUDE', 'DELETE'];
 ```

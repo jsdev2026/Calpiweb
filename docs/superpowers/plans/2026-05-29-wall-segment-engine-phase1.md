@@ -12,22 +12,23 @@
 
 ## Structure de fichiers
 
-| Fichier | Action | Responsabilité |
-|---|---|---|
-| `src/types/wall.ts` | Créer | Types `Wall`, `SnapResult`, `DrawingChain` |
-| `src/types/project.ts` | Modifier | Ajouter `walls?: Wall[]` à `Project` |
-| `src/store/projectStore.ts` | Modifier | Actions wall + extension `restoreSnapshot` |
-| `src/store/projectStore.test.ts` | Modifier | Tests des actions wall |
-| `src/engine/geometry/wallSnap.ts` | Créer | Fonctions snap (endpoint, face, libre) |
-| `src/engine/geometry/wallSnap.test.ts` | Créer | Tests snap |
-| `src/components/plan/WallDrawingCanvas.tsx` | Créer | Composant SVG complet (draw/select/delete) |
-| `src/components/plan/PlanEditor.tsx` | Modifier | Montage conditionnel + undo/redo walls |
+| Fichier                                     | Action   | Responsabilité                             |
+| ------------------------------------------- | -------- | ------------------------------------------ |
+| `src/types/wall.ts`                         | Créer    | Types `Wall`, `SnapResult`, `DrawingChain` |
+| `src/types/project.ts`                      | Modifier | Ajouter `walls?: Wall[]` à `Project`       |
+| `src/store/projectStore.ts`                 | Modifier | Actions wall + extension `restoreSnapshot` |
+| `src/store/projectStore.test.ts`            | Modifier | Tests des actions wall                     |
+| `src/engine/geometry/wallSnap.ts`           | Créer    | Fonctions snap (endpoint, face, libre)     |
+| `src/engine/geometry/wallSnap.test.ts`      | Créer    | Tests snap                                 |
+| `src/components/plan/WallDrawingCanvas.tsx` | Créer    | Composant SVG complet (draw/select/delete) |
+| `src/components/plan/PlanEditor.tsx`        | Modifier | Montage conditionnel + undo/redo walls     |
 
 ---
 
 ## Task 1: Types Wall
 
 **Files:**
+
 - Create: `src/types/wall.ts`
 - Modify: `src/types/project.ts`
 
@@ -41,7 +42,7 @@ export interface Wall {
   id: string;
   p1: Point;
   p2: Point;
-  thickness: number;  // cm, défaut 20
+  thickness: number; // cm, défaut 20
 }
 
 export interface SnapResult {
@@ -90,6 +91,7 @@ git commit -m "feat(wall-engine): types Wall + extension Project"
 ## Task 2: Store — actions wall
 
 **Files:**
+
 - Modify: `src/store/projectStore.ts`
 - Modify: `src/store/projectStore.test.ts`
 
@@ -269,6 +271,7 @@ git commit -m "feat(wall-engine): actions addWall/removeWall/updateWall/setWalls
 ## Task 3: Snap utilities
 
 **Files:**
+
 - Create: `src/engine/geometry/wallSnap.ts`
 - Create: `src/engine/geometry/wallSnap.test.ts`
 
@@ -281,11 +284,11 @@ import { snapToWalls } from './wallSnap';
 import type { Wall } from '@/types/wall';
 
 const SCALE = 1;
-const EP_R = 12;  // endpoint radius px
-const FA_R = 8;   // face radius px
+const EP_R = 12; // endpoint radius px
+const FA_R = 8; // face radius px
 
 const horizontal: Wall = { id: 'h', p1: { x: 0, y: 0 }, p2: { x: 200, y: 0 }, thickness: 20 };
-const vertical: Wall   = { id: 'v', p1: { x: 100, y: 0 }, p2: { x: 100, y: 200 }, thickness: 20 };
+const vertical: Wall = { id: 'v', p1: { x: 100, y: 0 }, p2: { x: 100, y: 200 }, thickness: 20 };
 
 describe('snapToWalls — endpoint', () => {
   it('snaps to p1 within radius', () => {
@@ -427,7 +430,7 @@ export function snapToWalls(
   for (const wall of walls) {
     const proj = projectOntoSegment(cursor, wall.p1, wall.p2);
     if (!proj) continue;
-    if (proj.t < 0 || proj.t > 1) continue;  // outside segment bounds
+    if (proj.t < 0 || proj.t > 1) continue; // outside segment bounds
     const d = dist(cursor, proj.projected);
     if (d < bestFaceDist) {
       bestFaceDist = d;
@@ -460,6 +463,7 @@ git commit -m "feat(wall-engine): snapToWalls — endpoint + face snap"
 ## Task 4: WallDrawingCanvas
 
 **Files:**
+
 - Create: `src/components/plan/WallDrawingCanvas.tsx`
 
 Le composant gère son propre SVG (pan/zoom autonome), le mode dessin WALL (chaîne continue), SELECT (sélection + WallEdgeEditor), DELETE (clic = suppression).
@@ -827,6 +831,7 @@ git commit -m "feat(wall-engine): WallDrawingCanvas — draw/select/delete"
 ## Task 5: Intégration PlanEditor
 
 **Files:**
+
 - Modify: `src/components/plan/PlanEditor.tsx`
 
 Objectif : monter `WallDrawingCanvas` à la place de `DrawingCanvas` quand le projet est en mode wall-engine. Étendre `HistoryEntry` pour inclure `walls`. Ajouter le bouton "Activer Wall Engine" dans la toolbar.
@@ -842,10 +847,10 @@ import type { Wall } from '@/types/wall';
 Dans la section des `useProjectStore` selectors (vers ligne 230), ajouter :
 
 ```typescript
-const walls          = useProjectStore((s) => selectActiveProject(s)?.walls);
-const addWall        = useProjectStore((s) => s.addWall);
-const removeWall     = useProjectStore((s) => s.removeWall);
-const updateWall     = useProjectStore((s) => s.updateWall);
+const walls = useProjectStore((s) => selectActiveProject(s)?.walls);
+const addWall = useProjectStore((s) => s.addWall);
+const removeWall = useProjectStore((s) => s.removeWall);
+const updateWall = useProjectStore((s) => s.updateWall);
 const initWallEngine = useProjectStore((s) => s.initWallEngine);
 ```
 
@@ -865,18 +870,23 @@ Ajouter `wallsRef` dans le bloc des refs (après `futureRef`, vers ligne 463) :
 
 ```typescript
 const wallsRef = useRef(walls);
-useEffect(() => { wallsRef.current = walls; }, [walls]);
+useEffect(() => {
+  wallsRef.current = walls;
+}, [walls]);
 ```
 
 Modifier `pushHistory` (ligne ~514) pour capturer les walls :
 
 ```typescript
 const pushHistory = useCallback(() => {
-  setPast((prev) => [{
-    rooms: deepCloneRooms(roomsRef.current),
-    constraints: [...constraintsRef.current],
-    walls: wallsRef.current ? [...wallsRef.current] : [],
-  }, ...prev.slice(0, 49)]);
+  setPast((prev) => [
+    {
+      rooms: deepCloneRooms(roomsRef.current),
+      constraints: [...constraintsRef.current],
+      walls: wallsRef.current ? [...wallsRef.current] : [],
+    },
+    ...prev.slice(0, 49),
+  ]);
   setFuture([]);
 }, []);
 ```
@@ -902,51 +912,77 @@ import { WallDrawingCanvas } from './WallDrawingCanvas';
 Dans le JSX de PlanEditor, trouver `<DrawingCanvas` (ligne ~1836) et ajouter la condition AVANT :
 
 ```tsx
-{walls !== undefined ? (
-  <WallDrawingCanvas
-    walls={walls}
-    tool={tool as 'WALL' | 'SELECT' | 'DELETE'}
-    onAddWall={addWall}
-    onRemoveWall={removeWall}
-    onUpdateWall={updateWall}
-    onPushHistory={pushHistory}
-  />
-) : (
-  <DrawingCanvas
-    svgRef={svgRef} rooms={rooms} activeRoomId={activeRoomId}
-    scale={scale} pan={pan} snapGrid={SNAP_GRID_MM}
-    tool={tool} isPanning={isPanning} mousePos={mousePos}
-    editingEdge={editingEdge} hoveredEdge={hoveredEdge}
-    snapPreview={snapPreview} originPoint={originPoint}
-    wallThickness={wallThickness}
-    constraints={constraints} coincideSource={coincideSource}
-    dofMap={dofMap} canCloseActiveRoom={canCloseActiveRoom}
-    partitionOrigin={partitionOrigin} excludePoints={excludePoints}
-    editingPartition={editingPartition}
-    hoveredZoneEdge={hoveredZoneEdge} editingZoneEdge={editingZoneEdge}
-    hoveredPartitionEdge={hoveredPartitionEdge}
-    partitionDimLines={partitionDimLines}
-    editingPartitionDimension={editingPartitionDimension}
-    faceSnapHover={faceSnapHover}
-    dimensionSource={dimensionSource}
-    deleteHover={deleteHover}
-    onPartitionDimensionPointerDown={handlePartitionDimensionPointerDown}
-    onPointerDown={handlePointerDown} onPointerMove={handlePointerMove}
-    onPointerUp={handlePointerUp} onEdgePointerDown={handleEdgePointerDown}
-    onVertexPointerDown={handleVertexPointerDown}
-    onConstraintRemove={(id) => { pushHistory(); removeConstraint(id); runSolver(); }}
-    onDeletePartition={(roomId, partitionId) => { pushHistory(); removePartition(roomId, partitionId); }}
-    onDeleteExcludedZone={(roomId, zoneId) => { pushHistory(); removeExcludedZone(roomId, zoneId); }}
-    onPartitionLabelPointerDown={handlePartitionLabelPointerDown}
-    onPartitionVertexPointerDown={handlePartitionVertexPointerDown}
-    onZoneVertexPointerDown={handleZoneVertexPointerDown}
-    onZoneEdgePointerDown={handleZoneEdgePointerDown}
-    onDimensionClick={handleDimensionClick}
-    onDimOffsetChange={handleDimOffsetChange}
-    dimTypeSelection={dimTypeSelection}
-    onDimTypeSelect={handleDimTypeSelect}
-  />
-)}
+{
+  walls !== undefined ? (
+    <WallDrawingCanvas
+      walls={walls}
+      tool={tool as 'WALL' | 'SELECT' | 'DELETE'}
+      onAddWall={addWall}
+      onRemoveWall={removeWall}
+      onUpdateWall={updateWall}
+      onPushHistory={pushHistory}
+    />
+  ) : (
+    <DrawingCanvas
+      svgRef={svgRef}
+      rooms={rooms}
+      activeRoomId={activeRoomId}
+      scale={scale}
+      pan={pan}
+      snapGrid={SNAP_GRID_MM}
+      tool={tool}
+      isPanning={isPanning}
+      mousePos={mousePos}
+      editingEdge={editingEdge}
+      hoveredEdge={hoveredEdge}
+      snapPreview={snapPreview}
+      originPoint={originPoint}
+      wallThickness={wallThickness}
+      constraints={constraints}
+      coincideSource={coincideSource}
+      dofMap={dofMap}
+      canCloseActiveRoom={canCloseActiveRoom}
+      partitionOrigin={partitionOrigin}
+      excludePoints={excludePoints}
+      editingPartition={editingPartition}
+      hoveredZoneEdge={hoveredZoneEdge}
+      editingZoneEdge={editingZoneEdge}
+      hoveredPartitionEdge={hoveredPartitionEdge}
+      partitionDimLines={partitionDimLines}
+      editingPartitionDimension={editingPartitionDimension}
+      faceSnapHover={faceSnapHover}
+      dimensionSource={dimensionSource}
+      deleteHover={deleteHover}
+      onPartitionDimensionPointerDown={handlePartitionDimensionPointerDown}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onEdgePointerDown={handleEdgePointerDown}
+      onVertexPointerDown={handleVertexPointerDown}
+      onConstraintRemove={(id) => {
+        pushHistory();
+        removeConstraint(id);
+        runSolver();
+      }}
+      onDeletePartition={(roomId, partitionId) => {
+        pushHistory();
+        removePartition(roomId, partitionId);
+      }}
+      onDeleteExcludedZone={(roomId, zoneId) => {
+        pushHistory();
+        removeExcludedZone(roomId, zoneId);
+      }}
+      onPartitionLabelPointerDown={handlePartitionLabelPointerDown}
+      onPartitionVertexPointerDown={handlePartitionVertexPointerDown}
+      onZoneVertexPointerDown={handleZoneVertexPointerDown}
+      onZoneEdgePointerDown={handleZoneEdgePointerDown}
+      onDimensionClick={handleDimensionClick}
+      onDimOffsetChange={handleDimOffsetChange}
+      dimTypeSelection={dimTypeSelection}
+      onDimTypeSelect={handleDimTypeSelect}
+    />
+  );
+}
 ```
 
 Note : supprimer l'ancien `<DrawingCanvas .../>` seul car il est maintenant inclus dans le else.
@@ -958,16 +994,18 @@ Trouver dans le JSX de PlanEditor le bloc de la toolbar (chercher `onChangeTool`
 Le bouton doit apparaître seulement si `walls === undefined` (ancien mode) :
 
 ```tsx
-{walls === undefined && (
-  <button
-    type="button"
-    title="Basculer vers le nouveau moteur de dessin (murs épais)"
-    onClick={() => initWallEngine()}
-    className="rounded border border-orange-600/40 bg-orange-600/10 px-2 py-1 text-[10px] font-semibold text-orange-400 hover:bg-orange-600/20"
-  >
-    Nouveau moteur ✦
-  </button>
-)}
+{
+  walls === undefined && (
+    <button
+      type="button"
+      title="Basculer vers le nouveau moteur de dessin (murs épais)"
+      onClick={() => initWallEngine()}
+      className="rounded border border-orange-600/40 bg-orange-600/10 px-2 py-1 text-[10px] font-semibold text-orange-400 hover:bg-orange-600/20"
+    >
+      Nouveau moteur ✦
+    </button>
+  );
+}
 ```
 
 Placer ce bouton dans la zone toolbar — chercher le `<div` contenant les boutons d'outils principaux (WALL, SELECT, DELETE).
@@ -987,6 +1025,7 @@ cd /workspaces/Calpiweb && npm run dev 2>&1 &
 ```
 
 Test manuel (golden path) :
+
 1. Ouvrir un projet existant → vérifier que `<DrawingCanvas>` est toujours monté (aucune régression)
 2. Cliquer "Nouveau moteur ✦" → vérifier que `<WallDrawingCanvas>` apparaît (fond sombre + grille de points)
 3. Outil WALL actif → cliquer 4 points pour former un rectangle → vérifier que 4 murs orange apparaissent
@@ -1020,6 +1059,7 @@ Expected: tous les tests préexistants PASS.
 ## Hors périmètre Phase 1
 
 Les éléments suivants sont traités dans des plans ultérieurs :
+
 - Coins en onglet (Phase 2 — `computeCornerGeometry`)
 - T-jonctions correctes (Phase 2)
 - Cotations automatiques (Phase 3 — `computeAutoCotations`)

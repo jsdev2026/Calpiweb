@@ -12,18 +12,19 @@
 
 ## Fichiers modifiés
 
-| Fichier | Rôle |
-|---|---|
-| `src/components/plan/WallThicknessControl.tsx` | Ajouter prop `compact` → stepper inline |
-| `src/components/plan/WallThicknessControl.test.tsx` | Nouveaux tests mode compact |
-| `src/components/plan/PlanToolbar.tsx` | Restructurer bloc mobile en deux lignes |
-| `src/components/plan/PlanToolbar.test.tsx` | Mettre à jour mock + nouveaux tests |
+| Fichier                                             | Rôle                                    |
+| --------------------------------------------------- | --------------------------------------- |
+| `src/components/plan/WallThicknessControl.tsx`      | Ajouter prop `compact` → stepper inline |
+| `src/components/plan/WallThicknessControl.test.tsx` | Nouveaux tests mode compact             |
+| `src/components/plan/PlanToolbar.tsx`               | Restructurer bloc mobile en deux lignes |
+| `src/components/plan/PlanToolbar.test.tsx`          | Mettre à jour mock + nouveaux tests     |
 
 ---
 
 ### Task 1 : WallThicknessControl — prop `compact`
 
 **Files:**
+
 - Modify: `src/components/plan/WallThicknessControl.tsx`
 - Modify: `src/components/plan/WallThicknessControl.test.tsx`
 
@@ -35,8 +36,8 @@ Dans `src/components/plan/WallThicknessControl.test.tsx`, ajouter ce bloc à la 
 describe('WallThicknessControl compact', () => {
   it('affiche un bouton "−" et un bouton "+"', () => {
     render(<WallThicknessControl wallThickness={100} onChange={() => {}} compact />);
-    expect(screen.getByRole('button', { name: 'Réduire l\'épaisseur' })).toBeDefined();
-    expect(screen.getByRole('button', { name: 'Augmenter l\'épaisseur' })).toBeDefined();
+    expect(screen.getByRole('button', { name: "Réduire l'épaisseur" })).toBeDefined();
+    expect(screen.getByRole('button', { name: "Augmenter l'épaisseur" })).toBeDefined();
   });
 
   it('affiche la valeur en cm (100mm → "10cm")', () => {
@@ -47,25 +48,25 @@ describe('WallThicknessControl compact', () => {
   it('clic "+" appelle onChange avec wallThickness + 5', () => {
     const onChange = vi.fn();
     render(<WallThicknessControl wallThickness={100} onChange={onChange} compact />);
-    fireEvent.click(screen.getByRole('button', { name: 'Augmenter l\'épaisseur' }));
+    fireEvent.click(screen.getByRole('button', { name: "Augmenter l'épaisseur" }));
     expect(onChange).toHaveBeenCalledWith(105);
   });
 
   it('clic "−" appelle onChange avec wallThickness - 5', () => {
     const onChange = vi.fn();
     render(<WallThicknessControl wallThickness={100} onChange={onChange} compact />);
-    fireEvent.click(screen.getByRole('button', { name: 'Réduire l\'épaisseur' }));
+    fireEvent.click(screen.getByRole('button', { name: "Réduire l'épaisseur" }));
     expect(onChange).toHaveBeenCalledWith(95);
   });
 
   it('clic "−" ne descend pas en dessous de 50mm', () => {
     const onChange = vi.fn();
     render(<WallThicknessControl wallThickness={50} onChange={onChange} compact />);
-    fireEvent.click(screen.getByRole('button', { name: 'Réduire l\'épaisseur' }));
+    fireEvent.click(screen.getByRole('button', { name: "Réduire l'épaisseur" }));
     expect(onChange).toHaveBeenCalledWith(50);
   });
 
-  it('le mode compact ne rend pas d\'input number (pas de clavier)', () => {
+  it("le mode compact ne rend pas d'input number (pas de clavier)", () => {
     render(<WallThicknessControl wallThickness={100} onChange={() => {}} compact />);
     expect(screen.queryByRole('spinbutton')).toBeNull();
   });
@@ -93,9 +94,14 @@ interface WallThicknessControlProps {
   compact?: boolean;
 }
 
-const BTN = 'flex h-8 w-8 items-center justify-center rounded-xl text-sm font-bold bg-gray-50 border border-gray-200 dark:bg-zinc-900 dark:border-zinc-800 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors';
+const BTN =
+  'flex h-8 w-8 items-center justify-center rounded-xl text-sm font-bold bg-gray-50 border border-gray-200 dark:bg-zinc-900 dark:border-zinc-800 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors';
 
-export const WallThicknessControl = ({ wallThickness, onChange, compact = false }: WallThicknessControlProps) => {
+export const WallThicknessControl = ({
+  wallThickness,
+  onChange,
+  compact = false,
+}: WallThicknessControlProps) => {
   const cm = Math.round(wallThickness / 10);
 
   if (compact) {
@@ -110,7 +116,10 @@ export const WallThicknessControl = ({ wallThickness, onChange, compact = false 
         >
           −
         </button>
-        <span className="w-10 text-center text-[12px] font-bold select-none" style={{ color: 'var(--text2)' }}>
+        <span
+          className="w-10 select-none text-center text-[12px] font-bold"
+          style={{ color: 'var(--text2)' }}
+        >
           {cm}cm
         </span>
         <button
@@ -133,7 +142,10 @@ export const WallThicknessControl = ({ wallThickness, onChange, compact = false 
 
   return (
     <div className="flex flex-col items-center gap-0.5">
-      <span className="text-[9px] font-black uppercase tracking-[0.15em]" style={{ color: 'var(--muted)' }}>
+      <span
+        className="text-[9px] font-black uppercase tracking-[0.15em]"
+        style={{ color: 'var(--muted)' }}
+      >
         ép.
       </span>
       <input
@@ -144,10 +156,12 @@ export const WallThicknessControl = ({ wallThickness, onChange, compact = false 
         defaultValue={cm}
         onBlur={(e) => commit(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && commit((e.target as HTMLInputElement).value)}
-        className="h-8 w-8 rounded-xl text-center text-[11px] font-bold outline-none transition-colors bg-gray-50 border border-gray-200 dark:bg-zinc-900 dark:border-zinc-800 hover:bg-gray-100 dark:hover:bg-zinc-800"
+        className="h-8 w-8 rounded-xl border border-gray-200 bg-gray-50 text-center text-[11px] font-bold outline-none transition-colors hover:bg-gray-100 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800"
         style={{ color: 'var(--text2)' }}
       />
-      <span className="text-[9px] font-semibold" style={{ color: 'var(--muted)' }}>cm</span>
+      <span className="text-[9px] font-semibold" style={{ color: 'var(--muted)' }}>
+        cm
+      </span>
     </div>
   );
 };
@@ -181,10 +195,12 @@ git commit -m "feat(mobile): WallThicknessControl — prop compact avec stepper 
 ### Task 2 : PlanToolbar — restructure mobile deux lignes
 
 **Files:**
+
 - Modify: `src/components/plan/PlanToolbar.tsx`
 - Modify: `src/components/plan/PlanToolbar.test.tsx`
 
 **Contexte important :**
+
 - `TOOL_STATUS_TEXTS` est déjà exporté de `src/components/plan/ToolStatusBar.tsx` — il suffit de l'importer.
 - Le mock de `WallThicknessControl` dans `PlanToolbar.test.tsx` ignore tous les props — à mettre à jour pour capturer `compact`.
 - Le `data-testid="plan-toolbar-mobile"` doit rester pour ne pas casser les tests existants.
@@ -220,13 +236,13 @@ describe('PlanToolbar mobile — deux lignes', () => {
     expect(ctrl!.getAttribute('data-compact')).toBe('true');
   });
 
-  it('texte d\'outil actif visible quand tool=WALL', () => {
+  it("texte d'outil actif visible quand tool=WALL", () => {
     render(<PlanToolbar {...defaultProps} tool="WALL" />);
     const toolbar = screen.getByTestId('plan-toolbar-mobile');
     expect(toolbar.textContent).toContain('Cliquez pour poser un point');
   });
 
-  it('pas de texte d\'outil actif quand tool=SELECT', () => {
+  it("pas de texte d'outil actif quand tool=SELECT", () => {
     render(<PlanToolbar {...defaultProps} tool="SELECT" />);
     const toolbar = screen.getByTestId('plan-toolbar-mobile');
     expect(toolbar.textContent).not.toContain('Cliquez');
@@ -255,45 +271,108 @@ import { TOOL_STATUS_TEXTS } from './ToolStatusBar';
 Dans `src/components/plan/PlanToolbar.tsx`, localiser et remplacer TOUT le second `<div>` (celui qui commence par `data-testid="plan-toolbar-mobile"`, lignes 125–151) par :
 
 ```tsx
-  <div
-    data-testid="plan-toolbar-mobile"
-    className="absolute bottom-0 left-0 right-0 z-20 flex flex-col md:hidden mouse:hidden border-t border-gray-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md"
-  >
-    {/* Ligne 1 : outils + épaisseur */}
-    <div className="flex items-center gap-1 px-2 pt-2 pb-1">
-      <button type="button" aria-label="Sélectionner" onClick={() => onChangeTool('SELECT')}
-        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${tool === 'SELECT' ? 'bg-orange-500 text-white shadow-md' : TB_CARD}`}
-        style={tool !== 'SELECT' ? { color: 'var(--text2)' } : {}}><MousePointer2 size={18} /></button>
-      <button type="button" aria-label="Tracer des murs" onClick={() => onChangeTool('WALL')}
-        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${tool === 'WALL' ? 'bg-orange-500 text-white shadow-md' : TB_CARD}`}
-        style={tool !== 'WALL' ? { color: 'var(--text2)' } : {}}><PenTool size={18} /></button>
-      <button type="button" aria-label="Porte" onClick={() => onChangeTool('DOOR')}
-        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${tool === 'DOOR' ? 'bg-orange-500 text-white shadow-md' : TB_CARD}`}
-        style={tool !== 'DOOR' ? { color: 'var(--text2)' } : {}}><DoorOpen size={18} /></button>
-      <button type="button" aria-label="Zone non carrelée" onClick={() => onChangeTool('EXCLUDE')}
-        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${tool === 'EXCLUDE' ? 'bg-amber-500 text-white shadow-md shadow-amber-500/30' : TB_CARD}`}
-        style={tool !== 'EXCLUDE' ? { color: 'var(--text2)' } : {}}><Square size={18} /></button>
-      <button type="button" aria-label="Verrouiller" onClick={() => onChangeTool('LOCK')}
-        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${tool === 'LOCK' ? 'text-white shadow-md' : TB_CARD}`}
-        style={tool === 'LOCK' ? { background: '#27ae60', boxShadow: '0 4px 10px rgba(39,174,96,0.3)' } : { color: 'var(--text2)' }}><Lock size={18} /></button>
-      <div className="ml-auto">
-        <WallThicknessControl wallThickness={wallThickness} onChange={onWallThicknessChange} compact />
-      </div>
-    </div>
-    {/* Ligne 2 : actions + texte d'outil actif */}
-    <div className="flex items-center gap-1 px-2 pt-1" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' }}>
-      <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0" onClick={onUndo} disabled={!canUndo}><Undo size={18} /></Button>
-      <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0" onClick={onRedo} disabled={!canRedo}><Redo2 size={18} /></Button>
-      <button type="button" aria-label="Mode suppression" onClick={() => onChangeTool('DELETE')}
-        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${tool === 'DELETE' ? 'bg-red-500 text-white shadow-md shadow-red-500/30' : TB_CARD}`}
-        style={tool !== 'DELETE' ? { color: 'var(--text2)' } : {}}><Trash2 size={18} /></button>
-      {TOOL_STATUS_TEXTS[tool] && (
-        <span className="ml-2 truncate text-[11px]" style={{ color: 'var(--text2)' }}>
-          {TOOL_STATUS_TEXTS[tool]}
-        </span>
-      )}
+<div
+  data-testid="plan-toolbar-mobile"
+  className="absolute bottom-0 left-0 right-0 z-20 flex flex-col border-t border-gray-200 bg-white/95 backdrop-blur-md mouse:hidden md:hidden dark:border-zinc-800 dark:bg-zinc-900/95"
+>
+  {/* Ligne 1 : outils + épaisseur */}
+  <div className="flex items-center gap-1 px-2 pb-1 pt-2">
+    <button
+      type="button"
+      aria-label="Sélectionner"
+      onClick={() => onChangeTool('SELECT')}
+      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${tool === 'SELECT' ? 'bg-orange-500 text-white shadow-md' : TB_CARD}`}
+      style={tool !== 'SELECT' ? { color: 'var(--text2)' } : {}}
+    >
+      <MousePointer2 size={18} />
+    </button>
+    <button
+      type="button"
+      aria-label="Tracer des murs"
+      onClick={() => onChangeTool('WALL')}
+      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${tool === 'WALL' ? 'bg-orange-500 text-white shadow-md' : TB_CARD}`}
+      style={tool !== 'WALL' ? { color: 'var(--text2)' } : {}}
+    >
+      <PenTool size={18} />
+    </button>
+    <button
+      type="button"
+      aria-label="Porte"
+      onClick={() => onChangeTool('DOOR')}
+      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${tool === 'DOOR' ? 'bg-orange-500 text-white shadow-md' : TB_CARD}`}
+      style={tool !== 'DOOR' ? { color: 'var(--text2)' } : {}}
+    >
+      <DoorOpen size={18} />
+    </button>
+    <button
+      type="button"
+      aria-label="Zone non carrelée"
+      onClick={() => onChangeTool('EXCLUDE')}
+      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${tool === 'EXCLUDE' ? 'bg-amber-500 text-white shadow-md shadow-amber-500/30' : TB_CARD}`}
+      style={tool !== 'EXCLUDE' ? { color: 'var(--text2)' } : {}}
+    >
+      <Square size={18} />
+    </button>
+    <button
+      type="button"
+      aria-label="Verrouiller"
+      onClick={() => onChangeTool('LOCK')}
+      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${tool === 'LOCK' ? 'text-white shadow-md' : TB_CARD}`}
+      style={
+        tool === 'LOCK'
+          ? { background: '#27ae60', boxShadow: '0 4px 10px rgba(39,174,96,0.3)' }
+          : { color: 'var(--text2)' }
+      }
+    >
+      <Lock size={18} />
+    </button>
+    <div className="ml-auto">
+      <WallThicknessControl
+        wallThickness={wallThickness}
+        onChange={onWallThicknessChange}
+        compact
+      />
     </div>
   </div>
+  {/* Ligne 2 : actions + texte d'outil actif */}
+  <div
+    className="flex items-center gap-1 px-2 pt-1"
+    style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' }}
+  >
+    <Button
+      variant="ghost"
+      size="icon"
+      className="h-10 w-10 shrink-0"
+      onClick={onUndo}
+      disabled={!canUndo}
+    >
+      <Undo size={18} />
+    </Button>
+    <Button
+      variant="ghost"
+      size="icon"
+      className="h-10 w-10 shrink-0"
+      onClick={onRedo}
+      disabled={!canRedo}
+    >
+      <Redo2 size={18} />
+    </Button>
+    <button
+      type="button"
+      aria-label="Mode suppression"
+      onClick={() => onChangeTool('DELETE')}
+      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${tool === 'DELETE' ? 'bg-red-500 text-white shadow-md shadow-red-500/30' : TB_CARD}`}
+      style={tool !== 'DELETE' ? { color: 'var(--text2)' } : {}}
+    >
+      <Trash2 size={18} />
+    </button>
+    {TOOL_STATUS_TEXTS[tool] && (
+      <span className="ml-2 truncate text-[11px]" style={{ color: 'var(--text2)' }}>
+        {TOOL_STATUS_TEXTS[tool]}
+      </span>
+    )}
+  </div>
+</div>
 ```
 
 - [ ] **Step 5 : Vérifier que tous les tests passent**
@@ -333,16 +412,16 @@ git commit -m "feat(mobile): toolbar deux lignes — bottom-0, safe area, épais
 
 ### Couverture spec
 
-| Exigence spec | Tâche |
-|---|---|
-| `bottom-20` → `bottom-0` | Task 2 Step 4 |
-| `paddingBottom: env(safe-area-inset-bottom)` | Task 2 Step 4 (ligne 2, style) |
-| Ligne 1 : SELECT WALL DOOR EXCLUDE LOCK + épaisseur | Task 2 Step 4 |
-| Ligne 2 : Undo Redo Delete + texte outil actif | Task 2 Step 4 |
-| WallThicknessControl compact `[−] Xcm [+]` | Task 1 Step 3 |
-| Pas de scroll horizontal | Résolu par `flex-col` + tous outils visibles sur 390px+ |
-| Aucun changement ToolStatusBar.tsx | ✓ hors périmètre |
-| Aucun changement WallRoomPanel | ✓ hors périmètre |
+| Exigence spec                                       | Tâche                                                   |
+| --------------------------------------------------- | ------------------------------------------------------- |
+| `bottom-20` → `bottom-0`                            | Task 2 Step 4                                           |
+| `paddingBottom: env(safe-area-inset-bottom)`        | Task 2 Step 4 (ligne 2, style)                          |
+| Ligne 1 : SELECT WALL DOOR EXCLUDE LOCK + épaisseur | Task 2 Step 4                                           |
+| Ligne 2 : Undo Redo Delete + texte outil actif      | Task 2 Step 4                                           |
+| WallThicknessControl compact `[−] Xcm [+]`          | Task 1 Step 3                                           |
+| Pas de scroll horizontal                            | Résolu par `flex-col` + tous outils visibles sur 390px+ |
+| Aucun changement ToolStatusBar.tsx                  | ✓ hors périmètre                                        |
+| Aucun changement WallRoomPanel                      | ✓ hors périmètre                                        |
 
 ### Hors périmètre (non traité)
 

@@ -63,14 +63,14 @@ The LOCK tool button uses the lock icon in green and follows the same button pat
 
 When a node has `locked === true`, the following operations are blocked:
 
-| Operation | Result |
-|---|---|
-| Drag node (SELECT mode) | Blocked silently — cursor `not-allowed` on hover |
-| Perpendicular wall segment drag | Blocked if either endpoint node is locked |
-| Node snap-merge on pointer release | Blocked if either involved node is locked |
-| Wall deletion | Allowed — orphaned locked node persists |
-| Wall split on locked segment | Allowed — newly inserted node is free by default |
-| Undo / Redo | Lock state is part of wall engine snapshot — fully reversible |
+| Operation                          | Result                                                        |
+| ---------------------------------- | ------------------------------------------------------------- |
+| Drag node (SELECT mode)            | Blocked silently — cursor `not-allowed` on hover              |
+| Perpendicular wall segment drag    | Blocked if either endpoint node is locked                     |
+| Node snap-merge on pointer release | Blocked if either involved node is locked                     |
+| Wall deletion                      | Allowed — orphaned locked node persists                       |
+| Wall split on locked segment       | Allowed — newly inserted node is free by default              |
+| Undo / Redo                        | Lock state is part of wall engine snapshot — fully reversible |
 
 ## Scope Boundaries
 
@@ -80,12 +80,12 @@ When a node has `locked === true`, the following operations are blocked:
 
 ## Files Changed
 
-| File | Change |
-|---|---|
-| `src/types/wall.ts` | Add `locked?: boolean` to `WallNode` |
+| File                                        | Change                                                                      |
+| ------------------------------------------- | --------------------------------------------------------------------------- |
+| `src/types/wall.ts`                         | Add `locked?: boolean` to `WallNode`                                        |
 | `src/components/plan/WallDrawingCanvas.tsx` | LOCK tool handling, double-click toggle, drag/merge guards, green rendering |
-| `src/app/project/[id]/page.tsx` | LOCK tool button in toolbar |
-| `src/store/projectStore.ts` | No change needed |
+| `src/app/project/[id]/page.tsx`             | LOCK tool button in toolbar                                                 |
+| `src/store/projectStore.ts`                 | No change needed                                                            |
 
 ## Testing
 

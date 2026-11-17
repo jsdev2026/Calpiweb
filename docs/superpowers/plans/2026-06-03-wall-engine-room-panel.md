@@ -14,16 +14,17 @@
 
 ## Fichiers concernés
 
-| Fichier | Action |
-|---------|--------|
-| `src/components/plan/WallRoomPanel.tsx` | **Créer** |
-| `src/components/plan/PlanEditor.tsx` | **Modifier** — conditionner RoomPanel / WallRoomPanel |
+| Fichier                                 | Action                                                |
+| --------------------------------------- | ----------------------------------------------------- |
+| `src/components/plan/WallRoomPanel.tsx` | **Créer**                                             |
+| `src/components/plan/PlanEditor.tsx`    | **Modifier** — conditionner RoomPanel / WallRoomPanel |
 
 ---
 
 ### Task 1 : Créer `WallRoomPanel.tsx`
 
 **Files:**
+
 - Create: `src/components/plan/WallRoomPanel.tsx`
 
 - [ ] **Step 1.1 : Créer le fichier complet**
@@ -155,6 +156,7 @@ git commit -m "feat(wall-engine): WallRoomPanel — panel read-only pièces + su
 ### Task 2 : Brancher dans PlanEditor
 
 **Files:**
+
 - Modify: `src/components/plan/PlanEditor.tsx`
 
 - [ ] **Step 2.1 : Ajouter l'import**

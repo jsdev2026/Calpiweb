@@ -81,7 +81,7 @@ export const TilingControls = ({ config, onChange }: TilingControlsProps) => {
       </div>
 
       {/* Layout (pose) selector */}
-      <div className="space-y-3 border-t border-gray-200 dark:border-zinc-800 pt-6">
+      <div className="space-y-3 border-t border-gray-200 pt-6 dark:border-zinc-800">
         <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-500">
           Mode de pose
         </label>
@@ -94,10 +94,10 @@ export const TilingControls = ({ config, onChange }: TilingControlsProps) => {
               className={`flex flex-col items-center rounded-lg border py-2 text-xs font-bold transition-all ${
                 config.layout === preset.value
                   ? 'border-orange-500 bg-orange-500/10 text-orange-400'
-                  : 'border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 text-gray-500 dark:text-zinc-500 hover:border-gray-400 dark:hover:border-zinc-500'
+                  : 'border-gray-200 bg-gray-50 text-gray-500 hover:border-gray-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-500 dark:hover:border-zinc-500'
               }`}
             >
-              <span className="leading-tight text-center">{preset.label}</span>
+              <span className="text-center leading-tight">{preset.label}</span>
               <span className="text-[10px] opacity-60">{preset.sublabel}</span>
             </button>
           ))}
@@ -106,7 +106,7 @@ export const TilingControls = ({ config, onChange }: TilingControlsProps) => {
 
       {/* Chevron angle: only relevant for chevron layout */}
       {config.layout === 'CHEVRON' && (
-        <div className="space-y-3 border-t border-gray-200 dark:border-zinc-800 pt-6">
+        <div className="space-y-3 border-t border-gray-200 pt-6 dark:border-zinc-800">
           <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-500">
             Angle de coupe (°)
           </label>
@@ -123,7 +123,7 @@ export const TilingControls = ({ config, onChange }: TilingControlsProps) => {
 
       {/* Stagger: only relevant for straight layout */}
       {config.layout === 'STRAIGHT' && (
-        <div className="space-y-3 border-t border-gray-200 dark:border-zinc-800 pt-6">
+        <div className="space-y-3 border-t border-gray-200 pt-6 dark:border-zinc-800">
           <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-500">
             Décalage
           </label>
@@ -136,7 +136,7 @@ export const TilingControls = ({ config, onChange }: TilingControlsProps) => {
                 className={`flex flex-col items-center rounded-lg border py-2 text-xs font-bold transition-all ${
                   config.stagger === preset.value
                     ? 'border-orange-500 bg-orange-500/10 text-orange-400'
-                    : 'border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 text-gray-500 dark:text-zinc-500 hover:border-gray-400 dark:hover:border-zinc-500'
+                    : 'border-gray-200 bg-gray-50 text-gray-500 hover:border-gray-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-500 dark:hover:border-zinc-500'
                 }`}
               >
                 <span>{preset.label}</span>
@@ -146,7 +146,6 @@ export const TilingControls = ({ config, onChange }: TilingControlsProps) => {
           </div>
         </div>
       )}
-
     </div>
   );
 };

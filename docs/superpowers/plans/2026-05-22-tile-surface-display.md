@@ -12,11 +12,11 @@
 
 ## File Structure
 
-| Action | File | Change |
-|--------|------|--------|
-| Modify | `src/components/results/ResultsPanel.tsx` | Add m² line under `toOrder` count |
-| Modify | `src/components/results/ResultsPanel.test.tsx` | Add test for m² display |
-| Modify | `src/components/quantities/QuantitiesPanel.tsx` | Add `sub` with m² to two StatCards |
+| Action | File                                                        | Change                              |
+| ------ | ----------------------------------------------------------- | ----------------------------------- |
+| Modify | `src/components/results/ResultsPanel.tsx`                   | Add m² line under `toOrder` count   |
+| Modify | `src/components/results/ResultsPanel.test.tsx`              | Add test for m² display             |
+| Modify | `src/components/quantities/QuantitiesPanel.tsx`             | Add `sub` with m² to two StatCards  |
 | Create | `src/components/quantities/QuantitiesPanel.surface.test.ts` | Unit tests for tile surface formula |
 
 ---
@@ -24,6 +24,7 @@
 ### Task 1: ResultsPanel — add m² under `toOrder`
 
 **Files:**
+
 - Modify: `src/components/results/ResultsPanel.tsx:40-43`
 - Modify: `src/components/results/ResultsPanel.test.tsx`
 
@@ -51,6 +52,7 @@ it('shows toOrder tile surface in m²', () => {
 ```bash
 npm run test -- --run src/components/results/ResultsPanel.test.tsx
 ```
+
 Expected: FAIL — `Unable to find an element with the text: 1.35 m²`
 
 - [ ] **Step 3: Implement the fix in ResultsPanel.tsx**
@@ -58,10 +60,9 @@ Expected: FAIL — `Unable to find an element with the text: 1.35 m²`
 In `src/components/results/ResultsPanel.tsx`, find lines 40–43:
 
 ```tsx
-          <div className="text-2xl font-black tracking-tight text-emerald-400">
-            {result.toOrder}{' '}
-            <span className="text-sm font-medium opacity-60">carreaux</span>
-          </div>
+<div className="text-2xl font-black tracking-tight text-emerald-400">
+  {result.toOrder} <span className="text-sm font-medium opacity-60">carreaux</span>
+</div>
 ```
 
 Replace with:
@@ -81,6 +82,7 @@ Replace with:
 ```bash
 npm run test -- --run src/components/results/ResultsPanel.test.tsx
 ```
+
 Expected: all 4 tests PASS
 
 - [ ] **Step 5: Run full suite**
@@ -88,6 +90,7 @@ Expected: all 4 tests PASS
 ```bash
 npm run test -- --run
 ```
+
 Expected: all 114+ tests pass
 
 - [ ] **Step 6: Commit**
@@ -104,6 +107,7 @@ Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"
 ### Task 2: QuantitiesPanel — add m² to two StatCards
 
 **Files:**
+
 - Modify: `src/components/quantities/QuantitiesPanel.tsx:307-330`
 - Create: `src/components/quantities/QuantitiesPanel.surface.test.ts`
 
@@ -120,8 +124,11 @@ With `wholeCount=10, tileW=300, tileH=300`: `formatM2(10 × 300 × 300) = "0.90 
 With `toOrder=15, tileW=300, tileH=300`: `formatM2(15 × 300 × 300) = "1.35 m²"`
 
 The `StatCard` component renders `sub` as:
+
 ```tsx
-{sub && <div className="mt-0.5 text-[10px] opacity-50">{sub}</div>}
+{
+  sub && <div className="mt-0.5 text-[10px] opacity-50">{sub}</div>;
+}
 ```
 
 - [ ] **Step 1: Write the failing test**
@@ -144,7 +151,8 @@ describe('QuantitiesPanel tile surface formula', () => {
   it('sub string for total: includes m² value', () => {
     const toOrder = 15;
     const totalTiles = 13;
-    const tileW = 300, tileH = 300;
+    const tileW = 300,
+      tileH = 300;
     const sub = `+10% marge · ${totalTiles} nets · ${formatM2(toOrder * tileW * tileH)}`;
     expect(sub).toBe('+10% marge · 13 nets · 1.35 m²');
   });
@@ -156,6 +164,7 @@ describe('QuantitiesPanel tile surface formula', () => {
 ```bash
 npm run test -- --run src/components/quantities/QuantitiesPanel.surface.test.ts
 ```
+
 Expected: 3 tests PASS
 
 - [ ] **Step 3: Apply the changes in QuantitiesPanel.tsx**
@@ -222,6 +231,7 @@ Replace with:
 ```bash
 npm run typecheck
 ```
+
 Expected: no errors
 
 - [ ] **Step 5: Run all tests**
@@ -229,6 +239,7 @@ Expected: no errors
 ```bash
 npm run test -- --run
 ```
+
 Expected: all tests pass
 
 - [ ] **Step 6: Commit**

@@ -33,17 +33,20 @@ export function buildCutTable(
       // instead of its global (and angle-dependent) bounding box.
       const frame = tile.points ? localFrameFromPoints(tile.points) : null;
       const tilePoly: Point[] = tile.points ?? [
-        { x,         y         },
-        { x: x + w,  y         },
-        { x: x + w,  y: y + h  },
-        { x,         y: y + h  },
+        { x, y },
+        { x: x + w, y },
+        { x: x + w, y: y + h },
+        { x, y: y + h },
       ];
       const tileW = frame ? frame.Wlen : w;
       const tileH = frame ? frame.Hlen : h;
 
       // Clip against all room polygons, accumulate bounding box of result
       // (in the tile's local frame for CHEVRON, in plan coordinates otherwise)
-      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      let minX = Infinity,
+        minY = Infinity,
+        maxX = -Infinity,
+        maxY = -Infinity;
       for (const rawPoly of roomPolygons) {
         const clipped = clipPolygon(tilePoly, ensureCCW(rawPoly));
         for (const p of clipped) {
@@ -57,13 +60,21 @@ export function buildCutTable(
 
       if (minX === Infinity) {
         return {
-          id: tile.id, roomId: roomIds[0] ?? '',
-          tileW, tileH,
-          usedW: tileW, usedH: tileH,
+          id: tile.id,
+          roomId: roomIds[0] ?? '',
+          tileW,
+          tileH,
+          usedW: tileW,
+          usedH: tileH,
           pieceEdges: ALL_FACTORY,
-          chuteW: 0, chuteH: 0, chuteEdges: ALL_FACTORY, chuteArea: 0,
-          clipCx: x + w / 2, clipCy: y + h / 2,
-          coveredById: null, reusedForId: null,
+          chuteW: 0,
+          chuteH: 0,
+          chuteEdges: ALL_FACTORY,
+          chuteArea: 0,
+          clipCx: x + w / 2,
+          clipCy: y + h / 2,
+          coveredById: null,
+          reusedForId: null,
         };
       }
 
@@ -83,20 +94,29 @@ export function buildCutTable(
       let bestDist = Infinity;
       for (let r = 0; r < roomPolygons.length; r++) {
         const pb = getBoundingBox(roomPolygons[r]!);
-        const pcx = (pb.minX + pb.maxX) / 2, pcy = (pb.minY + pb.maxY) / 2;
+        const pcx = (pb.minX + pb.maxX) / 2,
+          pcy = (pb.minY + pb.maxY) / 2;
         const d = (center.x - pcx) ** 2 + (center.y - pcy) ** 2;
-        if (d < bestDist) { bestDist = d; bestRoom = roomIds[r] ?? ''; }
+        if (d < bestDist) {
+          bestDist = d;
+          bestRoom = roomIds[r] ?? '';
+        }
       }
 
       return {
         id: tile.id,
         roomId: bestRoom,
-        tileW, tileH,
-        usedW: cut.usedW, usedH: cut.usedH,
+        tileW,
+        tileH,
+        usedW: cut.usedW,
+        usedH: cut.usedH,
         pieceEdges: cut.pieceEdges,
-        chuteW: cut.chuteW, chuteH: cut.chuteH,
-        chuteEdges: cut.chuteEdges, chuteArea: cut.chuteArea,
-        clipCx: clipPoint.x, clipCy: clipPoint.y,
+        chuteW: cut.chuteW,
+        chuteH: cut.chuteH,
+        chuteEdges: cut.chuteEdges,
+        chuteArea: cut.chuteArea,
+        clipCx: clipPoint.x,
+        clipCy: clipPoint.y,
         coveredById: null,
         reusedForId: null,
       };

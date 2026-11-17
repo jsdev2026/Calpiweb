@@ -12,12 +12,12 @@
 
 ## Structure de fichiers
 
-| Fichier | Action | Responsabilité |
-|---|---|---|
-| `src/engine/geometry/wallGeometry.ts` | Créer | `computeCornerGeometry` + types `WallPolygon` |
-| `src/engine/geometry/wallGeometry.test.ts` | Créer | Tests unitaires géométrie |
-| `src/components/plan/WallDrawingCanvas.tsx` | Modifier | Rendu polygone + import `useMemo` |
-| `src/types/wall.ts` | Modifier | Supprimer `'free'` de `SnapResult.type` |
+| Fichier                                     | Action   | Responsabilité                                |
+| ------------------------------------------- | -------- | --------------------------------------------- |
+| `src/engine/geometry/wallGeometry.ts`       | Créer    | `computeCornerGeometry` + types `WallPolygon` |
+| `src/engine/geometry/wallGeometry.test.ts`  | Créer    | Tests unitaires géométrie                     |
+| `src/components/plan/WallDrawingCanvas.tsx` | Modifier | Rendu polygone + import `useMemo`             |
+| `src/types/wall.ts`                         | Modifier | Supprimer `'free'` de `SnapResult.type`       |
 
 ---
 
@@ -44,6 +44,7 @@ Sans voisin : `vertex = corner ± n × half` (coupe plate perpendiculaire).
 ## Task 1: `computeCornerGeometry` + tests
 
 **Files:**
+
 - Create: `src/engine/geometry/wallGeometry.ts`
 - Create: `src/engine/geometry/wallGeometry.test.ts`
 
@@ -55,7 +56,9 @@ import { describe, it, expect } from 'vitest';
 import { computeCornerGeometry } from './wallGeometry';
 import type { Wall } from '@/types/wall';
 
-function pt(x: number, y: number) { return { x, y }; }
+function pt(x: number, y: number) {
+  return { x, y };
+}
 
 function near(
   a: { x: number; y: number } | undefined,
@@ -68,12 +71,12 @@ function near(
 
 describe('computeCornerGeometry', () => {
   it('preserves wallId', () => {
-    const walls: Wall[] = [{ id: 'abc', p1: pt(0,0), p2: pt(100,0), thickness: 10 }];
+    const walls: Wall[] = [{ id: 'abc', p1: pt(0, 0), p2: pt(100, 0), thickness: 10 }];
     expect(computeCornerGeometry(walls)[0]!.wallId).toBe('abc');
   });
 
   it('returns empty points for zero-length wall', () => {
-    const walls: Wall[] = [{ id: 'z', p1: pt(0,0), p2: pt(0,0), thickness: 10 }];
+    const walls: Wall[] = [{ id: 'z', p1: pt(0, 0), p2: pt(0, 0), thickness: 10 }];
     expect(computeCornerGeometry(walls)[0]!.points).toHaveLength(0);
   });
 
@@ -83,13 +86,13 @@ describe('computeCornerGeometry', () => {
     // p1 flat cap: n-side=(0,5), anti-n=(0,-5)
     // p2 flat cap: n-side=(100,5), anti-n=(100,-5)
     // Polygon order: [p1_n, p2_n, p2_a, p1_a]
-    const walls: Wall[] = [{ id: 'h', p1: pt(0,0), p2: pt(100,0), thickness: 10 }];
+    const walls: Wall[] = [{ id: 'h', p1: pt(0, 0), p2: pt(100, 0), thickness: 10 }];
     const pts = computeCornerGeometry(walls)[0]!.points;
     expect(pts).toHaveLength(4);
-    expect(near(pts[0], pt(0, 5))).toBe(true);    // p1 normal-side
-    expect(near(pts[1], pt(100, 5))).toBe(true);  // p2 normal-side
+    expect(near(pts[0], pt(0, 5))).toBe(true); // p1 normal-side
+    expect(near(pts[1], pt(100, 5))).toBe(true); // p2 normal-side
     expect(near(pts[2], pt(100, -5))).toBe(true); // p2 anti-normal
-    expect(near(pts[3], pt(0, -5))).toBe(true);   // p1 anti-normal
+    expect(near(pts[3], pt(0, -5))).toBe(true); // p1 anti-normal
   });
 
   it('single vertical wall — flat caps', () => {
@@ -97,7 +100,7 @@ describe('computeCornerGeometry', () => {
     // dir=(0,1), normal=(-1,0)
     // p1: n-side=(-5,0), anti-n=(5,0)
     // p2: n-side=(-5,100), anti-n=(5,100)
-    const walls: Wall[] = [{ id: 'v', p1: pt(0,0), p2: pt(0,100), thickness: 10 }];
+    const walls: Wall[] = [{ id: 'v', p1: pt(0, 0), p2: pt(0, 100), thickness: 10 }];
     const pts = computeCornerGeometry(walls)[0]!.points;
     expect(near(pts[0], pt(-5, 0))).toBe(true);
     expect(near(pts[1], pt(-5, 100))).toBe(true);
@@ -113,10 +116,10 @@ describe('computeCornerGeometry', () => {
     //     denom=dot((0,1),(-1/√2,-1/√2))=-1/√2
     //     n-side:  t=5/(-1/√2)=-5√2 → (100,0)+(-5√2)(-1/√2,-1/√2)=(105,5)
     //     anti-n:  t=5√2 → (100,0)+(5√2)(-1/√2,-1/√2)=(95,-5)
-    const w1: Wall = { id: 'w1', p1: pt(0,0), p2: pt(100,0), thickness: 10 };
-    const w2: Wall = { id: 'w2', p1: pt(100,0), p2: pt(100,100), thickness: 10 };
+    const w1: Wall = { id: 'w1', p1: pt(0, 0), p2: pt(100, 0), thickness: 10 };
+    const w2: Wall = { id: 'w2', p1: pt(100, 0), p2: pt(100, 100), thickness: 10 };
     const polys = computeCornerGeometry([w1, w2]);
-    const p1 = polys.find(p => p.wallId === 'w1')!;
+    const p1 = polys.find((p) => p.wallId === 'w1')!;
     // W1 p2 (miter): n-side and anti-n
     expect(near(p1.points[1], pt(105, 5))).toBe(true);
     expect(near(p1.points[2], pt(95, -5))).toBe(true);
@@ -126,11 +129,11 @@ describe('computeCornerGeometry', () => {
   });
 
   it('miter vertices tile without gaps (no seam at shared corner)', () => {
-    const w1: Wall = { id: 'w1', p1: pt(0,0), p2: pt(100,0), thickness: 10 };
-    const w2: Wall = { id: 'w2', p1: pt(100,0), p2: pt(100,100), thickness: 10 };
+    const w1: Wall = { id: 'w1', p1: pt(0, 0), p2: pt(100, 0), thickness: 10 };
+    const w2: Wall = { id: 'w2', p1: pt(100, 0), p2: pt(100, 100), thickness: 10 };
     const polys = computeCornerGeometry([w1, w2]);
-    const p1 = polys.find(p => p.wallId === 'w1')!;
-    const p2 = polys.find(p => p.wallId === 'w2')!;
+    const p1 = polys.find((p) => p.wallId === 'w1')!;
+    const p2 = polys.find((p) => p.wallId === 'w2')!;
     // W1 n-side at p2 == W2 anti-n at p1
     expect(near(p1.points[1], p2.points[3]!)).toBe(true);
     // W1 anti-n at p2 == W2 n-side at p1
@@ -144,7 +147,7 @@ describe('computeCornerGeometry', () => {
     // normal = (-1/√2, 1/√2) × ... actually normal=(-dir.y,dir.x)=(-1/√2,1/√2)
     // p1 n-side = (0,0)+half*normal = (0,0)+5√2*(-1/√2,1/√2) = (-5,5)
     // p1 anti-n = (0,0)-5√2*(-1/√2,1/√2) = (5,-5)
-    const walls: Wall[] = [{ id: 'd', p1: pt(0,0), p2: pt(100,100), thickness: 10*Math.SQRT2 }];
+    const walls: Wall[] = [{ id: 'd', p1: pt(0, 0), p2: pt(100, 100), thickness: 10 * Math.SQRT2 }];
     const pts = computeCornerGeometry(walls)[0]!.points;
     expect(near(pts[0], pt(-5, 5))).toBe(true);
     expect(near(pts[3], pt(5, -5))).toBe(true);
@@ -263,12 +266,12 @@ export function computeCornerGeometry(walls: Wall[]): WallPolygon[] {
     if (len < 0.1) return { wallId: wall.id, points: [] };
 
     const dir: Point = { x: dx / len, y: dy / len };
-    const n: Point = { x: -dir.y, y: dir.x };  // left normal, fixed p1→p2 orientation
+    const n: Point = { x: -dir.y, y: dir.x }; // left normal, fixed p1→p2 orientation
     const half = wall.thickness / 2;
 
     // away-from-corner direction for W at each endpoint
-    const awayP1 = dir;                                         // from p1 toward p2
-    const awayP2: Point = { x: -dir.x, y: -dir.y };            // from p2 toward p1
+    const awayP1 = dir; // from p1 toward p2
+    const awayP2: Point = { x: -dir.x, y: -dir.y }; // from p2 toward p1
 
     const nbP1 = findNeighbor(wall.id, wall.p1, walls);
     const nbP2 = findNeighbor(wall.id, wall.p2, walls);
@@ -315,6 +318,7 @@ git commit -m "feat(wall-engine): computeCornerGeometry — miter joints"
 ## Task 2: WallDrawingCanvas — rendu polygone
 
 **Files:**
+
 - Modify: `src/components/plan/WallDrawingCanvas.tsx`
 
 Remplacer le rendu `<rect>` rotatif par des `<polygon>` calculés depuis `computeCornerGeometry`. Garder le `<rect>` rotatif uniquement pour le preview de la chaîne en cours.
@@ -346,23 +350,21 @@ const wallPolygons = useMemo(() => computeCornerGeometry(walls), [walls]);
 **1c.** Remplacer le bloc `{/* Rendered walls */}` (lignes 242-258, le `walls.map` qui rend les `<rect>`) par :
 
 ```tsx
-{/* Rendered walls */}
-{wallPolygons.map((poly) => {
-  if (!poly.points.length) return null;
-  const isSelected = poly.wallId === selectedWallId;
-  const color = isSelected ? WALL_SELECTED_COLOR : WALL_COLOR;
-  const screenPts = poly.points
-    .map((p) => worldToScreen(p))
-    .map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`)
-    .join(' ');
-  return (
-    <polygon
-      key={poly.wallId}
-      points={screenPts}
-      fill={color}
-    />
-  );
-})}
+{
+  /* Rendered walls */
+}
+{
+  wallPolygons.map((poly) => {
+    if (!poly.points.length) return null;
+    const isSelected = poly.wallId === selectedWallId;
+    const color = isSelected ? WALL_SELECTED_COLOR : WALL_COLOR;
+    const screenPts = poly.points
+      .map((p) => worldToScreen(p))
+      .map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`)
+      .join(' ');
+    return <polygon key={poly.wallId} points={screenPts} fill={color} />;
+  });
+}
 ```
 
 **1d.** Supprimer la fonction `wallToRect` (lignes 204-214) et la constante `halfThickPx` (si elle n'est plus utilisée). Vérifier que `halfThickPx` n'est pas utilisée ailleurs dans le fichier :
@@ -401,6 +403,7 @@ git commit -m "feat(wall-engine): WallDrawingCanvas — rendu polygone miter"
 ## Task 3: Nettoyage `SnapResult.type`
 
 **Files:**
+
 - Modify: `src/types/wall.ts`
 
 Le membre `'free'` de `SnapResult.type` est mort : `snapToWalls` retourne `null` (pas `{type:'free'}`) pour le placement libre, et aucun code ne vérifie `type === 'free'`. Le supprimer évite de tromper les futurs lecteurs.
@@ -408,6 +411,7 @@ Le membre `'free'` de `SnapResult.type` est mort : `snapToWalls` retourne `null`
 - [ ] **Step 1 — Modifier `src/types/wall.ts`**
 
 Trouver :
+
 ```typescript
 export interface SnapResult {
   point: Point;
@@ -417,6 +421,7 @@ export interface SnapResult {
 ```
 
 Remplacer par :
+
 ```typescript
 export interface SnapResult {
   point: Point;

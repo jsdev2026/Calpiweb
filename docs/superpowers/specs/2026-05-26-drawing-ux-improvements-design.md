@@ -21,6 +21,7 @@ Trois features indépendantes. Un seul fichier principal modifié : `PlanEditor.
 ### Déclencheur
 
 Quand **toutes** ces conditions sont vraies :
+
 - `tool === 'WALL'`
 - La pièce active est la première du projet (`rooms.indexOf(activeRoom) === 0`)
 - `activeRoom.points.length === 0` (aucun point posé, c'est le tout premier)
@@ -68,8 +69,10 @@ if (allPoints.length === 0) return;
 // Bounding box
 const xs = allPoints.map((p) => p.x);
 const ys = allPoints.map((p) => p.y);
-const minX = Math.min(...xs), maxX = Math.max(...xs);
-const minY = Math.min(...ys), maxY = Math.max(...ys);
+const minX = Math.min(...xs),
+  maxX = Math.max(...xs);
+const minY = Math.min(...ys),
+  maxY = Math.max(...ys);
 const bboxW = maxX - minX || 1000; // fallback si un seul point
 const bboxH = maxY - minY || 1000;
 const cx = (minX + maxX) / 2;
@@ -85,7 +88,7 @@ const PADDING = 80;
 const newScale = Math.min(
   (vw - PADDING * 2) / bboxW,
   (vh - PADDING * 2) / bboxH,
-  0.5,  // cap maximal
+  0.5, // cap maximal
 );
 
 // Pan pour centrer
@@ -183,16 +186,10 @@ const handleTrashClick = () => {
 
     // Rotation : le nouveau premier point est points[(splitIdx+1) % n]
     const rotateBy = (splitIdx + 1) % n;
-    const newPoints = [
-      ...room.points.slice(rotateBy),
-      ...room.points.slice(0, rotateBy),
-    ];
+    const newPoints = [...room.points.slice(rotateBy), ...room.points.slice(0, rotateBy)];
     // Edges : tous sauf l'edge splitIdx, réordonnés selon la rotation
     const oldEdges = room.edges;
-    const reorderedEdges = [
-      ...oldEdges.slice(rotateBy),
-      ...oldEdges.slice(0, rotateBy),
-    ];
+    const reorderedEdges = [...oldEdges.slice(rotateBy), ...oldEdges.slice(0, rotateBy)];
     // Supprimer le dernier edge (qui correspond à l'edge supprimé après rotation)
     const newEdges = reorderedEdges.slice(0, n - 1);
 
@@ -202,9 +199,7 @@ const handleTrashClick = () => {
       .filter((c) => c.pts.some((r) => r.roomId === room.id))
       .forEach((c) => {
         const newPts = c.pts.map((r) =>
-          r.roomId === room.id
-            ? { ...r, index: (r.index - rotateBy + n) % n }
-            : r,
+          r.roomId === room.id ? { ...r, index: (r.index - rotateBy + n) % n } : r,
         );
         // updateConstraintPts n'existe pas — on supprime et recrée
         removeConstraint(c.id);
@@ -221,32 +216,40 @@ const handleTrashClick = () => {
 ### Tooltip dynamique dans PlanToolbar.tsx
 
 ```tsx
-const deleteTooltip = editingContext === 'wall'   ? 'Supprimer ce mur'
-                    : editingContext === 'door'   ? 'Supprimer cette porte'
-                    : editingContext === 'partition' ? 'Supprimer cette cloison'
-                    : editingContext === 'zone'   ? 'Supprimer cette zone'
-                    : 'Sélectionnez un élément pour le supprimer';
+const deleteTooltip =
+  editingContext === 'wall'
+    ? 'Supprimer ce mur'
+    : editingContext === 'door'
+      ? 'Supprimer cette porte'
+      : editingContext === 'partition'
+        ? 'Supprimer cette cloison'
+        : editingContext === 'zone'
+          ? 'Supprimer cette zone'
+          : 'Sélectionnez un élément pour le supprimer';
 ```
 
 `editingContext` est une prop dérivée dans `PlanEditor.tsx` :
 
 ```tsx
-const editingContext =
-  editingPartition ? 'partition'
-  : editingZoneEdge ? 'zone'
-  : editingEdge
-    ? ((activeRoom?.edges[editingEdge.edgeIdx] ?? 'WALL') === 'DOOR' ? 'door' : 'wall')
-  : null;
+const editingContext = editingPartition
+  ? 'partition'
+  : editingZoneEdge
+    ? 'zone'
+    : editingEdge
+      ? (activeRoom?.edges[editingEdge.edgeIdx] ?? 'WALL') === 'DOOR'
+        ? 'door'
+        : 'wall'
+      : null;
 ```
 
 ---
 
 ## Fichiers modifiés
 
-| Fichier | Changement |
-|---|---|
-| `src/components/plan/PlanEditor.tsx` | Auto-anchor premier nœud · `useEffect` centrage · `handleTrashClick` · prop `canDelete` + `onDelete` vers PlanToolbar |
-| `src/components/plan/PlanToolbar.tsx` | `canDelete` + `onDelete` props · tooltip dynamique · bouton Trash disabled |
+| Fichier                               | Changement                                                                                                            |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `src/components/plan/PlanEditor.tsx`  | Auto-anchor premier nœud · `useEffect` centrage · `handleTrashClick` · prop `canDelete` + `onDelete` vers PlanToolbar |
+| `src/components/plan/PlanToolbar.tsx` | `canDelete` + `onDelete` props · tooltip dynamique · bouton Trash disabled                                            |
 
 ---
 

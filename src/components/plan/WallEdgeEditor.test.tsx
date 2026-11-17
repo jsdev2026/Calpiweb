@@ -18,7 +18,7 @@ describe('WallEdgeEditor (thickness-only)', () => {
     expect(screen.getByDisplayValue('20.0')).toBeInTheDocument();
   });
 
-  it('n\'affiche pas de sélecteur H/V/L', () => {
+  it("n'affiche pas de sélecteur H/V/L", () => {
     render(<WallEdgeEditor {...defaultProps} />);
     // Should NOT have H, V, L constraint type buttons
     expect(screen.queryByTitle('Distance horizontale')).not.toBeInTheDocument();

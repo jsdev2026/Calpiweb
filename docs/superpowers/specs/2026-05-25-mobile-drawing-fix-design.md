@@ -53,7 +53,7 @@ Le wrapper reçoit trois handlers :
 
 ```tsx
 const handleWrapperTouchStart = (e: React.TouchEvent) => {
-  if (e.touches.length !== 2) return;          // uniquement 2 doigts
+  if (e.touches.length !== 2) return; // uniquement 2 doigts
   e.preventDefault();
   const t = e.touches;
   const dx = t[1]!.clientX - t[0]!.clientX;
@@ -100,10 +100,16 @@ L'overlay `handleTouchStart` existant est simplifié : il ne gère plus que le p
 
 ```tsx
 const handleTouchStart = (e: React.TouchEvent) => {
-  if (e.touches.length !== 1) return;          // pan 1-doigt uniquement
+  if (e.touches.length !== 1) return; // pan 1-doigt uniquement
   e.preventDefault();
   const t = e.touches;
-  touchRef.current = { dist: 0, midX: t[0]!.clientX, midY: t[0]!.clientY, panX: pan.x, panY: pan.y };
+  touchRef.current = {
+    dist: 0,
+    midX: t[0]!.clientX,
+    midY: t[0]!.clientY,
+    panX: pan.x,
+    panY: pan.y,
+  };
 };
 ```
 
@@ -175,8 +181,8 @@ Le popup s'affiche en haut du canvas, toujours visible au-dessus du clavier virt
 
 ## Fichiers modifiés
 
-| Fichier | Changement |
-|---|---|
+| Fichier                              | Changement                                                                                                                    |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
 | `src/components/plan/PlanEditor.tsx` | `pointer-events` conditionnel sur overlay + handlers pinch-zoom sur wrapper + `isTouchDevice` + coords `undefined` sur mobile |
 
 ## Tests à couvrir

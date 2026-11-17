@@ -14,27 +14,28 @@
 
 ## File Map
 
-| Action | File | Responsibility |
-|--------|------|----------------|
-| Create | `lib/supabase/client.ts` | Browser Supabase client singleton |
-| Create | `lib/supabase/server.ts` | Server-side Supabase client (cookies) |
-| Create | `lib/supabase/db.ts` | Project + profile CRUD via Supabase |
-| Create | `lib/supabase/db.test.ts` | Unit tests for supabaseDb (mocked client) |
-| Create | `middleware.ts` | Route protection + auth redirects |
-| Create | `app/dashboard/page.tsx` | Protected dashboard (moved from app/page.tsx) |
-| Create | `app/account/page.tsx` | Account page — plan display |
-| Modify | `store/projectStore.ts` | Replace `projectsDb` calls with `supabaseDb` |
-| Modify | `store/projectStore.test.ts` | Test project limit logic |
-| Modify | `store/uiStore.ts` | Supabase Auth integration (replace localStorage auth) |
-| Modify | `app/page.tsx` | Transform into public landing page |
-| Modify | `app/auth/page.tsx` | Real Supabase Auth (signIn / signUp) |
-| Delete | `lib/db.ts` | Replaced by `lib/supabase/db.ts` |
+| Action | File                         | Responsibility                                        |
+| ------ | ---------------------------- | ----------------------------------------------------- |
+| Create | `lib/supabase/client.ts`     | Browser Supabase client singleton                     |
+| Create | `lib/supabase/server.ts`     | Server-side Supabase client (cookies)                 |
+| Create | `lib/supabase/db.ts`         | Project + profile CRUD via Supabase                   |
+| Create | `lib/supabase/db.test.ts`    | Unit tests for supabaseDb (mocked client)             |
+| Create | `middleware.ts`              | Route protection + auth redirects                     |
+| Create | `app/dashboard/page.tsx`     | Protected dashboard (moved from app/page.tsx)         |
+| Create | `app/account/page.tsx`       | Account page — plan display                           |
+| Modify | `store/projectStore.ts`      | Replace `projectsDb` calls with `supabaseDb`          |
+| Modify | `store/projectStore.test.ts` | Test project limit logic                              |
+| Modify | `store/uiStore.ts`           | Supabase Auth integration (replace localStorage auth) |
+| Modify | `app/page.tsx`               | Transform into public landing page                    |
+| Modify | `app/auth/page.tsx`          | Real Supabase Auth (signIn / signUp)                  |
+| Delete | `lib/db.ts`                  | Replaced by `lib/supabase/db.ts`                      |
 
 ---
 
 ## Task 1: Install Supabase dependencies and set up environment
 
 **Files:**
+
 - Modify: `package.json`
 - Create: `.env.local.example`
 
@@ -169,6 +170,7 @@ In the Supabase Table Editor, confirm `profiles` and `projects` tables appear wi
 ## Task 3: Create Supabase client utilities
 
 **Files:**
+
 - Create: `src/lib/supabase/client.ts`
 - Create: `src/lib/supabase/server.ts`
 
@@ -240,6 +242,7 @@ git commit -m "feat(saas): add Supabase browser and server client utilities"
 ## Task 4: Create the Supabase database layer (TDD)
 
 **Files:**
+
 - Create: `src/lib/supabase/db.ts`
 - Create: `src/lib/supabase/db.test.ts`
 
@@ -292,10 +295,16 @@ const makeProject = (id = 'proj-1'): Project => ({
   updatedAt: 1000,
   rooms: [],
   config: {
-    width: 300, height: 600, joint: 3,
-    offsetX: 0, offsetY: 0, stagger: 33,
-    angle: 0, chevronAngle: 45,
-    color: '#93c5fd', layout: 'STRAIGHT',
+    width: 300,
+    height: 600,
+    joint: 3,
+    offsetX: 0,
+    offsetY: 0,
+    stagger: 33,
+    angle: 0,
+    chevronAngle: 45,
+    color: '#93c5fd',
+    layout: 'STRAIGHT',
   },
   wallThickness: 100,
   constraints: [],
@@ -408,11 +417,7 @@ export const supabaseDb = {
 
   async get(id: string): Promise<Project | undefined> {
     const supabase = createClient();
-    const { data, error } = await supabase
-      .from('projects')
-      .select('data')
-      .eq('id', id)
-      .single();
+    const { data, error } = await supabase.from('projects').select('data').eq('id', id).single();
     if (error) return undefined;
     return data?.data as Project | undefined;
   },
@@ -441,10 +446,7 @@ export const supabaseDb = {
 
   async getProfile(): Promise<{ plan: 'free' | 'pro' }> {
     const supabase = createClient();
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('plan')
-      .single();
+    const { data, error } = await supabase.from('profiles').select('plan').single();
     if (error) throw error;
     return data as { plan: 'free' | 'pro' };
   },
@@ -471,6 +473,7 @@ git commit -m "feat(saas): add Supabase project CRUD layer (TDD)"
 ## Task 5: Migrate `projectStore` to use Supabase
 
 **Files:**
+
 - Modify: `src/store/projectStore.ts`
 - Create: `src/store/projectStore.test.ts`
 
@@ -519,9 +522,16 @@ describe('projectStore — free plan limit', () => {
   it('throws PROJECT_LIMIT_REACHED for free users at 1 project', async () => {
     mockSupabaseDb.getProfile.mockResolvedValue({ plan: 'free' });
     const existing = {
-      id: 'existing', name: 'Existing', status: 'new' as const,
-      createdAt: 1000, updatedAt: 1000, rooms: [], config: {} as never,
-      wallThickness: 100, constraints: [], notes: [],
+      id: 'existing',
+      name: 'Existing',
+      status: 'new' as const,
+      createdAt: 1000,
+      updatedAt: 1000,
+      rooms: [],
+      config: {} as never,
+      wallThickness: 100,
+      constraints: [],
+      notes: [],
     };
     useProjectStore.setState({ projects: [existing] });
 
@@ -532,9 +542,16 @@ describe('projectStore — free plan limit', () => {
     mockSupabaseDb.getProfile.mockResolvedValue({ plan: 'pro' });
     mockSupabaseDb.save.mockResolvedValue(undefined);
     const existing = {
-      id: 'existing', name: 'Existing', status: 'new' as const,
-      createdAt: 1000, updatedAt: 1000, rooms: [], config: {} as never,
-      wallThickness: 100, constraints: [], notes: [],
+      id: 'existing',
+      name: 'Existing',
+      status: 'new' as const,
+      createdAt: 1000,
+      updatedAt: 1000,
+      rooms: [],
+      config: {} as never,
+      wallThickness: 100,
+      constraints: [],
+      notes: [],
     };
     useProjectStore.setState({ projects: [existing] });
 
@@ -555,6 +572,7 @@ Expected: FAIL — project limit logic doesn't exist yet.
 - [ ] **Step 3: Update `src/store/projectStore.ts`**
 
 Replace the import at line 5:
+
 ```typescript
 // Before:
 import { projectsDb } from '@/lib/db';
@@ -564,6 +582,7 @@ import { supabaseDb } from '@/lib/supabase/db';
 ```
 
 Replace the `hydrate` action (lines 115–119):
+
 ```typescript
 hydrate: async () => {
   if (get().hydrated) return;
@@ -573,6 +592,7 @@ hydrate: async () => {
 ```
 
 Replace the `create` action (lines 121–138) to add the plan limit check:
+
 ```typescript
 create: async (data) => {
   const profile = await supabaseDb.getProfile();
@@ -600,6 +620,7 @@ create: async (data) => {
 ```
 
 Replace the `rename` action (lines 141–144):
+
 ```typescript
 rename: (id, name) => {
   set({ projects: get().projects.map((p) => (p.id === id ? { ...p, name, updatedAt: Date.now() } : p)) });
@@ -609,6 +630,7 @@ rename: (id, name) => {
 ```
 
 Replace the `remove` action (lines 147–153):
+
 ```typescript
 remove: async (id) => {
   await supabaseDb.delete(id);
@@ -620,6 +642,7 @@ remove: async (id) => {
 ```
 
 Replace the `updateActive` action (lines 157–166). Find all `projectsDb.save` calls and change to `supabaseDb.save`:
+
 ```typescript
 updateActive: (updater) => {
   const id = get().activeProjectId;
@@ -661,6 +684,7 @@ git commit -m "feat(saas): migrate projectStore from IndexedDB to Supabase"
 ## Task 6: Create the Next.js middleware
 
 **Files:**
+
 - Create: `middleware.ts` (at the project root, next to `package.json`)
 
 - [ ] **Step 1: Write the failing test**
@@ -786,6 +810,7 @@ git commit -m "feat(saas): add Next.js middleware for route protection"
 ## Task 7: Update `uiStore` for Supabase Auth
 
 **Files:**
+
 - Modify: `src/store/uiStore.ts`
 
 The `uiStore` currently stores user in `localStorage`. We replace the auth parts with Supabase while keeping the dark mode logic.
@@ -837,10 +862,7 @@ export const useUiStore = create<UiState>((set, get) => ({
     }
 
     // Read plan from profiles table
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('plan')
-      .single();
+    const { data: profile } = await supabase.from('profiles').select('plan').single();
 
     set({
       user: {
@@ -877,10 +899,14 @@ Open `src/components/ThemeProvider.tsx`. Find where `init()` is called. Change:
 
 ```typescript
 // Before (synchronous):
-useEffect(() => { init(); }, [init]);
+useEffect(() => {
+  init();
+}, [init]);
 
 // After (async):
-useEffect(() => { void init(); }, [init]);
+useEffect(() => {
+  void init();
+}, [init]);
 ```
 
 - [ ] **Step 3: Verify TypeScript**
@@ -903,6 +929,7 @@ git commit -m "feat(saas): integrate Supabase Auth into uiStore"
 ## Task 8: Rewrite the auth page with Supabase Auth
 
 **Files:**
+
 - Modify: `src/app/auth/page.tsx`
 
 The page currently has 4 fake steps (login, register, plans, payment). In V1 we keep 2 real steps: login and register. The plan selection step is removed (everyone starts free). The payment step is V2.
@@ -1148,6 +1175,7 @@ git commit -m "feat(saas): rewrite auth page with real Supabase Auth"
 ## Task 9: Create the dashboard page
 
 **Files:**
+
 - Create: `src/app/dashboard/page.tsx`
 
 Move the existing home page content (project list, KPIs, filters) to `/dashboard` and add the upsell banner for free users at project limit.
@@ -1225,6 +1253,7 @@ Expected: no errors.
 - [ ] **Step 3: Manual test**
 
 Navigate to `http://localhost:3000/dashboard`. Verify:
+
 - Projects list displays
 - Upsell banner appears when 1 project exists (free plan)
 - Logout redirects to `/auth`
@@ -1241,6 +1270,7 @@ git commit -m "feat(saas): add protected dashboard with upsell banner"
 ## Task 10: Transform `app/page.tsx` into the landing page
 
 **Files:**
+
 - Modify: `src/app/page.tsx`
 
 The current content moves to `dashboard/page.tsx` (Task 9). Now replace it with the marketing landing page.
@@ -1392,6 +1422,7 @@ git commit -m "feat(saas): replace home page with public landing page"
 ## Task 11: Create the account page
 
 **Files:**
+
 - Create: `src/app/account/page.tsx`
 
 A simple static page showing the user's current plan. Stripe billing management is V2.
@@ -1508,6 +1539,7 @@ git commit -m "feat(saas): add account page with plan display"
 ## Task 12: Delete `lib/db.ts` and clean up imports
 
 **Files:**
+
 - Delete: `src/lib/db.ts`
 
 - [ ] **Step 1: Verify no remaining imports**
@@ -1585,6 +1617,7 @@ Vercel auto-deploys. Check the Vercel dashboard for build status.
 - [ ] **Step 4: Set environment variables in Vercel**
 
 In the Vercel dashboard → Project → Settings → Environment Variables, add:
+
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`

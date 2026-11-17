@@ -22,7 +22,10 @@ export const sharingDb = {
       .order('created_at', { ascending: true });
     if (error) throw new Error(`[${error.code}] ${error.message}`);
     return (data ?? []).map((row) => {
-      const profile = row.profiles as unknown as { email: string; display_name: string | null } | null;
+      const profile = row.profiles as unknown as {
+        email: string;
+        display_name: string | null;
+      } | null;
       return {
         id: row.id as string,
         projectId: row.project_id as string,
@@ -67,7 +70,9 @@ export const sharingDb = {
 
   async acquireLock(projectId: string): Promise<'acquired' | 'locked_by_other'> {
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) throw new Error('NOT_AUTHENTICATED');
 
     const { data: existing } = await supabase
@@ -82,21 +87,21 @@ export const sharingDb = {
     }
 
     const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
-    const { error } = await supabase
-      .from('project_locks')
-      .upsert({
-        project_id: projectId,
-        locked_by: user.id,
-        locked_at: new Date().toISOString(),
-        expires_at: expiresAt,
-      });
+    const { error } = await supabase.from('project_locks').upsert({
+      project_id: projectId,
+      locked_by: user.id,
+      locked_at: new Date().toISOString(),
+      expires_at: expiresAt,
+    });
     if (error) throw new Error(`[${error.code}] ${error.message}`);
     return 'acquired';
   },
 
   async releaseLock(projectId: string): Promise<void> {
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) return;
     const { error } = await supabase
       .from('project_locks')
@@ -108,7 +113,9 @@ export const sharingDb = {
 
   async refreshLock(projectId: string): Promise<void> {
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) return;
     const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
     await supabase
@@ -127,7 +134,10 @@ export const sharingDb = {
       .gt('expires_at', new Date().toISOString())
       .maybeSingle();
     if (!data) return null;
-    const profile = data.profiles as unknown as { display_name: string | null; email: string } | null;
+    const profile = data.profiles as unknown as {
+      display_name: string | null;
+      email: string;
+    } | null;
     return {
       projectId,
       lockedBy: data.locked_by as string,

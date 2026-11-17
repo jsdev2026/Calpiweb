@@ -8,8 +8,16 @@ import './globals.css';
 // dont le chargeur next/font/google échoue sur Vercel sans cache.
 const dmSerifDisplay = localFont({
   src: [
-    { path: '../../node_modules/@fontsource/dm-serif-display/files/dm-serif-display-latin-400-normal.woff2', weight: '400', style: 'normal' },
-    { path: '../../node_modules/@fontsource/dm-serif-display/files/dm-serif-display-latin-400-italic.woff2', weight: '400', style: 'italic' },
+    {
+      path: '../../node_modules/@fontsource/dm-serif-display/files/dm-serif-display-latin-400-normal.woff2',
+      weight: '400',
+      style: 'normal',
+    },
+    {
+      path: '../../node_modules/@fontsource/dm-serif-display/files/dm-serif-display-latin-400-italic.woff2',
+      weight: '400',
+      style: 'italic',
+    },
   ],
   variable: '--font-display',
   display: 'swap',
@@ -35,10 +43,18 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="fr" suppressHydrationWarning className={`${dmSerifDisplay.variable} ${dmSans.variable}`}>
+    <html
+      lang="fr"
+      suppressHydrationWarning
+      className={`${dmSerifDisplay.variable} ${dmSans.variable}`}
+    >
       <head>
         {/* Prevent dark-mode flash before React hydrates */}
-        <script dangerouslySetInnerHTML={{ __html: `(function(){try{if(localStorage.getItem('caleplan_dark')==='true')document.documentElement.setAttribute('data-dark','true');}catch(e){}})();` }} />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{if(localStorage.getItem('caleplan_dark')==='true')document.documentElement.setAttribute('data-dark','true');}catch(e){}})();`,
+          }}
+        />
       </head>
       <body>
         <ThemeProvider>{children}</ThemeProvider>

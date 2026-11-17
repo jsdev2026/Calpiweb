@@ -25,15 +25,14 @@ function nodePos(id: string, nodes: WallNode[]): Point {
 function wallDir(wall: Wall, nodes: WallNode[]): Point {
   const p1 = nodePos(wall.node1Id, nodes);
   const p2 = nodePos(wall.node2Id, nodes);
-  const dx = p2.x - p1.x, dy = p2.y - p1.y;
+  const dx = p2.x - p1.x,
+    dy = p2.y - p1.y;
   const len = Math.sqrt(dx * dx + dy * dy);
   return len < 1e-10 ? { x: 1, y: 0 } : { x: dx / len, y: dy / len };
 }
 
 function findNeighborsByNode(wallId: string, nodeId: string, walls: Wall[]): Wall[] {
-  return walls.filter(
-    (w) => w.id !== wallId && (w.node1Id === nodeId || w.node2Id === nodeId),
-  );
+  return walls.filter((w) => w.id !== wallId && (w.node1Id === nodeId || w.node2Id === nodeId));
 }
 
 /**
@@ -43,8 +42,12 @@ function findNeighborsByNode(wallId: string, nodeId: string, walls: Wall[]): Wal
  * Returns null if walls are nearly parallel.
  */
 function jointParam(
-  nA: Point, hA: number, dA: Point,
-  nB: Point, hB: number, dB: Point,
+  nA: Point,
+  hA: number,
+  dA: Point,
+  nB: Point,
+  hB: number,
+  dB: Point,
 ): number | null {
   const denom = cross(dA, dB);
   if (Math.abs(denom) < 1e-6) return null;
@@ -61,7 +64,8 @@ export function computeCornerGeometry(walls: Wall[], nodes: WallNode[]): WallPol
   return walls.map((wall) => {
     const p1 = nodePos(wall.node1Id, nodes);
     const p2 = nodePos(wall.node2Id, nodes);
-    const dx = p2.x - p1.x, dy = p2.y - p1.y;
+    const dx = p2.x - p1.x,
+      dy = p2.y - p1.y;
     const len = Math.sqrt(dx * dx + dy * dy);
     if (len < 0.1) return { wallId: wall.id, points: [] };
 

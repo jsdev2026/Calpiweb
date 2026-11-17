@@ -10,8 +10,16 @@ vi.mock('@/store/projectStore', () => ({
           id: 'p1',
           rooms: [],
           config: {
-            layout: 'STRAIGHT', width: 300, height: 300, joint: 3,
-            angle: 0, offsetX: 0, offsetY: 0, stagger: 0, chevronAngle: 45, color: '#93c5fd',
+            layout: 'STRAIGHT',
+            width: 300,
+            height: 300,
+            joint: 3,
+            angle: 0,
+            offsetX: 0,
+            offsetY: 0,
+            stagger: 0,
+            chevronAngle: 45,
+            color: '#93c5fd',
           },
           wallThickness: 0,
           wallEngine: undefined,
@@ -21,7 +29,10 @@ vi.mock('@/store/projectStore', () => ({
     }),
   selectActiveProject: (state: { activeProjectId: string; projects: { id: string }[] }) =>
     state.projects.find((p) => p.id === state.activeProjectId) ?? null,
-  selectRooms: (state: { activeProjectId: string; projects: { id: string; rooms: unknown[] }[] }) => {
+  selectRooms: (state: {
+    activeProjectId: string;
+    projects: { id: string; rooms: unknown[] }[];
+  }) => {
     const project = state.projects.find((p) => p.id === state.activeProjectId);
     return project?.rooms ?? [];
   },
@@ -30,16 +41,22 @@ vi.mock('@/store/projectStore', () => ({
 
 vi.mock('@/engine/quantities/quantityEngine', () => ({
   analyzeQuantities: () => ({
-    tileW: 300, tileH: 300, joint: 3,
+    tileW: 300,
+    tileH: 300,
+    joint: 3,
     wholeCount: 10,
     cuts: [],
     cutGroups: [
       {
-        usedW: 150, usedH: 300,
+        usedW: 150,
+        usedH: 300,
         pieceEdges: { left: 'cut', right: 'factory', top: 'factory', bottom: 'factory' },
-        chuteW: 150, chuteH: 300,
+        chuteW: 150,
+        chuteH: 300,
         chuteEdges: { left: 'factory', right: 'cut', top: 'factory', bottom: 'factory' },
-        totalCount: 3, reuseCount: 0, netTiles: 3,
+        totalCount: 3,
+        reuseCount: 0,
+        netTiles: 3,
       },
     ],
     totalReuseCount: 0,

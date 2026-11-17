@@ -58,6 +58,7 @@ wallEngine?: {
 ```
 
 **Mécanique :** outil EXCLUDE dans `WallDrawingCanvas` — identique à l'outil legacy :
+
 - Clic = ajouter un point au polygone en cours
 - Double-clic = fermer et enregistrer
 - Touche Enter = fermer et enregistrer (quand ≥ 3 points)
@@ -73,23 +74,23 @@ export function wallsToRooms(
   walls: Wall[],
   nodes: WallNode[],
   excludedZones?: WallExcludedZone[],
-): Room[]
+): Room[];
 ```
 
 ---
 
 ## Fichiers concernés
 
-| Fichier | Action |
-|---------|--------|
-| `src/types/wall.ts` | Ajouter `isDoor?: boolean` à `Wall` ; ajouter `WallExcludedZone` |
-| `src/types/project.ts` | Étendre `wallEngine` avec `excludedZones: WallExcludedZone[]` |
-| `src/engine/geometry/wallFaces.ts` | `wallsToRooms` : 3e param `excludedZones?`, point-in-polygon assignment |
-| `src/engine/geometry/wallFaces.test.ts` | Tests : zones assignées au bon room, centroïde hors pièce ignoré |
-| `src/store/projectStore.ts` | Actions `addWallExcludedZone`, `removeWallExcludedZone` ; MAJ `initWallEngine` |
-| `src/store/selectors.ts` / `projectStore.ts` | `selectRooms` passe `wallEngine.excludedZones` à `wallsToRooms` |
-| `src/components/plan/WallDrawingCanvas.tsx` | Tool DOOR + EXCLUDE, props, rendu |
-| `src/components/plan/PlanEditor.tsx` | Passer `excludedZones`, `onAddExcludedZone`, `onRemoveExcludedZone` |
+| Fichier                                      | Action                                                                         |
+| -------------------------------------------- | ------------------------------------------------------------------------------ |
+| `src/types/wall.ts`                          | Ajouter `isDoor?: boolean` à `Wall` ; ajouter `WallExcludedZone`               |
+| `src/types/project.ts`                       | Étendre `wallEngine` avec `excludedZones: WallExcludedZone[]`                  |
+| `src/engine/geometry/wallFaces.ts`           | `wallsToRooms` : 3e param `excludedZones?`, point-in-polygon assignment        |
+| `src/engine/geometry/wallFaces.test.ts`      | Tests : zones assignées au bon room, centroïde hors pièce ignoré               |
+| `src/store/projectStore.ts`                  | Actions `addWallExcludedZone`, `removeWallExcludedZone` ; MAJ `initWallEngine` |
+| `src/store/selectors.ts` / `projectStore.ts` | `selectRooms` passe `wallEngine.excludedZones` à `wallsToRooms`                |
+| `src/components/plan/WallDrawingCanvas.tsx`  | Tool DOOR + EXCLUDE, props, rendu                                              |
+| `src/components/plan/PlanEditor.tsx`         | Passer `excludedZones`, `onAddExcludedZone`, `onRemoveExcludedZone`            |
 
 ---
 
@@ -103,10 +104,11 @@ export interface Wall {
   node1Id: string;
   node2Id: string;
   thickness: number;
-  isDoor?: boolean;  // NOUVEAU
+  isDoor?: boolean; // NOUVEAU
 }
 
-export interface WallExcludedZone {  // NOUVEAU
+export interface WallExcludedZone {
+  // NOUVEAU
   id: string;
   points: Point[];
   label?: string;
@@ -130,21 +132,23 @@ Ajouter `WallExcludedZone` aux imports depuis `@/types/wall`.
 ### `src/engine/geometry/wallFaces.ts`
 
 Nouvelle signature :
+
 ```typescript
 export function wallsToRooms(
   walls: Wall[],
   nodes: WallNode[],
   excludedZones: WallExcludedZone[] = [],
-): Room[]
+): Room[];
 ```
 
 Logique d'assignation (à ajouter dans `interior.map(...)`) :
+
 ```typescript
 import { pointInPolygon } from '@/engine/geometry/polygon';
 
 // Dans le .map des faces intérieures :
-const facePts = pts.map(p => ({ x: p.x, y: p.y }));
-const roomZones = excludedZones.filter(zone => {
+const facePts = pts.map((p) => ({ x: p.x, y: p.y }));
+const roomZones = excludedZones.filter((zone) => {
   if (zone.points.length < 3) return false;
   const cx = zone.points.reduce((s, p) => s + p.x, 0) / zone.points.length;
   const cy = zone.points.reduce((s, p) => s + p.y, 0) / zone.points.length;
@@ -158,12 +162,14 @@ Les murs `isDoor` sont déjà exclus du rendu visuel dans `WallDrawingCanvas` �
 ### `src/store/projectStore.ts`
 
 **Nouvelles actions :**
+
 ```typescript
 addWallExcludedZone: (points: Point[]) => void;
 removeWallExcludedZone: (id: string) => void;
 ```
 
 Implémentation :
+
 ```typescript
 addWallExcludedZone: (points) => {
   set(state => ({
@@ -199,6 +205,7 @@ removeWallExcludedZone: (id) => {
 **Mettre à jour `initWallEngine` :** ajouter `excludedZones: []` dans l'objet initial.
 
 **Mettre à jour `selectRooms` :**
+
 ```typescript
 export function selectRooms(s: ProjectState): Room[] {
   const project = selectActiveProject(s);
@@ -212,6 +219,7 @@ export function selectRooms(s: ProjectState): Room[] {
 ### `src/components/plan/WallDrawingCanvas.tsx`
 
 **Nouvelles props :**
+
 ```typescript
 excludedZones: WallExcludedZone[];
 onAddExcludedZone: (points: Point[]) => void;
@@ -221,19 +229,21 @@ onRemoveExcludedZone: (id: string) => void;
 **PlanTool étendu :** `'WALL' | 'SELECT' | 'DELETE' | 'DOOR' | 'EXCLUDE'`
 
 **Constante de largeur de porte :**
+
 ```typescript
 const DOOR_DEFAULT_WIDTH_MM = 900;
-const DOOR_MIN_WIDTH_MM     = 300;
+const DOOR_MIN_WIDTH_MM = 300;
 ```
 
 **DOOR — handlePointerDown (outil DOOR) :**
+
 ```typescript
 if (tool === 'DOOR') {
   // Trouver le mur le plus proche
   const hit = hitTestWall(world);
   if (!hit) return;
-  const n1 = nodes.find(n => n.id === hit.node1Id)!;
-  const n2 = nodes.find(n => n.id === hit.node2Id)!;
+  const n1 = nodes.find((n) => n.id === hit.node1Id)!;
+  const n2 = nodes.find((n) => n.id === hit.node2Id)!;
 
   // Si isDoor : supprimer le segment de porte (MVP — les stubs u→d1 et d2→v restent,
   // l'utilisateur les reconnecte en déplaçant d1/d2 jusqu'à leur voisin, ce qui déclenche mergeNodes)
@@ -244,38 +254,52 @@ if (tool === 'DOOR') {
   }
 
   // Paramètre t du clic sur le segment
-  const dx = n2.x - n1.x, dy = n2.y - n1.y;
+  const dx = n2.x - n1.x,
+    dy = n2.y - n1.y;
   const len = Math.hypot(dx, dy);
   if (len < DOOR_MIN_WIDTH_MM * 2) return; // trop court
 
-  const t = Math.max(0, Math.min(1,
-    ((world.x - n1.x) * dx + (world.y - n1.y) * dy) / (len * len)
-  ));
-  const halfW = Math.min(DOOR_DEFAULT_WIDTH_MM / 2, (len * 0.4));
+  const t = Math.max(0, Math.min(1, ((world.x - n1.x) * dx + (world.y - n1.y) * dy) / (len * len)));
+  const halfW = Math.min(DOOR_DEFAULT_WIDTH_MM / 2, len * 0.4);
   const tCenter = Math.max(halfW / len, Math.min(1 - halfW / len, t));
 
-  const d1: Point = { x: n1.x + dx * (tCenter - halfW / len), y: n1.y + dy * (tCenter - halfW / len) };
-  const d2: Point = { x: n1.x + dx * (tCenter + halfW / len), y: n1.y + dy * (tCenter + halfW / len) };
+  const d1: Point = {
+    x: n1.x + dx * (tCenter - halfW / len),
+    y: n1.y + dy * (tCenter - halfW / len),
+  };
+  const d2: Point = {
+    x: n1.x + dx * (tCenter + halfW / len),
+    y: n1.y + dy * (tCenter + halfW / len),
+  };
 
-  const id1 = generateId(), id2 = generateId();
+  const id1 = generateId(),
+    id2 = generateId();
   onPushHistory();
   onRemoveWall(hit.id);
   onAddNode({ id: id1, x: d1.x, y: d1.y });
   onAddNode({ id: id2, x: d2.x, y: d2.y });
   onAddWall({ id: generateId(), node1Id: hit.node1Id, node2Id: id1, thickness: hit.thickness });
-  onAddWall({ id: generateId(), node1Id: id1,         node2Id: id2, thickness: hit.thickness, isDoor: true });
-  onAddWall({ id: generateId(), node1Id: id2,         node2Id: hit.node2Id, thickness: hit.thickness });
+  onAddWall({
+    id: generateId(),
+    node1Id: id1,
+    node2Id: id2,
+    thickness: hit.thickness,
+    isDoor: true,
+  });
+  onAddWall({ id: generateId(), node1Id: id2, node2Id: hit.node2Id, thickness: hit.thickness });
 }
 ```
 
 **EXCLUDE — état + handlers :**
+
 ```typescript
 const [excludePoints, setExcludePoints] = useState<Point[]>([]);
 const lastClickRef = useRef<{ time: number; x: number; y: number }>({ time: 0, x: 0, y: 0 });
 
 // Dans handlePointerDown (outil EXCLUDE) :
 if (tool === 'EXCLUDE') {
-  const now = Date.now(), last = lastClickRef.current;
+  const now = Date.now(),
+    last = lastClickRef.current;
   const isDouble = now - last.time < 350 && dist(world, { x: last.x, y: last.y }) < 30 / scale;
   lastClickRef.current = { time: now, x: world.x, y: world.y };
   if (isDouble) {
@@ -286,18 +310,19 @@ if (tool === 'EXCLUDE') {
     }
     return;
   }
-  setExcludePoints(prev => [...prev, world]);
+  setExcludePoints((prev) => [...prev, world]);
   return;
 }
 ```
 
 Mettre à jour le useEffect clavier pour gérer EXCLUDE :
+
 ```typescript
 if (e.key === 'Escape') {
   setChain(null);
   setSelectedWallId(null);
   setEditingWallId(null);
-  setExcludePoints([]);  // NOUVEAU
+  setExcludePoints([]); // NOUVEAU
 }
 if (e.key === 'Enter') {
   tryCloseChain();
@@ -310,6 +335,7 @@ if (e.key === 'Enter') {
 ```
 
 **Rendu DOOR :** dans la boucle `wallPolygons.map(...)`, sauter les murs `isDoor` pour le polygone épais. Ajouter une ligne dashed à la place :
+
 ```typescript
 // Après la boucle des wallPolygons :
 {walls.filter(w => w.isDoor).map(w => {
@@ -330,6 +356,7 @@ if (e.key === 'Enter') {
 Filtre dans `computeCornerGeometry` et `computeJointLines` — ces fonctions reçoivent `walls`. Passer `walls.filter(w => !w.isDoor)` pour exclure les ouvertures de la géométrie épaisse.
 
 **Rendu EXCLUDE :**
+
 ```typescript
 // Zones existantes
 {excludedZones.map(zone => {

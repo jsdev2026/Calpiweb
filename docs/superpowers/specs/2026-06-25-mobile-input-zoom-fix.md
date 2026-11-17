@@ -11,15 +11,15 @@ Sur iOS Safari (et tout navigateur mobile), le viewport zoome automatiquement lo
 
 ### Inputs affectés
 
-| Fichier | font-size actuel | Déclencheur |
-|---|---|---|
-| `src/components/plan/DimensionPopup.tsx:101` | `text-sm` = 14px | `autoFocus` |
-| `src/components/plan/WallEdgeEditor.tsx:56` | `text-sm` = 14px | `autoFocus` |
-| `src/components/plan/AutoCotationPanel.tsx:110` | `text-sm` = 14px | `autoFocus` |
-| `src/components/plan/WallDrawingCanvas.tsx:1421` | `text-xs` = 12px | `autoFocus` |
-| `src/components/plan/DimensionEditor.tsx:39` | hérité = 13.5px | `autoFocus` |
-| `src/components/plan/WallRoomPanel.tsx:116` | `text-[11px]` | focus manuel |
-| `src/components/plan/RoomTabs.tsx:50` | `text-[11px]` | focus manuel |
+| Fichier                                          | font-size actuel | Déclencheur  |
+| ------------------------------------------------ | ---------------- | ------------ |
+| `src/components/plan/DimensionPopup.tsx:101`     | `text-sm` = 14px | `autoFocus`  |
+| `src/components/plan/WallEdgeEditor.tsx:56`      | `text-sm` = 14px | `autoFocus`  |
+| `src/components/plan/AutoCotationPanel.tsx:110`  | `text-sm` = 14px | `autoFocus`  |
+| `src/components/plan/WallDrawingCanvas.tsx:1421` | `text-xs` = 12px | `autoFocus`  |
+| `src/components/plan/DimensionEditor.tsx:39`     | hérité = 13.5px  | `autoFocus`  |
+| `src/components/plan/WallRoomPanel.tsx:116`      | `text-[11px]`    | focus manuel |
+| `src/components/plan/RoomTabs.tsx:50`            | `text-[11px]`    | focus manuel |
 
 ## Solution retenue
 
@@ -27,7 +27,11 @@ Une seule règle CSS dans `src/app/globals.css`, ajoutée à la fin du fichier :
 
 ```css
 @media (pointer: coarse) {
-  input, select, textarea { font-size: 16px; }
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
 }
 ```
 
@@ -41,8 +45,8 @@ Une seule règle CSS dans `src/app/globals.css`, ajoutée à la fin du fichier :
 
 ## Fichier modifié
 
-| Fichier | Changement |
-|---|---|
+| Fichier               | Changement                                                     |
+| --------------------- | -------------------------------------------------------------- |
 | `src/app/globals.css` | Ajout d'un bloc `@media (pointer: coarse)` à la fin du fichier |
 
 ## Ce qui ne change pas

@@ -43,11 +43,13 @@ L'ID du nouveau nœud est généré dans le canvas (qui possède déjà `generat
 ### Canvas : `WallDrawingCanvas.tsx`
 
 **Nouveau prop :**
+
 ```ts
 onSplitWall: (wallId: string, newNode: WallNode) => void;
 ```
 
 **Démarrage de chaîne sur un mur (`!chain`) :**
+
 ```ts
 if (snap?.type === 'endpoint' && snap.nodeId) {
   nodeId = snap.nodeId;
@@ -61,6 +63,7 @@ if (snap?.type === 'endpoint' && snap.nodeId) {
 ```
 
 **Point intermédiaire / fermeture sur un mur :**
+
 ```ts
 if (snap?.type === 'endpoint' && snap.nodeId) {
   targetNodeId = snap.nodeId;
@@ -74,26 +77,35 @@ if (snap?.type === 'endpoint' && snap.nodeId) {
 ```
 
 **Déduplication avant `onAddWall` (point intermédiaire et fermeture) :**
+
 ```ts
-const alreadyConnected = walls.some(w =>
-  (w.node1Id === prevNodeId && w.node2Id === targetNodeId) ||
-  (w.node1Id === targetNodeId && w.node2Id === prevNodeId)
+const alreadyConnected = walls.some(
+  (w) =>
+    (w.node1Id === prevNodeId && w.node2Id === targetNodeId) ||
+    (w.node1Id === targetNodeId && w.node2Id === prevNodeId),
 );
 if (!alreadyConnected) {
-  onAddWall({ id: generateId(), node1Id: prevNodeId, node2Id: targetNodeId, thickness: chain.thickness });
+  onAddWall({
+    id: generateId(),
+    node1Id: prevNodeId,
+    node2Id: targetNodeId,
+    thickness: chain.thickness,
+  });
 }
 ```
 
 **`tryCloseChain` avec déduplication :**
+
 ```ts
 const tryCloseChain = useCallback(() => {
   if (!chain || chain.nodeIds.length < 2) return;
   const firstId = chain.nodeIds[0]!;
-  const lastId  = chain.nodeIds[chain.nodeIds.length - 1]!;
+  const lastId = chain.nodeIds[chain.nodeIds.length - 1]!;
   if (firstId === lastId) return;
-  const alreadyConnected = walls.some(w =>
-    (w.node1Id === lastId && w.node2Id === firstId) ||
-    (w.node1Id === firstId && w.node2Id === lastId)
+  const alreadyConnected = walls.some(
+    (w) =>
+      (w.node1Id === lastId && w.node2Id === firstId) ||
+      (w.node1Id === firstId && w.node2Id === lastId),
   );
   onPushHistory();
   if (!alreadyConnected) {
@@ -116,12 +128,12 @@ Note : `walls` ajouté comme dépendance de `tryCloseChain`.
 
 ## Fichiers
 
-| Fichier | Changement |
-|---------|-----------|
-| `src/store/projectStore.ts` | Ajouter action `splitWall` |
+| Fichier                                     | Changement                                                       |
+| ------------------------------------------- | ---------------------------------------------------------------- |
+| `src/store/projectStore.ts`                 | Ajouter action `splitWall`                                       |
 | `src/components/plan/WallDrawingCanvas.tsx` | Face snap → split, déduplication intermédiaire + `tryCloseChain` |
-| `src/components/plan/PlanEditor.tsx` | Passer `onSplitWall` |
-| `src/engine/geometry/wallFaces.ts` | **Aucun changement** |
+| `src/components/plan/PlanEditor.tsx`        | Passer `onSplitWall`                                             |
+| `src/engine/geometry/wallFaces.ts`          | **Aucun changement**                                             |
 
 ## Tests
 

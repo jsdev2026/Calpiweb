@@ -32,7 +32,7 @@ describe('computeNewP2', () => {
     expect(result.y).toBeCloseTo(4000);
   });
 
-  it('direction parallel — suit l\'angle', () => {
+  it("direction parallel — suit l'angle", () => {
     const angle = Math.PI / 4; // 45°
     const dim: TilingDimension = {
       ...base,

@@ -22,6 +22,7 @@
 ## Task 1: Supprimer la légende de QuantityPlanView
 
 **Files:**
+
 - Modify: `src/components/quantities/QuantityPlanView.test.tsx`
 - Modify: `src/components/quantities/QuantityPlanView.tsx`
 
@@ -30,18 +31,18 @@
 Dans `src/components/quantities/QuantityPlanView.test.tsx`, ajouter un 4e test à la fin du `describe` :
 
 ```tsx
-  it('does not render a legend section', () => {
-    const tile = { id: 't1', type: 'WHOLE' as const, rect: { x: 0, y: 0, w: 300, h: 300 } };
-    const { queryByText } = render(
-      <QuantityPlanView
-        result={makeResult({ tiles: [tile] })}
-        config={config}
-        rooms={[room]}
-        highlightGroup={null}
-      />,
-    );
-    expect(queryByText('Carreau entier')).toBeNull();
-  });
+it('does not render a legend section', () => {
+  const tile = { id: 't1', type: 'WHOLE' as const, rect: { x: 0, y: 0, w: 300, h: 300 } };
+  const { queryByText } = render(
+    <QuantityPlanView
+      result={makeResult({ tiles: [tile] })}
+      config={config}
+      rooms={[room]}
+      highlightGroup={null}
+    />,
+  );
+  expect(queryByText('Carreau entier')).toBeNull();
+});
 ```
 
 - [ ] **Step 2 : Vérifier que le test échoue**
@@ -103,18 +104,21 @@ git commit -m "feat(quantities): remove redundant legend from QuantityPlanView"
 ## Task 2: Restructurer CutGroupCard en version compacte
 
 **Files:**
+
 - Modify: `src/components/quantities/CutGroupCard.test.tsx`
 - Modify: `src/components/quantities/CutGroupCard.tsx`
 
 ### Contexte
 
 L'implémentation actuelle de `CutGroupCard.tsx` :
+
 - Badge : `h-5 w-5` (20 px), padding `py-2 px-3`
 - Vignette : `maxDim = 32`
 - "Chute disponible" sur sa propre ligne
 - Badge vert multilignes pour la réutilisation
 
 La nouvelle version :
+
 - Badge : `h-3.5 w-3.5` (14 px), padding `py-1 px-2`
 - Vignette : `maxDim = 18`
 - Tout sur une ligne principale : badge + vignette + dimensions + chute + nets
@@ -190,9 +194,7 @@ describe('CutGroupCard', () => {
 
   it('calls onHighlight(null) on mouseLeave', () => {
     const onHighlight = vi.fn();
-    const { container } = render(
-      <CutGroupCard {...defaultProps} onHighlight={onHighlight} />,
-    );
+    const { container } = render(<CutGroupCard {...defaultProps} onHighlight={onHighlight} />);
     fireEvent.mouseLeave(container.firstChild as Element);
     expect(onHighlight).toHaveBeenCalledWith(null);
   });
@@ -227,8 +229,16 @@ import type { CutGroup, PieceEdges } from '@/engine/quantities/quantityEngine';
 import { formatCm } from '@/utils/formatters';
 
 export const GROUP_COLORS = [
-  '#f87171', '#fb923c', '#facc15', '#4ade80', '#22d3ee',
-  '#818cf8', '#e879f9', '#f472b6', '#a78bfa', '#34d399',
+  '#f87171',
+  '#fb923c',
+  '#facc15',
+  '#4ade80',
+  '#22d3ee',
+  '#818cf8',
+  '#e879f9',
+  '#f472b6',
+  '#a78bfa',
+  '#34d399',
 ];
 
 interface ThumbnailProps {
@@ -241,7 +251,15 @@ interface ThumbnailProps {
   reused?: boolean;
 }
 
-const TileThumbnail = ({ tileW, tileH, usedW, usedH, pieceEdges, color, reused }: ThumbnailProps) => {
+const TileThumbnail = ({
+  tileW,
+  tileH,
+  usedW,
+  usedH,
+  pieceEdges,
+  color,
+  reused,
+}: ThumbnailProps) => {
   const maxDim = 18;
   const scale = Math.min(maxDim / tileW, maxDim / tileH);
   const tw = tileW * scale;
@@ -259,11 +277,52 @@ const TileThumbnail = ({ tileW, tileH, usedW, usedH, pieceEdges, color, reused }
     <svg width={tw} height={th} className="shrink-0 overflow-visible">
       <rect x={0} y={0} width={tw} height={th} fill="var(--tile-thumb-bg)" rx="2" />
       <rect x={px} y={py} width={uw} height={uh} fill={reused ? '#86efac' : color} rx="1" />
-      <line x1={px} y1={py} x2={px} y2={py + uh} stroke={pieceEdges.left === 'cut' ? cutColor : factoryColor} strokeWidth={sw} strokeDasharray={pieceEdges.left === 'cut' ? dash : undefined} />
-      <line x1={px + uw} y1={py} x2={px + uw} y2={py + uh} stroke={pieceEdges.right === 'cut' ? cutColor : factoryColor} strokeWidth={sw} strokeDasharray={pieceEdges.right === 'cut' ? dash : undefined} />
-      <line x1={px} y1={py} x2={px + uw} y2={py} stroke={pieceEdges.top === 'cut' ? cutColor : factoryColor} strokeWidth={sw} strokeDasharray={pieceEdges.top === 'cut' ? dash : undefined} />
-      <line x1={px} y1={py + uh} x2={px + uw} y2={py + uh} stroke={pieceEdges.bottom === 'cut' ? cutColor : factoryColor} strokeWidth={sw} strokeDasharray={pieceEdges.bottom === 'cut' ? dash : undefined} />
-      <rect x={0} y={0} width={tw} height={th} fill="none" stroke="var(--tile-thumb-bdr)" strokeWidth="0.5" rx="2" />
+      <line
+        x1={px}
+        y1={py}
+        x2={px}
+        y2={py + uh}
+        stroke={pieceEdges.left === 'cut' ? cutColor : factoryColor}
+        strokeWidth={sw}
+        strokeDasharray={pieceEdges.left === 'cut' ? dash : undefined}
+      />
+      <line
+        x1={px + uw}
+        y1={py}
+        x2={px + uw}
+        y2={py + uh}
+        stroke={pieceEdges.right === 'cut' ? cutColor : factoryColor}
+        strokeWidth={sw}
+        strokeDasharray={pieceEdges.right === 'cut' ? dash : undefined}
+      />
+      <line
+        x1={px}
+        y1={py}
+        x2={px + uw}
+        y2={py}
+        stroke={pieceEdges.top === 'cut' ? cutColor : factoryColor}
+        strokeWidth={sw}
+        strokeDasharray={pieceEdges.top === 'cut' ? dash : undefined}
+      />
+      <line
+        x1={px}
+        y1={py + uh}
+        x2={px + uw}
+        y2={py + uh}
+        stroke={pieceEdges.bottom === 'cut' ? cutColor : factoryColor}
+        strokeWidth={sw}
+        strokeDasharray={pieceEdges.bottom === 'cut' ? dash : undefined}
+      />
+      <rect
+        x={0}
+        y={0}
+        width={tw}
+        height={th}
+        fill="none"
+        stroke="var(--tile-thumb-bdr)"
+        strokeWidth="0.5"
+        rx="2"
+      />
     </svg>
   );
 };
@@ -334,11 +393,15 @@ export const CutGroupCard = ({
         {/* Nets */}
         <span
           className={`shrink-0 text-[11px] font-black tabular-nums ${
-            group.reuseCount > 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-gray-900 dark:text-zinc-100'
+            group.reuseCount > 0
+              ? 'text-emerald-500 dark:text-emerald-400'
+              : 'text-gray-900 dark:text-zinc-100'
           }`}
         >
           {group.netTiles}
-          <span className="text-[8px] font-normal text-gray-400 dark:text-zinc-500">&nbsp;nets</span>
+          <span className="text-[8px] font-normal text-gray-400 dark:text-zinc-500">
+            &nbsp;nets
+          </span>
         </span>
       </div>
 

@@ -14,8 +14,8 @@
 
 ## Fichiers concernés
 
-| Fichier | Action |
-|---------|--------|
+| Fichier                                     | Action                             |
+| ------------------------------------------- | ---------------------------------- |
 | `src/components/plan/WallDrawingCanvas.tsx` | **Modifier** — 3 micro-changements |
 
 ---
@@ -23,11 +23,13 @@
 ### Task 1 : Appliquer les 3 corrections de pan
 
 **Files:**
+
 - Modify: `src/components/plan/WallDrawingCanvas.tsx`
 
 - [ ] **Step 1.1 : Lire le fichier pour localiser les 3 endroits exacts**
 
 Lire `src/components/plan/WallDrawingCanvas.tsx` et repérer :
+
 1. La ligne `if (e.button === 1 || (e.button === 0 && e.altKey))` (autour de la ligne 221) — déclencheur du pan
 2. Le bloc `tool === 'SELECT'` dans `handlePointerDown` — la branche `else` qui désélectionne sans panner
 3. La balise `<svg` dans le `return` (vers la fin du fichier)
@@ -35,11 +37,13 @@ Lire `src/components/plan/WallDrawingCanvas.tsx` et repérer :
 - [ ] **Step 1.2 : Correction 1 — ajouter le clic droit au déclencheur de pan**
 
 Remplacer :
+
 ```typescript
 if (e.button === 1 || (e.button === 0 && e.altKey)) {
 ```
 
 Par :
+
 ```typescript
 if (e.button === 1 || e.button === 2 || (e.button === 0 && e.altKey)) {
 ```

@@ -7,6 +7,7 @@ When the user drags a free-end node (SELECT tool) and releases it on a wall face
 ## Context
 
 In the current SELECT tool drag flow:
+
 - Face snaps are already detected visually (the cursor/node sticks to the wall during drag)
 - On release, only `endpoint` snaps are acted on (node merge via `onMergeNodes`)
 - Face snaps on release are silently ignored — the node just moves to the snap position without any topological connection
@@ -26,6 +27,7 @@ connectNodeToWall(wallId: string, nodeId: string, newPos: Point): void
 ```
 
 Atomic sequence:
+
 1. Find wall `W` by `wallId` → read `W.node1Id`, `W.node2Id`, `W.thickness`
 2. Move node `nodeId` to `newPos`
 3. Delete wall `W`
@@ -45,7 +47,7 @@ Wrapped in `updateActive()` — persisted and undoable via existing undo/redo hi
 ```typescript
 if (snap?.type === 'face' && snap.wallId) {
   const degree = walls.filter(
-    w => w.node1Id === draggingNodeId || w.node2Id === draggingNodeId
+    (w) => w.node1Id === draggingNodeId || w.node2Id === draggingNodeId,
   ).length;
   if (degree === 1) {
     onPushHistory();
@@ -55,6 +57,7 @@ if (snap?.type === 'face' && snap.wallId) {
 ```
 
 New prop added to `WallDrawingCanvas`:
+
 ```typescript
 onConnectNodeToWall: (wallId: string, nodeId: string, newPos: Point) => void;
 ```
@@ -62,8 +65,9 @@ onConnectNodeToWall: (wallId: string, nodeId: string, newPos: Point) => void;
 ### PlanEditor.tsx
 
 Wire the new action:
+
 ```tsx
-onConnectNodeToWall={connectNodeToWall}
+onConnectNodeToWall = { connectNodeToWall };
 ```
 
 ## Data Flow

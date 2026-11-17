@@ -34,7 +34,10 @@ function computeConsumables(
   const tileThickness = params.tileThickness ?? 10;
   const isoRendement =
     ((config.width + config.height) / (config.width * config.height)) *
-    config.joint * tileThickness * 1.6 * 1.05;
+    config.joint *
+    tileThickness *
+    1.6 *
+    1.05;
   const jointRendement = params.jointRendement ?? isoRendement;
   const jointBagSize = params.jointBagSize ?? 5;
   const jointTotal = surface * jointRendement;
@@ -64,14 +67,18 @@ function computeConsumables(
   };
 }
 
-function tileSpaceRooms(rooms: Room[], angle: number, cx: number, cy: number, wallThickness = 0): Point[][] {
+function tileSpaceRooms(
+  rooms: Room[],
+  angle: number,
+  cx: number,
+  cy: number,
+  wallThickness = 0,
+): Point[][] {
   return rooms
     .filter((r) => r.points.length >= 3)
     .map((r) => {
       const inset = insetRoomPolygon(r, wallThickness);
-      return angle !== 0
-        ? inset.map((p) => rotatePoint(p.x, p.y, -angle, cx, cy))
-        : inset;
+      return angle !== 0 ? inset.map((p) => rotatePoint(p.x, p.y, -angle, cx, cy)) : inset;
     });
 }
 
@@ -93,10 +100,19 @@ export function analyzeQuantities(
 
   if (validRooms.length === 0 || !stats) {
     return {
-      tileW: config.width, tileH: config.height, joint: config.joint,
-      wholeCount: 0, cuts: [], cutGroups: [],
-      totalReuseCount: 0, tilesForCuts: 0, totalTiles: 0,
-      toOrder: 0, margin, roomArea: 0, tiles: [],
+      tileW: config.width,
+      tileH: config.height,
+      joint: config.joint,
+      wholeCount: 0,
+      cuts: [],
+      cutGroups: [],
+      totalReuseCount: 0,
+      tilesForCuts: 0,
+      totalTiles: 0,
+      toOrder: 0,
+      margin,
+      roomArea: 0,
+      tiles: [],
       consumables: EMPTY_CONSUMABLES,
     };
   }
@@ -120,7 +136,9 @@ export function analyzeQuantities(
   const consumables = computeConsumables(stats.roomArea, totalTiles, config);
 
   return {
-    tileW: config.width, tileH: config.height, joint: config.joint,
+    tileW: config.width,
+    tileH: config.height,
+    joint: config.joint,
     wholeCount: stats.whole,
     cuts,
     cutGroups,

@@ -3,29 +3,55 @@ import { describe, it, expect, vi, beforeAll } from 'vitest';
 
 // Mock child components that use canvas/SVG (not needed for tab logic test)
 vi.mock('./TilingCanvas', () => ({ TilingCanvas: () => <div data-testid="tiling-canvas" /> }));
-vi.mock('./TilingControls', () => ({ TilingControls: () => <div data-testid="tiling-controls" /> }));
-vi.mock('@/components/results/ResultsPanel', () => ({ ResultsPanel: () => <div data-testid="results-panel" /> }));
+vi.mock('./TilingControls', () => ({
+  TilingControls: () => <div data-testid="tiling-controls" />,
+}));
+vi.mock('@/components/results/ResultsPanel', () => ({
+  ResultsPanel: () => <div data-testid="results-panel" />,
+}));
 vi.mock('@/engine/quantities/quantityEngine', () => ({
   analyzeQuantities: () => ({
-    tileW: 300, tileH: 300, joint: 3,
-    wholeCount: 0, cuts: [], cutGroups: [],
-    totalReuseCount: 0, tilesForCuts: 0, totalTiles: 0, toOrder: 0, roomArea: 0,
+    tileW: 300,
+    tileH: 300,
+    joint: 3,
+    wholeCount: 0,
+    cuts: [],
+    cutGroups: [],
+    totalReuseCount: 0,
+    tilesForCuts: 0,
+    totalTiles: 0,
+    toOrder: 0,
+    roomArea: 0,
     tiles: [],
   }),
 }));
-vi.mock('@/engine/geometry/polygon', () => ({ getBoundingBox: () => ({ minX: 0, minY: 0, maxX: 100, maxY: 100 }) }));
+vi.mock('@/engine/geometry/polygon', () => ({
+  getBoundingBox: () => ({ minX: 0, minY: 0, maxX: 100, maxY: 100 }),
+}));
 
 // Resize observer not available in jsdom
 beforeAll(() => {
-  global.ResizeObserver = class { observe() {} unobserve() {} disconnect() {} };
+  global.ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
 });
 
 import { TilingEditor } from './TilingEditor';
 import type { TilingConfig } from '@/types/tiling';
 
 const config: TilingConfig = {
-  layout: 'STRAIGHT', width: 300, height: 300, joint: 3,
-  angle: 0, offsetX: 0, offsetY: 0, stagger: 0, chevronAngle: 45, color: '#ffffff',
+  layout: 'STRAIGHT',
+  width: 300,
+  height: 300,
+  joint: 3,
+  angle: 0,
+  offsetX: 0,
+  offsetY: 0,
+  stagger: 0,
+  chevronAngle: 45,
+  color: '#ffffff',
 };
 
 describe('TilingEditor mobile tabs', () => {

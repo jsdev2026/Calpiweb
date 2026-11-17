@@ -4,10 +4,16 @@ import { assignOffcuts, canReuseFor } from './assignOffcuts';
 import type { CutRecord, PieceEdges } from './types';
 
 const FACTORY: PieceEdges = {
-  left: 'factory', right: 'factory', top: 'factory', bottom: 'factory',
+  left: 'factory',
+  right: 'factory',
+  top: 'factory',
+  bottom: 'factory',
 };
 const RIGHT_CUT: PieceEdges = {
-  left: 'factory', right: 'cut', top: 'factory', bottom: 'factory',
+  left: 'factory',
+  right: 'cut',
+  top: 'factory',
+  bottom: 'factory',
 };
 
 function makeRecord(
@@ -20,14 +26,19 @@ function makeRecord(
   chuteEdges: PieceEdges = FACTORY,
 ): CutRecord {
   return {
-    id, roomId: 'r1',
-    tileW: 200, tileH: 200,
-    usedW, usedH,
+    id,
+    roomId: 'r1',
+    tileW: 200,
+    tileH: 200,
+    usedW,
+    usedH,
     pieceEdges,
-    chuteW, chuteH,
+    chuteW,
+    chuteH,
     chuteEdges,
     chuteArea: chuteW * chuteH,
-    clipCx: 0, clipCy: 0,
+    clipCx: 0,
+    clipCy: 0,
     coveredById: null,
     reusedForId: null,
   };
@@ -103,11 +114,21 @@ describe('assignOffcuts', () => {
     // The residual then covers corner2 (50×50).
     // Net result: 1 tile instead of 2 for the three cuts.
     // chuteEdges: left='cut' because the chute is the strip to the right of the RIGHT_CUT edge piece.
-    const cornerEdges: PieceEdges = { left: 'factory', right: 'cut', top: 'factory', bottom: 'cut' };
-    const chuteEdges: PieceEdges = { left: 'cut', right: 'factory', top: 'factory', bottom: 'factory' };
-    const edge    = makeRecord('edge',    50, 100, 50, 100, RIGHT_CUT, chuteEdges);
-    const corner1 = makeRecord('corner1', 50,  50,  0,   0, cornerEdges);
-    const corner2 = makeRecord('corner2', 50,  50,  0,   0, cornerEdges);
+    const cornerEdges: PieceEdges = {
+      left: 'factory',
+      right: 'cut',
+      top: 'factory',
+      bottom: 'cut',
+    };
+    const chuteEdges: PieceEdges = {
+      left: 'cut',
+      right: 'factory',
+      top: 'factory',
+      bottom: 'factory',
+    };
+    const edge = makeRecord('edge', 50, 100, 50, 100, RIGHT_CUT, chuteEdges);
+    const corner1 = makeRecord('corner1', 50, 50, 0, 0, cornerEdges);
+    const corner2 = makeRecord('corner2', 50, 50, 0, 0, cornerEdges);
     assignOffcuts([edge, corner1, corner2]);
     // edge's chute covers corner1
     expect(corner1.coveredById).toBe('edge');
@@ -133,7 +154,12 @@ describe('canReuseFor', () => {
   });
 
   it('bord factory requis non satisfait → false', () => {
-    const cutRight: PieceEdges = { left: 'factory', right: 'cut', top: 'factory', bottom: 'factory' };
+    const cutRight: PieceEdges = {
+      left: 'factory',
+      right: 'cut',
+      top: 'factory',
+      bottom: 'factory',
+    };
     // Besoin : bord droit factory. Chute : bord droit cut. → false même si dimensions ok
     expect(canReuseFor(80, 80, cutRight, 60, 60, FACTORY)).toBe(false);
   });
@@ -141,16 +167,34 @@ describe('canReuseFor', () => {
 
 describe('canReuseFor — tolérance 10mm', () => {
   it('chute 6mm plus petite que le besoin est réutilisable', () => {
-    const BOTTOM_CUT: PieceEdges = { left: 'factory', right: 'factory', top: 'factory', bottom: 'cut' };
+    const BOTTOM_CUT: PieceEdges = {
+      left: 'factory',
+      right: 'factory',
+      top: 'factory',
+      bottom: 'cut',
+    };
     // chute 14×200, besoin 20×180 → diff de 6mm en largeur
     // échoue avec tolérance 5mm (14 < 20−5=15), passe avec REUSE_TOLERANCE_MM=10mm (14 >= 20−10=10)
     expect(canReuseFor(14, 200, FACTORY, 20, 180, BOTTOM_CUT)).toBe(true);
   });
 
   it('assignOffcuts : réemploie une chute 6mm plus petite que le besoin', () => {
-    const BOTTOM_CUT: PieceEdges = { left: 'factory', right: 'factory', top: 'factory', bottom: 'cut' };
+    const BOTTOM_CUT: PieceEdges = {
+      left: 'factory',
+      right: 'factory',
+      top: 'factory',
+      bottom: 'cut',
+    };
     // src génère une chute 14×200 ; target a besoin de 20×180
-    const src = makeRecord('src', 186, 200, 14, 200, { left: 'factory', right: 'cut', top: 'factory', bottom: 'factory' }, FACTORY);
+    const src = makeRecord(
+      'src',
+      186,
+      200,
+      14,
+      200,
+      { left: 'factory', right: 'cut', top: 'factory', bottom: 'factory' },
+      FACTORY,
+    );
     const target = makeRecord('target', 20, 180, 0, 0, BOTTOM_CUT, FACTORY);
     assignOffcuts([src, target]);
     expect(target.coveredById).toBe('src');

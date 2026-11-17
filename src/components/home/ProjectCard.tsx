@@ -18,15 +18,26 @@ export const ProjectCard = ({ project, onOpen, onDelete, onShare }: ProjectCardP
   const isOwner = !project.myRole || project.myRole === 'owner';
   const roleLabel = !isOwner ? ROLE_LABELS[project.myRole as ShareRole] : null;
 
-  const handleDelete = (e: MouseEvent) => { e.stopPropagation(); onDelete(); };
-  const handleShare = (e: MouseEvent) => { e.stopPropagation(); onShare(); };
+  const handleDelete = (e: MouseEvent) => {
+    e.stopPropagation();
+    onDelete();
+  };
+  const handleShare = (e: MouseEvent) => {
+    e.stopPropagation();
+    onShare();
+  };
 
   return (
     <div
       role="button"
       tabIndex={0}
       onClick={onOpen}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(); } }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onOpen();
+        }
+      }}
       className="group flex h-64 cursor-pointer flex-col justify-between rounded-3xl border border-zinc-800 bg-zinc-900/50 p-8 shadow-sm transition-all duration-500 hover:border-blue-500/50 hover:bg-zinc-900 hover:shadow-2xl hover:shadow-blue-500/5"
     >
       <div>

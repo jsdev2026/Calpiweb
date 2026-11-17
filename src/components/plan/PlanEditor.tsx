@@ -7,10 +7,20 @@ import type { Point } from '@/types/plan';
 import type { Room } from '@/types/project';
 import type { TilingConfig } from '@/types/tiling';
 import type { Wall, WallNode, WallExcludedZone } from '@/types/wall';
-import { useProjectStore, selectActiveProject, selectRooms, selectDoorOpenings } from '@/store/projectStore';
+import {
+  useProjectStore,
+  selectActiveProject,
+  selectRooms,
+  selectDoorOpenings,
+} from '@/store/projectStore';
 import { DEFAULT_TILING_CONFIG } from '@/constants/tileDefaults';
 import { analyzeQuantities } from '@/engine/quantities/quantityEngine';
-import { dragOffset, normalizeOffset, originOffset, snapOffset } from '@/engine/tiling/layoutOrigin';
+import {
+  dragOffset,
+  normalizeOffset,
+  originOffset,
+  snapOffset,
+} from '@/engine/tiling/layoutOrigin';
 import { TileLayer } from '@/components/tiling/TileLayer';
 import { TileSettingsSheet } from '@/components/tiling/TileSettingsSheet';
 import { QuantitiesSheet } from '@/components/quantities/QuantitiesSheet';
@@ -43,8 +53,10 @@ export function computeInitialView(
 
   const xs = allPoints.map((p) => p.x);
   const ys = allPoints.map((p) => p.y);
-  const minX = Math.min(...xs), maxX = Math.max(...xs);
-  const minY = Math.min(...ys), maxY = Math.max(...ys);
+  const minX = Math.min(...xs),
+    maxX = Math.max(...xs);
+  const minY = Math.min(...ys),
+    maxY = Math.max(...ys);
   const bboxW = maxX - minX || 1000;
   const bboxH = maxY - minY || 1000;
   const cx = (minX + maxX) / 2;
@@ -53,11 +65,7 @@ export function computeInitialView(
   const PADDING = 80;
   const newScale = Math.max(
     0.005,
-    Math.min(
-      (viewW - PADDING * 2) / bboxW,
-      (viewH - PADDING * 2) / bboxH,
-      0.5,
-    ),
+    Math.min((viewW - PADDING * 2) / bboxW, (viewH - PADDING * 2) / bboxH, 0.5),
   );
 
   return {
@@ -78,29 +86,38 @@ interface PlanEditorProps {
   readOnly?: boolean;
 }
 
-export const PlanEditor = ({ onNavigateBack, mode = 'PLAN', onModeChange, readOnly = false }: PlanEditorProps) => {
-  const wallEngine           = useProjectStore((s) => selectActiveProject(s)?.wallEngine);
-  const wallThickness        = useProjectStore((s) => selectActiveProject(s)?.wallThickness ?? 100);
-  const wallRoomNames        = useProjectStore((s) => selectActiveProject(s)?.wallEngine?.wallRoomNames ?? {});
-  const addWall              = useProjectStore((s) => s.addWall);
-  const removeWall           = useProjectStore((s) => s.removeWall);
-  const updateWall           = useProjectStore((s) => s.updateWall);
-  const addNode              = useProjectStore((s) => s.addNode);
-  const updateNode           = useProjectStore((s) => s.updateNode);
-  const mergeNodes           = useProjectStore((s) => s.mergeNodes);
-  const initWallEngine       = useProjectStore((s) => s.initWallEngine);
-  const setWallThickness     = useProjectStore((s) => s.setWallThickness);
-  const renameWallRoom       = useProjectStore((s) => s.renameWallRoom);
-  const addWallExcludedZone    = useProjectStore((s) => s.addWallExcludedZone);
+export const PlanEditor = ({
+  onNavigateBack,
+  mode = 'PLAN',
+  onModeChange,
+  readOnly = false,
+}: PlanEditorProps) => {
+  const wallEngine = useProjectStore((s) => selectActiveProject(s)?.wallEngine);
+  const wallThickness = useProjectStore((s) => selectActiveProject(s)?.wallThickness ?? 100);
+  const wallRoomNames = useProjectStore(
+    (s) => selectActiveProject(s)?.wallEngine?.wallRoomNames ?? {},
+  );
+  const addWall = useProjectStore((s) => s.addWall);
+  const removeWall = useProjectStore((s) => s.removeWall);
+  const updateWall = useProjectStore((s) => s.updateWall);
+  const addNode = useProjectStore((s) => s.addNode);
+  const updateNode = useProjectStore((s) => s.updateNode);
+  const mergeNodes = useProjectStore((s) => s.mergeNodes);
+  const initWallEngine = useProjectStore((s) => s.initWallEngine);
+  const setWallThickness = useProjectStore((s) => s.setWallThickness);
+  const renameWallRoom = useProjectStore((s) => s.renameWallRoom);
+  const addWallExcludedZone = useProjectStore((s) => s.addWallExcludedZone);
   const removeWallExcludedZone = useProjectStore((s) => s.removeWallExcludedZone);
-  const updateExcludeZoneNode  = useProjectStore((s) => s.updateExcludeZoneNode);
-  const splitWall              = useProjectStore((s) => s.splitWall);
-  const connectNodeToWall      = useProjectStore((s) => s.connectNodeToWall);
-  const restoreSnapshot      = useProjectStore((s) => s.restoreSnapshot);
-  const storedConfig         = useProjectStore((s) => selectActiveProject(s)?.config ?? DEFAULT_TILING_CONFIG);
-  const setConfig            = useProjectStore((s) => s.setConfig);
-  const rooms                = useProjectStore(selectRooms);
-  const doorOpenings         = useProjectStore(useShallow(selectDoorOpenings));
+  const updateExcludeZoneNode = useProjectStore((s) => s.updateExcludeZoneNode);
+  const splitWall = useProjectStore((s) => s.splitWall);
+  const connectNodeToWall = useProjectStore((s) => s.connectNodeToWall);
+  const restoreSnapshot = useProjectStore((s) => s.restoreSnapshot);
+  const storedConfig = useProjectStore(
+    (s) => selectActiveProject(s)?.config ?? DEFAULT_TILING_CONFIG,
+  );
+  const setConfig = useProjectStore((s) => s.setConfig);
+  const rooms = useProjectStore(selectRooms);
+  const doorOpenings = useProjectStore(useShallow(selectDoorOpenings));
 
   // ── Calepinage / quantitatif ────────────────────────────────────────────
   const showTiles = mode !== 'PLAN';
@@ -118,7 +135,9 @@ export const PlanEditor = ({ onNavigateBack, mode = 'PLAN', onModeChange, readOn
     [showTiles, rooms, config, wallThickness, doorOpenings],
   );
 
-  useEffect(() => { if (mode !== 'TILING') setMoveMode(false); }, [mode]);
+  useEffect(() => {
+    if (mode !== 'TILING') setMoveMode(false);
+  }, [mode]);
 
   // Recadrage : en Calepinage / Quantitatif, la pièce est centrée dans la zone
   // laissée libre par le panneau (bas sur mobile, droite sur ordinateur).
@@ -143,12 +162,15 @@ export const PlanEditor = ({ onNavigateBack, mode = 'PLAN', onModeChange, readOn
 
   const liveRef = useRef<TilingConfig | null>(null);
 
-  const handleTileDrag = useCallback((dx: number, dy: number) => {
-    const base = liveRef.current ?? storedConfig;
-    const next = { ...base, ...dragOffset(base, dx, dy) };
-    liveRef.current = next;
-    setLiveConfig(next);
-  }, [storedConfig]);
+  const handleTileDrag = useCallback(
+    (dx: number, dy: number) => {
+      const base = liveRef.current ?? storedConfig;
+      const next = { ...base, ...dragOffset(base, dx, dy) };
+      liveRef.current = next;
+      setLiveConfig(next);
+    },
+    [storedConfig],
+  );
 
   const handleTileDragEnd = useCallback(() => {
     const live = liveRef.current;
@@ -165,30 +187,47 @@ export const PlanEditor = ({ onNavigateBack, mode = 'PLAN', onModeChange, readOn
     setLiveConfig(null);
   }, [rooms, wallThickness, doorOpenings, setConfig]);
 
-  const handleOrigin = useCallback((origin: 'CORNER' | 'CENTER') => {
-    setConfig({ ...storedConfig, ...originOffset(origin, rooms, storedConfig, wallThickness, doorOpenings) });
-  }, [storedConfig, rooms, wallThickness, doorOpenings, setConfig]);
+  const handleOrigin = useCallback(
+    (origin: 'CORNER' | 'CENTER') => {
+      setConfig({
+        ...storedConfig,
+        ...originOffset(origin, rooms, storedConfig, wallThickness, doorOpenings),
+      });
+    },
+    [storedConfig, rooms, wallThickness, doorOpenings, setConfig],
+  );
 
-  const [scale, setScale]   = useState(0.1);
-  const [pan,   setPan]     = useState<Point>({ x: 0, y: 0 });
-  const [tool,  setTool]    = useState<PlanTool>('SELECT');
+  const [scale, setScale] = useState(0.1);
+  const [pan, setPan] = useState<Point>({ x: 0, y: 0 });
+  const [tool, setTool] = useState<PlanTool>('SELECT');
   const [tutorialMode, setTutorialMode] = useState(false);
-  const [past,   setPast]   = useState<WallHistoryEntry[]>([]);
+  const [past, setPast] = useState<WallHistoryEntry[]>([]);
   const [future, setFuture] = useState<WallHistoryEntry[]>([]);
 
   const wallEngineRef = useRef(wallEngine);
-  const pastRef       = useRef(past);
-  const futureRef     = useRef(future);
-  useEffect(() => { wallEngineRef.current = wallEngine; }, [wallEngine]);
-  useEffect(() => { pastRef.current   = past;   }, [past]);
-  useEffect(() => { futureRef.current = future; }, [future]);
+  const pastRef = useRef(past);
+  const futureRef = useRef(future);
+  useEffect(() => {
+    wallEngineRef.current = wallEngine;
+  }, [wallEngine]);
+  useEffect(() => {
+    pastRef.current = past;
+  }, [past]);
+  useEffect(() => {
+    futureRef.current = future;
+  }, [future]);
 
-  const { zone: roomZone, isDragging: roomDragging, handlePointerDown: handleRoomPointerDown } =
-    useDraggableSnap({ storageKey: 'calpiweb-room-panel-zone', defaultZone: 'SIDE' });
+  const {
+    zone: roomZone,
+    isDragging: roomDragging,
+    handlePointerDown: handleRoomPointerDown,
+  } = useDraggableSnap({ storageKey: 'calpiweb-room-panel-zone', defaultZone: 'SIDE' });
 
   // Auto-init wallEngine si manquant (migration projets legacy)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (wallEngine === undefined) initWallEngine(); }, []);
+  useEffect(() => {
+    if (wallEngine === undefined) initWallEngine();
+  }, []);
 
   // Centrage initial sur le contenu existant
   useEffect(() => {
@@ -204,24 +243,37 @@ export const PlanEditor = ({ onNavigateBack, mode = 'PLAN', onModeChange, readOn
   const pushHistory = useCallback(() => {
     const we = wallEngineRef.current;
     if (!we) return;
-    setPast((prev) => [{
-      wallEngine: {
-        nodes: [...we.nodes],
-        walls: [...we.walls],
-        excludedZones: [...(we.excludedZones ?? [])],
+    setPast((prev) => [
+      {
+        wallEngine: {
+          nodes: [...we.nodes],
+          walls: [...we.walls],
+          excludedZones: [...(we.excludedZones ?? [])],
+        },
       },
-    }, ...prev.slice(0, 49)]);
+      ...prev.slice(0, 49),
+    ]);
     setFuture([]);
   }, []);
 
   const handleUndo = useCallback(() => {
     const [entry, ...rest] = pastRef.current;
-    if (!entry) { if (onNavigateBack) onNavigateBack(); return; }
+    if (!entry) {
+      if (onNavigateBack) onNavigateBack();
+      return;
+    }
     const we = wallEngineRef.current;
     if (we) {
-      setFuture((f) => [{
-        wallEngine: { nodes: [...we.nodes], walls: [...we.walls], excludedZones: [...(we.excludedZones ?? [])] },
-      }, ...f.slice(0, 49)]);
+      setFuture((f) => [
+        {
+          wallEngine: {
+            nodes: [...we.nodes],
+            walls: [...we.walls],
+            excludedZones: [...(we.excludedZones ?? [])],
+          },
+        },
+        ...f.slice(0, 49),
+      ]);
     }
     setPast(rest);
     restoreSnapshot([], [], entry.wallEngine);
@@ -232,9 +284,16 @@ export const PlanEditor = ({ onNavigateBack, mode = 'PLAN', onModeChange, readOn
     if (!entry) return;
     const we = wallEngineRef.current;
     if (we) {
-      setPast((p) => [{
-        wallEngine: { nodes: [...we.nodes], walls: [...we.walls], excludedZones: [...(we.excludedZones ?? [])] },
-      }, ...p.slice(0, 49)]);
+      setPast((p) => [
+        {
+          wallEngine: {
+            nodes: [...we.nodes],
+            walls: [...we.walls],
+            excludedZones: [...(we.excludedZones ?? [])],
+          },
+        },
+        ...p.slice(0, 49),
+      ]);
     }
     setFuture(rest);
     restoreSnapshot([], [], entry.wallEngine);
@@ -243,14 +302,19 @@ export const PlanEditor = ({ onNavigateBack, mode = 'PLAN', onModeChange, readOn
   // Ctrl+Z / Ctrl+Y
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
-      if (mode !== 'PLAN') { if (e.key === 'Escape') setMoveMode(false); return; }
+      if (mode !== 'PLAN') {
+        if (e.key === 'Escape') setMoveMode(false);
+        return;
+      }
       if (e.key === 'z' && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
         e.preventDefault();
         if (pastRef.current.length > 0) handleUndo();
         else if (onNavigateBack) onNavigateBack();
       }
-      if ((e.key === 'y' && (e.ctrlKey || e.metaKey)) ||
-          (e.key === 'z' && (e.ctrlKey || e.metaKey) && e.shiftKey)) {
+      if (
+        (e.key === 'y' && (e.ctrlKey || e.metaKey)) ||
+        (e.key === 'z' && (e.ctrlKey || e.metaKey) && e.shiftKey)
+      ) {
         e.preventDefault();
         if (futureRef.current.length > 0) handleRedo();
       }
@@ -282,7 +346,7 @@ export const PlanEditor = ({ onNavigateBack, mode = 'PLAN', onModeChange, readOn
               tutorialMode={tutorialMode}
               onToggleTutorial={() => setTutorialMode((v) => !v)}
             />
-            <div className="hidden md:block mouse:block">
+            <div className="hidden mouse:block md:block">
               <WallRoomPanel
                 zone={roomZone}
                 isDragging={roomDragging}
@@ -301,7 +365,10 @@ export const PlanEditor = ({ onNavigateBack, mode = 'PLAN', onModeChange, readOn
             open={tileSheetOpen}
             onOpenChange={setTileSheetOpen}
             moveMode={moveMode}
-            onMoveModeChange={(on) => { setMoveMode(on); if (on) setTileSheetOpen(false); }}
+            onMoveModeChange={(on) => {
+              setMoveMode(on);
+              if (on) setTileSheetOpen(false);
+            }}
             onOrigin={handleOrigin}
             onShowQuantities={() => onModeChange?.('QUANTITIES')}
             readOnly={readOnly}
@@ -331,22 +398,32 @@ export const PlanEditor = ({ onNavigateBack, mode = 'PLAN', onModeChange, readOn
 
         <WallDrawingCanvas
           viewOnly={showTiles}
-          worldLayer={showTiles && result ? (
-            <TileLayer
-              rooms={rooms}
-              result={result}
-              config={config}
-              wallThickness={wallThickness}
-              doorOpenings={doorOpenings}
-              showCutLabels={mode === 'QUANTITIES'}
-              highlightGroup={mode === 'QUANTITIES' ? highlightGroup : null}
-            />
-          ) : undefined}
+          worldLayer={
+            showTiles && result ? (
+              <TileLayer
+                rooms={rooms}
+                result={result}
+                config={config}
+                wallThickness={wallThickness}
+                doorOpenings={doorOpenings}
+                showCutLabels={mode === 'QUANTITIES'}
+                highlightGroup={mode === 'QUANTITIES' ? highlightGroup : null}
+              />
+            ) : undefined
+          }
           onViewDrag={mode === 'TILING' && moveMode && !readOnly ? handleTileDrag : null}
           onViewDragEnd={handleTileDragEnd}
           walls={wallEngine?.walls ?? []}
           nodes={wallEngine?.nodes ?? []}
-          tool={(showTiles ? 'SELECT' : tool) as 'WALL' | 'SELECT' | 'DELETE' | 'DOOR' | 'EXCLUDE' | 'LOCK'}
+          tool={
+            (showTiles ? 'SELECT' : tool) as
+              | 'WALL'
+              | 'SELECT'
+              | 'DELETE'
+              | 'DOOR'
+              | 'EXCLUDE'
+              | 'LOCK'
+          }
           scale={scale}
           pan={pan}
           onScaleChange={setScale}

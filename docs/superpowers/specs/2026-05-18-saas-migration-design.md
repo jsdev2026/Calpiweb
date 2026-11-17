@@ -15,22 +15,25 @@ TILEA est une application web de calepinage carrelage (Next.js 14, TypeScript, T
 ## 2. Décisions produit
 
 ### Cible utilisateurs
+
 Modèle **freemium** couvrant deux segments :
+
 - **Artisans indépendants** — sensibles au prix, usage solo
 - **PME du carrelage** — plusieurs chantiers, budget pro (adressé en V3)
 
 ### Modèle tarifaire
 
-| Plan | Prix | Limite | Stockage |
-|------|------|--------|----------|
-| Gratuit | 0 € | 1 projet | Cloud Supabase |
-| Pro | 9 €/mois | Illimité | Cloud Supabase |
-| À la carte (V2) | 2,99 € / projet | — | Cloud Supabase |
-| Packages (V2) | ex. 5 projets à 9,99 € | — | Cloud Supabase |
+| Plan            | Prix                   | Limite   | Stockage       |
+| --------------- | ---------------------- | -------- | -------------- |
+| Gratuit         | 0 €                    | 1 projet | Cloud Supabase |
+| Pro             | 9 €/mois               | Illimité | Cloud Supabase |
+| À la carte (V2) | 2,99 € / projet        | —        | Cloud Supabase |
+| Packages (V2)   | ex. 5 projets à 9,99 € | —        | Cloud Supabase |
 
 **Note V1 :** Stripe n'est pas intégré en V1. Les premiers comptes Pro sont activés manuellement en beta : mise à jour directe du champ `profiles.plan = 'pro'` via le dashboard Supabase. Stripe est implémenté en V2.
 
 ### Contrainte clé
+
 Tous les utilisateurs (y compris gratuits) ont leurs projets stockés dans le cloud Supabase. Un compte est obligatoire pour utiliser l'application. Cela garantit une bonne expérience multi-appareil dès le plan gratuit et simplifie l'architecture (pas de double source de vérité).
 
 ---
@@ -39,13 +42,13 @@ Tous les utilisateurs (y compris gratuits) ont leurs projets stockés dans le cl
 
 ### Stack
 
-| Couche | Technologie |
-|--------|-------------|
-| Frontend | Next.js 14 + React 18 + Tailwind CSS (existant) |
-| Hosting | Vercel (auto-deploy depuis GitHub) |
-| Auth | Supabase Auth (email + mot de passe) |
-| Base de données | Supabase PostgreSQL |
-| Paiements | — (V1) · Stripe (V2) |
+| Couche          | Technologie                                     |
+| --------------- | ----------------------------------------------- |
+| Frontend        | Next.js 14 + React 18 + Tailwind CSS (existant) |
+| Hosting         | Vercel (auto-deploy depuis GitHub)              |
+| Auth            | Supabase Auth (email + mot de passe)            |
+| Base de données | Supabase PostgreSQL                             |
+| Paiements       | — (V1) · Stripe (V2)                            |
 
 ### Schéma de base de données Supabase
 
@@ -95,18 +98,18 @@ SUPABASE_SERVICE_ROLE_KEY=eyJ...   # serveur uniquement, jamais exposé au clien
 
 ### Pages publiques (sans authentification)
 
-| Route | Description |
-|-------|-------------|
-| `/` | Landing page marketing |
+| Route   | Description                                  |
+| ------- | -------------------------------------------- |
+| `/`     | Landing page marketing                       |
 | `/auth` | Connexion + Inscription + Reset mot de passe |
 
 ### Pages protégées (authentification requise)
 
-| Route | Description |
-|-------|-------------|
-| `/dashboard` | Liste des projets, compteur, upsell |
-| `/account` | Plan actuel, gestion abonnement (V2 : historique Stripe) |
-| `/project/[id]` | Éditeur plan + calepinage + quantitatif (existant) |
+| Route           | Description                                              |
+| --------------- | -------------------------------------------------------- |
+| `/dashboard`    | Liste des projets, compteur, upsell                      |
+| `/account`      | Plan actuel, gestion abonnement (V2 : historique Stripe) |
+| `/project/[id]` | Éditeur plan + calepinage + quantitatif (existant)       |
 
 **Protection des routes :** `middleware.ts` Next.js intercepte toutes les routes protégées et redirige vers `/auth` si la session Supabase est absente. À l'inverse, un utilisateur déjà connecté qui visite `/` ou `/auth` est redirigé vers `/dashboard`.
 
@@ -145,17 +148,20 @@ supabaseDb.delete(id: string): Promise<void>
 ### Modifications dans `store/projectStore.ts`
 
 Seules deux fonctions changent d'implémentation :
+
 - `hydrate()` — lit depuis Supabase au lieu d'IndexedDB
 - Les actions `create()`, `remove()`, `updateRoom()`, etc. — appellent `supabaseDb.save()` au lieu de `projectsDb.save()`
 
 ### Limite de projets
 
 Dans `create()`, avant de créer un projet :
+
 ```typescript
 if (profile.plan === 'free' && projects.length >= 1) {
-  throw new Error('PROJECT_LIMIT_REACHED')
+  throw new Error('PROJECT_LIMIT_REACHED');
 }
 ```
+
 L'interface affiche alors la bannière upsell.
 
 ---
@@ -174,25 +180,29 @@ L'interface affiche alors la bannière upsell.
 ## 8. Landing page — contenu
 
 ### Hero
+
 - Titre : "Le calepinage carrelage pour les professionnels"
 - Sous-titre : "Dessinez, simulez, quantifiez. En quelques minutes."
 - CTA primaire : "Commencer gratuitement" → `/auth`
 - CTA secondaire : "Voir la démo" → scroll vers capture d'écran
 
 ### Arguments produit (3 blocs)
+
 1. Plan 2D — Dessinez vos pièces avec contraintes dimensionnelles
 2. Calepinage — 3 modes : droit, bâton rompu, pointe de hongrie
 3. Quantitatif — Commande optimisée avec gestion des chutes
 
 ### Grille tarifaire
-| | Gratuit | Pro |
-|--|---------|-----|
-| Prix | 0 € | 9 €/mois |
-| Projets | 1 | Illimité |
-| Stockage cloud | ✓ | ✓ |
-| Toutes les fonctions | ✓ | ✓ |
+
+|                      | Gratuit | Pro      |
+| -------------------- | ------- | -------- |
+| Prix                 | 0 €     | 9 €/mois |
+| Projets              | 1       | Illimité |
+| Stockage cloud       | ✓       | ✓        |
+| Toutes les fonctions | ✓       | ✓        |
 
 ### Footer
+
 Liens : Mentions légales · Politique de confidentialité · Contact
 
 ---
@@ -207,6 +217,7 @@ Dev local (next dev + Supabase local ou projet dev)
 ```
 
 **Environnements Vercel :**
+
 - `main` → production (`tilea.fr`)
 - Pull Requests → preview URLs automatiques (pour tester avant merge)
 
@@ -215,6 +226,7 @@ Dev local (next dev + Supabase local ou projet dev)
 ## 10. Feuille de route
 
 ### V1 — Beta (3-4 semaines)
+
 - [ ] Créer projet Supabase (auth + tables + RLS)
 - [ ] `lib/supabase.ts` — client et opérations CRUD
 - [ ] Modifier `projectStore.ts` — hydrate/save via Supabase
@@ -227,6 +239,7 @@ Dev local (next dev + Supabase local ou projet dev)
 - [ ] Déploiement Vercel + domaine
 
 ### V2 — Monétisation (4-6 semaines après beta)
+
 - [ ] Stripe — abonnement Pro 9 €/mois
 - [ ] Stripe — achat unitaire projet 2,99 €
 - [ ] Stripe — packages (5 projets, 20 projets)
@@ -235,6 +248,7 @@ Dev local (next dev + Supabase local ou projet dev)
 - [ ] Export PDF marque blanche
 
 ### V3 — Croissance (selon traction)
+
 - [ ] Plan Équipe (multi-utilisateurs, espaces partagés)
 - [ ] Partage client (lien lecture seule)
 - [ ] Bibliothèque de carreaux (catalogue)
@@ -243,4 +257,4 @@ Dev local (next dev + Supabase local ou projet dev)
 
 ---
 
-*Document validé le 2026-05-18 lors de la session de brainstorming.*
+_Document validé le 2026-05-18 lors de la session de brainstorming._

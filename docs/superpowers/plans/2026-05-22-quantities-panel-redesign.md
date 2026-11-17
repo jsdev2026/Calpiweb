@@ -12,21 +12,22 @@
 
 ## File Map
 
-| Action | File | Responsibility |
-|--------|------|----------------|
-| Create | `src/components/quantities/CutGroupCard.tsx` | Card UI, `TileThumbnail` (private), `GROUP_COLORS` (export) |
-| Create | `src/components/quantities/CutGroupCard.test.tsx` | Card behaviour tests |
-| Create | `src/components/quantities/QuantityPlanView.tsx` | SVG plan, hover dimming via `highlightGroup` prop |
-| Create | `src/components/quantities/QuantityPlanView.test.tsx` | Plan render tests |
-| Rewrite | `src/components/quantities/QuantitiesPanel.tsx` | Two-column shell, `highlightGroup` state |
-| Create | `src/components/quantities/QuantitiesPanel.test.tsx` | Language + layout smoke tests |
-| Keep as-is | `src/components/quantities/QuantitiesPanel.surface.test.ts` | Formula unit tests (no changes needed) |
+| Action     | File                                                        | Responsibility                                              |
+| ---------- | ----------------------------------------------------------- | ----------------------------------------------------------- |
+| Create     | `src/components/quantities/CutGroupCard.tsx`                | Card UI, `TileThumbnail` (private), `GROUP_COLORS` (export) |
+| Create     | `src/components/quantities/CutGroupCard.test.tsx`           | Card behaviour tests                                        |
+| Create     | `src/components/quantities/QuantityPlanView.tsx`            | SVG plan, hover dimming via `highlightGroup` prop           |
+| Create     | `src/components/quantities/QuantityPlanView.test.tsx`       | Plan render tests                                           |
+| Rewrite    | `src/components/quantities/QuantitiesPanel.tsx`             | Two-column shell, `highlightGroup` state                    |
+| Create     | `src/components/quantities/QuantitiesPanel.test.tsx`        | Language + layout smoke tests                               |
+| Keep as-is | `src/components/quantities/QuantitiesPanel.surface.test.ts` | Formula unit tests (no changes needed)                      |
 
 ---
 
 ## Task 1: CutGroupCard
 
 **Files:**
+
 - Create: `src/components/quantities/CutGroupCard.tsx`
 - Create: `src/components/quantities/CutGroupCard.test.tsx`
 
@@ -90,9 +91,7 @@ describe('CutGroupCard', () => {
 
   it('calls onHighlight(null) on mouseLeave', () => {
     const onHighlight = vi.fn();
-    const { container } = render(
-      <CutGroupCard {...defaultProps} onHighlight={onHighlight} />,
-    );
+    const { container } = render(<CutGroupCard {...defaultProps} onHighlight={onHighlight} />);
     fireEvent.mouseLeave(container.firstChild as Element);
     expect(onHighlight).toHaveBeenCalledWith(null);
   });
@@ -117,8 +116,16 @@ import type { CutGroup, PieceEdges } from '@/engine/quantities/quantityEngine';
 import { formatCm } from '@/utils/formatters';
 
 export const GROUP_COLORS = [
-  '#f87171', '#fb923c', '#facc15', '#4ade80', '#22d3ee',
-  '#818cf8', '#e879f9', '#f472b6', '#a78bfa', '#34d399',
+  '#f87171',
+  '#fb923c',
+  '#facc15',
+  '#4ade80',
+  '#22d3ee',
+  '#818cf8',
+  '#e879f9',
+  '#f472b6',
+  '#a78bfa',
+  '#34d399',
 ];
 
 interface ThumbnailProps {
@@ -131,7 +138,15 @@ interface ThumbnailProps {
   reused?: boolean;
 }
 
-const TileThumbnail = ({ tileW, tileH, usedW, usedH, pieceEdges, color, reused }: ThumbnailProps) => {
+const TileThumbnail = ({
+  tileW,
+  tileH,
+  usedW,
+  usedH,
+  pieceEdges,
+  color,
+  reused,
+}: ThumbnailProps) => {
   const maxDim = 44;
   const scale = Math.min(maxDim / tileW, maxDim / tileH);
   const tw = tileW * scale;
@@ -149,11 +164,52 @@ const TileThumbnail = ({ tileW, tileH, usedW, usedH, pieceEdges, color, reused }
     <svg width={tw} height={th} className="shrink-0 overflow-visible">
       <rect x={0} y={0} width={tw} height={th} fill="var(--tile-thumb-bg)" rx="2" />
       <rect x={px} y={py} width={uw} height={uh} fill={reused ? '#86efac' : color} rx="1" />
-      <line x1={px} y1={py} x2={px} y2={py + uh} stroke={pieceEdges.left === 'cut' ? cutColor : factoryColor} strokeWidth={sw} strokeDasharray={pieceEdges.left === 'cut' ? dash : undefined} />
-      <line x1={px + uw} y1={py} x2={px + uw} y2={py + uh} stroke={pieceEdges.right === 'cut' ? cutColor : factoryColor} strokeWidth={sw} strokeDasharray={pieceEdges.right === 'cut' ? dash : undefined} />
-      <line x1={px} y1={py} x2={px + uw} y2={py} stroke={pieceEdges.top === 'cut' ? cutColor : factoryColor} strokeWidth={sw} strokeDasharray={pieceEdges.top === 'cut' ? dash : undefined} />
-      <line x1={px} y1={py + uh} x2={px + uw} y2={py + uh} stroke={pieceEdges.bottom === 'cut' ? cutColor : factoryColor} strokeWidth={sw} strokeDasharray={pieceEdges.bottom === 'cut' ? dash : undefined} />
-      <rect x={0} y={0} width={tw} height={th} fill="none" stroke="var(--tile-thumb-bdr)" strokeWidth="0.5" rx="2" />
+      <line
+        x1={px}
+        y1={py}
+        x2={px}
+        y2={py + uh}
+        stroke={pieceEdges.left === 'cut' ? cutColor : factoryColor}
+        strokeWidth={sw}
+        strokeDasharray={pieceEdges.left === 'cut' ? dash : undefined}
+      />
+      <line
+        x1={px + uw}
+        y1={py}
+        x2={px + uw}
+        y2={py + uh}
+        stroke={pieceEdges.right === 'cut' ? cutColor : factoryColor}
+        strokeWidth={sw}
+        strokeDasharray={pieceEdges.right === 'cut' ? dash : undefined}
+      />
+      <line
+        x1={px}
+        y1={py}
+        x2={px + uw}
+        y2={py}
+        stroke={pieceEdges.top === 'cut' ? cutColor : factoryColor}
+        strokeWidth={sw}
+        strokeDasharray={pieceEdges.top === 'cut' ? dash : undefined}
+      />
+      <line
+        x1={px}
+        y1={py + uh}
+        x2={px + uw}
+        y2={py + uh}
+        stroke={pieceEdges.bottom === 'cut' ? cutColor : factoryColor}
+        strokeWidth={sw}
+        strokeDasharray={pieceEdges.bottom === 'cut' ? dash : undefined}
+      />
+      <rect
+        x={0}
+        y={0}
+        width={tw}
+        height={th}
+        fill="none"
+        stroke="var(--tile-thumb-bdr)"
+        strokeWidth="0.5"
+        rx="2"
+      />
     </svg>
   );
 };
@@ -229,7 +285,9 @@ export const CutGroupCard = ({
       {/* Qty block */}
       <div className="shrink-0 text-right">
         <div className="text-xs text-zinc-500">×{group.totalCount} total</div>
-        <div className={`text-sm font-black tabular-nums ${group.reuseCount > 0 ? 'text-emerald-400' : 'text-zinc-100'}`}>
+        <div
+          className={`text-sm font-black tabular-nums ${group.reuseCount > 0 ? 'text-emerald-400' : 'text-zinc-100'}`}
+        >
           {group.netTiles} nets
         </div>
       </div>
@@ -258,6 +316,7 @@ git commit -m "feat(quantities): add CutGroupCard component with GROUP_COLORS ex
 ## Task 2: QuantityPlanView
 
 **Files:**
+
 - Create: `src/components/quantities/QuantityPlanView.tsx`
 - Create: `src/components/quantities/QuantityPlanView.test.tsx`
 
@@ -279,21 +338,45 @@ import type { TilingConfig } from '@/types/tiling';
 import type { Room } from '@/types/project';
 
 const config: TilingConfig = {
-  layout: 'STRAIGHT', width: 300, height: 300, joint: 3,
-  angle: 0, offsetX: 0, offsetY: 0, stagger: 0, chevronAngle: 45, color: '#93c5fd',
+  layout: 'STRAIGHT',
+  width: 300,
+  height: 300,
+  joint: 3,
+  angle: 0,
+  offsetX: 0,
+  offsetY: 0,
+  stagger: 0,
+  chevronAngle: 45,
+  color: '#93c5fd',
 };
 
 const makeResult = (overrides: Partial<QuantityResult> = {}): QuantityResult => ({
-  tileW: 300, tileH: 300, joint: 3,
-  wholeCount: 5, cuts: [], cutGroups: [],
-  totalReuseCount: 0, tilesForCuts: 0, totalTiles: 5, toOrder: 6,
-  roomArea: 5_000_000, tiles: [],
+  tileW: 300,
+  tileH: 300,
+  joint: 3,
+  wholeCount: 5,
+  cuts: [],
+  cutGroups: [],
+  totalReuseCount: 0,
+  tilesForCuts: 0,
+  totalTiles: 5,
+  toOrder: 6,
+  roomArea: 5_000_000,
+  tiles: [],
   ...overrides,
 });
 
 const room: Room = {
-  id: 'r1', name: 'Salle', color: '#fff', edges: [],
-  points: [{ x: 0, y: 0 }, { x: 1000, y: 0 }, { x: 1000, y: 1000 }, { x: 0, y: 1000 }],
+  id: 'r1',
+  name: 'Salle',
+  color: '#fff',
+  edges: [],
+  points: [
+    { x: 0, y: 0 },
+    { x: 1000, y: 0 },
+    { x: 1000, y: 1000 },
+    { x: 0, y: 1000 },
+  ],
 };
 
 describe('QuantityPlanView', () => {
@@ -306,7 +389,12 @@ describe('QuantityPlanView', () => {
 
   it('returns null when tiles array is empty', () => {
     const { container } = render(
-      <QuantityPlanView result={makeResult({ tiles: [] })} config={config} rooms={[room]} highlightGroup={null} />,
+      <QuantityPlanView
+        result={makeResult({ tiles: [] })}
+        config={config}
+        rooms={[room]}
+        highlightGroup={null}
+      />,
     );
     expect(container.firstChild).toBeNull();
   });
@@ -353,7 +441,12 @@ export interface QuantityPlanViewProps {
   highlightGroup: number | null;
 }
 
-export const QuantityPlanView = ({ result, config, rooms, highlightGroup }: QuantityPlanViewProps) => {
+export const QuantityPlanView = ({
+  result,
+  config,
+  rooms,
+  highlightGroup,
+}: QuantityPlanViewProps) => {
   const validRooms = rooms.filter((r) => r.points.length >= 3);
   if (validRooms.length === 0 || result.tiles.length === 0) return null;
 
@@ -389,10 +482,7 @@ export const QuantityPlanView = ({ result, config, rooms, highlightGroup }: Quan
           <defs>
             <clipPath id="qty-plan-clip">
               {validRooms.map((room) => (
-                <polygon
-                  key={room.id}
-                  points={room.points.map((p) => `${p.x},${p.y}`).join(' ')}
-                />
+                <polygon key={room.id} points={room.points.map((p) => `${p.x},${p.y}`).join(' ')} />
               ))}
             </clipPath>
           </defs>
@@ -421,7 +511,8 @@ export const QuantityPlanView = ({ result, config, rooms, highlightGroup }: Quan
                   dimOpacity = !isWhole && groupNumber === highlightGroup ? 1 : 0.12;
                 }
 
-                const isHighlighted = highlightGroup !== null && !isWhole && groupNumber === highlightGroup;
+                const isHighlighted =
+                  highlightGroup !== null && !isWhole && groupNumber === highlightGroup;
 
                 const fill = isWhole ? config.color : isReused ? '#052e16' : '#1e293b';
                 const fillOpacity = isWhole ? 0.7 : 1;
@@ -432,7 +523,10 @@ export const QuantityPlanView = ({ result, config, rooms, highlightGroup }: Quan
                     style={{
                       opacity: dimOpacity,
                       transition: 'opacity 0.15s ease, filter 0.15s ease',
-                      filter: isHighlighted && groupColor ? `drop-shadow(0 0 8px ${groupColor}88)` : undefined,
+                      filter:
+                        isHighlighted && groupColor
+                          ? `drop-shadow(0 0 8px ${groupColor}88)`
+                          : undefined,
                     }}
                   >
                     <rect
@@ -478,8 +572,10 @@ export const QuantityPlanView = ({ result, config, rooms, highlightGroup }: Quan
               return (
                 <line
                   key={`edge-${room.id}-${i}`}
-                  x1={p.x} y1={p.y}
-                  x2={nextP.x} y2={nextP.y}
+                  x1={p.x}
+                  y1={p.y}
+                  x2={nextP.x}
+                  y2={nextP.y}
                   stroke={isDoor ? '#f97316' : '#ea580c'}
                   strokeWidth={isDoor ? 50 : 80}
                   strokeLinecap="round"
@@ -494,7 +590,10 @@ export const QuantityPlanView = ({ result, config, rooms, highlightGroup }: Quan
       {/* Legend */}
       <div className="mt-2 flex flex-wrap items-center gap-3 print:mt-3">
         <div className="flex items-center gap-1.5 text-[11px] text-zinc-400">
-          <span className="inline-block h-3 w-5 rounded-sm" style={{ background: config.color, opacity: 0.7 }} />
+          <span
+            className="inline-block h-3 w-5 rounded-sm"
+            style={{ background: config.color, opacity: 0.7 }}
+          />
           Carreau entier
         </div>
         {result.cutGroups.map((g, i) => (
@@ -544,6 +643,7 @@ git commit -m "feat(quantities): add QuantityPlanView with highlightGroup hover 
 ## Task 3: Rewrite QuantitiesPanel
 
 **Files:**
+
 - Rewrite: `src/components/quantities/QuantitiesPanel.tsx`
 - Create: `src/components/quantities/QuantitiesPanel.test.tsx`
 - Keep as-is: `src/components/quantities/QuantitiesPanel.surface.test.ts`
@@ -565,8 +665,16 @@ vi.mock('@/store/projectStore', () => ({
           id: 'p1',
           rooms: [],
           config: {
-            layout: 'STRAIGHT', width: 300, height: 300, joint: 3,
-            angle: 0, offsetX: 0, offsetY: 0, stagger: 0, chevronAngle: 45, color: '#93c5fd',
+            layout: 'STRAIGHT',
+            width: 300,
+            height: 300,
+            joint: 3,
+            angle: 0,
+            offsetX: 0,
+            offsetY: 0,
+            stagger: 0,
+            chevronAngle: 45,
+            color: '#93c5fd',
           },
           wallThickness: 0,
         },
@@ -578,16 +686,22 @@ vi.mock('@/store/projectStore', () => ({
 
 vi.mock('@/engine/quantities/quantityEngine', () => ({
   analyzeQuantities: () => ({
-    tileW: 300, tileH: 300, joint: 3,
+    tileW: 300,
+    tileH: 300,
+    joint: 3,
     wholeCount: 10,
     cuts: [],
     cutGroups: [
       {
-        usedW: 150, usedH: 300,
+        usedW: 150,
+        usedH: 300,
         pieceEdges: { left: 'cut', right: 'factory', top: 'factory', bottom: 'factory' },
-        chuteW: 150, chuteH: 300,
+        chuteW: 150,
+        chuteH: 300,
         chuteEdges: { left: 'factory', right: 'cut', top: 'factory', bottom: 'factory' },
-        totalCount: 3, reuseCount: 0, netTiles: 3,
+        totalCount: 3,
+        reuseCount: 0,
+        netTiles: 3,
       },
     ],
     totalReuseCount: 0,
@@ -680,11 +794,9 @@ export const QuantitiesPanel = () => {
       <div className="shrink-0 border-b border-zinc-800 bg-zinc-900 px-8 py-5">
         <h2 className="text-lg font-black text-zinc-100">Tableau des quantités</h2>
         <p className="mt-0.5 text-xs text-zinc-500">
-          Format&nbsp;: <span className="font-bold text-zinc-300">{tileLabel}</span>
-          {' '}—{' '}
-          Joint&nbsp;: <span className="font-bold text-zinc-300">{result.joint}&nbsp;mm</span>
-          {' '}—{' '}
-          Surface&nbsp;: <span className="font-bold text-zinc-300">{formatM2(result.roomArea)}</span>
+          Format&nbsp;: <span className="font-bold text-zinc-300">{tileLabel}</span> — Joint&nbsp;:{' '}
+          <span className="font-bold text-zinc-300">{result.joint}&nbsp;mm</span> — Surface&nbsp;:{' '}
+          <span className="font-bold text-zinc-300">{formatM2(result.roomArea)}</span>
         </p>
       </div>
 
@@ -707,12 +819,13 @@ export const QuantitiesPanel = () => {
 
         {/* Right — side panel */}
         <div className="flex w-[360px] shrink-0 flex-col gap-6 overflow-y-auto p-5">
-
           {/* Stat boxes */}
           <div className="grid grid-cols-2 gap-3">
             {/* Carreaux entiers */}
             <div className="rounded-xl border-t-2 border-blue-500 bg-zinc-900 p-4">
-              <div className="text-2xl font-black tabular-nums text-zinc-100">{result.wholeCount}</div>
+              <div className="text-2xl font-black tabular-nums text-zinc-100">
+                {result.wholeCount}
+              </div>
               <div className="mt-1 text-[10px] font-bold uppercase tracking-wider text-zinc-500">
                 Carreaux entiers
               </div>
@@ -722,13 +835,13 @@ export const QuantitiesPanel = () => {
             </div>
             {/* Carreaux à couper */}
             <div className="rounded-xl border-t-2 border-orange-500 bg-zinc-900 p-4">
-              <div className="text-2xl font-black tabular-nums text-zinc-100">{result.cuts.length}</div>
+              <div className="text-2xl font-black tabular-nums text-zinc-100">
+                {result.cuts.length}
+              </div>
               <div className="mt-1 text-[10px] font-bold uppercase tracking-wider text-zinc-500">
                 Carreaux à couper
               </div>
-              <div className="mt-0.5 text-[11px] text-zinc-500">
-                {formatM2(totalCutArea)} posés
-              </div>
+              <div className="mt-0.5 text-[11px] text-zinc-500">{formatM2(totalCutArea)} posés</div>
             </div>
           </div>
 
@@ -755,7 +868,9 @@ export const QuantitiesPanel = () => {
             {/* Net summary row */}
             <div className="mt-3 flex items-center justify-between border-t border-zinc-800 pt-3 text-xs">
               <span className="text-zinc-500">Carreaux nets pour coupes</span>
-              <span className="font-mono font-black text-zinc-100">{result.tilesForCuts} carreaux</span>
+              <span className="font-mono font-black text-zinc-100">
+                {result.tilesForCuts} carreaux
+              </span>
             </div>
           </div>
 
@@ -794,7 +909,6 @@ export const QuantitiesPanel = () => {
               </div>
             </div>
           </div>
-
         </div>
       </div>
     </div>
@@ -831,28 +945,28 @@ git commit -m "feat(quantities): redesign QuantitiesPanel with two-column plan-c
 
 **Spec coverage check:**
 
-| Spec requirement | Task |
-|-----------------|------|
-| Two-column layout (plan flex:1, side panel 360px) | Task 3 |
-| Plan has no `maxHeight` constraint | Task 2 |
-| `highlightGroup: number \| null` prop on QuantityPlanView | Task 2 |
-| Tiles NOT in highlighted group → opacity 0.12 | Task 2 |
-| Tiles IN highlighted group → full opacity + drop-shadow | Task 2 |
-| Transition `opacity 0.15s ease, filter 0.15s ease` | Task 2 |
-| Legend below SVG | Task 2 |
-| GROUP_COLORS exported from CutGroupCard | Task 1 |
-| Card badge + thumbnail + dimensions + chute + reuse badge + qty | Task 1 |
-| `onMouseEnter` → `onHighlight(groupIndex + 1)` | Task 1 |
-| `onMouseLeave` → `onHighlight(null)` | Task 1 |
-| 2 stat boxes (blue top border / orange top border) | Task 3 |
-| "Carreaux à couper" (replaces "Coupes nécessaires") | Task 3 |
-| "Taillée(s) dans une chute" (replaces "Chutes réutilisées") | Task 1 |
-| Net summary row (tilesForCuts) | Task 3 |
-| TOTAL À COMMANDER block with breakdown + big number | Task 3 |
-| `print:` — remove filter/opacity on print (all full opacity) | Task 2 (opacity transitions are CSS-only; print media removes CSS transitions naturally; the `print:mt-3` class on legend is present) |
-| Remove 7-column table | Task 3 (table not in rewrite) |
-| Remove StatCard sub-component | Task 3 (not in rewrite) |
-| Remove TileThumbnail from QuantitiesPanel | Task 1 (moved to CutGroupCard) |
+| Spec requirement                                                | Task                                                                                                                                  |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Two-column layout (plan flex:1, side panel 360px)               | Task 3                                                                                                                                |
+| Plan has no `maxHeight` constraint                              | Task 2                                                                                                                                |
+| `highlightGroup: number \| null` prop on QuantityPlanView       | Task 2                                                                                                                                |
+| Tiles NOT in highlighted group → opacity 0.12                   | Task 2                                                                                                                                |
+| Tiles IN highlighted group → full opacity + drop-shadow         | Task 2                                                                                                                                |
+| Transition `opacity 0.15s ease, filter 0.15s ease`              | Task 2                                                                                                                                |
+| Legend below SVG                                                | Task 2                                                                                                                                |
+| GROUP_COLORS exported from CutGroupCard                         | Task 1                                                                                                                                |
+| Card badge + thumbnail + dimensions + chute + reuse badge + qty | Task 1                                                                                                                                |
+| `onMouseEnter` → `onHighlight(groupIndex + 1)`                  | Task 1                                                                                                                                |
+| `onMouseLeave` → `onHighlight(null)`                            | Task 1                                                                                                                                |
+| 2 stat boxes (blue top border / orange top border)              | Task 3                                                                                                                                |
+| "Carreaux à couper" (replaces "Coupes nécessaires")             | Task 3                                                                                                                                |
+| "Taillée(s) dans une chute" (replaces "Chutes réutilisées")     | Task 1                                                                                                                                |
+| Net summary row (tilesForCuts)                                  | Task 3                                                                                                                                |
+| TOTAL À COMMANDER block with breakdown + big number             | Task 3                                                                                                                                |
+| `print:` — remove filter/opacity on print (all full opacity)    | Task 2 (opacity transitions are CSS-only; print media removes CSS transitions naturally; the `print:mt-3` class on legend is present) |
+| Remove 7-column table                                           | Task 3 (table not in rewrite)                                                                                                         |
+| Remove StatCard sub-component                                   | Task 3 (not in rewrite)                                                                                                               |
+| Remove TileThumbnail from QuantitiesPanel                       | Task 1 (moved to CutGroupCard)                                                                                                        |
 
 **Chute sub-line condition:** Spec says show only if `chuteW > 20 && chuteH > 20`. Task 1 implements this correctly.
 

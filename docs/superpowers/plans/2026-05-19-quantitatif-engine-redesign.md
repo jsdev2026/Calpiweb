@@ -12,24 +12,25 @@
 
 ## Structure des fichiers
 
-| Fichier | Action | Rôle |
-|---|---|---|
-| `src/engine/quantities/types.ts` | Créer | `TileEdgeSide`, `PieceEdges`, `CutRecord`, `CutGroup`, `QuantityResult` |
-| `src/engine/quantities/constants.ts` | Créer | `MIN_CHUTE_MM = 50`, `CUT_TOLERANCE_MM = 5` |
-| `src/engine/quantities/buildCutTable.ts` | Créer | Clipping + détection des bords + calcul chute |
-| `src/engine/quantities/buildCutTable.test.ts` | Créer | Tests unitaires buildCutTable |
-| `src/engine/quantities/assignOffcuts.ts` | Créer | Algorithme descending best-fit + canReuseFor |
-| `src/engine/quantities/assignOffcuts.test.ts` | Créer | Tests unitaires assignOffcuts |
-| `src/engine/quantities/groupCuts.ts` | Créer | Groupement par clé (usedW×usedH\|edges) |
-| `src/engine/quantities/groupCuts.test.ts` | Créer | Tests unitaires groupCuts |
-| `src/engine/quantities/quantityEngine.ts` | Réécrire | Orchestre les 3 fonctions, ré-exporte les types |
-| `src/components/quantities/QuantitiesPanel.tsx` | Modifier | `CutDetail` → `CutRecord` (2 occurrences) |
+| Fichier                                         | Action   | Rôle                                                                    |
+| ----------------------------------------------- | -------- | ----------------------------------------------------------------------- |
+| `src/engine/quantities/types.ts`                | Créer    | `TileEdgeSide`, `PieceEdges`, `CutRecord`, `CutGroup`, `QuantityResult` |
+| `src/engine/quantities/constants.ts`            | Créer    | `MIN_CHUTE_MM = 50`, `CUT_TOLERANCE_MM = 5`                             |
+| `src/engine/quantities/buildCutTable.ts`        | Créer    | Clipping + détection des bords + calcul chute                           |
+| `src/engine/quantities/buildCutTable.test.ts`   | Créer    | Tests unitaires buildCutTable                                           |
+| `src/engine/quantities/assignOffcuts.ts`        | Créer    | Algorithme descending best-fit + canReuseFor                            |
+| `src/engine/quantities/assignOffcuts.test.ts`   | Créer    | Tests unitaires assignOffcuts                                           |
+| `src/engine/quantities/groupCuts.ts`            | Créer    | Groupement par clé (usedW×usedH\|edges)                                 |
+| `src/engine/quantities/groupCuts.test.ts`       | Créer    | Tests unitaires groupCuts                                               |
+| `src/engine/quantities/quantityEngine.ts`       | Réécrire | Orchestre les 3 fonctions, ré-exporte les types                         |
+| `src/components/quantities/QuantitiesPanel.tsx` | Modifier | `CutDetail` → `CutRecord` (2 occurrences)                               |
 
 ---
 
 ## Task 1 : Types et constantes partagés
 
 **Files:**
+
 - Create: `src/engine/quantities/types.ts`
 - Create: `src/engine/quantities/constants.ts`
 
@@ -127,6 +128,7 @@ git commit -m "feat(quantities): add CutRecord types and shared constants"
 ## Task 2 : `buildCutTable` — tests d'abord
 
 **Files:**
+
 - Create: `src/engine/quantities/buildCutTable.test.ts`
 - Create: `src/engine/quantities/buildCutTable.ts`
 
@@ -149,8 +151,10 @@ import type { Point } from '@/types/plan';
 
 // Pièce carrée 200×200 en CCW
 const ROOM: Point[] = [
-  { x: 0, y: 0 }, { x: 200, y: 0 },
-  { x: 200, y: 200 }, { x: 0, y: 200 },
+  { x: 0, y: 0 },
+  { x: 200, y: 0 },
+  { x: 200, y: 200 },
+  { x: 0, y: 200 },
 ];
 
 describe('buildCutTable', () => {
@@ -273,7 +277,10 @@ import type { CutRecord, PieceEdges } from './types';
 import { MIN_CHUTE_MM, CUT_TOLERANCE_MM } from './constants';
 
 const ALL_FACTORY: PieceEdges = {
-  left: 'factory', right: 'factory', top: 'factory', bottom: 'factory',
+  left: 'factory',
+  right: 'factory',
+  top: 'factory',
+  bottom: 'factory',
 };
 
 function ensureCCW(poly: Point[]): Point[] {
@@ -298,14 +305,17 @@ export function buildCutTable(
 
       // Use actual polygon for chevron, bounding-box corners otherwise
       const tilePoly: Point[] = tile.points ?? [
-        { x,         y         },
-        { x: x + w,  y         },
-        { x: x + w,  y: y + h  },
-        { x,         y: y + h  },
+        { x, y },
+        { x: x + w, y },
+        { x: x + w, y: y + h },
+        { x, y: y + h },
       ];
 
       // Clip against all room polygons, accumulate bounding box of result
-      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      let minX = Infinity,
+        minY = Infinity,
+        maxX = -Infinity,
+        maxY = -Infinity;
       for (const rawPoly of roomPolygons) {
         const clipped = clipPolygon(tilePoly, ensureCCW(rawPoly));
         for (const p of clipped) {
@@ -318,13 +328,21 @@ export function buildCutTable(
 
       if (minX === Infinity) {
         return {
-          id: tile.id, roomId: roomIds[0] ?? '',
-          tileW: w, tileH: h,
-          usedW: w, usedH: h,
+          id: tile.id,
+          roomId: roomIds[0] ?? '',
+          tileW: w,
+          tileH: h,
+          usedW: w,
+          usedH: h,
           pieceEdges: ALL_FACTORY,
-          chuteW: 0, chuteH: 0, chuteEdges: ALL_FACTORY, chuteArea: 0,
-          clipCx: x + w / 2, clipCy: y + h / 2,
-          coveredById: null, reusedForId: null,
+          chuteW: 0,
+          chuteH: 0,
+          chuteEdges: ALL_FACTORY,
+          chuteArea: 0,
+          clipCx: x + w / 2,
+          clipCy: y + h / 2,
+          coveredById: null,
+          reusedForId: null,
         };
       }
 
@@ -333,46 +351,51 @@ export function buildCutTable(
       const clipCx = (minX + maxX) / 2;
       const clipCy = (minY + maxY) / 2;
 
-      const isCutLeft   = minX > x + CUT_TOLERANCE_MM;
-      const isCutRight  = maxX < x + w - CUT_TOLERANCE_MM;
-      const isCutTop    = minY > y + CUT_TOLERANCE_MM;
+      const isCutLeft = minX > x + CUT_TOLERANCE_MM;
+      const isCutRight = maxX < x + w - CUT_TOLERANCE_MM;
+      const isCutTop = minY > y + CUT_TOLERANCE_MM;
       const isCutBottom = maxY < y + h - CUT_TOLERANCE_MM;
 
       const pieceEdges: PieceEdges = {
-        left:   isCutLeft   ? 'cut' : 'factory',
-        right:  isCutRight  ? 'cut' : 'factory',
-        top:    isCutTop    ? 'cut' : 'factory',
+        left: isCutLeft ? 'cut' : 'factory',
+        right: isCutRight ? 'cut' : 'factory',
+        top: isCutTop ? 'cut' : 'factory',
         bottom: isCutBottom ? 'cut' : 'factory',
       };
 
       const isCutH = isCutLeft || isCutRight;
-      const isCutV = isCutTop  || isCutBottom;
-      const hTrim = isCutLeft ? (minX - x) : isCutRight ? (x + w - maxX) : 0;
-      const vTrim = isCutTop  ? (minY - y) : isCutBottom ? (y + h - maxY) : 0;
+      const isCutV = isCutTop || isCutBottom;
+      const hTrim = isCutLeft ? minX - x : isCutRight ? x + w - maxX : 0;
+      const vTrim = isCutTop ? minY - y : isCutBottom ? y + h - maxY : 0;
 
-      let chuteW = 0, chuteH = 0;
+      let chuteW = 0,
+        chuteH = 0;
       let chuteEdges: PieceEdges = ALL_FACTORY;
 
       if (isCutH && isCutV) {
         // Corner cut: choose the larger strip
         if (hTrim * h >= w * vTrim) {
-          chuteW = hTrim; chuteH = h;
+          chuteW = hTrim;
+          chuteH = h;
           chuteEdges = isCutLeft
             ? { left: 'factory', right: 'cut', top: 'factory', bottom: 'factory' }
             : { left: 'cut', right: 'factory', top: 'factory', bottom: 'factory' };
         } else {
-          chuteW = w; chuteH = vTrim;
+          chuteW = w;
+          chuteH = vTrim;
           chuteEdges = isCutTop
             ? { left: 'factory', right: 'factory', top: 'factory', bottom: 'cut' }
             : { left: 'factory', right: 'factory', top: 'cut', bottom: 'factory' };
         }
       } else if (isCutH) {
-        chuteW = hTrim; chuteH = h;
+        chuteW = hTrim;
+        chuteH = h;
         chuteEdges = isCutLeft
           ? { left: 'factory', right: 'cut', top: 'factory', bottom: 'factory' }
           : { left: 'cut', right: 'factory', top: 'factory', bottom: 'factory' };
       } else if (isCutV) {
-        chuteW = w; chuteH = vTrim;
+        chuteW = w;
+        chuteH = vTrim;
         chuteEdges = isCutTop
           ? { left: 'factory', right: 'factory', top: 'factory', bottom: 'cut' }
           : { left: 'factory', right: 'factory', top: 'cut', bottom: 'factory' };
@@ -381,27 +404,35 @@ export function buildCutTable(
       const viable = chuteW >= MIN_CHUTE_MM && chuteH >= MIN_CHUTE_MM;
 
       // Assign roomId by proximity (tile center ↔ room polygon center)
-      const cx2 = x + w / 2, cy2 = y + h / 2;
+      const cx2 = x + w / 2,
+        cy2 = y + h / 2;
       let bestRoom = roomIds[0] ?? '';
       let bestDist = Infinity;
       for (let r = 0; r < roomPolygons.length; r++) {
         const pb = getBoundingBox(roomPolygons[r]!);
-        const pcx = (pb.minX + pb.maxX) / 2, pcy = (pb.minY + pb.maxY) / 2;
+        const pcx = (pb.minX + pb.maxX) / 2,
+          pcy = (pb.minY + pb.maxY) / 2;
         const d = (cx2 - pcx) ** 2 + (cy2 - pcy) ** 2;
-        if (d < bestDist) { bestDist = d; bestRoom = roomIds[r] ?? ''; }
+        if (d < bestDist) {
+          bestDist = d;
+          bestRoom = roomIds[r] ?? '';
+        }
       }
 
       return {
         id: tile.id,
         roomId: bestRoom,
-        tileW: w, tileH: h,
-        usedW, usedH,
+        tileW: w,
+        tileH: h,
+        usedW,
+        usedH,
         pieceEdges,
-        chuteW:    viable ? chuteW : 0,
-        chuteH:    viable ? chuteH : 0,
+        chuteW: viable ? chuteW : 0,
+        chuteH: viable ? chuteH : 0,
         chuteEdges: viable ? chuteEdges : ALL_FACTORY,
-        chuteArea:  viable ? chuteW * chuteH : 0,
-        clipCx, clipCy,
+        chuteArea: viable ? chuteW * chuteH : 0,
+        clipCx,
+        clipCy,
         coveredById: null,
         reusedForId: null,
       };
@@ -429,6 +460,7 @@ git commit -m "feat(quantities): add buildCutTable with chevron polygon clipping
 ## Task 3 : `assignOffcuts` — tests d'abord
 
 **Files:**
+
 - Create: `src/engine/quantities/assignOffcuts.test.ts`
 - Create: `src/engine/quantities/assignOffcuts.ts`
 
@@ -449,10 +481,16 @@ import { assignOffcuts, canReuseFor } from './assignOffcuts';
 import type { CutRecord, PieceEdges } from './types';
 
 const FACTORY: PieceEdges = {
-  left: 'factory', right: 'factory', top: 'factory', bottom: 'factory',
+  left: 'factory',
+  right: 'factory',
+  top: 'factory',
+  bottom: 'factory',
 };
 const RIGHT_CUT: PieceEdges = {
-  left: 'factory', right: 'cut', top: 'factory', bottom: 'factory',
+  left: 'factory',
+  right: 'cut',
+  top: 'factory',
+  bottom: 'factory',
 };
 
 function makeRecord(
@@ -465,14 +503,19 @@ function makeRecord(
   chuteEdges: PieceEdges = FACTORY,
 ): CutRecord {
   return {
-    id, roomId: 'r1',
-    tileW: 200, tileH: 200,
-    usedW, usedH,
+    id,
+    roomId: 'r1',
+    tileW: 200,
+    tileH: 200,
+    usedW,
+    usedH,
     pieceEdges,
-    chuteW, chuteH,
+    chuteW,
+    chuteH,
     chuteEdges,
     chuteArea: chuteW * chuteH,
-    clipCx: 0, clipCy: 0,
+    clipCx: 0,
+    clipCy: 0,
     coveredById: null,
     reusedForId: null,
   };
@@ -560,7 +603,12 @@ describe('canReuseFor', () => {
   });
 
   it('bord factory requis non satisfait → false', () => {
-    const cutRight: PieceEdges = { left: 'factory', right: 'cut', top: 'factory', bottom: 'factory' };
+    const cutRight: PieceEdges = {
+      left: 'factory',
+      right: 'cut',
+      top: 'factory',
+      bottom: 'factory',
+    };
     // Besoin : bord droit factory. Chute : bord droit cut. → false même si dimensions ok
     expect(canReuseFor(80, 80, cutRight, 60, 60, FACTORY)).toBe(false);
   });
@@ -583,25 +631,38 @@ import type { CutRecord, PieceEdges, TileEdgeSide } from './types';
 import { CUT_TOLERANCE_MM } from './constants';
 
 export function canReuseFor(
-  cw: number, ch: number, ce: PieceEdges,
-  nw: number, nh: number, ne: PieceEdges,
+  cw: number,
+  ch: number,
+  ce: PieceEdges,
+  nw: number,
+  nh: number,
+  ne: PieceEdges,
 ): boolean {
-  let ew = cw, eh = ch;
-  let el: TileEdgeSide = ce.left,  er: TileEdgeSide = ce.right;
-  let et: TileEdgeSide = ce.top,   eb: TileEdgeSide = ce.bottom;
+  let ew = cw,
+    eh = ch;
+  let el: TileEdgeSide = ce.left,
+    er: TileEdgeSide = ce.right;
+  let et: TileEdgeSide = ce.top,
+    eb: TileEdgeSide = ce.bottom;
 
   for (let r = 0; r < 4; r++) {
     if (ew >= nw - CUT_TOLERANCE_MM && eh >= nh - CUT_TOLERANCE_MM) {
       const ok =
-        (ne.left   === 'factory' ? el === 'factory' : true) &&
-        (ne.right  === 'factory' ? er === 'factory' : true) &&
-        (ne.top    === 'factory' ? et === 'factory' : true) &&
+        (ne.left === 'factory' ? el === 'factory' : true) &&
+        (ne.right === 'factory' ? er === 'factory' : true) &&
+        (ne.top === 'factory' ? et === 'factory' : true) &&
         (ne.bottom === 'factory' ? eb === 'factory' : true);
       if (ok) return true;
     }
     // Rotate 90° CW: left←bottom, top←left, right←top, bottom←right
-    const nl = eb, nt = el, nr = et, nb = er;
-    el = nl; et = nt; er = nr; eb = nb;
+    const nl = eb,
+      nt = el,
+      nr = et,
+      nb = er;
+    el = nl;
+    et = nt;
+    er = nr;
+    eb = nb;
     [ew, eh] = [eh, ew];
   }
   return false;
@@ -612,7 +673,11 @@ export function assignOffcuts(records: CutRecord[]): void {
   const sorted = [...records].sort((a, b) => b.usedW * b.usedH - a.usedW * a.usedH);
 
   const pool: {
-    w: number; h: number; edges: PieceEdges; fromId: string; used: boolean;
+    w: number;
+    h: number;
+    edges: PieceEdges;
+    fromId: string;
+    used: boolean;
   }[] = [];
 
   for (const record of sorted) {
@@ -622,9 +687,14 @@ export function assignOffcuts(records: CutRecord[]): void {
     for (let i = 0; i < pool.length; i++) {
       const chute = pool[i]!;
       if (chute.used) continue;
-      if (canReuseFor(chute.w, chute.h, chute.edges, record.usedW, record.usedH, record.pieceEdges)) {
+      if (
+        canReuseFor(chute.w, chute.h, chute.edges, record.usedW, record.usedH, record.pieceEdges)
+      ) {
         const area = chute.w * chute.h;
-        if (area < bestArea) { bestArea = area; bestIdx = i; }
+        if (area < bestArea) {
+          bestArea = area;
+          bestIdx = i;
+        }
       }
     }
 
@@ -635,8 +705,11 @@ export function assignOffcuts(records: CutRecord[]): void {
       if (src) src.reusedForId = record.id;
     } else if (record.chuteW > 0 && record.chuteH > 0) {
       pool.push({
-        w: record.chuteW, h: record.chuteH,
-        edges: record.chuteEdges, fromId: record.id, used: false,
+        w: record.chuteW,
+        h: record.chuteH,
+        edges: record.chuteEdges,
+        fromId: record.id,
+        used: false,
       });
     }
   }
@@ -663,6 +736,7 @@ git commit -m "feat(quantities): add assignOffcuts with descending best-fit algo
 ## Task 4 : `groupCuts` — tests d'abord
 
 **Files:**
+
 - Create: `src/engine/quantities/groupCuts.test.ts`
 - Create: `src/engine/quantities/groupCuts.ts`
 
@@ -675,13 +749,22 @@ import { groupCuts } from './groupCuts';
 import type { CutRecord, PieceEdges } from './types';
 
 const FACTORY: PieceEdges = {
-  left: 'factory', right: 'factory', top: 'factory', bottom: 'factory',
+  left: 'factory',
+  right: 'factory',
+  top: 'factory',
+  bottom: 'factory',
 };
 const RIGHT_CUT: PieceEdges = {
-  left: 'factory', right: 'cut', top: 'factory', bottom: 'factory',
+  left: 'factory',
+  right: 'cut',
+  top: 'factory',
+  bottom: 'factory',
 };
 const LEFT_CUT: PieceEdges = {
-  left: 'cut', right: 'factory', top: 'factory', bottom: 'factory',
+  left: 'cut',
+  right: 'factory',
+  top: 'factory',
+  bottom: 'factory',
 };
 
 function makeRecord(
@@ -692,12 +775,19 @@ function makeRecord(
   coveredById: string | null = null,
 ): CutRecord {
   return {
-    id, roomId: 'r1',
-    tileW: 100, tileH: 100,
-    usedW, usedH,
+    id,
+    roomId: 'r1',
+    tileW: 100,
+    tileH: 100,
+    usedW,
+    usedH,
     pieceEdges,
-    chuteW: 0, chuteH: 0, chuteEdges: FACTORY, chuteArea: 0,
-    clipCx: 0, clipCy: 0,
+    chuteW: 0,
+    chuteH: 0,
+    chuteEdges: FACTORY,
+    chuteArea: 0,
+    clipCx: 0,
+    clipCy: 0,
     coveredById,
     reusedForId: null,
   };
@@ -740,7 +830,7 @@ describe('groupCuts', () => {
     // Groupe B : 2 tiles nettes de 30×45 = score 2700
     const records = [
       makeRecord('a', 30, 45, RIGHT_CUT),
-      makeRecord('b', 30, 45, LEFT_CUT),       // groupe distinct
+      makeRecord('b', 30, 45, LEFT_CUT), // groupe distinct
       makeRecord('c', 80, 80, FACTORY),
     ];
     const groups = groupCuts(records);
@@ -818,6 +908,7 @@ git commit -m "feat(quantities): add groupCuts"
 ## Task 5 : Réécrire `quantityEngine.ts`
 
 **Files:**
+
 - Modify: `src/engine/quantities/quantityEngine.ts` (réécriture complète)
 
 ### Contexte
@@ -825,6 +916,7 @@ git commit -m "feat(quantities): add groupCuts"
 Le fichier actuel définit `CutDetail`, `CutGroup`, `QuantityResult`, `PieceEdges`, `TileEdgeSide`, `ALL_FACTORY`, `ensureCCW`, `tileSpaceRooms`, `computeCutInfo`, `canReuseFor`, `optimizeReuse`, `edgeKey`, `groupCuts`, `analyzeQuantities`.
 
 Après cette tâche, le fichier :
+
 - Importe les types depuis `./types` et les ré-exporte (pour ne pas casser `QuantitiesPanel.tsx`)
 - Importe `buildCutTable`, `assignOffcuts`, `groupCuts` depuis leurs modules
 - Garde uniquement `tileSpaceRooms` et `analyzeQuantities`
@@ -857,9 +949,7 @@ function tileSpaceRooms(rooms: Room[], angle: number, cx: number, cy: number): P
   return rooms
     .filter((r) => r.points.length >= 3)
     .map((r) =>
-      angle !== 0
-        ? r.points.map((p) => rotatePoint(p.x, p.y, -angle, cx, cy))
-        : r.points,
+      angle !== 0 ? r.points.map((p) => rotatePoint(p.x, p.y, -angle, cx, cy)) : r.points,
     );
 }
 
@@ -869,9 +959,17 @@ export function analyzeQuantities(rooms: Room[], config: TilingConfig): Quantity
 
   if (validRooms.length === 0 || !stats) {
     return {
-      tileW: config.width, tileH: config.height, joint: config.joint,
-      wholeCount: 0, cuts: [], cutGroups: [],
-      totalReuseCount: 0, tilesForCuts: 0, totalTiles: 0, toOrder: 0, roomArea: 0,
+      tileW: config.width,
+      tileH: config.height,
+      joint: config.joint,
+      wholeCount: 0,
+      cuts: [],
+      cutGroups: [],
+      totalReuseCount: 0,
+      tilesForCuts: 0,
+      totalTiles: 0,
+      toOrder: 0,
+      roomArea: 0,
       tiles: [],
     };
   }
@@ -894,7 +992,9 @@ export function analyzeQuantities(rooms: Room[], config: TilingConfig): Quantity
   const toOrder = Math.ceil(totalTiles * (1 + ORDER_MARGIN_RATIO));
 
   return {
-    tileW: config.width, tileH: config.height, joint: config.joint,
+    tileW: config.width,
+    tileH: config.height,
+    joint: config.joint,
     wholeCount: stats.whole,
     cuts,
     cutGroups,
@@ -936,6 +1036,7 @@ git commit -m "refactor(quantities): orchestrate buildCutTable+assignOffcuts+gro
 ## Task 6 : Mettre à jour `QuantitiesPanel.tsx`
 
 **Files:**
+
 - Modify: `src/components/quantities/QuantitiesPanel.tsx` (2 occurrences de `CutDetail`)
 
 ### Contexte
@@ -945,30 +1046,45 @@ git commit -m "refactor(quantities): orchestrate buildCutTable+assignOffcuts+gro
 - [ ] **Step 1 : Mettre à jour l'import ligne 5**
 
 Remplacer :
+
 ```typescript
-import { analyzeQuantities, type QuantityResult, type CutDetail, type PieceEdges } from '@/engine/quantities/quantityEngine';
+import {
+  analyzeQuantities,
+  type QuantityResult,
+  type CutDetail,
+  type PieceEdges,
+} from '@/engine/quantities/quantityEngine';
 ```
 
 Par :
+
 ```typescript
-import { analyzeQuantities, type QuantityResult, type CutRecord, type PieceEdges } from '@/engine/quantities/quantityEngine';
+import {
+  analyzeQuantities,
+  type QuantityResult,
+  type CutRecord,
+  type PieceEdges,
+} from '@/engine/quantities/quantityEngine';
 ```
 
 - [ ] **Step 2 : Mettre à jour l'utilisation ligne 106**
 
 Remplacer :
+
 ```typescript
-  const cutMap = new Map<string, CutDetail>(result.cuts.map((c) => [c.id, c]));
+const cutMap = new Map<string, CutDetail>(result.cuts.map((c) => [c.id, c]));
 ```
 
 Par :
+
 ```typescript
-  const cutMap = new Map<string, CutRecord>(result.cuts.map((c) => [c.id, c]));
+const cutMap = new Map<string, CutRecord>(result.cuts.map((c) => [c.id, c]));
 ```
 
 - [ ] **Step 3 : Supprimer l'alias dans `quantityEngine.ts`**
 
 Retirer la ligne :
+
 ```typescript
 // Backwards-compat alias used by QuantitiesPanel (removed in Task 6)
 export type { CutRecord as CutDetail } from './types';
@@ -998,6 +1114,7 @@ cd /workspaces/Calpiweb && npx tsc --noEmit && npx vitest run 2>&1 | tail -10
 ```
 
 Expected :
+
 ```
 Test Files  X passed (X)
      Tests  ≥ 58 passed (≥ 58)   # 42 existants + 7 + 9 + 6 nouveaux

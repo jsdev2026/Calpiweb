@@ -38,11 +38,11 @@ Dans le bloc `tool === 'SELECT'`, quand ni nœud ni mur n'est touché :
 
 ## Comportement cible
 
-| Action | Résultat |
-|--------|----------|
-| SELECT + glisser zone vide | Pan ✓ |
-| SELECT + clic nœud | Drag nœud ✓ |
-| SELECT + clic mur | Ouvre éditeur ✓ |
-| Clic droit + glisser (tous modes) | Pan ✓ |
-| Clic milieu (tous modes) | Pan ✓ |
-| Molette | Zoom ✓ |
+| Action                            | Résultat        |
+| --------------------------------- | --------------- |
+| SELECT + glisser zone vide        | Pan ✓           |
+| SELECT + clic nœud                | Drag nœud ✓     |
+| SELECT + clic mur                 | Ouvre éditeur ✓ |
+| Clic droit + glisser (tous modes) | Pan ✓           |
+| Clic milieu (tous modes)          | Pan ✓           |
+| Molette                           | Zoom ✓          |

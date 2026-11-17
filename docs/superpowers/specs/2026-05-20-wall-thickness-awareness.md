@@ -38,19 +38,20 @@ Pure utility — no React, no side effects.
 export function constraintInteriorOffset(
   constraint: Constraint,
   room: Room,
-  defaultThickness: number
-): number
+  defaultThickness: number,
+): number;
 ```
 
 **Logic per constraint type:**
 
-| Type | Offset |
-|------|--------|
-| `LENGTH` | `0` — wall face length = centerline length for straight walls |
-| `H_DISTANCE` (nodes i, j) | `t_i / 2 + t_j / 2` — thickness of the most-vertical edge adjacent to each node |
+| Type                      | Offset                                                                            |
+| ------------------------- | --------------------------------------------------------------------------------- |
+| `LENGTH`                  | `0` — wall face length = centerline length for straight walls                     |
+| `H_DISTANCE` (nodes i, j) | `t_i / 2 + t_j / 2` — thickness of the most-vertical edge adjacent to each node   |
 | `V_DISTANCE` (nodes i, j) | `t_i / 2 + t_j / 2` — thickness of the most-horizontal edge adjacent to each node |
 
 **Edge classification:**
+
 - For `H_DISTANCE`: look at the two edges incident to node i; pick the one whose direction makes an angle < 45° with the Y-axis (most vertical). Its thickness = `room.edgeThicknesses[k] ?? defaultThickness`. Repeat for node j.
 - For `V_DISTANCE`: same but pick the edge most horizontal (angle < 45° with X-axis).
 - If no qualifying edge is found (degenerate polygon), return 0 for that node's contribution.

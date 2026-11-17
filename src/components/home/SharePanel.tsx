@@ -29,7 +29,9 @@ export const SharePanel = ({ projectId, onClose }: SharePanelProps) => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => { void loadShares(projectId); }, [projectId, loadShares]);
+  useEffect(() => {
+    void loadShares(projectId);
+  }, [projectId, loadShares]);
 
   const handleInvite = async () => {
     if (!email.trim()) return;
@@ -55,15 +57,25 @@ export const SharePanel = ({ projectId, onClose }: SharePanelProps) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-end p-4" style={{ background: 'rgba(0,0,0,0.4)' }}>
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-end p-4"
+      style={{ background: 'rgba(0,0,0,0.4)' }}
+    >
       <div
         className="flex w-full max-w-sm flex-col rounded-2xl shadow-2xl"
         style={{ background: 'var(--surf)', border: '1px solid var(--bdr)', maxHeight: '85vh' }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b px-5 py-4" style={{ borderColor: 'var(--bdr)' }}>
-          <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>Partager le projet</h2>
-          <button type="button" className="btn-icon" onClick={onClose}><X size={15} /></button>
+        <div
+          className="flex items-center justify-between border-b px-5 py-4"
+          style={{ borderColor: 'var(--bdr)' }}
+        >
+          <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>
+            Partager le projet
+          </h2>
+          <button type="button" className="btn-icon" onClick={onClose}>
+            <X size={15} />
+          </button>
         </div>
 
         {/* Invite form */}
@@ -72,25 +84,36 @@ export const SharePanel = ({ projectId, onClose }: SharePanelProps) => {
             <input
               type="email"
               value={email}
-              onChange={(e) => { setEmail(e.target.value); setError(null); }}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setError(null);
+              }}
               placeholder="adresse@email.com"
               className="flex-1 rounded-lg px-3 py-2 text-[13px] outline-none"
-              style={{ background: 'var(--surf2)', border: '1px solid var(--bdr)', color: 'var(--text)' }}
-              onKeyDown={(e) => { if (e.key === 'Enter') void handleInvite(); }}
+              style={{
+                background: 'var(--surf2)',
+                border: '1px solid var(--bdr)',
+                color: 'var(--text)',
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') void handleInvite();
+              }}
             />
             <select
               value={role}
               onChange={(e) => setRole(e.target.value as ShareRole)}
               className="rounded-lg px-2 py-2 text-[12px] outline-none"
-              style={{ background: 'var(--surf2)', border: '1px solid var(--bdr)', color: 'var(--text)' }}
+              style={{
+                background: 'var(--surf2)',
+                border: '1px solid var(--bdr)',
+                color: 'var(--text)',
+              }}
             >
               <option value="editor">Éditeur</option>
               <option value="viewer">Lecteur</option>
             </select>
           </div>
-          {error && (
-            <p className="mt-2 text-[12px] text-red-400">{error}</p>
-          )}
+          {error && <p className="mt-2 text-[12px] text-red-400">{error}</p>}
           <button
             type="button"
             className="btn-primary mt-3 w-full text-[13px]"
@@ -119,7 +142,9 @@ export const SharePanel = ({ projectId, onClose }: SharePanelProps) => {
                     <p className="text-[13px] font-medium" style={{ color: 'var(--text)' }}>
                       {c.userDisplayName || c.userEmail}
                     </p>
-                    <p className="text-[11px]" style={{ color: 'var(--muted)' }}>{c.userEmail}</p>
+                    <p className="text-[11px]" style={{ color: 'var(--muted)' }}>
+                      {c.userEmail}
+                    </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <span

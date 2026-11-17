@@ -41,7 +41,8 @@ describe('updateNode — locked field', () => {
   it('persists locked: true on a node', () => {
     const { updateNode } = useProjectStore.getState();
     updateNode('n1', { locked: true });
-    const node = useProjectStore.getState()
+    const node = useProjectStore
+      .getState()
       .projects[0]!.wallEngine!.nodes.find((n) => n.id === 'n1');
     expect(node?.locked).toBe(true);
   });
@@ -62,7 +63,8 @@ describe('updateNode — locked field', () => {
     }));
     const { updateNode } = useProjectStore.getState();
     updateNode('n1', { locked: false });
-    const node = useProjectStore.getState()
+    const node = useProjectStore
+      .getState()
       .projects[0]!.wallEngine!.nodes.find((n) => n.id === 'n1');
     expect(node?.locked).toBe(false);
   });

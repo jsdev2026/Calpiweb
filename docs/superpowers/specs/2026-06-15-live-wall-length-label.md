@@ -38,10 +38,10 @@ Length = distance in world units (mm) between the last placed chain node and the
 
 ## Architecture
 
-| Action | File | Responsibility |
-|--------|------|-----------------|
-| Modify | `src/components/plan/WallDrawingCanvas.tsx` | Add a `chainLengthLabel` computation (mirrors `chainPreview`, computes world-space length + screen-space label position) and render it as a pill + text `<g>` alongside the existing chain preview |
-| Unchanged | `src/utils/formatters.ts` | `formatCm` reused as-is |
+| Action    | File                                        | Responsibility                                                                                                                                                                                     |
+| --------- | ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Modify    | `src/components/plan/WallDrawingCanvas.tsx` | Add a `chainLengthLabel` computation (mirrors `chainPreview`, computes world-space length + screen-space label position) and render it as a pill + text `<g>` alongside the existing chain preview |
+| Unchanged | `src/utils/formatters.ts`                   | `formatCm` reused as-is                                                                                                                                                                            |
 
 ## Testing
 

@@ -12,17 +12,18 @@
 
 ## File Map
 
-| Fichier | Action |
-|---------|--------|
-| `src/components/plan/DrawingCanvas.tsx` | Modifier — import `halfThicknessAt`, hoist `FACE_LABEL`, snap dots scale-indépendants, `resolveDisplayCoord`, marqueurs SVG, rendu côtes CAD, badge suppression, prop `onDimensionClick` |
-| `src/components/plan/PlanEditor.tsx` | Modifier — bug fix signe `openDimensionPopup` + `submitDimensionPopup`, `handleDimensionClick`, passer prop à `DrawingCanvas` |
-| `src/components/plan/PlanEditor.toolbar.test.ts` | Modifier — 2 tests pour le bug fix de signe |
+| Fichier                                          | Action                                                                                                                                                                                   |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/components/plan/DrawingCanvas.tsx`          | Modifier — import `halfThicknessAt`, hoist `FACE_LABEL`, snap dots scale-indépendants, `resolveDisplayCoord`, marqueurs SVG, rendu côtes CAD, badge suppression, prop `onDimensionClick` |
+| `src/components/plan/PlanEditor.tsx`             | Modifier — bug fix signe `openDimensionPopup` + `submitDimensionPopup`, `handleDimensionClick`, passer prop à `DrawingCanvas`                                                            |
+| `src/components/plan/PlanEditor.toolbar.test.ts` | Modifier — 2 tests pour le bug fix de signe                                                                                                                                              |
 
 ---
 
 ## Task 1 — Bug fix signe openDimensionPopup / submitDimensionPopup
 
 **Files:**
+
 - Modify: `src/components/plan/PlanEditor.tsx:637` (openDimensionPopup)
 - Modify: `src/components/plan/PlanEditor.tsx:660` (submitDimensionPopup)
 - Test: `src/components/plan/PlanEditor.toolbar.test.ts` (section `constraintFaceOffset`, après la ligne 338)
@@ -42,7 +43,7 @@ describe('Conversion displayed ↔ stored (bug fix signe)', () => {
     // displayed correct = 3000 - 20 = 2980mm = 298.0cm
     const stored = 3000;
     const offset = 20;
-    expect((stored - offset) / 10).toBe(298);    // formule correcte
+    expect((stored - offset) / 10).toBe(298); // formule correcte
     expect((stored + offset) / 10).not.toBe(298); // le bug
   });
 
@@ -51,7 +52,7 @@ describe('Conversion displayed ↔ stored (bug fix signe)', () => {
     // stored correct = 2980 + 20 = 3000mm
     const displayedMm = 2980;
     const offset = 20;
-    expect(displayedMm + offset).toBe(3000);    // formule correcte
+    expect(displayedMm + offset).toBe(3000); // formule correcte
     expect(displayedMm - offset).not.toBe(3000); // le bug
   });
 });
@@ -69,23 +70,29 @@ Ces tests vérifient des expressions arithmétiques pures, ils doivent passer im
 - [ ] **Step 3 : Corriger le bug dans `openDimensionPopup` (ligne 637)**
 
 Dans `src/components/plan/PlanEditor.tsx`, trouver :
+
 ```typescript
-      displayedValue = (existing.value + offset) / 10;
+displayedValue = (existing.value + offset) / 10;
 ```
+
 Remplacer par :
+
 ```typescript
-      displayedValue = (existing.value - offset) / 10;
+displayedValue = (existing.value - offset) / 10;
 ```
 
 - [ ] **Step 4 : Corriger le bug dans `submitDimensionPopup` (ligne 660)**
 
 Dans `src/components/plan/PlanEditor.tsx`, trouver :
+
 ```typescript
-    const storedMm = displayedMm - offset;
+const storedMm = displayedMm - offset;
 ```
+
 Remplacer par :
+
 ```typescript
-    const storedMm = displayedMm + offset;
+const storedMm = displayedMm + offset;
 ```
 
 - [ ] **Step 5 : Lancer tous les tests pour vérifier aucune régression**
@@ -110,6 +117,7 @@ git commit -m "fix(plan): corriger signe displayed↔stored dans openDimensionPo
 ## Task 2 — Snap dots scale-indépendants
 
 **Files:**
+
 - Modify: `src/components/plan/DrawingCanvas.tsx:819-863` (snap dots + confirmed source dot)
 
 **Context:** Les rayons actuels sont en world units (120, 100, 180) et grossissent avec le zoom. Le fix divise par `scale` pour avoir des pixels-écran constants. Ajouter un anneau blanc pour la lisibilité. Le `FACE_LABEL` est actuellement défini INLINE à la ligne 847 (dans le bloc confirmed source) — il faut le hisser au scope module pour pouvoir le réutiliser dans Task 3.
@@ -117,12 +125,14 @@ git commit -m "fix(plan): corriger signe displayed↔stored dans openDimensionPo
 - [ ] **Step 1 : Hisser `FACE_LABEL` au scope module**
 
 Dans `src/components/plan/DrawingCanvas.tsx`, trouver le bloc du confirmed source dot (autour des lignes 845-863) qui contient :
+
 ```typescript
         {tool === 'DIMENSION' && dimensionSource && (() => {
           const FACE_LABEL = { INSIDE: 'I', AXIS: 'A', OUTSIDE: 'E' } as const;
 ```
 
 Extraire la constante vers le **scope module** (avant la définition de `DrawingCanvas`, après les fonctions helper existantes, vers la ligne 93). Ajouter :
+
 ```typescript
 const FACE_LABEL = { INSIDE: 'I', AXIS: 'A', OUTSIDE: 'E' } as const;
 ```
@@ -132,6 +142,7 @@ Puis supprimer la ligne `const FACE_LABEL = { INSIDE: 'I', AXIS: 'A', OUTSIDE: '
 - [ ] **Step 2 : Remplacer le rendu des snap dots (lignes ~819-843)**
 
 Trouver le bloc :
+
 ```typescript
           const dots: Array<{ pos: Point; dotFace: 'INSIDE' | 'AXIS' | 'OUTSIDE'; color: string; baseR: number }> = [
             { pos: outsidePos, dotFace: 'OUTSIDE', color: '#3b82f6', baseR: 120 },
@@ -160,6 +171,7 @@ Trouver le bloc :
 ```
 
 Remplacer par :
+
 ```typescript
           const dots: Array<{ pos: Point; dotFace: 'INSIDE' | 'AXIS' | 'OUTSIDE'; color: string }> = [
             { pos: outsidePos, dotFace: 'OUTSIDE', color: '#3b82f6' },
@@ -192,6 +204,7 @@ Remplacer par :
 - [ ] **Step 3 : Remplacer le confirmed source dot (lignes ~851-862)**
 
 Trouver :
+
 ```typescript
               <circle cx={worldPos.x} cy={worldPos.y} r={180} fill="#f97316" />
               <text
@@ -203,6 +216,7 @@ Trouver :
 ```
 
 Remplacer par :
+
 ```typescript
               <circle cx={worldPos.x} cy={worldPos.y} r={Math.min(8 / scale, 2000)} fill="#f97316" />
               <text
@@ -242,12 +256,14 @@ git commit -m "fix(canvas): snap dots scale-indépendants (r=6/scale actif, r=3.
 ## Task 3 — Lignes de cote CAD (H_DISTANCE / V_DISTANCE / LENGTH)
 
 **Files:**
+
 - Modify: `src/components/plan/DrawingCanvas.tsx:11` (ajouter import `halfThicknessAt`)
 - Modify: `src/components/plan/DrawingCanvas.tsx` (après les helpers existants ~ligne 93, avant `DrawingCanvas`) — ajouter `resolveDisplayCoord`
 - Modify: `src/components/plan/DrawingCanvas.tsx` (dans le JSX retourné) — ajouter `<defs>` SVG + rendu des côtes
 - Modify: `src/components/plan/DrawingCanvas.tsx:464` — supprimer badge si côte CAD existe
 
 **Context :**
+
 - `DIM_OFFSET = 500` world units (offset de la ligne de cote par rapport à la géométrie)
 - `EXT_GAP = 50` (espace entre le point de référence et le début de la ligne d'extension)
 - `EXT_OVER = 80` (dépassement de la ligne d'extension au-delà de la ligne de cote)
@@ -259,10 +275,13 @@ git commit -m "fix(canvas): snap dots scale-indépendants (r=6/scale actif, r=3.
 - [ ] **Step 1 : Ajouter l'import `halfThicknessAt`**
 
 Dans `src/components/plan/DrawingCanvas.tsx`, trouver la ligne :
+
 ```typescript
 import { constraintFaceOffset } from '@/engine/constraints/faceOffset';
 ```
+
 Remplacer par :
+
 ```typescript
 import { constraintFaceOffset, halfThicknessAt } from '@/engine/constraints/faceOffset';
 ```
@@ -274,8 +293,8 @@ Dans `src/components/plan/DrawingCanvas.tsx`, trouver la ligne `const FACE_LABEL
 ```typescript
 // ── CAD dimension line constants ───────────────────────────────────────────
 const DIM_OFFSET = 500; // world units — offset de la ligne de cote
-const EXT_GAP   = 50;  // espace entre pt de référence et début ligne d'extension
-const EXT_OVER  = 80;  // dépassement de la ligne d'extension au-delà de la cote
+const EXT_GAP = 50; // espace entre pt de référence et début ligne d'extension
+const EXT_OVER = 80; // dépassement de la ligne d'extension au-delà de la cote
 
 /**
  * Calcule la coordonnée affichée d'un PointRef le long de l'axe mesuré,
@@ -294,7 +313,7 @@ function resolveDisplayCoord(
   wallThickness: number,
   axis: 'H' | 'V',
 ): number | null {
-  const room = rooms.find(r => r.id === pt.roomId);
+  const room = rooms.find((r) => r.id === pt.roomId);
   const vertex = room?.points[pt.vertexIdx];
   if (!room || !vertex) return null;
 
@@ -305,20 +324,27 @@ function resolveDisplayCoord(
 
   const n = room.points.length;
   const edgeIndices = [(pt.vertexIdx - 1 + n) % n, pt.vertexIdx];
-  let bestEdge = -1, bestScore = -1;
+  let bestEdge = -1,
+    bestScore = -1;
   for (const eIdx of edgeIndices) {
-    const p1 = room.points[eIdx]!, p2 = room.points[(eIdx + 1) % n]!;
-    const adx = Math.abs(p2.x - p1.x), ady = Math.abs(p2.y - p1.y);
+    const p1 = room.points[eIdx]!,
+      p2 = room.points[(eIdx + 1) % n]!;
+    const adx = Math.abs(p2.x - p1.x),
+      ady = Math.abs(p2.y - p1.y);
     const total = adx + ady;
     if (total < 0.001) continue;
     const score = preferVertical ? ady / total : adx / total;
-    if (score > bestScore) { bestScore = score; bestEdge = eIdx; }
+    if (score > bestScore) {
+      bestScore = score;
+      bestEdge = eIdx;
+    }
   }
   if (bestEdge === -1 || bestScore < 0.5) {
     return axis === 'H' ? vertex.x : vertex.y;
   }
 
-  const ep1 = room.points[bestEdge]!, ep2 = room.points[(bestEdge + 1) % n]!;
+  const ep1 = room.points[bestEdge]!,
+    ep2 = room.points[(bestEdge + 1) % n]!;
   const centroidX = room.points.reduce((s, p) => s + p.x, 0) / n;
   const centroidY = room.points.reduce((s, p) => s + p.y, 0) / n;
 
@@ -343,21 +369,33 @@ function resolveDisplayCoord(
 Dans `src/components/plan/DrawingCanvas.tsx`, localiser la balise `<svg` principale (le SVG du canvas). Juste après la balise d'ouverture `<svg ...>`, ajouter un bloc `<defs>` avec les marqueurs de flèches ouvertes :
 
 ```tsx
-        {/* ── Marqueurs SVG pour flèches ouvertes CAD ─── */}
-        <defs>
-          {/* Flèche ouverte → fin de ligne (pointe vers la droite) */}
-          <marker id="cad-arr-r" markerWidth="8" markerHeight="5"
-            refX="0" refY="2.5" orient="auto">
-            <polyline points="0,0.5 8,2.5 0,4.5" fill="none" stroke="#22c55e"
-              strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-          </marker>
-          {/* Flèche ouverte ← début de ligne (pointe vers la gauche) */}
-          <marker id="cad-arr-l" markerWidth="8" markerHeight="5"
-            refX="8" refY="2.5" orient="auto">
-            <polyline points="8,0.5 0,2.5 8,4.5" fill="none" stroke="#22c55e"
-              strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-          </marker>
-        </defs>
+{
+  /* ── Marqueurs SVG pour flèches ouvertes CAD ─── */
+}
+<defs>
+  {/* Flèche ouverte → fin de ligne (pointe vers la droite) */}
+  <marker id="cad-arr-r" markerWidth="8" markerHeight="5" refX="0" refY="2.5" orient="auto">
+    <polyline
+      points="0,0.5 8,2.5 0,4.5"
+      fill="none"
+      stroke="#22c55e"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </marker>
+  {/* Flèche ouverte ← début de ligne (pointe vers la gauche) */}
+  <marker id="cad-arr-l" markerWidth="8" markerHeight="5" refX="8" refY="2.5" orient="auto">
+    <polyline
+      points="8,0.5 0,2.5 8,4.5"
+      fill="none"
+      stroke="#22c55e"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </marker>
+</defs>;
 ```
 
 - [ ] **Step 4 : Ajouter le rendu des côtes H_DISTANCE et V_DISTANCE**
@@ -365,156 +403,264 @@ Dans `src/components/plan/DrawingCanvas.tsx`, localiser la balise `<svg` princip
 Dans `src/components/plan/DrawingCanvas.tsx`, chercher la section où sont rendus les POINT_ON_LINE tick marks (vers la ligne 488). Juste AVANT cette section (après la fermeture du bloc des per-edge labels), ajouter :
 
 ```tsx
-        {/* ── Lignes de cote CAD (H_DISTANCE / V_DISTANCE / LENGTH) ─────── */}
-        {constraints.map((c) => {
-          if (c.type !== 'H_DISTANCE' && c.type !== 'V_DISTANCE' && c.type !== 'LENGTH') return null;
-          if (c.pts.length < 2 || typeof c.value !== 'number') return null;
+{
+  /* ── Lignes de cote CAD (H_DISTANCE / V_DISTANCE / LENGTH) ─────── */
+}
+{
+  constraints.map((c) => {
+    if (c.type !== 'H_DISTANCE' && c.type !== 'V_DISTANCE' && c.type !== 'LENGTH') return null;
+    if (c.pts.length < 2 || typeof c.value !== 'number') return null;
 
-          const roomA = rooms.find(r => r.id === c.pts[0]!.roomId);
-          const roomB = rooms.find(r => r.id === c.pts[1]!.roomId);
-          if (!roomA || !roomB) return null;
+    const roomA = rooms.find((r) => r.id === c.pts[0]!.roomId);
+    const roomB = rooms.find((r) => r.id === c.pts[1]!.roomId);
+    if (!roomA || !roomB) return null;
 
-          const vA = roomA.points[c.pts[0]!.vertexIdx];
-          const vB = roomB.points[c.pts[1]!.vertexIdx];
-          if (!vA || !vB) return null;
+    const vA = roomA.points[c.pts[0]!.vertexIdx];
+    const vB = roomB.points[c.pts[1]!.vertexIdx];
+    if (!vA || !vB) return null;
 
-          const hOffset = constraintFaceOffset(c, roomA, wallThickness);
-          const displayedMm = c.value - hOffset;
-          const displayedCm = (displayedMm / 10).toFixed(1);
-          const faceLabel = `${FACE_LABEL[c.pts[0]!.face ?? 'INSIDE']}→${FACE_LABEL[c.pts[1]!.face ?? 'INSIDE']}`;
+    const hOffset = constraintFaceOffset(c, roomA, wallThickness);
+    const displayedMm = c.value - hOffset;
+    const displayedCm = (displayedMm / 10).toFixed(1);
+    const faceLabel = `${FACE_LABEL[c.pts[0]!.face ?? 'INSIDE']}→${FACE_LABEL[c.pts[1]!.face ?? 'INSIDE']}`;
 
-          const sw = 1.2 / scale;   // épaisseur trait
-          const extSw = 0.8 / scale;
-          const fontSize = 11 / scale;
-          const padX = 28 / scale, padY = 8 / scale;
+    const sw = 1.2 / scale; // épaisseur trait
+    const extSw = 0.8 / scale;
+    const fontSize = 11 / scale;
+    const padX = 28 / scale,
+      padY = 8 / scale;
 
-          if (c.type === 'H_DISTANCE') {
-            const xA = resolveDisplayCoord(c.pts[0]!, rooms, wallThickness, 'H') ?? vA.x;
-            const xB = resolveDisplayCoord(c.pts[1]!, rooms, wallThickness, 'H') ?? vB.x;
-            const topY = Math.min(vA.y, vB.y);
-            const dimY  = topY - DIM_OFFSET;
-            const extY0 = topY - EXT_GAP;
-            const extY1 = dimY + EXT_OVER;
-            const midX = (xA + xB) / 2;
-            const labelText = `${faceLabel}  ${displayedCm} cm`;
-            const textW = labelText.length * fontSize * 0.6 + padX * 2;
-            return (
-              <g key={`cad-h-${c.id}`} className="pointer-events-none">
-                {/* Lignes d'extension */}
-                <line x1={xA} y1={extY0} x2={xA} y2={extY1}
-                  stroke="#22c55e" strokeWidth={extSw} opacity={0.7} />
-                <line x1={xB} y1={extY0} x2={xB} y2={extY1}
-                  stroke="#22c55e" strokeWidth={extSw} opacity={0.7} />
-                {/* Ligne de cote avec flèches ouvertes */}
-                <line x1={xA} y1={dimY} x2={xB} y2={dimY}
-                  stroke="#22c55e" strokeWidth={sw}
-                  markerStart="url(#cad-arr-l)" markerEnd="url(#cad-arr-r)" />
-                {/* Label encadré */}
-                <rect
-                  x={midX - textW / 2} y={dimY - fontSize - padY * 1.5}
-                  width={textW} height={fontSize + padY * 2}
-                  rx={4 / scale} fill="var(--canvas-bg)"
-                  stroke="#22c55e" strokeWidth={0.8 / scale} />
-                <text x={midX} y={dimY - padY * 0.5}
-                  textAnchor="middle" dominantBaseline="middle"
-                  fontSize={fontSize} fontWeight="700" fill="#22c55e"
-                  style={{ fontFamily: 'system-ui' }}>
-                  {labelText}
-                </text>
-              </g>
-            );
-          }
+    if (c.type === 'H_DISTANCE') {
+      const xA = resolveDisplayCoord(c.pts[0]!, rooms, wallThickness, 'H') ?? vA.x;
+      const xB = resolveDisplayCoord(c.pts[1]!, rooms, wallThickness, 'H') ?? vB.x;
+      const topY = Math.min(vA.y, vB.y);
+      const dimY = topY - DIM_OFFSET;
+      const extY0 = topY - EXT_GAP;
+      const extY1 = dimY + EXT_OVER;
+      const midX = (xA + xB) / 2;
+      const labelText = `${faceLabel}  ${displayedCm} cm`;
+      const textW = labelText.length * fontSize * 0.6 + padX * 2;
+      return (
+        <g key={`cad-h-${c.id}`} className="pointer-events-none">
+          {/* Lignes d'extension */}
+          <line
+            x1={xA}
+            y1={extY0}
+            x2={xA}
+            y2={extY1}
+            stroke="#22c55e"
+            strokeWidth={extSw}
+            opacity={0.7}
+          />
+          <line
+            x1={xB}
+            y1={extY0}
+            x2={xB}
+            y2={extY1}
+            stroke="#22c55e"
+            strokeWidth={extSw}
+            opacity={0.7}
+          />
+          {/* Ligne de cote avec flèches ouvertes */}
+          <line
+            x1={xA}
+            y1={dimY}
+            x2={xB}
+            y2={dimY}
+            stroke="#22c55e"
+            strokeWidth={sw}
+            markerStart="url(#cad-arr-l)"
+            markerEnd="url(#cad-arr-r)"
+          />
+          {/* Label encadré */}
+          <rect
+            x={midX - textW / 2}
+            y={dimY - fontSize - padY * 1.5}
+            width={textW}
+            height={fontSize + padY * 2}
+            rx={4 / scale}
+            fill="var(--canvas-bg)"
+            stroke="#22c55e"
+            strokeWidth={0.8 / scale}
+          />
+          <text
+            x={midX}
+            y={dimY - padY * 0.5}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            fontSize={fontSize}
+            fontWeight="700"
+            fill="#22c55e"
+            style={{ fontFamily: 'system-ui' }}
+          >
+            {labelText}
+          </text>
+        </g>
+      );
+    }
 
-          if (c.type === 'V_DISTANCE') {
-            const yA = resolveDisplayCoord(c.pts[0]!, rooms, wallThickness, 'V') ?? vA.y;
-            const yB = resolveDisplayCoord(c.pts[1]!, rooms, wallThickness, 'V') ?? vB.y;
-            const rightX = Math.max(vA.x, vB.x);
-            const dimX  = rightX + DIM_OFFSET;
-            const extX0 = rightX + EXT_GAP;
-            const extX1 = dimX - EXT_OVER;
-            const midY = (yA + yB) / 2;
-            const labelText = `${faceLabel}  ${displayedCm} cm`;
-            const textW = labelText.length * fontSize * 0.6 + padX * 2;
-            return (
-              <g key={`cad-v-${c.id}`} className="pointer-events-none">
-                {/* Lignes d'extension */}
-                <line x1={extX0} y1={yA} x2={extX1} y2={yA}
-                  stroke="#22c55e" strokeWidth={extSw} opacity={0.7} />
-                <line x1={extX0} y1={yB} x2={extX1} y2={yB}
-                  stroke="#22c55e" strokeWidth={extSw} opacity={0.7} />
-                {/* Ligne de cote avec flèches ouvertes */}
-                <line x1={dimX} y1={yA} x2={dimX} y2={yB}
-                  stroke="#22c55e" strokeWidth={sw}
-                  markerStart="url(#cad-arr-l)" markerEnd="url(#cad-arr-r)" />
-                {/* Label encadré */}
-                <rect
-                  x={dimX + padY} y={midY - fontSize / 2 - padY}
-                  width={textW} height={fontSize + padY * 2}
-                  rx={4 / scale} fill="var(--canvas-bg)"
-                  stroke="#22c55e" strokeWidth={0.8 / scale} />
-                <text x={dimX + padY + textW / 2} y={midY}
-                  textAnchor="middle" dominantBaseline="middle"
-                  fontSize={fontSize} fontWeight="700" fill="#22c55e"
-                  style={{ fontFamily: 'system-ui' }}>
-                  {labelText}
-                </text>
-              </g>
-            );
-          }
+    if (c.type === 'V_DISTANCE') {
+      const yA = resolveDisplayCoord(c.pts[0]!, rooms, wallThickness, 'V') ?? vA.y;
+      const yB = resolveDisplayCoord(c.pts[1]!, rooms, wallThickness, 'V') ?? vB.y;
+      const rightX = Math.max(vA.x, vB.x);
+      const dimX = rightX + DIM_OFFSET;
+      const extX0 = rightX + EXT_GAP;
+      const extX1 = dimX - EXT_OVER;
+      const midY = (yA + yB) / 2;
+      const labelText = `${faceLabel}  ${displayedCm} cm`;
+      const textW = labelText.length * fontSize * 0.6 + padX * 2;
+      return (
+        <g key={`cad-v-${c.id}`} className="pointer-events-none">
+          {/* Lignes d'extension */}
+          <line
+            x1={extX0}
+            y1={yA}
+            x2={extX1}
+            y2={yA}
+            stroke="#22c55e"
+            strokeWidth={extSw}
+            opacity={0.7}
+          />
+          <line
+            x1={extX0}
+            y1={yB}
+            x2={extX1}
+            y2={yB}
+            stroke="#22c55e"
+            strokeWidth={extSw}
+            opacity={0.7}
+          />
+          {/* Ligne de cote avec flèches ouvertes */}
+          <line
+            x1={dimX}
+            y1={yA}
+            x2={dimX}
+            y2={yB}
+            stroke="#22c55e"
+            strokeWidth={sw}
+            markerStart="url(#cad-arr-l)"
+            markerEnd="url(#cad-arr-r)"
+          />
+          {/* Label encadré */}
+          <rect
+            x={dimX + padY}
+            y={midY - fontSize / 2 - padY}
+            width={textW}
+            height={fontSize + padY * 2}
+            rx={4 / scale}
+            fill="var(--canvas-bg)"
+            stroke="#22c55e"
+            strokeWidth={0.8 / scale}
+          />
+          <text
+            x={dimX + padY + textW / 2}
+            y={midY}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            fontSize={fontSize}
+            fontWeight="700"
+            fill="#22c55e"
+            style={{ fontFamily: 'system-ui' }}
+          >
+            {labelText}
+          </text>
+        </g>
+      );
+    }
 
-          if (c.type === 'LENGTH') {
-            // Côte LENGTH : ligne parallèle à l'arête, décalée perpendiculairement
-            const dx = vB.x - vA.x, dy = vB.y - vA.y;
-            const len = Math.sqrt(dx * dx + dy * dy) || 1;
-            const nx = -dy / len, ny = dx / len; // normale perpendiculaire
-            const ox = nx * DIM_OFFSET, oy = ny * DIM_OFFSET;
-            const ax = vA.x + ox, ay = vA.y + oy;
-            const bx = vB.x + ox, by = vB.y + oy;
-            const midX = (ax + bx) / 2, midY = (ay + by) / 2;
-            const labelText = `${(c.value / 10).toFixed(1)} cm`;
-            const textW = labelText.length * fontSize * 0.6 + padX * 2;
-            return (
-              <g key={`cad-l-${c.id}`} className="pointer-events-none">
-                {/* Lignes d'extension */}
-                <line x1={vA.x + nx * EXT_GAP} y1={vA.y + ny * EXT_GAP}
-                  x2={ax + nx * EXT_OVER} y2={ay + ny * EXT_OVER}
-                  stroke="#22c55e" strokeWidth={extSw} opacity={0.7} />
-                <line x1={vB.x + nx * EXT_GAP} y1={vB.y + ny * EXT_GAP}
-                  x2={bx + nx * EXT_OVER} y2={by + ny * EXT_OVER}
-                  stroke="#22c55e" strokeWidth={extSw} opacity={0.7} />
-                {/* Ligne de cote */}
-                <line x1={ax} y1={ay} x2={bx} y2={by}
-                  stroke="#22c55e" strokeWidth={sw}
-                  markerStart="url(#cad-arr-l)" markerEnd="url(#cad-arr-r)" />
-                {/* Label encadré */}
-                <rect
-                  x={midX - textW / 2} y={midY - fontSize / 2 - padY}
-                  width={textW} height={fontSize + padY * 2}
-                  rx={4 / scale} fill="var(--canvas-bg)"
-                  stroke="#22c55e" strokeWidth={0.8 / scale} />
-                <text x={midX} y={midY}
-                  textAnchor="middle" dominantBaseline="middle"
-                  fontSize={fontSize} fontWeight="700" fill="#22c55e"
-                  style={{ fontFamily: 'system-ui' }}>
-                  {labelText}
-                </text>
-              </g>
-            );
-          }
+    if (c.type === 'LENGTH') {
+      // Côte LENGTH : ligne parallèle à l'arête, décalée perpendiculairement
+      const dx = vB.x - vA.x,
+        dy = vB.y - vA.y;
+      const len = Math.sqrt(dx * dx + dy * dy) || 1;
+      const nx = -dy / len,
+        ny = dx / len; // normale perpendiculaire
+      const ox = nx * DIM_OFFSET,
+        oy = ny * DIM_OFFSET;
+      const ax = vA.x + ox,
+        ay = vA.y + oy;
+      const bx = vB.x + ox,
+        by = vB.y + oy;
+      const midX = (ax + bx) / 2,
+        midY = (ay + by) / 2;
+      const labelText = `${(c.value / 10).toFixed(1)} cm`;
+      const textW = labelText.length * fontSize * 0.6 + padX * 2;
+      return (
+        <g key={`cad-l-${c.id}`} className="pointer-events-none">
+          {/* Lignes d'extension */}
+          <line
+            x1={vA.x + nx * EXT_GAP}
+            y1={vA.y + ny * EXT_GAP}
+            x2={ax + nx * EXT_OVER}
+            y2={ay + ny * EXT_OVER}
+            stroke="#22c55e"
+            strokeWidth={extSw}
+            opacity={0.7}
+          />
+          <line
+            x1={vB.x + nx * EXT_GAP}
+            y1={vB.y + ny * EXT_GAP}
+            x2={bx + nx * EXT_OVER}
+            y2={by + ny * EXT_OVER}
+            stroke="#22c55e"
+            strokeWidth={extSw}
+            opacity={0.7}
+          />
+          {/* Ligne de cote */}
+          <line
+            x1={ax}
+            y1={ay}
+            x2={bx}
+            y2={by}
+            stroke="#22c55e"
+            strokeWidth={sw}
+            markerStart="url(#cad-arr-l)"
+            markerEnd="url(#cad-arr-r)"
+          />
+          {/* Label encadré */}
+          <rect
+            x={midX - textW / 2}
+            y={midY - fontSize / 2 - padY}
+            width={textW}
+            height={fontSize + padY * 2}
+            rx={4 / scale}
+            fill="var(--canvas-bg)"
+            stroke="#22c55e"
+            strokeWidth={0.8 / scale}
+          />
+          <text
+            x={midX}
+            y={midY}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            fontSize={fontSize}
+            fontWeight="700"
+            fill="#22c55e"
+            style={{ fontFamily: 'system-ui' }}
+          >
+            {labelText}
+          </text>
+        </g>
+      );
+    }
 
-          return null;
-        })}
+    return null;
+  });
+}
 ```
 
 - [ ] **Step 5 : Supprimer le badge texte quand une côte CAD existe**
 
 Dans `src/components/plan/DrawingCanvas.tsx`, dans la section per-edge labels, trouver :
+
 ```typescript
-                const showLabel = screenLen > 65 || isHov;
+const showLabel = screenLen > 65 || isHov;
 ```
+
 Remplacer par :
+
 ```typescript
-                const showLabel = !hasDistC && (screenLen > 65 || isHov);
+const showLabel = !hasDistC && (screenLen > 65 || isHov);
 ```
 
 (La variable `hasDistC` est déjà définie juste au-dessus : `const hasDistC = !!(hDistC || vDistC || lenC);`)
@@ -548,6 +694,7 @@ git commit -m "feat(canvas): lignes de cote CAD (H/V/L) + badge suppression si c
 ## Task 4 — `onDimensionClick` : clic sur label CAD → rouvre DimensionPopup
 
 **Files:**
+
 - Modify: `src/components/plan/DrawingCanvas.tsx:91` (interface DrawingCanvasProps — ajouter prop)
 - Modify: `src/components/plan/DrawingCanvas.tsx:172-185` (destructuring — ajouter `onDimensionClick`)
 - Modify: `src/components/plan/DrawingCanvas.tsx` (dans le rendu côtes CAD — ajouter `pointer-events-auto` + onClick)
@@ -558,11 +705,14 @@ git commit -m "feat(canvas): lignes de cote CAD (H/V/L) + badge suppression si c
 - [ ] **Step 1 : Ajouter `onDimensionClick` dans DrawingCanvasProps**
 
 Dans `src/components/plan/DrawingCanvas.tsx`, trouver la fin de l'interface `DrawingCanvasProps` :
+
 ```typescript
   deleteHover: DeleteHoverTarget | null;
 }
 ```
+
 Remplacer par :
+
 ```typescript
   deleteHover: DeleteHoverTarget | null;
   onDimensionClick?: (constraint: Constraint) => void;
@@ -572,11 +722,14 @@ Remplacer par :
 - [ ] **Step 2 : Ajouter `onDimensionClick` dans le destructuring du composant**
 
 Dans `src/components/plan/DrawingCanvas.tsx`, trouver :
+
 ```typescript
   deleteHover,
 }: DrawingCanvasProps) => {
 ```
+
 Remplacer par :
+
 ```typescript
   deleteHover,
   onDimensionClick,
@@ -588,20 +741,26 @@ Remplacer par :
 Dans le bloc de rendu des côtes CAD ajouté à la Task 3, dans chacune des 3 branches (`H_DISTANCE`, `V_DISTANCE`, `LENGTH`), retirer la classe `pointer-events-none` du `<g>` parent et rendre le `<rect>` du label cliquable.
 
 Pour **H_DISTANCE**, remplacer :
+
 ```tsx
               <g key={`cad-h-${c.id}`} className="pointer-events-none">
 ```
+
 par :
+
 ```tsx
               <g key={`cad-h-${c.id}`}>
 ```
+
 Et sur le `<rect>` du label, ajouter :
+
 ```tsx
                   className={onDimensionClick ? 'cursor-pointer' : 'pointer-events-none'}
                   onClick={() => onDimensionClick?.(c)}
 ```
 
 Pour **V_DISTANCE**, de même : retirer `pointer-events-none` du `<g>` parent, et sur le `<rect>` du label ajouter :
+
 ```tsx
                   className={onDimensionClick ? 'cursor-pointer' : 'pointer-events-none'}
                   onClick={() => onDimensionClick?.(c)}
@@ -616,26 +775,32 @@ Ajouter `className="pointer-events-none"` explicitement sur les `<line>` et `<te
 Dans `src/components/plan/PlanEditor.tsx`, repérer la fonction `openDimensionPopup` (ligne ~609). Après la fermeture de ce `useCallback` (après la ligne `}, [constraints, rooms, wallThickness]);`), ajouter :
 
 ```typescript
-  const handleDimensionClick = useCallback((c: Constraint) => {
+const handleDimensionClick = useCallback(
+  (c: Constraint) => {
     const fromRef = c.pts[0]!;
-    const toRef   = c.pts[1]!;
-    const fromRoom = rooms.find(r => r.id === fromRef.roomId);
-    const toRoom   = rooms.find(r => r.id === toRef.roomId);
+    const toRef = c.pts[1]!;
+    const fromRoom = rooms.find((r) => r.id === fromRef.roomId);
+    const toRoom = rooms.find((r) => r.id === toRef.roomId);
     const fromVertex = fromRoom?.points[fromRef.vertexIdx];
-    const toVertex   = toRoom?.points[toRef.vertexIdx];
+    const toVertex = toRoom?.points[toRef.vertexIdx];
     if (!fromVertex || !toVertex) return;
     openDimensionPopup(fromRef, toRef, fromVertex, toVertex);
-  }, [rooms, openDimensionPopup]);
+  },
+  [rooms, openDimensionPopup],
+);
 ```
 
 - [ ] **Step 5 : Passer `onDimensionClick` à `<DrawingCanvas>`**
 
 Dans `src/components/plan/PlanEditor.tsx`, trouver dans le JSX le bloc `<DrawingCanvas ...>`. Trouver la ligne :
+
 ```tsx
         onZoneEdgePointerDown={handleZoneEdgePointerDown}
       />
 ```
+
 Remplacer par :
+
 ```tsx
         onZoneEdgePointerDown={handleZoneEdgePointerDown}
         onDimensionClick={handleDimensionClick}

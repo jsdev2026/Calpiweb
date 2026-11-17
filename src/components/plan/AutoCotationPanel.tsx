@@ -19,9 +19,11 @@ export function computeNewNode2(
   const dir: Point = len < 1e-10 ? { x: 1, y: 0 } : { x: dx / len, y: dy / len };
 
   const nodeDist =
-    side === 'exterior' ? newLabelMm - wall.thickness :
-    side === 'interior' ? newLabelMm + wall.thickness :
-    newLabelMm;
+    side === 'exterior'
+      ? newLabelMm - wall.thickness
+      : side === 'interior'
+        ? newLabelMm + wall.thickness
+        : newLabelMm;
 
   return { x: n1.x + dir.x * nodeDist, y: n1.y + dir.y * nodeDist };
 }
@@ -55,11 +57,15 @@ interface AutoCotationPanelProps {
 }
 
 export const AutoCotationPanel = ({
-  cot, wall, nodes, screenX, screenY, onApply, onClose,
+  cot,
+  wall,
+  nodes,
+  screenX,
+  screenY,
+  onApply,
+  onClose,
 }: AutoCotationPanelProps) => {
-  const [rawValue, setRawValue] = useState(
-    () => mmToCm(anchorDistMm(cot)).toFixed(1),
-  );
+  const [rawValue, setRawValue] = useState(() => mmToCm(anchorDistMm(cot)).toFixed(1));
   const [error, setError] = useState<string | null>(null);
 
   const handleApply = () => {
@@ -84,7 +90,10 @@ export const AutoCotationPanel = ({
   };
 
   return (
-    <div style={panelStyle} className="w-52 rounded-xl border border-orange-500/60 bg-zinc-900 p-3 shadow-2xl">
+    <div
+      style={panelStyle}
+      className="w-52 rounded-xl border border-orange-500/60 bg-zinc-900 p-3 shadow-2xl"
+    >
       <div className="mb-2 flex items-center justify-between">
         <span className="text-[10px] font-bold uppercase tracking-wider text-orange-400">
           Côte sélectionnée
@@ -113,8 +122,14 @@ export const AutoCotationPanel = ({
             min="0.1"
             autoFocus
             value={rawValue}
-            onChange={(e) => { setRawValue(e.target.value); setError(null); }}
-            onKeyDown={(e) => { if (e.key === 'Enter') handleApply(); if (e.key === 'Escape') onClose(); }}
+            onChange={(e) => {
+              setRawValue(e.target.value);
+              setError(null);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleApply();
+              if (e.key === 'Escape') onClose();
+            }}
             className="w-20 rounded border border-orange-500 bg-zinc-800 px-2 py-1 text-sm font-bold text-white outline-none"
           />
           <span className="text-xs text-zinc-500">cm</span>

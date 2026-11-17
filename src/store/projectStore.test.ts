@@ -14,7 +14,9 @@ import { useProjectStore, selectActiveProject, selectRooms } from './projectStor
 import type { Wall, WallNode } from '@/types/wall';
 import type { TilingDimension } from '@/types/tilingDimension';
 
-function nd(id: string, x: number, y: number): WallNode { return { id, x, y }; }
+function nd(id: string, x: number, y: number): WallNode {
+  return { id, x, y };
+}
 
 const mockSupabaseDb = vi.mocked(supabaseDb);
 
@@ -37,9 +39,16 @@ describe('projectStore — free plan limit', () => {
   it('throws PROJECT_LIMIT_REACHED for free users at 1 project', async () => {
     mockSupabaseDb.getProfile.mockResolvedValue({ plan: 'free' });
     const existing = {
-      id: 'existing', name: 'Existing', status: 'new' as const,
-      createdAt: 1000, updatedAt: 1000, rooms: [], config: {} as never,
-      wallThickness: 100, constraints: [], notes: [],
+      id: 'existing',
+      name: 'Existing',
+      status: 'new' as const,
+      createdAt: 1000,
+      updatedAt: 1000,
+      rooms: [],
+      config: {} as never,
+      wallThickness: 100,
+      constraints: [],
+      notes: [],
     };
     useProjectStore.setState({ projects: [existing] });
 
@@ -50,9 +59,16 @@ describe('projectStore — free plan limit', () => {
     mockSupabaseDb.getProfile.mockResolvedValue({ plan: 'pro' });
     mockSupabaseDb.save.mockResolvedValue(undefined);
     const existing = {
-      id: 'existing', name: 'Existing', status: 'new' as const,
-      createdAt: 1000, updatedAt: 1000, rooms: [], config: {} as never,
-      wallThickness: 100, constraints: [], notes: [],
+      id: 'existing',
+      name: 'Existing',
+      status: 'new' as const,
+      createdAt: 1000,
+      updatedAt: 1000,
+      rooms: [],
+      config: {} as never,
+      wallThickness: 100,
+      constraints: [],
+      notes: [],
     };
     useProjectStore.setState({ projects: [existing] });
 
@@ -221,14 +237,32 @@ describe('selectRooms', () => {
   });
 
   it('returns project.rooms when wallEngine is undefined', () => {
-    const rooms = [{ id: 'r1', name: 'R1', points: [{ x: 0, y: 0 }], edges: [] as never, partitions: [], excludedZones: [] }];
+    const rooms = [
+      {
+        id: 'r1',
+        name: 'R1',
+        points: [{ x: 0, y: 0 }],
+        edges: [] as never,
+        partitions: [],
+        excludedZones: [],
+      },
+    ];
     useProjectStore.setState({
-      projects: [{
-        id: 'p1', name: 'test', status: 'new' as const,
-        createdAt: 0, updatedAt: 0,
-        rooms, wallEngine: undefined,
-        config: {} as never, wallThickness: 100, constraints: [], notes: [],
-      }],
+      projects: [
+        {
+          id: 'p1',
+          name: 'test',
+          status: 'new' as const,
+          createdAt: 0,
+          updatedAt: 0,
+          rooms,
+          wallEngine: undefined,
+          config: {} as never,
+          wallThickness: 100,
+          constraints: [],
+          notes: [],
+        },
+      ],
       activeProjectId: 'p1',
     });
     expect(selectRooms(useProjectStore.getState())).toBe(rooms);
@@ -236,13 +270,30 @@ describe('selectRooms', () => {
 
   it('returns [] from wallsToRooms when wallEngine has no walls', () => {
     useProjectStore.setState({
-      projects: [{
-        id: 'p1', name: 'test', status: 'new' as const,
-        createdAt: 0, updatedAt: 0,
-        rooms: [{ id: 'legacy', name: 'L', points: [], edges: [] as never, partitions: [], excludedZones: [] }],
-        wallEngine: { walls: [], nodes: [], excludedZones: [] },
-        config: {} as never, wallThickness: 100, constraints: [], notes: [],
-      }],
+      projects: [
+        {
+          id: 'p1',
+          name: 'test',
+          status: 'new' as const,
+          createdAt: 0,
+          updatedAt: 0,
+          rooms: [
+            {
+              id: 'legacy',
+              name: 'L',
+              points: [],
+              edges: [] as never,
+              partitions: [],
+              excludedZones: [],
+            },
+          ],
+          wallEngine: { walls: [], nodes: [], excludedZones: [] },
+          config: {} as never,
+          wallThickness: 100,
+          constraints: [],
+          notes: [],
+        },
+      ],
       activeProjectId: 'p1',
     });
     expect(selectRooms(useProjectStore.getState())).toEqual([]);
@@ -257,13 +308,21 @@ describe('selectRooms', () => {
       { id: 'w4', node1Id: 'd', node2Id: 'a', thickness: 20 },
     ];
     useProjectStore.setState({
-      projects: [{
-        id: 'p1', name: 'test', status: 'new' as const,
-        createdAt: 0, updatedAt: 0,
-        rooms: [],
-        wallEngine: { walls, nodes, excludedZones: [] },
-        config: {} as never, wallThickness: 100, constraints: [], notes: [],
-      }],
+      projects: [
+        {
+          id: 'p1',
+          name: 'test',
+          status: 'new' as const,
+          createdAt: 0,
+          updatedAt: 0,
+          rooms: [],
+          wallEngine: { walls, nodes, excludedZones: [] },
+          config: {} as never,
+          wallThickness: 100,
+          constraints: [],
+          notes: [],
+        },
+      ],
       activeProjectId: 'p1',
     });
     const result = selectRooms(useProjectStore.getState());
@@ -301,8 +360,8 @@ describe('projectStore — updateTilingDimension', () => {
     const dims = selectActiveProject(useProjectStore.getState())?.tilingDimensions ?? [];
     expect(dims).toHaveLength(1);
     expect(dims[0]?.p2.x).toBe(300);
-    expect(dims[0]?.p2NodeId).toBe('n2');    // préservé
-    expect(dims[0]?.perpOffset).toBe(600);   // préservé
+    expect(dims[0]?.p2NodeId).toBe('n2'); // préservé
+    expect(dims[0]?.perpOffset).toBe(600); // préservé
   });
 
   it('ignore un id inexistant sans erreur', async () => {

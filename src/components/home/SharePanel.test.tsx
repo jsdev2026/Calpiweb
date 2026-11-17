@@ -11,9 +11,13 @@ vi.mock('@/store/sharingStore', () => ({
       shares: {
         'proj-1': [
           {
-            id: 's1', projectId: 'proj-1', userId: 'user-2',
-            userEmail: 'alice@x.com', userDisplayName: 'Alice',
-            role: 'editor', createdAt: '2026-01-01',
+            id: 's1',
+            projectId: 'proj-1',
+            userId: 'user-2',
+            userEmail: 'alice@x.com',
+            userDisplayName: 'Alice',
+            role: 'editor',
+            createdAt: '2026-01-01',
           },
         ],
       },

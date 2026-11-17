@@ -30,14 +30,16 @@ interface TilingCanvasProps {
 }
 
 function doorRectPath(door: DoorOpening): string {
-  const dx = door.to.x - door.from.x, dy = door.to.y - door.from.y;
+  const dx = door.to.x - door.from.x,
+    dy = door.to.y - door.from.y;
   const L = Math.sqrt(dx * dx + dy * dy);
   if (L < 1) return '';
-  const px = (-dy / L) * (door.thickness / 2), py = (dx / L) * (door.thickness / 2);
+  const px = (-dy / L) * (door.thickness / 2),
+    py = (dx / L) * (door.thickness / 2);
   const pts = [
     { x: door.from.x + px, y: door.from.y + py },
-    { x: door.to.x   + px, y: door.to.y   + py },
-    { x: door.to.x   - px, y: door.to.y   - py },
+    { x: door.to.x + px, y: door.to.y + py },
+    { x: door.to.x - px, y: door.to.y - py },
     { x: door.from.x - px, y: door.from.y - py },
   ];
   return `M ${pts.map((p) => `${p.x},${p.y}`).join(' L ')} Z`;
@@ -67,7 +69,8 @@ export const TilingCanvas = ({
   const centerY = (bbox.minY + bbox.maxY) / 2;
 
   // Reference dimensions: only for straight layout at angle = 0
-  const canShowDims = activeTool === 'dimension' && config.angle === 0 && config.layout === 'STRAIGHT';
+  const canShowDims =
+    activeTool === 'dimension' && config.angle === 0 && config.layout === 'STRAIGHT';
   const effectiveAngle = config.angle;
 
   return (
@@ -79,7 +82,9 @@ export const TilingCanvas = ({
       onPointerUp={onPointerUp}
       onPointerLeave={onPointerUp}
       onClick={onClick}
-      onContextMenu={(e) => { if (activeTool === 'dimension') e.preventDefault(); }}
+      onContextMenu={(e) => {
+        if (activeTool === 'dimension') e.preventDefault();
+      }}
     >
       <g transform={`translate(${pan.x}, ${pan.y}) scale(${scale})`}>
         <defs>
@@ -88,19 +93,22 @@ export const TilingCanvas = ({
               clipRule="evenodd"
               fillRule="evenodd"
               d={[
-                ...validRooms.map((r) =>
-                  `M ${insetRoomPolygon(r, wallThickness).map((p) => `${p.x},${p.y}`).join(' L ')} Z`
+                ...validRooms.map(
+                  (r) =>
+                    `M ${insetRoomPolygon(r, wallThickness)
+                      .map((p) => `${p.x},${p.y}`)
+                      .join(' L ')} Z`,
                 ),
                 ...validRooms.flatMap((r) =>
-                  (r.excludedZones ?? []).map((z) =>
-                    `M ${z.points.map((p) => `${p.x},${p.y}`).join(' L ')} Z`
-                  )
+                  (r.excludedZones ?? []).map(
+                    (z) => `M ${z.points.map((p) => `${p.x},${p.y}`).join(' L ')} Z`,
+                  ),
                 ),
                 ...validRooms.flatMap((r) =>
                   (r.partitions ?? []).map((pt) => {
                     const poly = partitionToPolygon(pt);
                     return `M ${poly.map((p) => `${p.x},${p.y}`).join(' L ')} Z`;
-                  })
+                  }),
                 ),
                 ...doorOpenings.map(doorRectPath).filter(Boolean),
               ].join(' ')}
@@ -111,7 +119,9 @@ export const TilingCanvas = ({
         {validRooms.map((room) => (
           <polygon
             key={`bg-${room.id}`}
-            points={insetRoomPolygon(room, wallThickness).map((p) => `${p.x},${p.y}`).join(' ')}
+            points={insetRoomPolygon(room, wallThickness)
+              .map((p) => `${p.x},${p.y}`)
+              .join(' ')}
             fill="var(--tile-joint)"
           />
         ))}
@@ -140,7 +150,7 @@ export const TilingCanvas = ({
                   height={tile.rect.h}
                   fill={tile.type === 'WHOLE' ? config.color : 'var(--tile-cut-bg)'}
                 />
-              )
+              ),
             )}
           </g>
         </g>
@@ -170,7 +180,7 @@ export const TilingCanvas = ({
               strokeDasharray="120,80"
               className="pointer-events-none"
             />
-          ))
+          )),
         )}
 
         {/* Partitions — filled polygon showing actual thickness */}
@@ -188,34 +198,39 @@ export const TilingCanvas = ({
                 className="pointer-events-none"
               />
             );
-          })
+          }),
         )}
 
         {/* Reference dimensions */}
-        {canShowDims && validRooms.map((room) => {
-          const pts = room.points;
-          if (pts.length < 3) return null;
-          const rb = getBoundingBox(pts);
-          const roomW = rb.maxX - rb.minX;
-          const roomH = rb.maxY - rb.minY;
-          const offset = 600;
-          return (
-            <g key={`dims-${room.id}`}>
-              <DimLine
-                x1={rb.minX} y1={rb.minY}
-                x2={rb.maxX} y2={rb.minY}
-                label={formatCm(roomW)}
-                perpOffset={-offset}
-              />
-              <DimLine
-                x1={rb.maxX} y1={rb.minY}
-                x2={rb.maxX} y2={rb.maxY}
-                label={formatCm(roomH)}
-                perpOffset={offset}
-              />
-            </g>
-          );
-        })}
+        {canShowDims &&
+          validRooms.map((room) => {
+            const pts = room.points;
+            if (pts.length < 3) return null;
+            const rb = getBoundingBox(pts);
+            const roomW = rb.maxX - rb.minX;
+            const roomH = rb.maxY - rb.minY;
+            const offset = 600;
+            return (
+              <g key={`dims-${room.id}`}>
+                <DimLine
+                  x1={rb.minX}
+                  y1={rb.minY}
+                  x2={rb.maxX}
+                  y2={rb.minY}
+                  label={formatCm(roomW)}
+                  perpOffset={-offset}
+                />
+                <DimLine
+                  x1={rb.maxX}
+                  y1={rb.minY}
+                  x2={rb.maxX}
+                  y2={rb.maxY}
+                  label={formatCm(roomH)}
+                  perpOffset={offset}
+                />
+              </g>
+            );
+          })}
         {dimensionLayer}
       </g>
     </svg>

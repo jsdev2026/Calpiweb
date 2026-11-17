@@ -19,6 +19,7 @@ Le `<input>` nom du projet a un `minWidth: 120` qui, combiné au bouton user men
 ### Solution
 
 **Mobile (`< md`) :**
+
 - `<input>` nom du projet : `hidden md:block` — masqué sur mobile.
 - Le div wrapper breadcrumb (`.flex.items-center.gap-1.5`) reste dans le DOM mais sans l'input, il occupe `flex:1` naturellement et crée l'espace vide central.
 - Résultat : `←` · espace libre · `☀` · `⚙` · avatar+badge.
@@ -41,6 +42,7 @@ Le `<input>` nom du projet a un `minWidth: 120` qui, combiné au bouton user men
 **Position :** `bottom-20 md:bottom-4` — 80px du bas sur mobile, 16px sur desktop.
 
 **Layout 3 lignes sur mobile (2 lignes restent sur desktop) :**
+
 - Ligne 1 : bouton Côtes + séparateur + Angle (label + slider `flex-1` + valeur °)
 - Ligne 2 : DÉC. X seul (label complet + slider `flex-1` + valeur)
 - Ligne 3 : DÉC. Y seul (label complet + slider `flex-1` + valeur)
@@ -68,6 +70,7 @@ Sur mobile le conteneur passe de `flex-col` 2 items à `flex-col` 3 items. La Ro
 #### PlanToolbar — variante horizontale mobile
 
 Dans `src/components/plan/PlanToolbar.tsx` :
+
 - La colonne verticale existante garde `hidden md:flex` (desktop uniquement).
 - Ajout d'une variante horizontale `flex md:hidden` : barre fixe en bas du canvas, `overflow-x-auto`, boutons `h-10 w-10`.
 - Ordre des outils dans la barre mobile : SELECT, WALL, DOOR, PARTITION, EXCLUDE, APPLY_H, APPLY_V, DIMENSION, COINCIDE, ANCHOR, THICKNESS, séparateur, Annuler, Rétablir, Supprimer.
@@ -76,6 +79,7 @@ Dans `src/components/plan/PlanToolbar.tsx` :
 #### RoomPanel — banderole compacte mobile
 
 Dans `src/components/plan/PlanEditor.tsx`, ajouter avant le canvas une banderole mobile `flex md:hidden` :
+
 - Positionnée en flux normal (non `fixed`), sous la barre d'onglets.
 - Affiche les onglets de pièces en ligne (`RoomTabs` avec `vertical={false}`).
 - Le `RoomPanel` draggable existant reçoit `hidden md:block` pour ne s'afficher que sur desktop.
@@ -95,12 +99,12 @@ Dans `src/components/plan/PlanEditor.tsx`, ajouter avant le canvas une banderole
 
 ## Fichiers modifiés
 
-| Fichier | Changement |
-|---------|------------|
-| `src/app/project/[id]/page.tsx` | `hidden md:block` sur l'input nom |
-| `src/components/tiling/TilingEditor.tsx` | `bottom-20 md:bottom-4`, Row 2 → 2 rows séparées |
-| `src/components/plan/PlanToolbar.tsx` | Variante horizontale mobile `flex md:hidden` |
-| `src/components/plan/PlanEditor.tsx` | Banderole pièces mobile, raccourcis `hidden md:block`, hint tactile, suppression bannière |
+| Fichier                                  | Changement                                                                                |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `src/app/project/[id]/page.tsx`          | `hidden md:block` sur l'input nom                                                         |
+| `src/components/tiling/TilingEditor.tsx` | `bottom-20 md:bottom-4`, Row 2 → 2 rows séparées                                          |
+| `src/components/plan/PlanToolbar.tsx`    | Variante horizontale mobile `flex md:hidden`                                              |
+| `src/components/plan/PlanEditor.tsx`     | Banderole pièces mobile, raccourcis `hidden md:block`, hint tactile, suppression bannière |
 
 ---
 

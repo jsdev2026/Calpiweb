@@ -13,11 +13,11 @@
 
 3 constantes dans `WallDrawingCanvas.tsx` (réduction ~30 %) :
 
-| Constante | Avant | Après |
-|-----------|-------|-------|
-| `HV_SNAP_PX` | 20 | 15 |
-| `HV_SNAP_DRAG_PX` | 40 | 28 |
-| `PERP_SNAP_PX` | 30 | 22 |
+| Constante         | Avant | Après |
+| ----------------- | ----- | ----- |
+| `HV_SNAP_PX`      | 20    | 15    |
+| `HV_SNAP_DRAG_PX` | 40    | 28    |
+| `PERP_SNAP_PX`    | 30    | 22    |
 
 ### 2 — Snap colinéaire
 
@@ -42,10 +42,11 @@ export function collinearSnap(
   const r = snapPx / scale;
   let best: { point: Point; dist: number } | null = null;
   for (const wall of walls) {
-    const n1 = nodes.find(n => n.id === wall.node1Id);
-    const n2 = nodes.find(n => n.id === wall.node2Id);
+    const n1 = nodes.find((n) => n.id === wall.node1Id);
+    const n2 = nodes.find((n) => n.id === wall.node2Id);
     if (!n1 || !n2) continue;
-    const dx = n2.x - n1.x, dy = n2.y - n1.y;
+    const dx = n2.x - n1.x,
+      dy = n2.y - n1.y;
     const lenSq = dx * dx + dy * dy;
     if (lenSq < 1) continue;
     const t = ((cursor.x - n1.x) * dx + (cursor.y - n1.y) * dy) / lenSq;
@@ -70,8 +71,10 @@ export function collinearSnapForNode(
   let best: { point: Point; dist: number } | null = null;
   for (let i = 0; i < adjacentNodes.length; i++) {
     for (let j = i + 1; j < adjacentNodes.length; j++) {
-      const A = adjacentNodes[i]!, B = adjacentNodes[j]!;
-      const dx = B.x - A.x, dy = B.y - A.y;
+      const A = adjacentNodes[i]!,
+        B = adjacentNodes[j]!;
+      const dx = B.x - A.x,
+        dy = B.y - A.y;
       const lenSq = dx * dx + dy * dy;
       if (lenSq < 1) continue;
       const t = ((cursor.x - A.x) * dx + (cursor.y - A.y) * dy) / lenSq;
@@ -119,12 +122,12 @@ Problème : `SnapResult` ne contient pas actuellement la direction du mur. Solut
 
 ## Fichiers
 
-| Fichier | Changement |
-|---------|-----------|
-| `src/types/wall.ts` | `SnapResult.type` + `'collinear'`; `SnapResult.dir?: Point` |
-| `src/engine/geometry/wallSnap.ts` | `collinearSnap`, `collinearSnapForNode` |
-| `src/engine/geometry/wallSnap.test.ts` | Tests pour les deux nouvelles fonctions |
-| `src/components/plan/WallDrawingCanvas.tsx` | 3 constantes réduites + appels snap + indicateur visuel |
+| Fichier                                     | Changement                                                  |
+| ------------------------------------------- | ----------------------------------------------------------- |
+| `src/types/wall.ts`                         | `SnapResult.type` + `'collinear'`; `SnapResult.dir?: Point` |
+| `src/engine/geometry/wallSnap.ts`           | `collinearSnap`, `collinearSnapForNode`                     |
+| `src/engine/geometry/wallSnap.test.ts`      | Tests pour les deux nouvelles fonctions                     |
+| `src/components/plan/WallDrawingCanvas.tsx` | 3 constantes réduites + appels snap + indicateur visuel     |
 
 ## Tests
 

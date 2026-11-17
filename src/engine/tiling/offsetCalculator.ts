@@ -11,11 +11,7 @@ export const computeGridStart = (
   startY: bbox.minY - (Math.abs(bbox.minY) % stepY) - stepY + (offsetY % stepY),
 });
 
-export const computeStagger = (
-  rowIndex: number,
-  stepX: number,
-  stagger: number,
-): number => {
+export const computeStagger = (rowIndex: number, stepX: number, stagger: number): number => {
   const modulus = 1 / stagger >= 1 ? Math.round(1 / stagger) : 1;
   return (rowIndex % modulus) * (stepX * stagger);
 };

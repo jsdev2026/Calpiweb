@@ -93,13 +93,13 @@ describe('PlanToolbar mobile — deux lignes', () => {
     expect(ctrl!.getAttribute('data-compact')).toBe('true');
   });
 
-  it('texte d\'outil actif visible quand tool=WALL', () => {
+  it("texte d'outil actif visible quand tool=WALL", () => {
     render(<PlanToolbar {...defaultProps} tool="WALL" />);
     const toolbar = screen.getByTestId('plan-toolbar-mobile');
     expect(toolbar.textContent).toContain('Cliquez pour poser un point');
   });
 
-  it('pas de texte d\'outil actif quand tool=SELECT', () => {
+  it("pas de texte d'outil actif quand tool=SELECT", () => {
     render(<PlanToolbar {...defaultProps} tool="SELECT" />);
     const toolbar = screen.getByTestId('plan-toolbar-mobile');
     expect(toolbar.textContent).not.toContain('Cliquez');

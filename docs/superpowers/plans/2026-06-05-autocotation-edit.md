@@ -12,12 +12,12 @@
 
 ## Structure des fichiers
 
-| Fichier | Action | Responsabilité |
-|---------|--------|----------------|
-| `src/components/plan/AutoCotationPanel.tsx` | Créer | Panneau flottant + pure function `computeNewNode2` |
-| `src/components/plan/AutoCotationPanel.test.ts` | Créer | Tests unitaires de `computeNewNode2` |
-| `src/components/plan/WallDrawingCanvas.tsx` | Modifier | Sélection côte, labels interactifs, rendu panel |
-| `src/components/tiling/TilingEditor.tsx` | Modifier | Supprimer bouton Côtes + état `selectedDimId` |
+| Fichier                                         | Action   | Responsabilité                                     |
+| ----------------------------------------------- | -------- | -------------------------------------------------- |
+| `src/components/plan/AutoCotationPanel.tsx`     | Créer    | Panneau flottant + pure function `computeNewNode2` |
+| `src/components/plan/AutoCotationPanel.test.ts` | Créer    | Tests unitaires de `computeNewNode2`               |
+| `src/components/plan/WallDrawingCanvas.tsx`     | Modifier | Sélection côte, labels interactifs, rendu panel    |
+| `src/components/tiling/TilingEditor.tsx`        | Modifier | Supprimer bouton Côtes + état `selectedDimId`      |
 
 ---
 
@@ -30,11 +30,11 @@
 export interface AutoCotation {
   wallId: string;
   side: 'exterior' | 'interior' | 'isolated';
-  anchor1: Point;  // extrémité côté node1
-  anchor2: Point;  // extrémité côté node2
+  anchor1: Point; // extrémité côté node1
+  anchor2: Point; // extrémité côté node2
   normal: Point;
   offset: number;
-  label: string;   // ex: "32.0 cm" — formaté par formatCm()
+  label: string; // ex: "32.0 cm" — formaté par formatCm()
 }
 
 export interface Wall {
@@ -71,15 +71,17 @@ Après la balise `</svg>`, le canvas rend déjà des overlays absolus (ex: `Wall
 ## Task 1 : `computeNewNode2` — pure function + tests (TDD)
 
 **Files:**
+
 - Create: `src/components/plan/AutoCotationPanel.tsx`
 - Create: `src/components/plan/AutoCotationPanel.test.ts`
 
 ### Contexte
 
 `computeNewNode2` convertit la valeur de label saisie (en mm) en nouvelle position pour `node2Id` :
-- `exterior` → `node_dist = newLabelMm - wall.thickness`  
-- `interior` → `node_dist = newLabelMm + wall.thickness`  
-- `isolated` → `node_dist = newLabelMm`  
+
+- `exterior` → `node_dist = newLabelMm - wall.thickness`
+- `interior` → `node_dist = newLabelMm + wall.thickness`
+- `isolated` → `node_dist = newLabelMm`
 
 Puis : `newNode2 = node1 + normalize(node2 - node1) * node_dist`
 
@@ -91,7 +93,9 @@ import { describe, it, expect } from 'vitest';
 import { computeNewNode2 } from './AutoCotationPanel';
 import type { Wall, WallNode } from '@/types/wall';
 
-function nd(id: string, x: number, y: number): WallNode { return { id, x, y }; }
+function nd(id: string, x: number, y: number): WallNode {
+  return { id, x, y };
+}
 function w(id: string, n1: string, n2: string, t: number): Wall {
   return { id, node1Id: n1, node2Id: n2, thickness: t };
 }
@@ -101,14 +105,14 @@ const wallH = w('w1', 'n1', 'n2', 10);
 const nodesH = [nd('n1', 0, 0), nd('n2', 200, 0)];
 
 describe('computeNewNode2', () => {
-  it('exterior — soustrait l\'épaisseur pour trouver node_dist', () => {
+  it("exterior — soustrait l'épaisseur pour trouver node_dist", () => {
     // label ext = node_dist + thickness => on entre 300mm (ext), thickness=10 => node_dist=290
     const result = computeNewNode2(wallH, nodesH, 300, 'exterior');
     expect(result.x).toBeCloseTo(290);
     expect(result.y).toBeCloseTo(0);
   });
 
-  it('interior — ajoute l\'épaisseur pour trouver node_dist', () => {
+  it("interior — ajoute l'épaisseur pour trouver node_dist", () => {
     // label int = node_dist - thickness => on entre 180mm (int), thickness=10 => node_dist=190
     const result = computeNewNode2(wallH, nodesH, 180, 'interior');
     expect(result.x).toBeCloseTo(190);
@@ -165,9 +169,11 @@ export function computeNewNode2(
   const dir: Point = len < 1e-10 ? { x: 1, y: 0 } : { x: dx / len, y: dy / len };
 
   const nodeDist =
-    side === 'exterior' ? newLabelMm - wall.thickness :
-    side === 'interior' ? newLabelMm + wall.thickness :
-    newLabelMm;
+    side === 'exterior'
+      ? newLabelMm - wall.thickness
+      : side === 'interior'
+        ? newLabelMm + wall.thickness
+        : newLabelMm;
 
   return { x: n1.x + dir.x * nodeDist, y: n1.y + dir.y * nodeDist };
 }
@@ -196,6 +202,7 @@ git commit -m "feat(plan): computeNewNode2 + tests — conversion anchor→nœud
 ## Task 2 : `AutoCotationPanel` — composant UI complet
 
 **Files:**
+
 - Modify: `src/components/plan/AutoCotationPanel.tsx`
 
 ### Contexte
@@ -231,9 +238,11 @@ export function computeNewNode2(
   const dir: Point = len < 1e-10 ? { x: 1, y: 0 } : { x: dx / len, y: dy / len };
 
   const nodeDist =
-    side === 'exterior' ? newLabelMm - wall.thickness :
-    side === 'interior' ? newLabelMm + wall.thickness :
-    newLabelMm;
+    side === 'exterior'
+      ? newLabelMm - wall.thickness
+      : side === 'interior'
+        ? newLabelMm + wall.thickness
+        : newLabelMm;
 
   return { x: n1.x + dir.x * nodeDist, y: n1.y + dir.y * nodeDist };
 }
@@ -265,11 +274,13 @@ interface AutoCotationPanelProps {
 }
 
 export const AutoCotationPanel = ({
-  cot, wall, nodes, onApply, onClose,
+  cot,
+  wall,
+  nodes,
+  onApply,
+  onClose,
 }: AutoCotationPanelProps) => {
-  const [rawValue, setRawValue] = useState(
-    () => mmToCm(anchorDistMm(cot)).toFixed(1),
-  );
+  const [rawValue, setRawValue] = useState(() => mmToCm(anchorDistMm(cot)).toFixed(1));
   const [error, setError] = useState<string | null>(null);
 
   const handleApply = () => {
@@ -313,8 +324,14 @@ export const AutoCotationPanel = ({
             min="0.1"
             autoFocus
             value={rawValue}
-            onChange={(e) => { setRawValue(e.target.value); setError(null); }}
-            onKeyDown={(e) => { if (e.key === 'Enter') handleApply(); if (e.key === 'Escape') onClose(); }}
+            onChange={(e) => {
+              setRawValue(e.target.value);
+              setError(null);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleApply();
+              if (e.key === 'Escape') onClose();
+            }}
             className="w-20 rounded border border-orange-500 bg-zinc-800 px-2 py-1 text-sm font-bold text-white outline-none"
           />
           <span className="text-xs text-zinc-500">cm</span>
@@ -355,6 +372,7 @@ git commit -m "feat(plan): AutoCotationPanel — UI panneau édition côte autom
 ## Task 3 : `WallDrawingCanvas` — labels cliquables + rendu du panneau
 
 **Files:**
+
 - Modify: `src/components/plan/WallDrawingCanvas.tsx`
 
 ### Contexte
@@ -378,13 +396,23 @@ import { AutoCotationPanel } from './AutoCotationPanel';
 Dans le corps du composant `WallDrawingCanvas`, après la ligne `const [editingWallId, setEditingWallId] = useState<string | null>(null);` (ligne ~88), ajouter :
 
 ```tsx
-const [selectedCot, setSelectedCot] = useState<{ wallId: string; side: AutoCotation['side'] } | null>(null);
+const [selectedCot, setSelectedCot] = useState<{
+  wallId: string;
+  side: AutoCotation['side'];
+} | null>(null);
 ```
 
 Et ajouter l'import du type `AutoCotation` à la ligne d'import de `@/types/wall` (ligne ~5) :
 
 ```tsx
-import type { Wall, WallNode, DrawingChain, SnapResult, WallExcludedZone, AutoCotation } from '@/types/wall';
+import type {
+  Wall,
+  WallNode,
+  DrawingChain,
+  SnapResult,
+  WallExcludedZone,
+  AutoCotation,
+} from '@/types/wall';
 ```
 
 - [ ] **Step 2 : Modifier le rendu des autoCotations pour rendre le label cliquable**
@@ -392,53 +420,86 @@ import type { Wall, WallNode, DrawingChain, SnapResult, WallExcludedZone, AutoCo
 Localiser le bloc `{/* Auto-cotations */}` (ligne ~740). Remplacer le contenu du `<g key={...}>` par :
 
 ```tsx
-{autoCotations.map((c, i) => {
-  const sa1 = worldToScreen(c.anchor1);
-  const sa2 = worldToScreen(c.anchor2);
-  const ox = c.normal.x * c.offset * scale;
-  const oy = c.normal.y * c.offset * scale;
-  const sl1 = { x: sa1.x + ox, y: sa1.y + oy };
-  const sl2 = { x: sa2.x + ox, y: sa2.y + oy };
-  const smid = { x: (sl1.x + sl2.x) / 2, y: (sl1.y + sl2.y) / 2 };
-  const isSelected = selectedCot?.wallId === c.wallId && selectedCot?.side === c.side;
-  const color =
-    isSelected ? '#f97316' :
-    c.side === 'exterior' ? '#22c55e' :
-    c.side === 'interior' ? '#3b82f6' : '#f97316';
-  const tick = 5;
-  return (
-    <g key={`cot-${i}`} className="pointer-events-none">
-      <line x1={sa1.x} y1={sa1.y} x2={sl1.x} y2={sl1.y}
-        stroke={color} strokeWidth={0.7} strokeDasharray="3,3" />
-      <line x1={sa2.x} y1={sa2.y} x2={sl2.x} y2={sl2.y}
-        stroke={color} strokeWidth={0.7} strokeDasharray="3,3" />
-      <line x1={sl1.x} y1={sl1.y} x2={sl2.x} y2={sl2.y}
-        stroke={color} strokeWidth={1} />
-      <line
-        x1={sl1.x - c.normal.x * tick} y1={sl1.y - c.normal.y * tick}
-        x2={sl1.x + c.normal.x * tick} y2={sl1.y + c.normal.y * tick}
-        stroke={color} strokeWidth={1.5} />
-      <line
-        x1={sl2.x - c.normal.x * tick} y1={sl2.y - c.normal.y * tick}
-        x2={sl2.x + c.normal.x * tick} y2={sl2.y + c.normal.y * tick}
-        stroke={color} strokeWidth={1.5} />
-      {/* Label cliquable — pointer-events réactivés sur ce groupe uniquement */}
-      <g
-        style={{ cursor: 'pointer', pointerEvents: 'auto' }}
-        onClick={(e) => { e.stopPropagation(); setSelectedCot({ wallId: c.wallId, side: c.side }); }}
-      >
-        <text
-          x={smid.x + c.normal.x * 12} y={smid.y + c.normal.y * 12}
-          textAnchor="middle" dominantBaseline="middle"
-          fontSize={11} fill={color} fontWeight={isSelected ? 'bold' : 'normal'}
-          style={{ fontFamily: 'monospace', userSelect: 'none' }}
+{
+  autoCotations.map((c, i) => {
+    const sa1 = worldToScreen(c.anchor1);
+    const sa2 = worldToScreen(c.anchor2);
+    const ox = c.normal.x * c.offset * scale;
+    const oy = c.normal.y * c.offset * scale;
+    const sl1 = { x: sa1.x + ox, y: sa1.y + oy };
+    const sl2 = { x: sa2.x + ox, y: sa2.y + oy };
+    const smid = { x: (sl1.x + sl2.x) / 2, y: (sl1.y + sl2.y) / 2 };
+    const isSelected = selectedCot?.wallId === c.wallId && selectedCot?.side === c.side;
+    const color = isSelected
+      ? '#f97316'
+      : c.side === 'exterior'
+        ? '#22c55e'
+        : c.side === 'interior'
+          ? '#3b82f6'
+          : '#f97316';
+    const tick = 5;
+    return (
+      <g key={`cot-${i}`} className="pointer-events-none">
+        <line
+          x1={sa1.x}
+          y1={sa1.y}
+          x2={sl1.x}
+          y2={sl1.y}
+          stroke={color}
+          strokeWidth={0.7}
+          strokeDasharray="3,3"
+        />
+        <line
+          x1={sa2.x}
+          y1={sa2.y}
+          x2={sl2.x}
+          y2={sl2.y}
+          stroke={color}
+          strokeWidth={0.7}
+          strokeDasharray="3,3"
+        />
+        <line x1={sl1.x} y1={sl1.y} x2={sl2.x} y2={sl2.y} stroke={color} strokeWidth={1} />
+        <line
+          x1={sl1.x - c.normal.x * tick}
+          y1={sl1.y - c.normal.y * tick}
+          x2={sl1.x + c.normal.x * tick}
+          y2={sl1.y + c.normal.y * tick}
+          stroke={color}
+          strokeWidth={1.5}
+        />
+        <line
+          x1={sl2.x - c.normal.x * tick}
+          y1={sl2.y - c.normal.y * tick}
+          x2={sl2.x + c.normal.x * tick}
+          y2={sl2.y + c.normal.y * tick}
+          stroke={color}
+          strokeWidth={1.5}
+        />
+        {/* Label cliquable — pointer-events réactivés sur ce groupe uniquement */}
+        <g
+          style={{ cursor: 'pointer', pointerEvents: 'auto' }}
+          onClick={(e) => {
+            e.stopPropagation();
+            setSelectedCot({ wallId: c.wallId, side: c.side });
+          }}
         >
-          {c.label}
-        </text>
+          <text
+            x={smid.x + c.normal.x * 12}
+            y={smid.y + c.normal.y * 12}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            fontSize={11}
+            fill={color}
+            fontWeight={isSelected ? 'bold' : 'normal'}
+            style={{ fontFamily: 'monospace', userSelect: 'none' }}
+          >
+            {c.label}
+          </text>
+        </g>
       </g>
-    </g>
-  );
-})}
+    );
+  });
+}
 ```
 
 - [ ] **Step 3 : Ajouter `setSelectedCot(null)` dans `handleKeyDown`**
@@ -467,27 +528,32 @@ const handleKeyDown = (e: React.KeyboardEvent<SVGSVGElement>) => {
 Localiser le bloc `{/* WallEdgeEditor popup */}` (ligne ~885). Après le bloc `WallEdgeEditor` (après la `)`), ajouter :
 
 ```tsx
-{/* AutoCotationPanel */}
-{selectedCot && (() => {
-  const cot = autoCotations.find(
-    (ac) => ac.wallId === selectedCot.wallId && ac.side === selectedCot.side,
-  );
-  const wall = walls.find((w) => w.id === selectedCot.wallId);
-  return cot && wall ? (
-    <AutoCotationPanel
-      key={`${selectedCot.wallId}-${selectedCot.side}`}
-      cot={cot}
-      wall={wall}
-      nodes={nodes}
-      onApply={(nodeId, newPos) => {
-        onPushHistory();
-        onUpdateNode(nodeId, newPos);
-        setSelectedCot(null);
-      }}
-      onClose={() => setSelectedCot(null)}
-    />
-  ) : null;
-})()}
+{
+  /* AutoCotationPanel */
+}
+{
+  selectedCot &&
+    (() => {
+      const cot = autoCotations.find(
+        (ac) => ac.wallId === selectedCot.wallId && ac.side === selectedCot.side,
+      );
+      const wall = walls.find((w) => w.id === selectedCot.wallId);
+      return cot && wall ? (
+        <AutoCotationPanel
+          key={`${selectedCot.wallId}-${selectedCot.side}`}
+          cot={cot}
+          wall={wall}
+          nodes={nodes}
+          onApply={(nodeId, newPos) => {
+            onPushHistory();
+            onUpdateNode(nodeId, newPos);
+            setSelectedCot(null);
+          }}
+          onClose={() => setSelectedCot(null)}
+        />
+      ) : null;
+    })();
+}
 ```
 
 - [ ] **Step 5 : Vérifier la compilation TypeScript**
@@ -518,6 +584,7 @@ git commit -m "feat(plan): labels AutoCotation cliquables + panneau d'édition f
 ## Task 4 : `TilingEditor` — supprimer le bouton Côtes (ancien système)
 
 **Files:**
+
 - Modify: `src/components/tiling/TilingEditor.tsx`
 
 ### Contexte

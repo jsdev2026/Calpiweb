@@ -41,8 +41,10 @@ function sideOf(a: Point, b: Point, p: Point): number {
 }
 
 function segIntersect(p1: Point, p2: Point, p3: Point, p4: Point): Point | null {
-  const d1x = p2.x - p1.x, d1y = p2.y - p1.y;
-  const d2x = p4.x - p3.x, d2y = p4.y - p3.y;
+  const d1x = p2.x - p1.x,
+    d1y = p2.y - p1.y;
+  const d2x = p4.x - p3.x,
+    d2y = p4.y - p3.y;
   const denom = d1x * d2y - d1y * d2x;
   if (Math.abs(denom) < 1e-9) return null;
   const t = ((p3.x - p1.x) * d2y - (p3.y - p1.y) * d2x) / denom;

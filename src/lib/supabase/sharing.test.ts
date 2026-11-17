@@ -43,7 +43,8 @@ describe('sharingDb.findUserByEmail', () => {
 
   it('returns user when found', async () => {
     mockMaybeSingle.mockResolvedValueOnce({
-      data: { id: 'user-2', display_name: 'Alice' }, error: null,
+      data: { id: 'user-2', display_name: 'Alice' },
+      error: null,
     });
     const result = await sharingDb.findUserByEmail('alice@example.com');
     expect(result).toEqual({ id: 'user-2', displayName: 'Alice' });

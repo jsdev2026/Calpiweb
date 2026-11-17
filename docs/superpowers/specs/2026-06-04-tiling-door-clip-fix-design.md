@@ -35,16 +35,17 @@ Le `<clipPath>` utilise `fillRule="evenodd"` et `clipRule="evenodd"`. Les rectan
 
 ## Fichiers
 
-| Fichier | Changement |
-|---------|-----------|
+| Fichier                                  | Changement                                                                                         |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------- |
 | `src/components/tiling/TilingCanvas.tsx` | Ajouter `doorOpenings?: DoorOpening[]` à l'interface + inclure les rectangles dans le `<clipPath>` |
-| `src/components/tiling/TilingEditor.tsx` | Passer `doorOpenings={doorOpenings}` à `<TilingCanvas>` |
+| `src/components/tiling/TilingEditor.tsx` | Passer `doorOpenings={doorOpenings}` à `<TilingCanvas>`                                            |
 
 ## Détail d'implémentation
 
 ### `TilingCanvas.tsx`
 
 Ajouter l'import :
+
 ```ts
 import type { DoorOpening } from '@/types/wall';
 ```
@@ -54,23 +55,27 @@ Ajouter `doorOpenings?: DoorOpening[]` dans `TilingCanvasProps`.
 Dans le destructuring du composant, ajouter `doorOpenings = []`.
 
 Fonction helper inline pour calculer les 4 coins d'un rectangle d'ouverture :
+
 ```ts
 function doorRect(door: DoorOpening): string {
-  const dx = door.to.x - door.from.x, dy = door.to.y - door.from.y;
+  const dx = door.to.x - door.from.x,
+    dy = door.to.y - door.from.y;
   const L = Math.sqrt(dx * dx + dy * dy);
   if (L < 1) return '';
-  const px = -dy / L * door.thickness, py = dx / L * door.thickness;
+  const px = (-dy / L) * door.thickness,
+    py = (dx / L) * door.thickness;
   const pts = [
     { x: door.from.x + px, y: door.from.y + py },
-    { x: door.to.x   + px, y: door.to.y   + py },
-    { x: door.to.x   - px, y: door.to.y   - py },
+    { x: door.to.x + px, y: door.to.y + py },
+    { x: door.to.x - px, y: door.to.y - py },
     { x: door.from.x - px, y: door.from.y - py },
   ];
-  return `M ${pts.map(p => `${p.x},${p.y}`).join(' L ')} Z`;
+  return `M ${pts.map((p) => `${p.x},${p.y}`).join(' L ')} Z`;
 }
 ```
 
 Dans la construction du `d` du `<clipPath>`, ajouter après les partitions :
+
 ```ts
 ...doorOpenings.map(doorRect).filter(Boolean),
 ```
@@ -78,6 +83,7 @@ Dans la construction du `d` du `<clipPath>`, ajouter après les partitions :
 ### `TilingEditor.tsx`
 
 `doorOpenings` est déjà sélectionné via `useProjectStore(useShallow(selectDoorOpenings))`. Il suffit de le passer à `<TilingCanvas>` :
+
 ```tsx
 <TilingCanvas
   ...

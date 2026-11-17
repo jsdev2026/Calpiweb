@@ -12,23 +12,24 @@
 
 ## Fichiers
 
-| Fichier | Action |
-|---------|--------|
-| `src/types/project.ts` | Ajouter `wallRoomNames?: Record<string, string>` dans `wallEngine` |
-| `src/types/wall.ts` | Ajouter interface `DoorOpening` |
-| `src/store/projectStore.ts` | `renameWallRoom` action, `selectRooms` avec noms, `restoreSnapshot` preserve noms, `selectDoorOpenings` |
-| `src/components/plan/WallRoomPanel.tsx` | UI de renommage inline |
-| `src/components/plan/PlanEditor.tsx` | `Escape` → `setTool('SELECT')` |
-| `src/engine/tiling/tilingEngine.ts` | Paramètre `doorOpenings` dans `computeTilingMultiRoom` |
-| `src/engine/tiling/tilingEngine.test.ts` | Tests portes |
-| `src/engine/quantities/quantityEngine.ts` | Passer `doorOpenings` à `computeTilingMultiRoom` |
-| `src/components/tiling/TilingEditor.tsx` | Sélectionner `doorOpenings` et les passer |
+| Fichier                                   | Action                                                                                                  |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `src/types/project.ts`                    | Ajouter `wallRoomNames?: Record<string, string>` dans `wallEngine`                                      |
+| `src/types/wall.ts`                       | Ajouter interface `DoorOpening`                                                                         |
+| `src/store/projectStore.ts`               | `renameWallRoom` action, `selectRooms` avec noms, `restoreSnapshot` preserve noms, `selectDoorOpenings` |
+| `src/components/plan/WallRoomPanel.tsx`   | UI de renommage inline                                                                                  |
+| `src/components/plan/PlanEditor.tsx`      | `Escape` → `setTool('SELECT')`                                                                          |
+| `src/engine/tiling/tilingEngine.ts`       | Paramètre `doorOpenings` dans `computeTilingMultiRoom`                                                  |
+| `src/engine/tiling/tilingEngine.test.ts`  | Tests portes                                                                                            |
+| `src/engine/quantities/quantityEngine.ts` | Passer `doorOpenings` à `computeTilingMultiRoom`                                                        |
+| `src/components/tiling/TilingEditor.tsx`  | Sélectionner `doorOpenings` et les passer                                                               |
 
 ---
 
 ## Task 1 : Échap → outil SELECT
 
 **Files:**
+
 - Modify: `src/components/plan/PlanEditor.tsx:151-166`
 
 - [ ] **Step 1 : Modifier le listener keydown dans PlanEditor**
@@ -43,8 +44,10 @@ useEffect(() => {
       if (pastRef.current.length > 0) handleUndo();
       else if (onNavigateBack) onNavigateBack();
     }
-    if ((e.key === 'y' && (e.ctrlKey || e.metaKey)) ||
-        (e.key === 'z' && (e.ctrlKey || e.metaKey) && e.shiftKey)) {
+    if (
+      (e.key === 'y' && (e.ctrlKey || e.metaKey)) ||
+      (e.key === 'z' && (e.ctrlKey || e.metaKey) && e.shiftKey)
+    ) {
       e.preventDefault();
       if (futureRef.current.length > 0) handleRedo();
     }
@@ -79,6 +82,7 @@ git commit -m "feat(plan): Escape bascule toujours vers l'outil SELECT"
 ## Task 2 : Nommer les pièces auto-détectées
 
 **Files:**
+
 - Modify: `src/types/project.ts`
 - Modify: `src/store/projectStore.ts`
 - Modify: `src/components/plan/WallRoomPanel.tsx`
@@ -103,27 +107,59 @@ import type { ProjectState } from './projectStore';
 
 // Helpers
 const makeNode = (id: string, x: number, y: number) => ({ id, x, y });
-const makeWall = (id: string, n1: string, n2: string) => ({ id, node1Id: n1, node2Id: n2, thickness: 100 });
+const makeWall = (id: string, n1: string, n2: string) => ({
+  id,
+  node1Id: n1,
+  node2Id: n2,
+  thickness: 100,
+});
 
 // Carré fermé : A(0,0) B(1000,0) C(1000,1000) D(0,1000)
 const nodes = [
-  makeNode('A', 0, 0), makeNode('B', 1000, 0),
-  makeNode('C', 1000, 1000), makeNode('D', 0, 1000),
+  makeNode('A', 0, 0),
+  makeNode('B', 1000, 0),
+  makeNode('C', 1000, 1000),
+  makeNode('D', 0, 1000),
 ];
 const walls = [
-  makeWall('w1', 'A', 'B'), makeWall('w2', 'B', 'C'),
-  makeWall('w3', 'C', 'D'), makeWall('w4', 'D', 'A'),
+  makeWall('w1', 'A', 'B'),
+  makeWall('w2', 'B', 'C'),
+  makeWall('w3', 'C', 'D'),
+  makeWall('w4', 'D', 'A'),
 ];
 
 function makeState(wallRoomNames?: Record<string, string>): ProjectState {
   return {
-    projects: [{
-      id: 'p1', name: 'Test', status: 'new' as const,
-      createdAt: 0, updatedAt: 0, rooms: [], constraints: [], notes: [],
-      config: { width: 300, height: 300, joint: 3, stagger: 0, angle: 0, layout: 'STRAIGHT' as const, offsetX: 0, offsetY: 0, chevronAngle: 45 },
-      wallThickness: 100,
-      wallEngine: { nodes, walls, excludedZones: [], ...(wallRoomNames ? { wallRoomNames } : {}) },
-    }],
+    projects: [
+      {
+        id: 'p1',
+        name: 'Test',
+        status: 'new' as const,
+        createdAt: 0,
+        updatedAt: 0,
+        rooms: [],
+        constraints: [],
+        notes: [],
+        config: {
+          width: 300,
+          height: 300,
+          joint: 3,
+          stagger: 0,
+          angle: 0,
+          layout: 'STRAIGHT' as const,
+          offsetX: 0,
+          offsetY: 0,
+          chevronAngle: 45,
+        },
+        wallThickness: 100,
+        wallEngine: {
+          nodes,
+          walls,
+          excludedZones: [],
+          ...(wallRoomNames ? { wallRoomNames } : {}),
+        },
+      },
+    ],
     activeProjectId: 'p1',
     hydrated: true,
   } as unknown as ProjectState;
@@ -143,7 +179,7 @@ describe('selectRooms — noms de pièces', () => {
     expect(rooms2[0]!.name).toBe('Salon');
   });
 
-  it('conserve le nom par défaut si l\'ID n\'est pas dans wallRoomNames', () => {
+  it("conserve le nom par défaut si l'ID n'est pas dans wallRoomNames", () => {
     const rooms = selectRooms(makeState({ 'unknown-id': 'Xyz' }));
     expect(rooms[0]!.name).toBe('Pièce 1');
   });
@@ -239,7 +275,7 @@ export function selectRooms(s: ProjectState): Room[] {
   if (we !== undefined) {
     const rooms = wallsToRooms(we.walls, we.nodes, we.excludedZones ?? []);
     const names = we.wallRoomNames ?? {};
-    return rooms.map((r) => names[r.id] ? { ...r, name: names[r.id] } : r);
+    return rooms.map((r) => (names[r.id] ? { ...r, name: names[r.id] } : r));
   }
   return project.rooms;
 }
@@ -306,23 +342,61 @@ interface WallRoomPanelProps {
   tutorialMode?: boolean;
 }
 
-const CANVAS_TOP_PX      = 92;
-const SIDE_LEFT_NORMAL   = 72;
+const CANVAS_TOP_PX = 92;
+const SIDE_LEFT_NORMAL = 72;
 const SIDE_LEFT_TUTORIAL = 216;
 
 const getPanelStyle = (zone: SnapZone, tutorialMode: boolean): React.CSSProperties => {
-  if (zone === 'SIDE') return { position: 'fixed', left: tutorialMode ? SIDE_LEFT_TUTORIAL : SIDE_LEFT_NORMAL, top: CANVAS_TOP_PX + 16, zIndex: 10 };
-  if (zone === 'TOP')  return { position: 'fixed', top: CANVAS_TOP_PX + 16, left: '50%', transform: 'translateX(-50%)', zIndex: 10 };
+  if (zone === 'SIDE')
+    return {
+      position: 'fixed',
+      left: tutorialMode ? SIDE_LEFT_TUTORIAL : SIDE_LEFT_NORMAL,
+      top: CANVAS_TOP_PX + 16,
+      zIndex: 10,
+    };
+  if (zone === 'TOP')
+    return {
+      position: 'fixed',
+      top: CANVAS_TOP_PX + 16,
+      left: '50%',
+      transform: 'translateX(-50%)',
+      zIndex: 10,
+    };
   return { position: 'fixed', bottom: 16, left: '50%', transform: 'translateX(-50%)', zIndex: 10 };
 };
 
 const getDropZoneStyle = (zone: SnapZone, tutorialMode: boolean): React.CSSProperties => {
   if (zone === 'SIDE') {
     const left = (tutorialMode ? SIDE_LEFT_TUTORIAL : SIDE_LEFT_NORMAL) - 8;
-    return { position: 'fixed', left, top: CANVAS_TOP_PX + 8, width: 140, height: 200, zIndex: 9, borderRadius: 16 };
+    return {
+      position: 'fixed',
+      left,
+      top: CANVAS_TOP_PX + 8,
+      width: 140,
+      height: 200,
+      zIndex: 9,
+      borderRadius: 16,
+    };
   }
-  if (zone === 'TOP')  return { position: 'fixed', left: '25%', top: CANVAS_TOP_PX + 4, width: '50%', height: 56, zIndex: 9, borderRadius: 16 };
-  return { position: 'fixed', left: '25%', bottom: 4, width: '50%', height: 56, zIndex: 9, borderRadius: 16 };
+  if (zone === 'TOP')
+    return {
+      position: 'fixed',
+      left: '25%',
+      top: CANVAS_TOP_PX + 4,
+      width: '50%',
+      height: 56,
+      zIndex: 9,
+      borderRadius: 16,
+    };
+  return {
+    position: 'fixed',
+    left: '25%',
+    bottom: 4,
+    width: '50%',
+    height: 56,
+    zIndex: 9,
+    borderRadius: 16,
+  };
 };
 
 export const WallRoomPanel = ({
@@ -352,24 +426,25 @@ export const WallRoomPanel = ({
 
   return (
     <>
-      {isDragging && (['SIDE', 'TOP', 'BOTTOM'] as SnapZone[]).map((z) => (
-        <div
-          key={z}
-          className="pointer-events-none"
-          style={{
-            ...getDropZoneStyle(z, tutorialMode),
-            border: '2px dashed rgba(249,115,22,0.4)',
-            background: 'rgba(249,115,22,0.06)',
-          }}
-        />
-      ))}
+      {isDragging &&
+        (['SIDE', 'TOP', 'BOTTOM'] as SnapZone[]).map((z) => (
+          <div
+            key={z}
+            className="pointer-events-none"
+            style={{
+              ...getDropZoneStyle(z, tutorialMode),
+              border: '2px dashed rgba(249,115,22,0.4)',
+              background: 'rgba(249,115,22,0.06)',
+            }}
+          />
+        ))}
 
       <div
         className={`group ${isDragging ? '' : 'transition-all duration-150 ease-out'}`}
         style={getPanelStyle(zone, tutorialMode)}
       >
         <div
-          className="absolute -right-5 top-1/2 -translate-y-1/2 flex h-8 w-5 cursor-grab items-center justify-center rounded-r-lg opacity-0 transition-opacity group-hover:opacity-100 active:cursor-grabbing"
+          className="absolute -right-5 top-1/2 flex h-8 w-5 -translate-y-1/2 cursor-grab items-center justify-center rounded-r-lg opacity-0 transition-opacity active:cursor-grabbing group-hover:opacity-100"
           style={{ background: 'var(--surf)', border: '1px solid var(--bdr)' }}
           onPointerDown={onPointerDown}
         >
@@ -377,11 +452,11 @@ export const WallRoomPanel = ({
         </div>
 
         <div
-          className="flex flex-col gap-1 rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 p-1.5 shadow-2xl backdrop-blur-md"
+          className="flex flex-col gap-1 rounded-2xl border border-gray-200 bg-white/90 p-1.5 shadow-2xl backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-900/90"
           style={{ minWidth: 140 }}
         >
           <p
-            className="px-3 pt-1 pb-0 text-[9px] font-black uppercase tracking-[0.15em]"
+            className="px-3 pb-0 pt-1 text-[9px] font-black uppercase tracking-[0.15em]"
             style={{ color: 'var(--muted)' }}
           >
             Pièces
@@ -409,7 +484,7 @@ export const WallRoomPanel = ({
                   />
                 ) : (
                   <p
-                    className="text-[11px] font-bold text-orange-500 dark:text-orange-400 cursor-pointer select-none"
+                    className="cursor-pointer select-none text-[11px] font-bold text-orange-500 dark:text-orange-400"
                     title="Double-clic pour renommer"
                     onDoubleClick={() => startRename(room)}
                   >
@@ -450,6 +525,7 @@ git commit -m "feat(wall-rooms): renommage des pièces auto-détectées dans Wal
 ## Task 3 : Portes dans le calepinage
 
 **Files:**
+
 - Modify: `src/types/wall.ts`
 - Modify: `src/store/projectStore.ts`
 - Modify: `src/engine/tiling/tilingEngine.ts`
@@ -490,7 +566,12 @@ describe('computeTilingMultiRoom — ouvertures de porte', () => {
   const room: Room = {
     id: 'r1',
     name: 'Test',
-    points: [{ x: 0, y: 0 }, { x: 3000, y: 0 }, { x: 3000, y: 3000 }, { x: 0, y: 3000 }],
+    points: [
+      { x: 0, y: 0 },
+      { x: 3000, y: 0 },
+      { x: 3000, y: 3000 },
+      { x: 0, y: 3000 },
+    ],
     edges: ['WALL', 'WALL', 'WALL', 'WALL'],
     partitions: [],
     excludedZones: [],
@@ -555,8 +636,8 @@ Ajouter à la fin du fichier, après `AutoCotation` :
 
 ```ts
 export interface DoorOpening {
-  from: Point;       // nœud 1 du mur porte (coords monde)
-  to: Point;         // nœud 2 du mur porte (coords monde)
+  from: Point; // nœud 1 du mur porte (coords monde)
+  to: Point; // nœud 2 du mur porte (coords monde)
   thickness: number; // épaisseur du mur (mm)
 }
 ```
@@ -599,7 +680,15 @@ import type { Point } from '@/types/plan';
 import type { EdgeType, ExcludedZone, Partition, Room } from '@/types/project';
 import type { Tile, TileType, TilingConfig, TilingResult } from '@/types/tiling';
 import type { DoorOpening } from '@/types/wall';
-import { getBoundingBox, distance, rotatePoint, getPolygonArea, pointInPolygon, getIntersection, insetRoomPolygon } from '@/engine/geometry/polygon';
+import {
+  getBoundingBox,
+  distance,
+  rotatePoint,
+  getPolygonArea,
+  pointInPolygon,
+  getIntersection,
+  insetRoomPolygon,
+} from '@/engine/geometry/polygon';
 import { classifyTile, classifyPolygonTile } from '@/engine/geometry/clipping';
 import { computeStats } from './cutCalculator';
 ```
@@ -617,39 +706,44 @@ export const computeTilingMultiRoom = (rooms: Room[], config: TilingConfig, wall
 Dans le bloc `if (layout === 'STRAIGHT')` de `computeTilingMultiRoom`, trouver la fin de la boucle principale (le `rowIndex += 1;` final) et ajouter le bloc des carreaux de porte juste avant la fermeture du bloc `if (layout === 'STRAIGHT')` :
 
 ```ts
-  // Carreaux dans les ouvertures de porte (STRAIGHT, angle = 0 uniquement)
-  if (angle === 0 && doorOpenings.length > 0) {
-    for (const door of doorOpenings) {
-      const dx = door.to.x - door.from.x, dy = door.to.y - door.from.y;
-      const L = Math.sqrt(dx * dx + dy * dy);
-      if (L < 1) continue;
-      const dirX = dx / L, dirY = dy / L;
-      const perpX = -dirY, perpY = dirX;
-      const halfGap = wallThickness;
-      let ri = 0;
-      for (let y = startY - stepY; y < endY + stepY; y += stepY) {
-        const rowStagger = (ri % 2) * (stepX * staggerRatio);
-        for (let x = startX - stepX - rowStagger; x < endX + stepX; x += stepX) {
-          const corners = [
-            { x, y }, { x: x + width, y },
-            { x: x + width, y: y + height }, { x, y: y + height },
-          ];
-          const fits = corners.every((c) => {
-            const t = (c.x - door.from.x) * dirX + (c.y - door.from.y) * dirY;
-            const s = (c.x - door.from.x) * perpX + (c.y - door.from.y) * perpY;
-            return t >= 0 && t <= L && Math.abs(s) <= halfGap;
-          });
-          if (fits) {
-            const id = `door-${x.toFixed(0)}-${y.toFixed(0)}`;
-            if (!tiles.some((t) => t.id === id)) {
-              tiles.push({ id, rect: { x, y, w: width, h: height }, type: 'WHOLE' as const });
-            }
+// Carreaux dans les ouvertures de porte (STRAIGHT, angle = 0 uniquement)
+if (angle === 0 && doorOpenings.length > 0) {
+  for (const door of doorOpenings) {
+    const dx = door.to.x - door.from.x,
+      dy = door.to.y - door.from.y;
+    const L = Math.sqrt(dx * dx + dy * dy);
+    if (L < 1) continue;
+    const dirX = dx / L,
+      dirY = dy / L;
+    const perpX = -dirY,
+      perpY = dirX;
+    const halfGap = wallThickness;
+    let ri = 0;
+    for (let y = startY - stepY; y < endY + stepY; y += stepY) {
+      const rowStagger = (ri % 2) * (stepX * staggerRatio);
+      for (let x = startX - stepX - rowStagger; x < endX + stepX; x += stepX) {
+        const corners = [
+          { x, y },
+          { x: x + width, y },
+          { x: x + width, y: y + height },
+          { x, y: y + height },
+        ];
+        const fits = corners.every((c) => {
+          const t = (c.x - door.from.x) * dirX + (c.y - door.from.y) * dirY;
+          const s = (c.x - door.from.x) * perpX + (c.y - door.from.y) * perpY;
+          return t >= 0 && t <= L && Math.abs(s) <= halfGap;
+        });
+        if (fits) {
+          const id = `door-${x.toFixed(0)}-${y.toFixed(0)}`;
+          if (!tiles.some((t) => t.id === id)) {
+            tiles.push({ id, rect: { x, y, w: width, h: height }, type: 'WHOLE' as const });
           }
         }
-        ri++;
       }
+      ri++;
     }
   }
+}
 ```
 
 Le bloc `if (layout === 'STRAIGHT')` complet ressemble à ceci (pour avoir le contexte d'insertion) :
@@ -669,7 +763,10 @@ if (layout === 'STRAIGHT') {
       let bestType: TileType = 'OUTSIDE';
       for (const { testPoints, edges } of testRooms) {
         const t = classifyTile(rect, testPoints, edges);
-        if (t === 'WHOLE') { bestType = 'WHOLE'; break; }
+        if (t === 'WHOLE') {
+          bestType = 'WHOLE';
+          break;
+        }
         if (t === 'CUT') bestType = 'CUT';
       }
       if (bestType !== 'OUTSIDE') {
@@ -733,7 +830,10 @@ Et modifier le `useMemo` (~ligne 86) qui calcule `result` :
 
 ```ts
 // Avant
-const result = useMemo(() => analyzeQuantities(rooms, config, wallThickness), [rooms, config, wallThickness]);
+const result = useMemo(
+  () => analyzeQuantities(rooms, config, wallThickness),
+  [rooms, config, wallThickness],
+);
 
 // Après
 const result = useMemo(

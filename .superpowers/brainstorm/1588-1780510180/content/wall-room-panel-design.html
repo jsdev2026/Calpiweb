@@ -1,5 +1,8 @@
 <h2>SP4 — Design WallRoomPanel</h2>
-<p class="subtitle">Même conteneur visuel que RoomPanel (backdrop blur, border, shadow) — affichage seul : Nom + Surface.</p>
+<p class="subtitle">
+  Même conteneur visuel que RoomPanel (backdrop blur, border, shadow) — affichage seul : Nom +
+  Surface.
+</p>
 
 <style>
   .preview-wrap {
@@ -13,7 +16,7 @@
     border: 1px solid #374151;
     border-radius: 18px;
     padding: 6px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
     display: inline-flex;
     flex-direction: column;
     gap: 2px;
@@ -35,7 +38,7 @@
     margin-top: 2px;
   }
   .room-entry.highlight {
-    background: rgba(249,115,22,0.12);
+    background: rgba(249, 115, 22, 0.12);
   }
   .divider {
     height: 1px;
@@ -72,15 +75,21 @@
     font-size: 9px;
     color: #6b7280;
   }
-  .panel-wrap { position: relative; display: inline-block; }
-  .note { font-size: 10px; color: #6b7280; margin-top: 8px; }
+  .panel-wrap {
+    position: relative;
+    display: inline-block;
+  }
+  .note {
+    font-size: 10px;
+    color: #6b7280;
+    margin-top: 8px;
+  }
 </style>
 
 <div class="preview-wrap">
-
   <!-- 2 pièces -->
   <div>
-    <p style="font-size:12px;color:#9ca3af;margin-bottom:10px">2 pièces fermées détectées</p>
+    <p style="font-size: 12px; color: #9ca3af; margin-bottom: 10px">2 pièces fermées détectées</p>
     <div class="panel-wrap">
       <div class="panel-demo">
         <div class="label-tag">Pièces</div>
@@ -101,7 +110,7 @@
 
   <!-- 0 pièces -->
   <div>
-    <p style="font-size:12px;color:#9ca3af;margin-bottom:10px">Aucun contour fermé</p>
+    <p style="font-size: 12px; color: #9ca3af; margin-bottom: 10px">Aucun contour fermé</p>
     <div class="panel-wrap">
       <div class="panel-demo">
         <div class="label-tag">Pièces</div>
@@ -112,17 +121,24 @@
     </div>
     <p class="note">Affiché quand wallsToRooms retourne [].</p>
   </div>
-
 </div>
 
-<div style="border:1px solid #374151;border-radius:10px;padding:14px 16px;margin-top:4px">
-  <p style="font-size:11px;color:#d1d5db;font-weight:700;margin:0 0 8px">Fonctionnement</p>
-  <ul style="font-size:11px;color:#d1d5db;line-height:1.9;margin:0;padding-left:16px">
-    <li>Composant : <code style="color:#7dd3fc">WallRoomPanel.tsx</code> — nouveau fichier</li>
-    <li>Données : <code style="color:#7dd3fc">selectRooms(state)</code> via useProjectStore</li>
-    <li>Surface : <code style="color:#7dd3fc">getPolygonArea(room.points) / 1_000_000</code> → m²</li>
-    <li>Draggable : même <code style="color:#7dd3fc">useDraggableSnap</code> + même <code style="color:#7dd3fc">getPanelStyle</code></li>
-    <li>Dans PlanEditor : remplace RoomPanel quand <code style="color:#7dd3fc">wallEngine !== undefined</code></li>
+<div style="border: 1px solid #374151; border-radius: 10px; padding: 14px 16px; margin-top: 4px">
+  <p style="font-size: 11px; color: #d1d5db; font-weight: 700; margin: 0 0 8px">Fonctionnement</p>
+  <ul style="font-size: 11px; color: #d1d5db; line-height: 1.9; margin: 0; padding-left: 16px">
+    <li>Composant : <code style="color: #7dd3fc">WallRoomPanel.tsx</code> — nouveau fichier</li>
+    <li>Données : <code style="color: #7dd3fc">selectRooms(state)</code> via useProjectStore</li>
+    <li>
+      Surface : <code style="color: #7dd3fc">getPolygonArea(room.points) / 1_000_000</code> → m²
+    </li>
+    <li>
+      Draggable : même <code style="color: #7dd3fc">useDraggableSnap</code> + même
+      <code style="color: #7dd3fc">getPanelStyle</code>
+    </li>
+    <li>
+      Dans PlanEditor : remplace RoomPanel quand
+      <code style="color: #7dd3fc">wallEngine !== undefined</code>
+    </li>
     <li>Read-only : aucune interaction (pas de sélection, rename, add, delete)</li>
   </ul>
 </div>

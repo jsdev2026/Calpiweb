@@ -33,10 +33,10 @@ Sur smartphone, la toolbar de l'outil de dessin souffre de trois défauts :
 
 ### Fichiers modifiés
 
-| Fichier | Rôle |
-|---|---|
-| `src/components/plan/PlanToolbar.tsx` | Restructurer le bloc mobile en deux lignes |
-| `src/components/plan/WallThicknessControl.tsx` | Ajouter prop `compact` → stepper inline |
+| Fichier                                        | Rôle                                       |
+| ---------------------------------------------- | ------------------------------------------ |
+| `src/components/plan/PlanToolbar.tsx`          | Restructurer le bloc mobile en deux lignes |
+| `src/components/plan/WallThicknessControl.tsx` | Ajouter prop `compact` → stepper inline    |
 
 ### WallThicknessControl — prop `compact`
 

@@ -8,6 +8,7 @@
 Sur mobile, le layout utilise `h-screen` (= `100vh`). Sur Safari iOS, `100vh` correspond à la hauteur du viewport lorsque la barre du navigateur est **cachée** — sa valeur maximale. Quand la barre Safari est **visible** (cas nominal), elle empiète sur le bas du layout. La toolbar de dessin (`absolute bottom-0`) se retrouve partiellement ou totalement masquée.
 
 Scénarios affectés :
+
 - **Safari iOS** (barre en bas, iOS 15+) : toolbar masquée sous la barre Safari
 - **Chrome Android récent** (barre bas) : même problème via `100vh` trop grand
 - **Autres navigateurs** : pas d'impact visible, mais `100vh` légèrement inexact
@@ -37,10 +38,10 @@ La combinaison des deux garantit le comportement correct même sur les navigateu
 
 ### Fichiers modifiés
 
-| Fichier | Changement |
-|---|---|
-| `src/app/project/[id]/page.tsx` | Ajouter `style={{ height: '100svh' }}` sur le div racine |
-| `src/components/plan/PlanToolbar.tsx` | `absolute` → `fixed` sur le bloc mobile |
+| Fichier                               | Changement                                               |
+| ------------------------------------- | -------------------------------------------------------- |
+| `src/app/project/[id]/page.tsx`       | Ajouter `style={{ height: '100svh' }}` sur le div racine |
+| `src/components/plan/PlanToolbar.tsx` | `absolute` → `fixed` sur le bloc mobile                  |
 
 ### Détail — page.tsx
 

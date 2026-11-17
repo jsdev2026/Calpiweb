@@ -25,9 +25,9 @@ To: openings & zones group (with PARTITION + EXCLUDE)
 
 1. SELECT
 2. WALL
-3. WallThicknessControl  ← moved up
+3. WallThicknessControl ← moved up
 4. ─ divider ─
-5. DOOR                  ← moved down
+5. DOOR ← moved down
 6. PARTITION
 7. EXCLUDE
 8. ─ divider ─

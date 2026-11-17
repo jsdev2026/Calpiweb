@@ -12,22 +12,24 @@
 
 ## Fichiers créés/modifiés
 
-| Fichier | Rôle |
-|---|---|
-| `src/engine/quantities/mergeSimilarCutGroups.ts` | **Créé** — fonction pure + type `MergedCutGroup` |
-| `src/engine/quantities/mergeSimilarCutGroups.test.ts` | **Créé** — 10 tests unitaires |
-| `src/components/quantities/QuantitiesPanel.tsx` | **Modifié** — appel de `mergeSimilarCutGroups` avant rendu des cartes |
-| `src/components/quantities/QuantitiesPrintView.tsx` | **Modifié** — appel de `mergeSimilarCutGroups` dans le tableau des coupes |
+| Fichier                                               | Rôle                                                                      |
+| ----------------------------------------------------- | ------------------------------------------------------------------------- |
+| `src/engine/quantities/mergeSimilarCutGroups.ts`      | **Créé** — fonction pure + type `MergedCutGroup`                          |
+| `src/engine/quantities/mergeSimilarCutGroups.test.ts` | **Créé** — 10 tests unitaires                                             |
+| `src/components/quantities/QuantitiesPanel.tsx`       | **Modifié** — appel de `mergeSimilarCutGroups` avant rendu des cartes     |
+| `src/components/quantities/QuantitiesPrintView.tsx`   | **Modifié** — appel de `mergeSimilarCutGroups` dans le tableau des coupes |
 
 ---
 
 ## Task 1 — `mergeSimilarCutGroups` : fonction pure + tests
 
 **Files:**
+
 - Create: `src/engine/quantities/mergeSimilarCutGroups.ts`
 - Create: `src/engine/quantities/mergeSimilarCutGroups.test.ts`
 
 **Contexte :**
+
 - `CutGroup` (dans `src/engine/quantities/types.ts`) a les champs : `usedW`, `usedH`, `pieceEdges`, `chuteW`, `chuteH`, `chuteEdges`, `totalCount`, `reuseCount`, `netTiles`.
 - L'algorithme trie par `(usedW, usedH)`, puis clustering glouton en comparant chaque nouveau groupe au **premier** élément du cluster courant (pour bloquer la dérive chaînée).
 - Valeurs représentatives : médiane (`sorted[Math.floor(N/2)]`) pour toutes les dimensions numériques. `pieceEdges`/`chuteEdges` du groupe médian. Somme pour les compteurs.
@@ -41,14 +43,29 @@ import { describe, it, expect } from 'vitest';
 import { mergeSimilarCutGroups } from './mergeSimilarCutGroups';
 import type { CutGroup } from './types';
 
-const PE_CUT  = { left: 'cut'     as const, right: 'factory' as const, top: 'factory' as const, bottom: 'factory' as const };
-const PE_FACT = { left: 'factory' as const, right: 'cut'     as const, top: 'factory' as const, bottom: 'factory' as const };
+const PE_CUT = {
+  left: 'cut' as const,
+  right: 'factory' as const,
+  top: 'factory' as const,
+  bottom: 'factory' as const,
+};
+const PE_FACT = {
+  left: 'factory' as const,
+  right: 'cut' as const,
+  top: 'factory' as const,
+  bottom: 'factory' as const,
+};
 
 const g = (usedW: number, usedH: number, extras: Partial<CutGroup> = {}): CutGroup => ({
-  usedW, usedH,
-  pieceEdges: PE_CUT, chuteEdges: PE_FACT,
-  chuteW: 0, chuteH: 0,
-  totalCount: 2, reuseCount: 0, netTiles: 2,
+  usedW,
+  usedH,
+  pieceEdges: PE_CUT,
+  chuteEdges: PE_FACT,
+  chuteW: 0,
+  chuteH: 0,
+  totalCount: 2,
+  reuseCount: 0,
+  netTiles: 2,
   ...extras,
 });
 
@@ -83,11 +100,7 @@ describe('mergeSimilarCutGroups', () => {
   });
 
   it('médiane correcte sur 3 groupes : 600×294, 600×300, 600×306 → usedH = 300', () => {
-    const result = mergeSimilarCutGroups([
-      g(600, 306),
-      g(600, 294),
-      g(600, 300),
-    ]);
+    const result = mergeSimilarCutGroups([g(600, 306), g(600, 294), g(600, 300)]);
     expect(result).toHaveLength(1);
     // sorted usedH = [294, 300, 306], Math.floor(3/2) = 1 → 300
     expect(result[0]!.usedH).toBe(300);
@@ -107,11 +120,7 @@ describe('mergeSimilarCutGroups', () => {
 
   it('dérive chaînée autorisée : A≈B≈C et A≈C → 1 cluster', () => {
     // A(100) ≈ C(102) : |102-100|/102 = 1.96% ≤ 2%
-    const result = mergeSimilarCutGroups([
-      g(300, 100),
-      g(300, 101),
-      g(300, 102),
-    ]);
+    const result = mergeSimilarCutGroups([g(300, 100), g(300, 101), g(300, 102)]);
     expect(result).toHaveLength(1);
     // sorted usedH = [100,101,102], idx 1 → 101
     expect(result[0]!.usedH).toBe(101);
@@ -120,21 +129,14 @@ describe('mergeSimilarCutGroups', () => {
   it('dérive chaînée bloquée : A≈B mais A≉C → 2 clusters', () => {
     // A(100)≈B(101) (0.99%), A≉C(103) : |103-100|/103 = 2.91% > 2%
     // comparaison au PREMIER du cluster : C vs A → hors tolérance
-    const result = mergeSimilarCutGroups([
-      g(300, 100),
-      g(300, 101),
-      g(300, 103),
-    ]);
+    const result = mergeSimilarCutGroups([g(300, 100), g(300, 101), g(300, 103)]);
     expect(result).toHaveLength(2);
     expect(result[0]!.originalIndices).toHaveLength(2); // {A, B}
     expect(result[1]!.originalIndices).toHaveLength(1); // {C}
   });
 
   it('tolerance = 0 → aucune fusion', () => {
-    const result = mergeSimilarCutGroups(
-      [g(600, 300), g(600, 301), g(600, 302)],
-      0,
-    );
+    const result = mergeSimilarCutGroups([g(600, 300), g(600, 301), g(600, 302)], 0);
     expect(result).toHaveLength(3);
   });
 
@@ -206,10 +208,7 @@ function median(sorted: number[]): number {
  * Valeurs représentatives : médiane pour les dimensions numériques,
  * somme pour les compteurs, pieceEdges/chuteEdges du groupe médian.
  */
-export function mergeSimilarCutGroups(
-  groups: CutGroup[],
-  tolerance = 0.02,
-): MergedCutGroup[] {
+export function mergeSimilarCutGroups(groups: CutGroup[], tolerance = 0.02): MergedCutGroup[] {
   if (groups.length === 0) return [];
 
   // Associer chaque groupe à son index original avant le tri
@@ -238,22 +237,22 @@ export function mergeSimilarCutGroups(
     const medianIdx = Math.floor(n / 2);
     const representative = items[medianIdx]!;
 
-    const usedWs  = [...items].sort((a, b) => a.g.usedW  - b.g.usedW ).map(x => x.g.usedW);
-    const usedHs  = [...items].sort((a, b) => a.g.usedH  - b.g.usedH ).map(x => x.g.usedH);
-    const chuteWs = [...items].sort((a, b) => a.g.chuteW - b.g.chuteW).map(x => x.g.chuteW);
-    const chuteHs = [...items].sort((a, b) => a.g.chuteH - b.g.chuteH).map(x => x.g.chuteH);
+    const usedWs = [...items].sort((a, b) => a.g.usedW - b.g.usedW).map((x) => x.g.usedW);
+    const usedHs = [...items].sort((a, b) => a.g.usedH - b.g.usedH).map((x) => x.g.usedH);
+    const chuteWs = [...items].sort((a, b) => a.g.chuteW - b.g.chuteW).map((x) => x.g.chuteW);
+    const chuteHs = [...items].sort((a, b) => a.g.chuteH - b.g.chuteH).map((x) => x.g.chuteH);
 
     return {
-      usedW:      median(usedWs),
-      usedH:      median(usedHs),
-      chuteW:     median(chuteWs),
-      chuteH:     median(chuteHs),
+      usedW: median(usedWs),
+      usedH: median(usedHs),
+      chuteW: median(chuteWs),
+      chuteH: median(chuteHs),
       pieceEdges: representative.g.pieceEdges,
       chuteEdges: representative.g.chuteEdges,
       totalCount: items.reduce((s, x) => s + x.g.totalCount, 0),
       reuseCount: items.reduce((s, x) => s + x.g.reuseCount, 0),
-      netTiles:   items.reduce((s, x) => s + x.g.netTiles,   0),
-      originalIndices: items.map(x => x.origIdx),
+      netTiles: items.reduce((s, x) => s + x.g.netTiles, 0),
+      originalIndices: items.map((x) => x.origIdx),
     };
   });
 }
@@ -278,6 +277,7 @@ cd /workspaces/Calpiweb && git add src/engine/quantities/mergeSimilarCutGroups.t
 ## Task 2 — Intégration dans `QuantitiesPanel`
 
 **Files:**
+
 - Modify: `src/components/quantities/QuantitiesPanel.tsx`
 
 **Contexte :** `QuantitiesPanel` mappe actuellement `result.cutGroups` directement vers des `CutGroupCard`. Le `onHighlight` appelle `setHighlightGroup(groupIndex + 1)` via `CutGroupCard` (comportement interne de la card). Après fusion, on intercepte ce callback pour passer l'index original (1-based) du premier groupe représentatif, afin que le highlight sur le plan SVG reste cohérent avec les données du moteur.
@@ -302,36 +302,38 @@ Localiser le bloc de rendu des `CutGroupCard` (actuellement `result.cutGroups.ma
 
 ```tsx
 // AVANT
-{result.cutGroups.map((group, i) => (
-  <CutGroupCard
-    key={`${group.usedW}×${group.usedH}|${group.pieceEdges.left}|${group.pieceEdges.right}|${group.pieceEdges.top}|${group.pieceEdges.bottom}`}
-    group={group}
-    groupIndex={i}
-    groupColor={GROUP_COLORS[i % GROUP_COLORS.length]!}
-    tileW={result.tileW}
-    tileH={result.tileH}
-    tileColor={color}
-    onHighlight={setHighlightGroup}
-  />
-))}
+{
+  result.cutGroups.map((group, i) => (
+    <CutGroupCard
+      key={`${group.usedW}×${group.usedH}|${group.pieceEdges.left}|${group.pieceEdges.right}|${group.pieceEdges.top}|${group.pieceEdges.bottom}`}
+      group={group}
+      groupIndex={i}
+      groupColor={GROUP_COLORS[i % GROUP_COLORS.length]!}
+      tileW={result.tileW}
+      tileH={result.tileH}
+      tileColor={color}
+      onHighlight={setHighlightGroup}
+    />
+  ));
+}
 ```
 
 ```tsx
 // APRÈS
-{mergeSimilarCutGroups(result.cutGroups).map((group, i) => (
-  <CutGroupCard
-    key={group.originalIndices.join(',')}
-    group={group}
-    groupIndex={i}
-    groupColor={GROUP_COLORS[i % GROUP_COLORS.length]!}
-    tileW={result.tileW}
-    tileH={result.tileH}
-    tileColor={color}
-    onHighlight={(n) => setHighlightGroup(
-      n === null ? null : group.originalIndices[0]! + 1,
-    )}
-  />
-))}
+{
+  mergeSimilarCutGroups(result.cutGroups).map((group, i) => (
+    <CutGroupCard
+      key={group.originalIndices.join(',')}
+      group={group}
+      groupIndex={i}
+      groupColor={GROUP_COLORS[i % GROUP_COLORS.length]!}
+      tileW={result.tileW}
+      tileH={result.tileH}
+      tileColor={color}
+      onHighlight={(n) => setHighlightGroup(n === null ? null : group.originalIndices[0]! + 1)}
+    />
+  ));
+}
 ```
 
 **Pourquoi `originalIndices[0]! + 1` :** le plan SVG utilise des indices 1-based dérivés des groupes bruts du moteur. `originalIndices[0]` est l'index 0-based du premier groupe représentatif dans `result.cutGroups`. Le `+1` aligne sur la convention du plan.
@@ -363,6 +365,7 @@ cd /workspaces/Calpiweb && git add src/components/quantities/QuantitiesPanel.tsx
 ## Task 3 — Intégration dans `QuantitiesPrintView`
 
 **Files:**
+
 - Modify: `src/components/quantities/QuantitiesPrintView.tsx`
 
 **Contexte :** Le tableau des coupes dans `QuantitiesPrintView` mappe actuellement `result.cutGroups` ligne par ligne. On insère `mergeSimilarCutGroups` avant ce mapping. La structure du tableau (colonnes, styles) reste identique — seule la source de données change.

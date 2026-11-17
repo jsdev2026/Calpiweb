@@ -35,7 +35,11 @@ export function snapToTiling(
       dist,
       result: { point: { x: pt.x, y: pt.y }, kind, ...(nodeId ? { nodeId } : {}) },
     };
-    if (!state.best || priority < state.best.priority || (priority === state.best.priority && dist < state.best.dist)) {
+    if (
+      !state.best ||
+      priority < state.best.priority ||
+      (priority === state.best.priority && dist < state.best.dist)
+    ) {
       state.best = candidate;
     }
   };
@@ -70,7 +74,10 @@ export function snapToTiling(
   for (const tile of tiles) {
     const { x, y, w, h } = tile.rect;
     for (const pt of [
-      { x, y }, { x: x + w, y }, { x: x + w, y: y + h }, { x, y: y + h },
+      { x, y },
+      { x: x + w, y },
+      { x: x + w, y: y + h },
+      { x, y: y + h },
     ]) {
       consider(pt, 'tile-corner', 3);
     }
@@ -80,8 +87,10 @@ export function snapToTiling(
   for (const tile of tiles) {
     const { x, y, w, h } = tile.rect;
     for (const pt of [
-      { x: x + w / 2, y }, { x: x + w, y: y + h / 2 },
-      { x: x + w / 2, y: y + h }, { x, y: y + h / 2 },
+      { x: x + w / 2, y },
+      { x: x + w, y: y + h / 2 },
+      { x: x + w / 2, y: y + h },
+      { x, y: y + h / 2 },
     ]) {
       consider(pt, 'tile-midpoint', 4);
     }
@@ -90,11 +99,7 @@ export function snapToTiling(
   return state.best ? state.best.result : null;
 }
 
-export function getParallelAngle(
-  p1: Point,
-  rooms: Room[],
-  wallThickness: number,
-): number | null {
+export function getParallelAngle(p1: Point, rooms: Room[], wallThickness: number): number | null {
   let bestDist = Infinity;
   let bestAngle: number | null = null;
 

@@ -12,21 +12,22 @@
 
 ## File Map
 
-| Action | File | Purpose |
-|--------|------|---------|
-| Modify | `src/engine/geometry/polygon.ts` | Add `insetRoomPolygon` export + private `lineIntersect` helper |
-| Modify | `src/engine/geometry/polygon.test.ts` | Unit tests for `insetRoomPolygon` |
-| Modify | `src/engine/tiling/tilingEngine.ts` | Add `wallThickness` param to `computeTilingMultiRoom`, apply inset to `testPoints` |
-| Modify | `src/engine/quantities/quantityEngine.ts` | Add `wallThickness` param to `analyzeQuantities` and `tileSpaceRooms`, thread through |
-| Modify | `src/engine/quantities/quantityEngine.integration.test.ts` | Failing test verifying inset reduces tile count |
-| Modify | `src/components/tiling/TilingEditor.tsx` | Pass `wallThickness` to `analyzeQuantities` |
-| Modify | `src/components/tiling/TilingCanvas.tsx` | Draw room outline using inset polygon |
+| Action | File                                                       | Purpose                                                                               |
+| ------ | ---------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Modify | `src/engine/geometry/polygon.ts`                           | Add `insetRoomPolygon` export + private `lineIntersect` helper                        |
+| Modify | `src/engine/geometry/polygon.test.ts`                      | Unit tests for `insetRoomPolygon`                                                     |
+| Modify | `src/engine/tiling/tilingEngine.ts`                        | Add `wallThickness` param to `computeTilingMultiRoom`, apply inset to `testPoints`    |
+| Modify | `src/engine/quantities/quantityEngine.ts`                  | Add `wallThickness` param to `analyzeQuantities` and `tileSpaceRooms`, thread through |
+| Modify | `src/engine/quantities/quantityEngine.integration.test.ts` | Failing test verifying inset reduces tile count                                       |
+| Modify | `src/components/tiling/TilingEditor.tsx`                   | Pass `wallThickness` to `analyzeQuantities`                                           |
+| Modify | `src/components/tiling/TilingCanvas.tsx`                   | Draw room outline using inset polygon                                                 |
 
 ---
 
 ### Task 1: `insetRoomPolygon` utility in `polygon.ts`
 
 **Files:**
+
 - Modify: `src/engine/geometry/polygon.ts`
 - Modify: `src/engine/geometry/polygon.test.ts`
 
@@ -50,7 +51,12 @@ import type { Room } from '@/types/project';
 function makeRect(w: number, h: number, edgeThicknesses?: (number | undefined)[]): Room {
   return {
     id: 'r1',
-    points: [{ x: 0, y: 0 }, { x: w, y: 0 }, { x: w, y: h }, { x: 0, y: h }],
+    points: [
+      { x: 0, y: 0 },
+      { x: w, y: 0 },
+      { x: w, y: h },
+      { x: 0, y: h },
+    ],
     edges: ['WALL', 'WALL', 'WALL', 'WALL'],
     edgeThicknesses,
   };
@@ -82,14 +88,21 @@ describe('insetRoomPolygon', () => {
     // Edge 3 (left,   200mm → inset 100): x goes from 0 to 100
     const room = makeRect(2000, 3000, [100, 200, 100, 200]);
     const result = insetRoomPolygon(room, 0); // defaultThickness irrelevant, all overridden
-    expect(result[0]).toEqual({ x: 100, y: 50 });   // edge3∩edge0
-    expect(result[1]).toEqual({ x: 1900, y: 50 });  // edge0∩edge1
+    expect(result[0]).toEqual({ x: 100, y: 50 }); // edge3∩edge0
+    expect(result[1]).toEqual({ x: 1900, y: 50 }); // edge0∩edge1
     expect(result[2]).toEqual({ x: 1900, y: 2950 }); // edge1∩edge2
-    expect(result[3]).toEqual({ x: 100, y: 2950 });  // edge2∩edge3
+    expect(result[3]).toEqual({ x: 100, y: 2950 }); // edge2∩edge3
   });
 
   it('returns original points for degenerate polygon (< 3 pts)', () => {
-    const room: Room = { id: 'r', points: [{ x: 0, y: 0 }, { x: 1, y: 0 }], edges: [] };
+    const room: Room = {
+      id: 'r',
+      points: [
+        { x: 0, y: 0 },
+        { x: 1, y: 0 },
+      ],
+      edges: [],
+    };
     expect(insetRoomPolygon(room, 100)).toEqual(room.points);
   });
 });
@@ -179,6 +192,7 @@ git commit -m "feat(tiling): insetRoomPolygon utility for wall face alignment"
 ### Task 2: Thread `wallThickness` through the engine
 
 **Files:**
+
 - Modify: `src/engine/quantities/quantityEngine.integration.test.ts`
 - Modify: `src/engine/tiling/tilingEngine.ts`
 - Modify: `src/engine/quantities/quantityEngine.ts`
@@ -195,6 +209,7 @@ After change: `(rooms: Room[], config: TilingConfig, wallThickness = 0): Quantit
 Default `0` preserves existing tests without modification.
 
 In `computeTilingMultiRoom`, two code paths use `r.points` for classification:
+
 1. **Single-room path** (line 273–275): passes `valid[0]!.points` directly to `computeTiling`
 2. **Multi-room path** (lines 289–295): builds `testRooms` with `testPoints` from `r.points`
 
@@ -239,10 +254,25 @@ In `src/engine/tiling/tilingEngine.ts`:
 
 ```ts
 // BEFORE:
-import { getBoundingBox, distance, rotatePoint, getPolygonArea, pointInPolygon, getIntersection } from '@/engine/geometry/polygon';
+import {
+  getBoundingBox,
+  distance,
+  rotatePoint,
+  getPolygonArea,
+  pointInPolygon,
+  getIntersection,
+} from '@/engine/geometry/polygon';
 
 // AFTER:
-import { getBoundingBox, distance, rotatePoint, getPolygonArea, pointInPolygon, getIntersection, insetRoomPolygon } from '@/engine/geometry/polygon';
+import {
+  getBoundingBox,
+  distance,
+  rotatePoint,
+  getPolygonArea,
+  pointInPolygon,
+  getIntersection,
+  insetRoomPolygon,
+} from '@/engine/geometry/polygon';
 ```
 
 **b) Update the function signature** (line 270):
@@ -259,13 +289,23 @@ export const computeTilingMultiRoom = (rooms: Room[], config: TilingConfig, wall
 
 ```ts
 // BEFORE:
-  if (valid.length === 1) return computeTiling(
-    valid[0]!.points, config, valid[0]!.edges, valid[0]!.excludedZones, valid[0]!.partitions,
+if (valid.length === 1)
+  return computeTiling(
+    valid[0]!.points,
+    config,
+    valid[0]!.edges,
+    valid[0]!.excludedZones,
+    valid[0]!.partitions,
   );
 
 // AFTER:
-  if (valid.length === 1) return computeTiling(
-    insetRoomPolygon(valid[0]!, wallThickness), config, valid[0]!.edges, valid[0]!.excludedZones, valid[0]!.partitions,
+if (valid.length === 1)
+  return computeTiling(
+    insetRoomPolygon(valid[0]!, wallThickness),
+    config,
+    valid[0]!.edges,
+    valid[0]!.excludedZones,
+    valid[0]!.partitions,
   );
 ```
 
@@ -273,25 +313,21 @@ export const computeTilingMultiRoom = (rooms: Room[], config: TilingConfig, wall
 
 ```ts
 // BEFORE:
-  const testRooms = valid.map((r) => ({
-    testPoints:
-      angle !== 0
-        ? r.points.map((p) => rotatePoint(p.x, p.y, -angle, centerX, centerY))
-        : r.points,
-    edges: r.edges,
-  }));
+const testRooms = valid.map((r) => ({
+  testPoints:
+    angle !== 0 ? r.points.map((p) => rotatePoint(p.x, p.y, -angle, centerX, centerY)) : r.points,
+  edges: r.edges,
+}));
 
 // AFTER:
-  const testRooms = valid.map((r) => {
-    const inset = insetRoomPolygon(r, wallThickness);
-    return {
-      testPoints:
-        angle !== 0
-          ? inset.map((p) => rotatePoint(p.x, p.y, -angle, centerX, centerY))
-          : inset,
-      edges: r.edges,
-    };
-  });
+const testRooms = valid.map((r) => {
+  const inset = insetRoomPolygon(r, wallThickness);
+  return {
+    testPoints:
+      angle !== 0 ? inset.map((p) => rotatePoint(p.x, p.y, -angle, centerX, centerY)) : inset,
+    edges: r.edges,
+  };
+});
 ```
 
 - [ ] **Step 4: Update `tileSpaceRooms` and `analyzeQuantities` in `quantityEngine.ts`**
@@ -316,21 +352,23 @@ function tileSpaceRooms(rooms: Room[], angle: number, cx: number, cy: number): P
   return rooms
     .filter((r) => r.points.length >= 3)
     .map((r) =>
-      angle !== 0
-        ? r.points.map((p) => rotatePoint(p.x, p.y, -angle, cx, cy))
-        : r.points,
+      angle !== 0 ? r.points.map((p) => rotatePoint(p.x, p.y, -angle, cx, cy)) : r.points,
     );
 }
 
 // AFTER:
-function tileSpaceRooms(rooms: Room[], angle: number, cx: number, cy: number, wallThickness = 0): Point[][] {
+function tileSpaceRooms(
+  rooms: Room[],
+  angle: number,
+  cx: number,
+  cy: number,
+  wallThickness = 0,
+): Point[][] {
   return rooms
     .filter((r) => r.points.length >= 3)
     .map((r) => {
       const inset = insetRoomPolygon(r, wallThickness);
-      return angle !== 0
-        ? inset.map((p) => rotatePoint(p.x, p.y, -angle, cx, cy))
-        : inset;
+      return angle !== 0 ? inset.map((p) => rotatePoint(p.x, p.y, -angle, cx, cy)) : inset;
     });
 }
 ```
@@ -349,18 +387,18 @@ export function analyzeQuantities(rooms: Room[], config: TilingConfig, wallThick
 
 ```ts
 // Line 26 — BEFORE:
-  const { tiles, stats } = computeTilingMultiRoom(rooms, config);
+const { tiles, stats } = computeTilingMultiRoom(rooms, config);
 
 // AFTER:
-  const { tiles, stats } = computeTilingMultiRoom(rooms, config, wallThickness);
+const { tiles, stats } = computeTilingMultiRoom(rooms, config, wallThickness);
 ```
 
 ```ts
 // Line 42 — BEFORE:
-  const roomPolygons = tileSpaceRooms(validRooms, config.angle, cx, cy);
+const roomPolygons = tileSpaceRooms(validRooms, config.angle, cx, cy);
 
 // AFTER:
-  const roomPolygons = tileSpaceRooms(validRooms, config.angle, cx, cy, wallThickness);
+const roomPolygons = tileSpaceRooms(validRooms, config.angle, cx, cy, wallThickness);
 ```
 
 - [ ] **Step 5: Update `TilingEditor.tsx` useMemo call**
@@ -369,10 +407,13 @@ In `src/components/tiling/TilingEditor.tsx`, update line 77:
 
 ```ts
 // BEFORE:
-  const result = useMemo(() => analyzeQuantities(rooms, config), [rooms, config]);
+const result = useMemo(() => analyzeQuantities(rooms, config), [rooms, config]);
 
 // AFTER:
-  const result = useMemo(() => analyzeQuantities(rooms, config, wallThickness), [rooms, config, wallThickness]);
+const result = useMemo(
+  () => analyzeQuantities(rooms, config, wallThickness),
+  [rooms, config, wallThickness],
+);
 ```
 
 - [ ] **Step 6: Run integration test to verify it passes**
@@ -403,6 +444,7 @@ git commit -m "feat(tiling): apply wall-face inset in computeTilingMultiRoom and
 ### Task 3: Update `TilingCanvas` room outline to interior face
 
 **Files:**
+
 - Modify: `src/components/tiling/TilingCanvas.tsx`
 
 #### Background
@@ -435,9 +477,10 @@ Find the `clipPath` block. The inner `<path d={[...validRooms.map(...)]}>` maps 
 ```ts
 // BEFORE:
 `M ${r.points.map((p) => `${p.x},${p.y}`).join(' L ')} Z`
-
 // AFTER:
-`M ${insetRoomPolygon(r, wallThickness).map((p) => `${p.x},${p.y}`).join(' L ')} Z`
+`M ${insetRoomPolygon(r, wallThickness)
+  .map((p) => `${p.x},${p.y}`)
+  .join(' L ')} Z`;
 ```
 
 - [ ] **Step 3: Update the background `<polygon>` (line 124)**

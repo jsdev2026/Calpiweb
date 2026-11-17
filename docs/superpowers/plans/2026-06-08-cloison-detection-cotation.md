@@ -12,18 +12,19 @@
 
 ## Fichiers
 
-| Fichier | Rôle |
-|---|---|
-| `src/engine/geometry/wallFaces.ts` | Ajouter leaf-pruning dans `wallFaceCycles` |
-| `src/engine/geometry/wallFaces.test.ts` | Tests T-junction |
-| `src/engine/geometry/wallCotation.ts` | Remplacer la boucle "murs isolés" par logique cloison |
-| `src/engine/geometry/wallCotation.test.ts` | Tests Cas 1 / Cas 2 |
+| Fichier                                    | Rôle                                                  |
+| ------------------------------------------ | ----------------------------------------------------- |
+| `src/engine/geometry/wallFaces.ts`         | Ajouter leaf-pruning dans `wallFaceCycles`            |
+| `src/engine/geometry/wallFaces.test.ts`    | Tests T-junction                                      |
+| `src/engine/geometry/wallCotation.ts`      | Remplacer la boucle "murs isolés" par logique cloison |
+| `src/engine/geometry/wallCotation.test.ts` | Tests Cas 1 / Cas 2                                   |
 
 ---
 
 ## Task 1 : Leaf-pruning dans `wallFaceCycles`
 
 **Files:**
+
 - Modify: `src/engine/geometry/wallFaces.ts`
 - Test: `src/engine/geometry/wallFaces.test.ts`
 
@@ -32,8 +33,9 @@
 `wallFaceCycles` (dans `wallFaces.ts`) utilise une traversée half-edge pour trouver les cycles fermés (pièces). Quand un mur-cloison est connecté en jonction T (nœud de degré 3), l'algorithme peut suivre l'impasse de la cloison, marquer des demi-arêtes comme visitées, et la pièce ne peut plus être complétée → la pièce disparaît.
 
 La signature actuelle :
+
 ```typescript
-export function wallFaceCycles(walls: Wall[], nodes: WallNode[]): FaceCycle[]
+export function wallFaceCycles(walls: Wall[], nodes: WallNode[]): FaceCycle[];
 ```
 
 Le fix : ajouter une fonction `pruneLeaves` appelée au début de `wallFaceCycles`.
@@ -48,17 +50,20 @@ describe('wallFaceCycles — cloisons (T-junction)', () => {
   // Mur du haut splitté en a→m et m→b, avec m(50,0)
   // Cloison m→f, f(50,60) — pend dans la pièce
   const nodes = [
-    nd('a', 0, 0), nd('b', 100, 0), nd('c', 100, 100), nd('d', 0, 100),
+    nd('a', 0, 0),
+    nd('b', 100, 0),
+    nd('c', 100, 100),
+    nd('d', 0, 100),
     nd('m', 50, 0),
     nd('f', 50, 60),
   ];
   const walls: Wall[] = [
     { id: 'w1a', node1Id: 'a', node2Id: 'm', thickness: 20 },
     { id: 'w1b', node1Id: 'm', node2Id: 'b', thickness: 20 },
-    { id: 'w2',  node1Id: 'b', node2Id: 'c', thickness: 20 },
-    { id: 'w3',  node1Id: 'c', node2Id: 'd', thickness: 20 },
-    { id: 'w4',  node1Id: 'd', node2Id: 'a', thickness: 20 },
-    { id: 'wC',  node1Id: 'm', node2Id: 'f', thickness: 15 }, // cloison
+    { id: 'w2', node1Id: 'b', node2Id: 'c', thickness: 20 },
+    { id: 'w3', node1Id: 'c', node2Id: 'd', thickness: 20 },
+    { id: 'w4', node1Id: 'd', node2Id: 'a', thickness: 20 },
+    { id: 'wC', node1Id: 'm', node2Id: 'f', thickness: 15 }, // cloison
   ];
 
   it('pièce rectangulaire préservée quand une cloison pend depuis un nœud du contour', () => {
@@ -77,7 +82,10 @@ describe('wallFaceCycles — cloisons (T-junction)', () => {
   it('pièce + cloison connectée à un coin existant (degré 3)', () => {
     // Rectangle normal + cloison sortant du coin b
     const n2 = [
-      nd('a', 0, 0), nd('b', 100, 0), nd('c', 100, 100), nd('d', 0, 100),
+      nd('a', 0, 0),
+      nd('b', 100, 0),
+      nd('c', 100, 100),
+      nd('d', 0, 100),
       nd('e', 100, 50), // free end of cloison
     ];
     const w2: Wall[] = [
@@ -165,6 +173,7 @@ git commit -m "fix: leaf-pruning dans wallFaceCycles — cloisons en T ne détru
 ## Task 2 : Cotation des cloisons dans `computeAutoCotations`
 
 **Files:**
+
 - Modify: `src/engine/geometry/wallCotation.ts`
 - Test: `src/engine/geometry/wallCotation.test.ts`
 
@@ -173,12 +182,15 @@ git commit -m "fix: leaf-pruning dans wallFaceCycles — cloisons en T ne détru
 `computeAutoCotations` (dans `wallCotation.ts`) génère les cotations automatiques. À la fin de la fonction, une boucle "murs isolés" traite tous les murs hors pièce avec `anchor1 = nodePos(node1)` et `anchor2 = nodePos(node2)` — mesure centre-à-centre.
 
 Pour une cloison avec un bout connecté à un mur de pièce, le bon anchor pour le bout connecté est :
+
 ```
 anchorConnecté = posNœudConnecté + (épaisseurMoyenneAdjacents / 2) × dirVersFree
 ```
+
 où `dirVersFree = normalize(posNœudLibre − posNœudConnecté)`.
 
 Types importants (définis dans `@/types/wall`) :
+
 ```typescript
 interface AutoCotation {
   wallId: string;
@@ -222,7 +234,7 @@ describe('computeAutoCotations — cloisons', () => {
     expect(cot).toBeDefined();
     expect(cot.side).toBe('isolated');
     expect(cot.anchor1.x).toBeCloseTo(100);
-    expect(cot.anchor1.y).toBeCloseTo(10);  // b + (20/2)*(0,1)
+    expect(cot.anchor1.y).toBeCloseTo(10); // b + (20/2)*(0,1)
     expect(cot.anchor2.x).toBeCloseTo(100);
     expect(cot.anchor2.y).toBeCloseTo(100);
     expect(cot.label).toBe('9.0 cm');
@@ -239,7 +251,7 @@ describe('computeAutoCotations — cloisons', () => {
     expect(cot.side).toBe('isolated');
     expect(cot.anchor1.x).toBeCloseTo(0);
     expect(cot.anchor1.y).toBeCloseTo(0);
-    expect(cot.anchor2.x).toBeCloseTo(95);  // b - (10/2)*(1,0)
+    expect(cot.anchor2.x).toBeCloseTo(95); // b - (10/2)*(1,0)
     expect(cot.anchor2.y).toBeCloseTo(0);
     expect(cot.label).toBe('9.5 cm');
   });
@@ -259,12 +271,19 @@ describe('computeAutoCotations — cloisons', () => {
   it('cloison dans une pièce — pas de cotation isolated pour les murs de pièce', () => {
     // Rectangle + cloison : les 4 murs de pièce ont ext+int, la cloison a isolated
     const rNodes = [
-      nd('a', 0, 0), nd('b', 200, 0), nd('c', 200, 200), nd('d', 0, 200),
-      nd('m', 100, 0), nd('f', 100, 100),
+      nd('a', 0, 0),
+      nd('b', 200, 0),
+      nd('c', 200, 200),
+      nd('d', 0, 200),
+      nd('m', 100, 0),
+      nd('f', 100, 100),
     ];
     const rWalls = [
-      w('r1', 'a', 'm', 20), w('r2', 'm', 'b', 20),
-      w('r3', 'b', 'c', 20), w('r4', 'c', 'd', 20), w('r5', 'd', 'a', 20),
+      w('r1', 'a', 'm', 20),
+      w('r2', 'm', 'b', 20),
+      w('r3', 'b', 'c', 20),
+      w('r4', 'c', 'd', 20),
+      w('r5', 'd', 'a', 20),
       w('rC', 'm', 'f', 15),
     ];
     const result = computeAutoCotations(rWalls, rNodes);
@@ -291,59 +310,62 @@ Attendu : les 4 nouveaux tests FAIL.
 Dans `src/engine/geometry/wallCotation.ts`, localiser le bloc commenté `// ── Murs isolés ───` (vers la fin de `computeAutoCotations`) et le remplacer entièrement :
 
 ```typescript
-  // ── Degré des nœuds — pour détecter les cloisons ─────────────────────────
-  const nodeDegree = new Map<string, number>();
-  for (const wall of walls) {
-    if (wall.isDoor) continue;
-    nodeDegree.set(wall.node1Id, (nodeDegree.get(wall.node1Id) ?? 0) + 1);
-    nodeDegree.set(wall.node2Id, (nodeDegree.get(wall.node2Id) ?? 0) + 1);
+// ── Degré des nœuds — pour détecter les cloisons ─────────────────────────
+const nodeDegree = new Map<string, number>();
+for (const wall of walls) {
+  if (wall.isDoor) continue;
+  nodeDegree.set(wall.node1Id, (nodeDegree.get(wall.node1Id) ?? 0) + 1);
+  nodeDegree.set(wall.node2Id, (nodeDegree.get(wall.node2Id) ?? 0) + 1);
+}
+
+// ── Cloisons (murs hors pièce, au moins un bout libre) ───────────────────
+for (const wall of walls) {
+  if (wallsInRooms.has(wall.id) || wall.isDoor) continue;
+  const p1 = nodePos(wall.node1Id, nodes);
+  const p2 = nodePos(wall.node2Id, nodes);
+  const d = dist(p1, p2);
+  if (d < 1) continue;
+  const dir: Point = { x: (p2.x - p1.x) / d, y: (p2.y - p1.y) / d };
+  const normal: Point = { x: -dir.y, y: dir.x };
+
+  const deg1 = nodeDegree.get(wall.node1Id) ?? 0;
+  const deg2 = nodeDegree.get(wall.node2Id) ?? 0;
+
+  let anchor1: Point = p1;
+  let anchor2: Point = p2;
+
+  if (deg1 === 1 && deg2 > 1) {
+    // p1 libre, p2 connecté → reculer anchor2 de tAdj/2 vers p1
+    const adj = walls.filter(
+      (w) =>
+        !w.isDoor && w.id !== wall.id && (w.node1Id === wall.node2Id || w.node2Id === wall.node2Id),
+    );
+    const tAdj = adj.length > 0 ? adj.reduce((s, w) => s + w.thickness, 0) / adj.length : 0;
+    anchor2 = { x: p2.x - (dir.x * tAdj) / 2, y: p2.y - (dir.y * tAdj) / 2 };
+  } else if (deg2 === 1 && deg1 > 1) {
+    // p2 libre, p1 connecté → avancer anchor1 de tAdj/2 vers p2
+    const adj = walls.filter(
+      (w) =>
+        !w.isDoor && w.id !== wall.id && (w.node1Id === wall.node1Id || w.node2Id === wall.node1Id),
+    );
+    const tAdj = adj.length > 0 ? adj.reduce((s, w) => s + w.thickness, 0) / adj.length : 0;
+    anchor1 = { x: p1.x + (dir.x * tAdj) / 2, y: p1.y + (dir.y * tAdj) / 2 };
   }
+  // Cas 2 (deg1===1 && deg2===1) : anchor1=p1, anchor2=p2 — inchangé
 
-  // ── Cloisons (murs hors pièce, au moins un bout libre) ───────────────────
-  for (const wall of walls) {
-    if (wallsInRooms.has(wall.id) || wall.isDoor) continue;
-    const p1 = nodePos(wall.node1Id, nodes);
-    const p2 = nodePos(wall.node2Id, nodes);
-    const d  = dist(p1, p2);
-    if (d < 1) continue;
-    const dir: Point    = { x: (p2.x - p1.x) / d, y: (p2.y - p1.y) / d };
-    const normal: Point = { x: -dir.y, y: dir.x };
+  const anchorDist = dist(anchor1, anchor2);
+  if (anchorDist < 1) continue;
 
-    const deg1 = nodeDegree.get(wall.node1Id) ?? 0;
-    const deg2 = nodeDegree.get(wall.node2Id) ?? 0;
-
-    let anchor1: Point = p1;
-    let anchor2: Point = p2;
-
-    if (deg1 === 1 && deg2 > 1) {
-      // p1 libre, p2 connecté → reculer anchor2 de tAdj/2 vers p1
-      const adj = walls.filter(
-        (w) => !w.isDoor && w.id !== wall.id &&
-               (w.node1Id === wall.node2Id || w.node2Id === wall.node2Id),
-      );
-      const tAdj = adj.length > 0 ? adj.reduce((s, w) => s + w.thickness, 0) / adj.length : 0;
-      anchor2 = { x: p2.x - dir.x * tAdj / 2, y: p2.y - dir.y * tAdj / 2 };
-    } else if (deg2 === 1 && deg1 > 1) {
-      // p2 libre, p1 connecté → avancer anchor1 de tAdj/2 vers p2
-      const adj = walls.filter(
-        (w) => !w.isDoor && w.id !== wall.id &&
-               (w.node1Id === wall.node1Id || w.node2Id === wall.node1Id),
-      );
-      const tAdj = adj.length > 0 ? adj.reduce((s, w) => s + w.thickness, 0) / adj.length : 0;
-      anchor1 = { x: p1.x + dir.x * tAdj / 2, y: p1.y + dir.y * tAdj / 2 };
-    }
-    // Cas 2 (deg1===1 && deg2===1) : anchor1=p1, anchor2=p2 — inchangé
-
-    const anchorDist = dist(anchor1, anchor2);
-    if (anchorDist < 1) continue;
-
-    result.push({
-      wallId: wall.id, side: 'isolated',
-      anchor1, anchor2,
-      normal, offset: COTE_OFFSET_ISO,
-      label: formatCm(anchorDist),
-    });
-  }
+  result.push({
+    wallId: wall.id,
+    side: 'isolated',
+    anchor1,
+    anchor2,
+    normal,
+    offset: COTE_OFFSET_ISO,
+    label: formatCm(anchorDist),
+  });
+}
 ```
 
 - [ ] **Étape 4 : Vérifier que tous les tests passent**

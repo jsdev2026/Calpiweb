@@ -128,20 +128,22 @@ Localiser le bloc `<div className="hidden md:block mouse:block">` qui contient `
 
 ## Fichiers concernés
 
-| Fichier | Action |
-|---------|--------|
-| `src/components/plan/WallRoomPanel.tsx` | **Créer** |
-| `src/components/plan/PlanEditor.tsx` | **Modifier** — conditionner RoomPanel / WallRoomPanel |
+| Fichier                                 | Action                                                |
+| --------------------------------------- | ----------------------------------------------------- |
+| `src/components/plan/WallRoomPanel.tsx` | **Créer**                                             |
+| `src/components/plan/PlanEditor.tsx`    | **Modifier** — conditionner RoomPanel / WallRoomPanel |
 
 ---
 
 ## Tests
 
 Aucun test unitaire requis (composant UI pur). Vérifier :
+
 - `npx vitest run` — 344 tests passent sans régression
 - `npx tsc --noEmit` — 0 erreurs
 
 ### Validation manuelle
+
 1. Mode legacy (sans moteur de murs) → `RoomPanel` visible comme avant
 2. Activer le moteur de murs → `WallRoomPanel` s'affiche
 3. Dessiner 1 rectangle fermé → "Pièce 1 / XX.XX m²" affiché

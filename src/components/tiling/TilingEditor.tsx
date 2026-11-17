@@ -32,13 +32,26 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
   const [activeTool, setActiveTool] = useState<'pan' | 'dimension'>('pan');
   const [mobileTab, setMobileTab] = useState<'apercu' | 'reglages'>('apercu');
   const [dimDrag, setDimDrag] = useState<{
-    id: string; nx: number; ny: number;
-    startPerp: number; startMX: number; startMY: number;
+    id: string;
+    nx: number;
+    ny: number;
+    startPerp: number;
+    startMX: number;
+    startMY: number;
   } | null>(null);
-  const [livePerpOverride, setLivePerpOverride] = useState<{ id: string; perpOffset: number } | null>(null);
+  const [livePerpOverride, setLivePerpOverride] = useState<{
+    id: string;
+    perpOffset: number;
+  } | null>(null);
   const [selectedDimId, setSelectedDimId] = useState<string | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
-  const tilingTouchRef = useRef<{ dist: number; midX: number; midY: number; panX: number; panY: number } | null>(null);
+  const tilingTouchRef = useRef<{
+    dist: number;
+    midX: number;
+    midY: number;
+    panX: number;
+    panY: number;
+  } | null>(null);
 
   const handleTilingTouchStart = (e: React.TouchEvent) => {
     e.preventDefault();
@@ -48,10 +61,17 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
         dist: Math.hypot(t[1]!.clientX - t[0]!.clientX, t[1]!.clientY - t[0]!.clientY),
         midX: (t[0]!.clientX + t[1]!.clientX) / 2,
         midY: (t[0]!.clientY + t[1]!.clientY) / 2,
-        panX: pan.x, panY: pan.y,
+        panX: pan.x,
+        panY: pan.y,
       };
     } else if (t.length === 1) {
-      tilingTouchRef.current = { dist: 0, midX: t[0]!.clientX, midY: t[0]!.clientY, panX: pan.x, panY: pan.y };
+      tilingTouchRef.current = {
+        dist: 0,
+        midX: t[0]!.clientX,
+        midY: t[0]!.clientY,
+        panX: pan.x,
+        panY: pan.y,
+      };
     }
   };
 
@@ -70,8 +90,8 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
         setScale((s) => {
           const ns = Math.max(0.005, Math.min(s * ratio, 4));
           setPan((p) => ({
-            x: (midX - rect.left) - ((midX - rect.left) - p.x) * (ns / s),
-            y: (midY - rect.top) - ((midY - rect.top) - p.y) * (ns / s),
+            x: midX - rect.left - (midX - rect.left - p.x) * (ns / s),
+            y: midY - rect.top - (midY - rect.top - p.y) * (ns / s),
           }));
           return ns;
         });
@@ -84,12 +104,18 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
     }
   };
 
-  const handleTilingTouchEnd = () => { tilingTouchRef.current = null; };
+  const handleTilingTouchEnd = () => {
+    tilingTouchRef.current = null;
+  };
 
   const doorOpenings = useProjectStore(useShallow(selectDoorOpenings));
-  const wallEngine = useProjectStore(s => selectActiveProject(s)?.wallEngine);
+  const wallEngine = useProjectStore((s) => selectActiveProject(s)?.wallEngine);
   const wallPolygons = useMemo(
-    () => computeCornerGeometry((wallEngine?.walls ?? []).filter(w => !w.isDoor), wallEngine?.nodes ?? []),
+    () =>
+      computeCornerGeometry(
+        (wallEngine?.walls ?? []).filter((w) => !w.isDoor),
+        wallEngine?.nodes ?? [],
+      ),
     [wallEngine],
   );
   const result = useMemo(
@@ -101,7 +127,10 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
   const updateTilingDimensionPerpOffset = useProjectStore((s) => s.updateTilingDimensionPerpOffset);
 
   const dimHook = useTilingDimension(
-    rooms, result.tiles, wallThickness, scale,
+    rooms,
+    result.tiles,
+    wallThickness,
+    scale,
     activeTool === 'dimension',
     wallEngine?.nodes ?? [],
   );
@@ -138,7 +167,10 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
       const mx = e.clientX - rect.left;
       const my = e.clientY - rect.top;
       setScale(newScale);
-      setPan({ x: mx - (mx - pan.x) * (newScale / scale), y: my - (my - pan.y) * (newScale / scale) });
+      setPan({
+        x: mx - (mx - pan.x) * (newScale / scale),
+        y: my - (my - pan.y) * (newScale / scale),
+      });
     };
     svg.addEventListener('wheel', handleWheel, { passive: false });
     return () => svg.removeEventListener('wheel', handleWheel);
@@ -158,11 +190,17 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
   const toWorld = (e: { clientX: number; clientY: number }): Point | null => {
     const rect = svgRef.current?.getBoundingClientRect();
     if (!rect) return null;
-    return { x: (e.clientX - rect.left - pan.x) / scale, y: (e.clientY - rect.top - pan.y) / scale };
+    return {
+      x: (e.clientX - rect.left - pan.x) / scale,
+      y: (e.clientY - rect.top - pan.y) / scale,
+    };
   };
 
   const handleDimDragStart = (
-    id: string, nx: number, ny: number, startPerp: number,
+    id: string,
+    nx: number,
+    ny: number,
+    startPerp: number,
     e: React.PointerEvent<SVGGElement>,
   ) => {
     if (!svgRef.current) return;
@@ -183,8 +221,8 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
     if (dimDrag) {
       const world = toWorld(e);
       if (!world) return;
-      const delta = (world.x - dimDrag.startMX) * dimDrag.nx
-                  + (world.y - dimDrag.startMY) * dimDrag.ny;
+      const delta =
+        (world.x - dimDrag.startMX) * dimDrag.nx + (world.y - dimDrag.startMY) * dimDrag.ny;
       setLivePerpOverride({ id: dimDrag.id, perpOffset: dimDrag.startPerp + delta });
       return;
     }
@@ -230,18 +268,23 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
   );
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden dark:bg-zinc-950 bg-gray-100 md:flex-row">
-
+    <div className="flex flex-1 flex-col overflow-hidden bg-gray-100 md:flex-row dark:bg-zinc-950">
       {/* Mobile tab bar */}
-      <div className="flex border-b border-gray-200 dark:border-zinc-800 md:hidden" style={{ background: 'var(--surf)' }}>
+      <div
+        className="flex border-b border-gray-200 md:hidden dark:border-zinc-800"
+        style={{ background: 'var(--surf)' }}
+      >
         <button
           type="button"
           data-active={mobileTab === 'apercu' ? 'true' : 'false'}
           onClick={() => setMobileTab('apercu')}
           className="flex-1 py-2.5 text-[13px] font-medium transition-colors"
-          style={mobileTab === 'apercu'
-            ? { color: 'var(--accent)', borderBottom: '2px solid var(--accent)' }
-            : { color: 'var(--text2)', borderBottom: '2px solid transparent' }}>
+          style={
+            mobileTab === 'apercu'
+              ? { color: 'var(--accent)', borderBottom: '2px solid var(--accent)' }
+              : { color: 'var(--text2)', borderBottom: '2px solid transparent' }
+          }
+        >
           Aperçu
         </button>
         <button
@@ -249,15 +292,20 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
           data-active={mobileTab === 'reglages' ? 'true' : 'false'}
           onClick={() => setMobileTab('reglages')}
           className="flex-1 py-2.5 text-[13px] font-medium transition-colors"
-          style={mobileTab === 'reglages'
-            ? { color: 'var(--accent)', borderBottom: '2px solid var(--accent)' }
-            : { color: 'var(--text2)', borderBottom: '2px solid transparent' }}>
+          style={
+            mobileTab === 'reglages'
+              ? { color: 'var(--accent)', borderBottom: '2px solid var(--accent)' }
+              : { color: 'var(--text2)', borderBottom: '2px solid transparent' }
+          }
+        >
           Réglages
         </button>
       </div>
 
       {/* Canvas area — full width on mobile (Aperçu tab), left panel on desktop */}
-      <div className={`relative flex flex-1 flex-col border-r border-gray-200 dark:border-zinc-900 ${mobileTab === 'reglages' ? 'hidden md:flex' : 'flex'}`}>
+      <div
+        className={`relative flex flex-1 flex-col border-r border-gray-200 dark:border-zinc-900 ${mobileTab === 'reglages' ? 'hidden md:flex' : 'flex'}`}
+      >
         {/* Mobile touch overlay for pan + pinch-to-zoom */}
         <div
           className="absolute inset-0 z-10 md:hidden"
@@ -287,61 +335,96 @@ export const TilingEditor = ({ rooms, config, wallThickness, setConfig }: Tiling
         {/* Bottom controls: 3 rows on mobile, 1 row on desktop */}
         <div
           data-testid="controls-bar"
-          className="absolute bottom-20 md:bottom-4 mouse:bottom-4 left-1/2 z-10 -translate-x-1/2 flex flex-col md:flex-row mouse:flex-row items-start md:items-center mouse:items-center gap-2 md:gap-5 mouse:gap-5 rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 px-5 py-3 shadow-2xl backdrop-blur-md w-[calc(100%-2rem)] md:w-auto mouse:w-auto">
+          className="absolute bottom-20 left-1/2 z-10 flex w-[calc(100%-2rem)] -translate-x-1/2 flex-col items-start gap-2 rounded-2xl border border-gray-200 bg-white/90 px-5 py-3 shadow-2xl backdrop-blur-md mouse:bottom-4 mouse:w-auto mouse:flex-row mouse:items-center mouse:gap-5 md:bottom-4 md:w-auto md:flex-row md:items-center md:gap-5 dark:border-zinc-800 dark:bg-zinc-900/90"
+        >
           {/* Row 1 : Angle */}
           <div className="flex w-full items-center gap-2.5">
             <div className="flex flex-1 items-center gap-2">
-              <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-500">Angle</span>
+              <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-500">
+                Angle
+              </span>
               <input
-                type="range" min="0" max="90" step="1"
+                type="range"
+                min="0"
+                max="90"
+                step="1"
                 value={config.angle}
                 onChange={(e) => setConfig({ ...config, angle: parseInt(e.target.value, 10) })}
-                className="h-1.5 flex-1 cursor-pointer appearance-none rounded-lg bg-gray-200 dark:bg-zinc-700 accent-orange-500"
+                className="h-1.5 flex-1 cursor-pointer appearance-none rounded-lg bg-gray-200 accent-orange-500 dark:bg-zinc-700"
               />
-              <span className="w-8 font-mono text-xs font-bold text-orange-400">{config.angle}°</span>
+              <span className="w-8 font-mono text-xs font-bold text-orange-400">
+                {config.angle}°
+              </span>
             </div>
           </div>
           {/* Separator Angle | Déc. (desktop only) */}
-          <div className="hidden md:block h-5 w-px bg-gray-200 dark:bg-zinc-700" />
+          <div className="hidden h-5 w-px bg-gray-200 md:block dark:bg-zinc-700" />
           {/* Row 2 : Déc. X */}
           <div data-testid="dec-x-row" className="flex w-full items-center gap-2">
-            <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-500">Déc. X</span>
+            <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-500">
+              Déc. X
+            </span>
             <input
-              type="range" min="0" max={config.width + config.joint} step="1"
-              value={Math.round(((config.offsetX % (config.width + config.joint)) + (config.width + config.joint)) % (config.width + config.joint))}
+              type="range"
+              min="0"
+              max={config.width + config.joint}
+              step="1"
+              value={Math.round(
+                ((config.offsetX % (config.width + config.joint)) + (config.width + config.joint)) %
+                  (config.width + config.joint),
+              )}
               onChange={(e) => setConfig({ ...config, offsetX: parseInt(e.target.value, 10) })}
-              className="h-1.5 flex-1 cursor-pointer appearance-none rounded-lg bg-gray-200 dark:bg-zinc-700 accent-orange-500"
+              className="h-1.5 flex-1 cursor-pointer appearance-none rounded-lg bg-gray-200 accent-orange-500 dark:bg-zinc-700"
             />
-            <span className="w-7 font-mono text-[10px] font-bold text-orange-400">{Math.round(((config.offsetX % (config.width + config.joint)) + (config.width + config.joint)) % (config.width + config.joint))}</span>
+            <span className="w-7 font-mono text-[10px] font-bold text-orange-400">
+              {Math.round(
+                ((config.offsetX % (config.width + config.joint)) + (config.width + config.joint)) %
+                  (config.width + config.joint),
+              )}
+            </span>
           </div>
           {/* Separator X | Y (desktop only) */}
-          <div className="hidden md:block h-5 w-px bg-gray-200 dark:bg-zinc-700" />
+          <div className="hidden h-5 w-px bg-gray-200 md:block dark:bg-zinc-700" />
           {/* Row 3 : Déc. Y */}
           <div data-testid="dec-y-row" className="flex w-full items-center gap-2">
-            <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-500">Déc. Y</span>
+            <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-500">
+              Déc. Y
+            </span>
             <input
-              type="range" min="0" max={config.height + config.joint} step="1"
-              value={Math.round(((config.offsetY % (config.height + config.joint)) + (config.height + config.joint)) % (config.height + config.joint))}
+              type="range"
+              min="0"
+              max={config.height + config.joint}
+              step="1"
+              value={Math.round(
+                ((config.offsetY % (config.height + config.joint)) +
+                  (config.height + config.joint)) %
+                  (config.height + config.joint),
+              )}
               onChange={(e) => setConfig({ ...config, offsetY: parseInt(e.target.value, 10) })}
-              className="h-1.5 flex-1 cursor-pointer appearance-none rounded-lg bg-gray-200 dark:bg-zinc-700 accent-orange-500"
+              className="h-1.5 flex-1 cursor-pointer appearance-none rounded-lg bg-gray-200 accent-orange-500 dark:bg-zinc-700"
             />
-            <span className="w-7 font-mono text-[10px] font-bold text-orange-400">{Math.round(((config.offsetY % (config.height + config.joint)) + (config.height + config.joint)) % (config.height + config.joint))}</span>
+            <span className="w-7 font-mono text-[10px] font-bold text-orange-400">
+              {Math.round(
+                ((config.offsetY % (config.height + config.joint)) +
+                  (config.height + config.joint)) %
+                  (config.height + config.joint),
+              )}
+            </span>
           </div>
         </div>
       </div>
 
       {/* Controls sidebar — full width on mobile (Réglages tab), right panel on desktop */}
-      <aside className={`z-20 flex w-full flex-col overflow-y-auto dark:bg-zinc-900 bg-white shadow-2xl md:w-80 ${mobileTab === 'apercu' ? 'hidden md:flex' : 'flex'}`}>
-        {selectedDimId && (() => {
-          const dim = dimensions.find((d) => d.id === selectedDimId);
-          return dim ? (
-            <DimPropertiesPanel
-              key={dim.id}
-              dim={dim}
-              onClose={() => setSelectedDimId(null)}
-            />
-          ) : null;
-        })()}
+      <aside
+        className={`z-20 flex w-full flex-col overflow-y-auto bg-white shadow-2xl md:w-80 dark:bg-zinc-900 ${mobileTab === 'apercu' ? 'hidden md:flex' : 'flex'}`}
+      >
+        {selectedDimId &&
+          (() => {
+            const dim = dimensions.find((d) => d.id === selectedDimId);
+            return dim ? (
+              <DimPropertiesPanel key={dim.id} dim={dim} onClose={() => setSelectedDimId(null)} />
+            ) : null;
+          })()}
         <TilingControls config={config} onChange={setConfig} />
         <ResultsPanel result={result} />
       </aside>

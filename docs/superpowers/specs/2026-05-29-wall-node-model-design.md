@@ -37,12 +37,12 @@ export interface SnapResult {
   point: Point;
   type: 'endpoint' | 'face' | 'hv';
   wallId?: string;
-  nodeId?: string;   // renseigné pour type 'endpoint'
+  nodeId?: string; // renseigné pour type 'endpoint'
   axis?: 'h' | 'v'; // renseigné pour type 'hv'
 }
 
 export type DrawingChain = {
-  nodeIds: string[];   // IDs des nœuds déjà posés
+  nodeIds: string[]; // IDs des nœuds déjà posés
   thickness: number;
 } | null;
 ```
@@ -57,6 +57,7 @@ walls: Wall[]
 ```
 
 Actions :
+
 - `addNode(node)`, `updateNode(id, patch)`, `removeNode(id)`
 - `addWall(wall)`, `removeWall(id)`, `updateWall(id, patch)`
 - `setNodes(nodes)`, `setWalls(walls)`
@@ -133,13 +134,13 @@ Nouveaux tests ajoutés : 45°, 120°, épaisseurs différentes + angle non-droi
 
 ### Logique de click (mode WALL)
 
-| Situation | Action |
-|-----------|--------|
-| Snap `endpoint` sur nœud existant | Réutilise ce nœud (pas de doublon) |
-| Snap `endpoint` = nœud de départ de la chaîne | Ferme la boucle, termine la chaîne |
-| Snap `hv` | Crée un nouveau nœud aux coordonnées contraintes |
-| Snap `face` | Crée un nouveau nœud sur la face, sans split du mur hôte |
-| Espace libre | Crée un nouveau nœud aux coordonnées brutes |
+| Situation                                     | Action                                                   |
+| --------------------------------------------- | -------------------------------------------------------- |
+| Snap `endpoint` sur nœud existant             | Réutilise ce nœud (pas de doublon)                       |
+| Snap `endpoint` = nœud de départ de la chaîne | Ferme la boucle, termine la chaîne                       |
+| Snap `hv`                                     | Crée un nouveau nœud aux coordonnées contraintes         |
+| Snap `face`                                   | Crée un nouveau nœud sur la face, sans split du mur hôte |
+| Espace libre                                  | Crée un nouveau nœud aux coordonnées brutes              |
 
 À chaque click (sauf premier) : `addNode(nouveau)` + `addWall({ node1Id: précédent, node2Id: nouveau, thickness })`.
 
@@ -166,6 +167,7 @@ La preview du prochain segment utilise `nodes.find(n => n.id === last(nodeIds))`
 ### Détection du hit (`pointerdown`)
 
 Priorité :
+
 1. **Handle nœud** : distance écran < `NODE_HANDLE_RADIUS_PX=10` → entre en drag nœud
 2. **Corps de mur** : hit-test existant → sélection + WallEdgeEditor
 
@@ -189,18 +191,18 @@ Priorité :
 
 ## Architecture — fichiers concernés
 
-| Fichier | Changement |
-|---------|-----------|
-| `src/types/wall.ts` | Nouveau `WallNode`, `Wall` avec `node1Id/node2Id`, `SnapResult.hv`, `DrawingChain.nodeIds` |
-| `src/store/projectStore.ts` | Slice `nodes[]` + actions `addNode/updateNode/removeNode/mergeNodes/setNodes` |
-| `src/engine/geometry/wallGeometry.ts` | Signature `(walls, nodes)`, formule d'extension et joint par intersection |
-| `src/engine/geometry/wallGeometry.test.ts` | Mise à jour 13 tests + nouveaux cas angles non-droits |
-| `src/engine/geometry/wallSnap.ts` | Ajout snap `'hv'`, signature avec `nodes` |
-| `src/engine/geometry/wallSnap.test.ts` | Tests snap H/V |
-| `src/components/plan/WallDrawingCanvas.tsx` | DrawingChain → nodeIds, drag nœud, handles SELECT, aimantation H/V |
-| `src/components/plan/PlanEditor.tsx` | Passe `nodes` + `walls` au canvas, actions store étendues |
-| `src/lib/supabase/db.ts` | `migrateProject` — détection ancien/nouveau format |
-| `src/types/project.ts` | Remplace `walls?: Wall[]` par `wallEngine?: { nodes: WallNode[]; walls: Wall[] }` |
+| Fichier                                     | Changement                                                                                 |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `src/types/wall.ts`                         | Nouveau `WallNode`, `Wall` avec `node1Id/node2Id`, `SnapResult.hv`, `DrawingChain.nodeIds` |
+| `src/store/projectStore.ts`                 | Slice `nodes[]` + actions `addNode/updateNode/removeNode/mergeNodes/setNodes`              |
+| `src/engine/geometry/wallGeometry.ts`       | Signature `(walls, nodes)`, formule d'extension et joint par intersection                  |
+| `src/engine/geometry/wallGeometry.test.ts`  | Mise à jour 13 tests + nouveaux cas angles non-droits                                      |
+| `src/engine/geometry/wallSnap.ts`           | Ajout snap `'hv'`, signature avec `nodes`                                                  |
+| `src/engine/geometry/wallSnap.test.ts`      | Tests snap H/V                                                                             |
+| `src/components/plan/WallDrawingCanvas.tsx` | DrawingChain → nodeIds, drag nœud, handles SELECT, aimantation H/V                         |
+| `src/components/plan/PlanEditor.tsx`        | Passe `nodes` + `walls` au canvas, actions store étendues                                  |
+| `src/lib/supabase/db.ts`                    | `migrateProject` — détection ancien/nouveau format                                         |
+| `src/types/project.ts`                      | Remplace `walls?: Wall[]` par `wallEngine?: { nodes: WallNode[]; walls: Wall[] }`          |
 
 ---
 

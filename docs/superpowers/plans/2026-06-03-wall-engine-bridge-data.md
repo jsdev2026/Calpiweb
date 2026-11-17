@@ -14,20 +14,21 @@
 
 ## Fichiers concernés
 
-| Fichier | Action |
-|---------|--------|
-| `src/engine/geometry/wallFaces.ts` | **Créer** — `wallsToRooms()` |
-| `src/engine/geometry/wallFaces.test.ts` | **Créer** — tests TDD |
-| `src/store/projectStore.ts` | **Modifier** — ajouter `selectRooms` |
-| `src/store/projectStore.test.ts` | **Modifier** — tests `selectRooms` |
-| `src/components/quantities/QuantitiesPanel.tsx` | **Modifier** — utiliser `selectRooms` (2 lignes) |
-| `src/app/project/[id]/page.tsx` | **Modifier** — utiliser `selectRooms` (3 endroits) |
+| Fichier                                         | Action                                             |
+| ----------------------------------------------- | -------------------------------------------------- |
+| `src/engine/geometry/wallFaces.ts`              | **Créer** — `wallsToRooms()`                       |
+| `src/engine/geometry/wallFaces.test.ts`         | **Créer** — tests TDD                              |
+| `src/store/projectStore.ts`                     | **Modifier** — ajouter `selectRooms`               |
+| `src/store/projectStore.test.ts`                | **Modifier** — tests `selectRooms`                 |
+| `src/components/quantities/QuantitiesPanel.tsx` | **Modifier** — utiliser `selectRooms` (2 lignes)   |
+| `src/app/project/[id]/page.tsx`                 | **Modifier** — utiliser `selectRooms` (3 endroits) |
 
 ---
 
 ### Task 1 : `wallsToRooms()` — TDD half-edge planar traversal
 
 **Files:**
+
 - Create: `src/engine/geometry/wallFaces.test.ts`
 - Create: `src/engine/geometry/wallFaces.ts`
 
@@ -39,7 +40,9 @@ import { describe, it, expect } from 'vitest';
 import { wallsToRooms } from './wallFaces';
 import type { Wall, WallNode } from '@/types/wall';
 
-function nd(id: string, x: number, y: number): WallNode { return { id, x, y }; }
+function nd(id: string, x: number, y: number): WallNode {
+  return { id, x, y };
+}
 ```
 
 - [ ] **Step 1.2 : Écrire le test — graphe vide**
@@ -69,23 +72,23 @@ describe('wallsToRooms', () => {
 - [ ] **Step 1.3 : Écrire le test — rectangle simple**
 
 ```typescript
-  it('returns 1 Room for a simple rectangle', () => {
-    // Nodes in SVG coords (Y down): a(0,0) b(100,0) c(100,100) d(0,100)
-    const nodes = [nd('a', 0, 0), nd('b', 100, 0), nd('c', 100, 100), nd('d', 0, 100)];
-    const walls: Wall[] = [
-      { id: 'w1', node1Id: 'a', node2Id: 'b', thickness: 20 },
-      { id: 'w2', node1Id: 'b', node2Id: 'c', thickness: 20 },
-      { id: 'w3', node1Id: 'c', node2Id: 'd', thickness: 20 },
-      { id: 'w4', node1Id: 'd', node2Id: 'a', thickness: 20 },
-    ];
-    const rooms = wallsToRooms(walls, nodes);
-    expect(rooms).toHaveLength(1);
-    expect(rooms[0]!.points).toHaveLength(4);
-    expect(rooms[0]!.edges).toEqual(['WALL', 'WALL', 'WALL', 'WALL']);
-    expect(rooms[0]!.name).toBe('Pièce 1');
-    expect(rooms[0]!.partitions).toEqual([]);
-    expect(rooms[0]!.excludedZones).toEqual([]);
-  });
+it('returns 1 Room for a simple rectangle', () => {
+  // Nodes in SVG coords (Y down): a(0,0) b(100,0) c(100,100) d(0,100)
+  const nodes = [nd('a', 0, 0), nd('b', 100, 0), nd('c', 100, 100), nd('d', 0, 100)];
+  const walls: Wall[] = [
+    { id: 'w1', node1Id: 'a', node2Id: 'b', thickness: 20 },
+    { id: 'w2', node1Id: 'b', node2Id: 'c', thickness: 20 },
+    { id: 'w3', node1Id: 'c', node2Id: 'd', thickness: 20 },
+    { id: 'w4', node1Id: 'd', node2Id: 'a', thickness: 20 },
+  ];
+  const rooms = wallsToRooms(walls, nodes);
+  expect(rooms).toHaveLength(1);
+  expect(rooms[0]!.points).toHaveLength(4);
+  expect(rooms[0]!.edges).toEqual(['WALL', 'WALL', 'WALL', 'WALL']);
+  expect(rooms[0]!.name).toBe('Pièce 1');
+  expect(rooms[0]!.partitions).toEqual([]);
+  expect(rooms[0]!.excludedZones).toEqual([]);
+});
 ```
 
 - [ ] **Step 1.4 : Écrire le test — deux pièces (T-junction)**
@@ -144,7 +147,7 @@ import type { Wall, WallNode } from '@/types/wall';
 import type { Room, EdgeType } from '@/types/project';
 
 function pos(id: string, nodes: WallNode[]): { x: number; y: number } {
-  return nodes.find(n => n.id === id) ?? { x: 0, y: 0 };
+  return nodes.find((n) => n.id === id) ?? { x: 0, y: 0 };
 }
 
 function shoelaceArea(pts: { x: number; y: number }[]): number {
@@ -178,7 +181,7 @@ export function wallsToRooms(walls: Wall[], nodes: WallNode[]): Room[] {
   if (walls.length === 0 || nodes.length === 0) return [];
 
   type HE = { from: string; to: string };
-  const halfEdges: HE[] = walls.flatMap(w => [
+  const halfEdges: HE[] = walls.flatMap((w) => [
     { from: w.node1Id, to: w.node2Id },
     { from: w.node2Id, to: w.node1Id },
   ]);
@@ -195,12 +198,15 @@ export function wallsToRooms(walls: Wall[], nodes: WallNode[]): Room[] {
     const θRev = Math.atan2(u.y - v.y, u.x - v.x);
     let best: HE | null = null;
     let bestCw = Infinity;
-    for (const e of (out.get(he.to) ?? [])) {
+    for (const e of out.get(he.to) ?? []) {
       if (e.to === he.from) continue;
       const w = pos(e.to, nodes);
       const θOut = Math.atan2(w.y - v.y, w.x - v.x);
-      const cw = ((θRev - θOut) + 2 * Math.PI) % (2 * Math.PI);
-      if (cw < bestCw) { bestCw = cw; best = e; }
+      const cw = (θRev - θOut + 2 * Math.PI) % (2 * Math.PI);
+      if (cw < bestCw) {
+        bestCw = cw;
+        best = e;
+      }
     }
     return best;
   };
@@ -220,25 +226,30 @@ export function wallsToRooms(walls: Wall[], nodes: WallNode[]): Room[] {
       cur = nextHE(cur);
     }
     if (cur && key(cur) === key(start) && cycle.length >= 3) {
-      faces.push(cycle.map(he => { const p = pos(he.from, nodes); return { nodeId: he.from, x: p.x, y: p.y }; }));
+      faces.push(
+        cycle.map((he) => {
+          const p = pos(he.from, nodes);
+          return { nodeId: he.from, x: p.x, y: p.y };
+        }),
+      );
     }
   }
 
   // Interior faces: positive shoelace area (SVG Y-down: CW winding = positive)
-  const interior = faces.filter(pts => shoelaceArea(pts) > 0);
+  const interior = faces.filter((pts) => shoelaceArea(pts) > 0);
 
   // Sort top-left → bottom-right for stable naming
   interior.sort((a, b) => {
     const cya = a.reduce((s, p) => s + p.y, 0) / a.length;
     const cyb = b.reduce((s, p) => s + p.y, 0) / b.length;
     if (Math.abs(cya - cyb) > 1) return cya - cyb;
-    return (a.reduce((s, p) => s + p.x, 0) / a.length) - (b.reduce((s, p) => s + p.x, 0) / b.length);
+    return a.reduce((s, p) => s + p.x, 0) / a.length - b.reduce((s, p) => s + p.x, 0) / b.length;
   });
 
   return interior.map((pts, idx) => ({
-    id: faceId(pts.map(p => p.nodeId)),
+    id: faceId(pts.map((p) => p.nodeId)),
     name: `Pièce ${idx + 1}`,
-    points: pts.map(p => ({ x: p.x, y: p.y })),
+    points: pts.map((p) => ({ x: p.x, y: p.y })),
     edges: pts.map(() => 'WALL' as EdgeType),
     partitions: [],
     excludedZones: [],
@@ -266,6 +277,7 @@ git commit -m "feat(wall-engine): wallsToRooms — half-edge planar face detecti
 ### Task 2 : `selectRooms` — sélecteur unifié dans le store
 
 **Files:**
+
 - Modify: `src/store/projectStore.ts`
 - Modify: `src/store/projectStore.test.ts`
 
@@ -277,7 +289,9 @@ Dans `src/store/projectStore.test.ts`, ajouter après les imports existants :
 import { useProjectStore, selectActiveProject, selectRooms } from './projectStore';
 import type { Wall, WallNode } from '@/types/wall';
 
-function nd(id: string, x: number, y: number): WallNode { return { id, x, y }; }
+function nd(id: string, x: number, y: number): WallNode {
+  return { id, x, y };
+}
 ```
 
 Puis ajouter un nouveau bloc `describe` à la fin du fichier :
@@ -294,14 +308,32 @@ describe('selectRooms', () => {
   });
 
   it('returns project.rooms when wallEngine is undefined', () => {
-    const rooms = [{ id: 'r1', name: 'R1', points: [{ x: 0, y: 0 }], edges: [] as never, partitions: [], excludedZones: [] }];
+    const rooms = [
+      {
+        id: 'r1',
+        name: 'R1',
+        points: [{ x: 0, y: 0 }],
+        edges: [] as never,
+        partitions: [],
+        excludedZones: [],
+      },
+    ];
     useProjectStore.setState({
-      projects: [{
-        id: 'p1', name: 'test', status: 'new' as const,
-        createdAt: 0, updatedAt: 0,
-        rooms, wallEngine: undefined,
-        config: {} as never, wallThickness: 100, constraints: [], notes: [],
-      }],
+      projects: [
+        {
+          id: 'p1',
+          name: 'test',
+          status: 'new' as const,
+          createdAt: 0,
+          updatedAt: 0,
+          rooms,
+          wallEngine: undefined,
+          config: {} as never,
+          wallThickness: 100,
+          constraints: [],
+          notes: [],
+        },
+      ],
       activeProjectId: 'p1',
     });
     expect(selectRooms(useProjectStore.getState())).toBe(rooms);
@@ -309,13 +341,30 @@ describe('selectRooms', () => {
 
   it('returns [] from wallsToRooms when wallEngine has no walls', () => {
     useProjectStore.setState({
-      projects: [{
-        id: 'p1', name: 'test', status: 'new' as const,
-        createdAt: 0, updatedAt: 0,
-        rooms: [{ id: 'legacy', name: 'L', points: [], edges: [] as never, partitions: [], excludedZones: [] }],
-        wallEngine: { walls: [], nodes: [] },
-        config: {} as never, wallThickness: 100, constraints: [], notes: [],
-      }],
+      projects: [
+        {
+          id: 'p1',
+          name: 'test',
+          status: 'new' as const,
+          createdAt: 0,
+          updatedAt: 0,
+          rooms: [
+            {
+              id: 'legacy',
+              name: 'L',
+              points: [],
+              edges: [] as never,
+              partitions: [],
+              excludedZones: [],
+            },
+          ],
+          wallEngine: { walls: [], nodes: [] },
+          config: {} as never,
+          wallThickness: 100,
+          constraints: [],
+          notes: [],
+        },
+      ],
       activeProjectId: 'p1',
     });
     expect(selectRooms(useProjectStore.getState())).toEqual([]);
@@ -330,13 +379,21 @@ describe('selectRooms', () => {
       { id: 'w4', node1Id: 'd', node2Id: 'a', thickness: 20 },
     ];
     useProjectStore.setState({
-      projects: [{
-        id: 'p1', name: 'test', status: 'new' as const,
-        createdAt: 0, updatedAt: 0,
-        rooms: [],
-        wallEngine: { walls, nodes },
-        config: {} as never, wallThickness: 100, constraints: [], notes: [],
-      }],
+      projects: [
+        {
+          id: 'p1',
+          name: 'test',
+          status: 'new' as const,
+          createdAt: 0,
+          updatedAt: 0,
+          rooms: [],
+          wallEngine: { walls, nodes },
+          config: {} as never,
+          wallThickness: 100,
+          constraints: [],
+          notes: [],
+        },
+      ],
       activeProjectId: 'p1',
     });
     const result = selectRooms(useProjectStore.getState());
@@ -396,6 +453,7 @@ git commit -m "feat(wall-engine): selectRooms — sélecteur unifié legacy/wall
 ### Task 3 : QuantitiesPanel — brancher `selectRooms`
 
 **Files:**
+
 - Modify: `src/components/quantities/QuantitiesPanel.tsx:35-46` et ligne ~208
 
 - [ ] **Step 3.1 : Ajouter le hook `rooms` et mettre à jour les usages**
@@ -423,10 +481,10 @@ export const QuantitiesPanel = () => {
 **Ligne ~43-46** — remplacer `project.rooms` par `rooms` dans `useMemo` :
 
 ```typescript
-  const result = useMemo(() => {
-    if (!project) return null;
-    return analyzeQuantities(rooms, project.config, project.wallThickness); // ← rooms au lieu de project.rooms
-  }, [project, rooms]);                                                       // ← ajouter rooms
+const result = useMemo(() => {
+  if (!project) return null;
+  return analyzeQuantities(rooms, project.config, project.wallThickness); // ← rooms au lieu de project.rooms
+}, [project, rooms]); // ← ajouter rooms
 ```
 
 **Ligne ~208** — remplacer `rooms={project.rooms}` par `rooms={rooms}` :
@@ -434,7 +492,7 @@ export const QuantitiesPanel = () => {
 ```typescript
 // Chercher dans le JSX : rooms={project.rooms}
 // Remplacer par :
-rooms={rooms}
+rooms = { rooms };
 ```
 
 - [ ] **Step 3.2 : Lancer la suite complète**
@@ -457,6 +515,7 @@ git commit -m "feat(wall-engine): QuantitiesPanel — utiliser selectRooms"
 ### Task 4 : page.tsx — brancher `selectRooms` pour TilingEditor
 
 **Files:**
+
 - Modify: `src/app/project/[id]/page.tsx` (lignes ~227, ~330-331, ~520)
 
 - [ ] **Step 4.1 : Ajouter l'import `selectRooms`**
@@ -476,7 +535,7 @@ Après la ligne `const activeProject = useProjectStore(selectActiveProject);` (l
 
 ```typescript
 const activeProject = useProjectStore(selectActiveProject);
-const rooms = useProjectStore(selectRooms);              // ← AJOUTER
+const rooms = useProjectStore(selectRooms); // ← AJOUTER
 ```
 
 - [ ] **Step 4.3 : Remplacer `activeProject.rooms` par `rooms` (3 endroits)**

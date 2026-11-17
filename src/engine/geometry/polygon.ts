@@ -29,7 +29,8 @@ export const pointInPolygon = (point: Point, vs: Point[]): boolean => {
   for (let i = 0, j = vs.length - 1; i < vs.length; j = i++) {
     const vi = vs[i]!;
     const vj = vs[j]!;
-    const intersect = vi.y > y !== vj.y > y && x < ((vj.x - vi.x) * (y - vi.y)) / (vj.y - vi.y) + vi.x;
+    const intersect =
+      vi.y > y !== vj.y > y && x < ((vj.x - vi.x) * (y - vi.y)) / (vj.y - vi.y) + vi.x;
     if (intersect) inside = !inside;
   }
   return inside;

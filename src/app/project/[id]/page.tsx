@@ -6,7 +6,12 @@ import { useRouter } from 'next/navigation';
 import { ChevronLeft, FileDown, LogOut, Moon, Settings, Sun, Trash2, X } from 'lucide-react';
 import { PlanEditor } from '@/components/plan/PlanEditor';
 import { QuantitiesPrintView } from '@/components/quantities/QuantitiesPrintView';
-import { selectActiveProject, selectDoorOpenings, selectRooms, useProjectStore } from '@/store/projectStore';
+import {
+  selectActiveProject,
+  selectDoorOpenings,
+  selectRooms,
+  useProjectStore,
+} from '@/store/projectStore';
 import { useShallow } from 'zustand/react/shallow';
 import { useUiStore } from '@/store/uiStore';
 import { useSharingStore } from '@/store/sharingStore';
@@ -15,18 +20,41 @@ import type { ProjectStatus } from '@/types/project';
 type WorkspaceTab = 'PLAN' | 'TILING' | 'QUANTITIES';
 
 const STATUS_CYCLE: Record<ProjectStatus, ProjectStatus> = { new: 'wip', wip: 'done', done: 'new' };
-const STATUS_LABELS: Record<ProjectStatus, string> = { new: 'Nouveau', wip: 'En cours', done: 'Terminé' };
-const STATUS_CLASS: Record<ProjectStatus, string> = { new: 'tag-new', wip: 'tag-wip', done: 'tag-ok' };
+const STATUS_LABELS: Record<ProjectStatus, string> = {
+  new: 'Nouveau',
+  wip: 'En cours',
+  done: 'Terminé',
+};
+const STATUS_CLASS: Record<ProjectStatus, string> = {
+  new: 'tag-new',
+  wip: 'tag-wip',
+  done: 'tag-ok',
+};
 
 const TAB_ICONS: Record<WorkspaceTab, JSX.Element> = {
   PLAN: (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.3"/><path d="M1 5h12M5 5v8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <rect x="1" y="1" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M1 5h12M5 5v8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
   ),
   TILING: (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5" height="5" rx="1" fill="currentColor" fillOpacity=".4"/><rect x="8" y="1" width="5" height="5" rx="1" fill="currentColor"/><rect x="1" y="8" width="5" height="5" rx="1" fill="currentColor"/><rect x="8" y="8" width="5" height="5" rx="1" fill="currentColor" fillOpacity=".4"/></svg>
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <rect x="1" y="1" width="5" height="5" rx="1" fill="currentColor" fillOpacity=".4" />
+      <rect x="8" y="1" width="5" height="5" rx="1" fill="currentColor" />
+      <rect x="1" y="8" width="5" height="5" rx="1" fill="currentColor" />
+      <rect x="8" y="8" width="5" height="5" rx="1" fill="currentColor" fillOpacity=".4" />
+    </svg>
   ),
   QUANTITIES: (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 4h10M2 7h7M2 10h5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <path
+        d="M2 4h10M2 7h7M2 10h5"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+      />
+    </svg>
   ),
 };
 
@@ -40,15 +68,31 @@ interface SettingsModalProps {
   clientEmail: string;
   clientAddress: string;
   notes: { id: string; text: string; createdAt: number; authorName: string }[];
-  onSave: (data: { name: string; description: string; clientName: string; clientPhone: string; clientEmail: string; clientAddress: string }) => void;
+  onSave: (data: {
+    name: string;
+    description: string;
+    clientName: string;
+    clientPhone: string;
+    clientEmail: string;
+    clientAddress: string;
+  }) => void;
   onAddNote: (text: string) => void;
   onDeleteNote: (id: string) => void;
   onClose: () => void;
 }
 
 const SettingsModal = ({
-  projectName, description, clientName, clientPhone, clientEmail, clientAddress,
-  notes, onSave, onAddNote, onDeleteNote, onClose,
+  projectName,
+  description,
+  clientName,
+  clientPhone,
+  clientEmail,
+  clientAddress,
+  notes,
+  onSave,
+  onAddNote,
+  onDeleteNote,
+  onClose,
 }: SettingsModalProps) => {
   const [name, setName] = useState(projectName);
   const [desc, setDesc] = useState(description);
@@ -60,7 +104,14 @@ const SettingsModal = ({
   const [tab, setTab] = useState<'info' | 'notes'>('info');
 
   const handleSave = () => {
-    onSave({ name, description: desc, clientName: cName, clientPhone: cPhone, clientEmail: cEmail, clientAddress: cAddr });
+    onSave({
+      name,
+      description: desc,
+      clientName: cName,
+      clientPhone: cPhone,
+      clientEmail: cEmail,
+      clientAddress: cAddr,
+    });
     onClose();
   };
 
@@ -72,26 +123,60 @@ const SettingsModal = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.5)' }}>
-      <div className="flex w-full max-w-lg flex-col rounded-2xl shadow-2xl" style={{ background: 'var(--surf)', border: '1px solid var(--bdr)', maxHeight: '90vh' }}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(0,0,0,0.5)' }}
+    >
+      <div
+        className="flex w-full max-w-lg flex-col rounded-2xl shadow-2xl"
+        style={{ background: 'var(--surf)', border: '1px solid var(--bdr)', maxHeight: '90vh' }}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between border-b px-5 py-4" style={{ borderColor: 'var(--bdr)' }}>
+        <div
+          className="flex items-center justify-between border-b px-5 py-4"
+          style={{ borderColor: 'var(--bdr)' }}
+        >
           <div>
-            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>Paramètres du projet</h2>
-            <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>Informations et notes</p>
+            <h2
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 16,
+                fontWeight: 700,
+                color: 'var(--text)',
+              }}
+            >
+              Paramètres du projet
+            </h2>
+            <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>
+              Informations et notes
+            </p>
           </div>
-          <button type="button" className="btn-icon" onClick={onClose}><X size={15} /></button>
+          <button type="button" className="btn-icon" onClick={onClose}>
+            <X size={15} />
+          </button>
         </div>
 
         {/* Tabs */}
         <div className="flex border-b" style={{ borderColor: 'var(--bdr)' }}>
           {(['info', 'notes'] as const).map((t) => (
-            <button key={t} type="button" onClick={() => setTab(t)}
+            <button
+              key={t}
+              type="button"
+              onClick={() => setTab(t)}
               className="px-5 py-2.5 text-[13px] font-medium transition-colors"
-              style={tab === t
-                ? { color: 'var(--accent)', borderBottom: '2px solid var(--accent)', background: 'transparent' }
-                : { color: 'var(--text2)', borderBottom: '2px solid transparent' }}>
-              {t === 'info' ? 'Informations' : `Notes ${notes.length > 0 ? `(${notes.length})` : ''}`}
+              style={
+                tab === t
+                  ? {
+                      color: 'var(--accent)',
+                      borderBottom: '2px solid var(--accent)',
+                      background: 'transparent',
+                    }
+                  : { color: 'var(--text2)', borderBottom: '2px solid transparent' }
+              }
+            >
+              {t === 'info'
+                ? 'Informations'
+                : `Notes ${notes.length > 0 ? `(${notes.length})` : ''}`}
             </button>
           ))}
         </div>
@@ -101,51 +186,125 @@ const SettingsModal = ({
           {tab === 'info' && (
             <div className="flex flex-col gap-4">
               <Field label="Nom du projet">
-                <input value={name} onChange={(e) => setName(e.target.value)}
+                <input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                   className="w-full rounded-lg px-3 py-2 text-[13px] outline-none"
-                  style={{ background: 'var(--surf2)', border: '1px solid var(--bdr)', color: 'var(--text)' }}
-                  onFocus={(e) => { e.target.style.borderColor = 'var(--accent)'; }}
-                  onBlur={(e) => { e.target.style.borderColor = 'var(--bdr)'; }} />
+                  style={{
+                    background: 'var(--surf2)',
+                    border: '1px solid var(--bdr)',
+                    color: 'var(--text)',
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = 'var(--accent)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = 'var(--bdr)';
+                  }}
+                />
               </Field>
               <Field label="Description">
-                <textarea value={desc} onChange={(e) => setDesc(e.target.value)} rows={3}
+                <textarea
+                  value={desc}
+                  onChange={(e) => setDesc(e.target.value)}
+                  rows={3}
                   placeholder="Description du chantier, contexte…"
                   className="w-full resize-none rounded-lg px-3 py-2 text-[13px] outline-none"
-                  style={{ background: 'var(--surf2)', border: '1px solid var(--bdr)', color: 'var(--text)' }}
-                  onFocus={(e) => { e.target.style.borderColor = 'var(--accent)'; }}
-                  onBlur={(e) => { e.target.style.borderColor = 'var(--bdr)'; }} />
+                  style={{
+                    background: 'var(--surf2)',
+                    border: '1px solid var(--bdr)',
+                    color: 'var(--text)',
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = 'var(--accent)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = 'var(--bdr)';
+                  }}
+                />
               </Field>
               <div className="h-px" style={{ background: 'var(--bdr)' }} />
-              <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--muted)' }}>Client</p>
+              <p
+                className="text-[11px] font-bold uppercase tracking-wider"
+                style={{ color: 'var(--muted)' }}
+              >
+                Client
+              </p>
               <Field label="Nom">
-                <input value={cName} onChange={(e) => setCName(e.target.value)}
+                <input
+                  value={cName}
+                  onChange={(e) => setCName(e.target.value)}
                   className="w-full rounded-lg px-3 py-2 text-[13px] outline-none"
-                  style={{ background: 'var(--surf2)', border: '1px solid var(--bdr)', color: 'var(--text)' }}
-                  onFocus={(e) => { e.target.style.borderColor = 'var(--accent)'; }}
-                  onBlur={(e) => { e.target.style.borderColor = 'var(--bdr)'; }} />
+                  style={{
+                    background: 'var(--surf2)',
+                    border: '1px solid var(--bdr)',
+                    color: 'var(--text)',
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = 'var(--accent)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = 'var(--bdr)';
+                  }}
+                />
               </Field>
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Téléphone">
-                  <input value={cPhone} onChange={(e) => setCPhone(e.target.value)} type="tel"
+                  <input
+                    value={cPhone}
+                    onChange={(e) => setCPhone(e.target.value)}
+                    type="tel"
                     className="w-full rounded-lg px-3 py-2 text-[13px] outline-none"
-                    style={{ background: 'var(--surf2)', border: '1px solid var(--bdr)', color: 'var(--text)' }}
-                    onFocus={(e) => { e.target.style.borderColor = 'var(--accent)'; }}
-                    onBlur={(e) => { e.target.style.borderColor = 'var(--bdr)'; }} />
+                    style={{
+                      background: 'var(--surf2)',
+                      border: '1px solid var(--bdr)',
+                      color: 'var(--text)',
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = 'var(--accent)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = 'var(--bdr)';
+                    }}
+                  />
                 </Field>
                 <Field label="E-mail">
-                  <input value={cEmail} onChange={(e) => setCEmail(e.target.value)} type="email"
+                  <input
+                    value={cEmail}
+                    onChange={(e) => setCEmail(e.target.value)}
+                    type="email"
                     className="w-full rounded-lg px-3 py-2 text-[13px] outline-none"
-                    style={{ background: 'var(--surf2)', border: '1px solid var(--bdr)', color: 'var(--text)' }}
-                    onFocus={(e) => { e.target.style.borderColor = 'var(--accent)'; }}
-                    onBlur={(e) => { e.target.style.borderColor = 'var(--bdr)'; }} />
+                    style={{
+                      background: 'var(--surf2)',
+                      border: '1px solid var(--bdr)',
+                      color: 'var(--text)',
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = 'var(--accent)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = 'var(--bdr)';
+                    }}
+                  />
                 </Field>
               </div>
               <Field label="Adresse">
-                <input value={cAddr} onChange={(e) => setCAddr(e.target.value)}
+                <input
+                  value={cAddr}
+                  onChange={(e) => setCAddr(e.target.value)}
                   className="w-full rounded-lg px-3 py-2 text-[13px] outline-none"
-                  style={{ background: 'var(--surf2)', border: '1px solid var(--bdr)', color: 'var(--text)' }}
-                  onFocus={(e) => { e.target.style.borderColor = 'var(--accent)'; }}
-                  onBlur={(e) => { e.target.style.borderColor = 'var(--bdr)'; }} />
+                  style={{
+                    background: 'var(--surf2)',
+                    border: '1px solid var(--bdr)',
+                    color: 'var(--text)',
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = 'var(--accent)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = 'var(--bdr)';
+                  }}
+                />
               </Field>
             </div>
           )}
@@ -154,36 +313,79 @@ const SettingsModal = ({
             <div className="flex flex-col gap-3">
               {/* New note input */}
               <div className="flex gap-2">
-                <textarea value={noteText} onChange={(e) => setNoteText(e.target.value)} rows={2}
+                <textarea
+                  value={noteText}
+                  onChange={(e) => setNoteText(e.target.value)}
+                  rows={2}
                   placeholder="Ajouter une note…"
                   className="flex-1 resize-none rounded-lg px-3 py-2 text-[13px] outline-none"
-                  style={{ background: 'var(--surf2)', border: '1px solid var(--bdr)', color: 'var(--text)' }}
-                  onFocus={(e) => { e.target.style.borderColor = 'var(--accent)'; }}
-                  onBlur={(e) => { e.target.style.borderColor = 'var(--bdr)'; }}
-                  onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); handleAddNote(); } }} />
-                <button type="button" className="btn-primary self-start px-3 py-2 text-[12px]" onClick={handleAddNote}>
+                  style={{
+                    background: 'var(--surf2)',
+                    border: '1px solid var(--bdr)',
+                    color: 'var(--text)',
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = 'var(--accent)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = 'var(--bdr)';
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                      e.preventDefault();
+                      handleAddNote();
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  className="btn-primary self-start px-3 py-2 text-[12px]"
+                  onClick={handleAddNote}
+                >
                   Ajouter
                 </button>
               </div>
               {/* Notes list */}
               {notes.length === 0 && (
-                <p className="py-6 text-center text-[13px]" style={{ color: 'var(--muted)' }}>Aucune note pour le moment</p>
+                <p className="py-6 text-center text-[13px]" style={{ color: 'var(--muted)' }}>
+                  Aucune note pour le moment
+                </p>
               )}
               {notes.map((note) => (
-                <div key={note.id} className="group rounded-lg p-3" style={{ background: 'var(--surf2)', border: '1px solid var(--bdr)' }}>
+                <div
+                  key={note.id}
+                  className="group rounded-lg p-3"
+                  style={{ background: 'var(--surf2)', border: '1px solid var(--bdr)' }}
+                >
                   <div className="mb-1 flex items-center justify-between gap-2">
                     <span className="text-[11px] font-medium" style={{ color: 'var(--muted)' }}>
-                      {note.authorName} · {new Date(note.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      {note.authorName} ·{' '}
+                      {new Date(note.createdAt).toLocaleDateString('fr-FR', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
                     </span>
-                    <button type="button" onClick={() => onDeleteNote(note.id)}
+                    <button
+                      type="button"
+                      onClick={() => onDeleteNote(note.id)}
                       className="opacity-0 transition-opacity group-hover:opacity-100"
                       style={{ color: 'var(--muted)' }}
-                      onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = '#ef4444'; }}
-                      onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--muted)'; }}>
+                      onMouseEnter={(e) => {
+                        (e.currentTarget as HTMLButtonElement).style.color = '#ef4444';
+                      }}
+                      onMouseLeave={(e) => {
+                        (e.currentTarget as HTMLButtonElement).style.color = 'var(--muted)';
+                      }}
+                    >
                       <Trash2 size={12} />
                     </button>
                   </div>
-                  <p className="whitespace-pre-wrap text-[13px]" style={{ color: 'var(--text)' }}>{note.text}</p>
+                  <p className="whitespace-pre-wrap text-[13px]" style={{ color: 'var(--text)' }}>
+                    {note.text}
+                  </p>
                 </div>
               ))}
             </div>
@@ -191,10 +393,17 @@ const SettingsModal = ({
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-2 border-t px-5 py-3" style={{ borderColor: 'var(--bdr)' }}>
-          <button type="button" className="btn-secondary" onClick={onClose}>Annuler</button>
+        <div
+          className="flex justify-end gap-2 border-t px-5 py-3"
+          style={{ borderColor: 'var(--bdr)' }}
+        >
+          <button type="button" className="btn-secondary" onClick={onClose}>
+            Annuler
+          </button>
           {tab === 'info' && (
-            <button type="button" className="btn-primary" onClick={handleSave}>Enregistrer</button>
+            <button type="button" className="btn-primary" onClick={handleSave}>
+              Enregistrer
+            </button>
           )}
         </div>
       </div>
@@ -204,7 +413,9 @@ const SettingsModal = ({
 
 const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <div className="flex flex-col gap-1.5">
-    <label className="text-[11.5px] font-semibold" style={{ color: 'var(--text2)' }}>{label}</label>
+    <label className="text-[11.5px] font-semibold" style={{ color: 'var(--text2)' }}>
+      {label}
+    </label>
     {children}
   </div>
 );
@@ -252,7 +463,9 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
   }, [tabHint]);
   const [showSettings, setShowSettings] = useState(false);
   const [printMounted, setPrintMounted] = useState(false);
-  useEffect(() => { setPrintMounted(true); }, []);
+  useEffect(() => {
+    setPrintMounted(true);
+  }, []);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
@@ -260,8 +473,12 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
     window.print();
   }, []);
 
-  useEffect(() => { void hydrate(); }, [hydrate]);
-  useEffect(() => { if (hydrated) setActive(id); }, [id, hydrated, setActive]);
+  useEffect(() => {
+    void hydrate();
+  }, [hydrate]);
+  useEffect(() => {
+    if (hydrated) setActive(id);
+  }, [id, hydrated, setActive]);
 
   useEffect(() => {
     if (!hydrated || !activeProject) return;
@@ -279,12 +496,17 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
       void releaseLock(id);
       setLockInfo(null);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, hydrated, activeProject?.myRole]);
 
   useEffect(() => {
     if (lockStatus !== 'acquired') return;
-    const interval = setInterval(() => { void refreshLock(id); }, 10 * 60 * 1000);
+    const interval = setInterval(
+      () => {
+        void refreshLock(id);
+      },
+      10 * 60 * 1000,
+    );
     return () => clearInterval(interval);
   }, [id, lockStatus]);
 
@@ -292,7 +514,9 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
     if (!activeProject) return;
     const isEditor = activeProject.myRole === 'editor' || activeProject.myRole === 'owner';
     if (!isEditor) return;
-    const handler = () => { void releaseLock(id); };
+    const handler = () => {
+      void releaseLock(id);
+    };
     window.addEventListener('beforeunload', handler);
     return () => window.removeEventListener('beforeunload', handler);
   }, [id, activeProject?.myRole]);
@@ -310,7 +534,8 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
   // Close user menu on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) setShowUserMenu(false);
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node))
+        setShowUserMenu(false);
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
@@ -318,7 +543,10 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
 
   if (!hydrated) {
     return (
-      <div className="flex h-screen items-center justify-center" style={{ background: 'var(--bg)', color: 'var(--text2)', height: '100svh' }}>
+      <div
+        className="flex h-screen items-center justify-center"
+        style={{ background: 'var(--bg)', color: 'var(--text2)', height: '100svh' }}
+      >
         Chargement…
       </div>
     );
@@ -326,87 +554,173 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
 
   if (!activeProject) {
     return (
-      <div className="flex h-screen flex-col items-center justify-center gap-4" style={{ background: 'var(--bg)', color: 'var(--text2)', height: '100svh' }}>
+      <div
+        className="flex h-screen flex-col items-center justify-center gap-4"
+        style={{ background: 'var(--bg)', color: 'var(--text2)', height: '100svh' }}
+      >
         <p>Projet introuvable.</p>
-        <button type="button" className="btn-secondary" onClick={() => router.push('/')}>Retour à l&apos;accueil</button>
+        <button type="button" className="btn-secondary" onClick={() => router.push('/')}>
+          Retour à l&apos;accueil
+        </button>
       </div>
     );
   }
 
   const canGoTiling = rooms.some((r) => r.points.length >= 3);
-  const roomCount = rooms.filter(r => r.points.length >= 3).length;
+  const roomCount = rooms.filter((r) => r.points.length >= 3).length;
   const isReadOnly = lockStatus === 'locked_by_other' || activeProject.myRole === 'viewer';
-  const initials = user?.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() ?? 'CP';
+  const initials =
+    user?.name
+      .split(' ')
+      .map((w) => w[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase() ?? 'CP';
   const planLabel: Record<string, string> = { free: 'Gratuit', pro: 'Pro', team: 'Équipe' };
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden" style={{ background: 'var(--bg)', height: '100svh' }}>
-
+    <div
+      className="flex h-screen flex-col overflow-hidden"
+      style={{ background: 'var(--bg)', height: '100svh' }}
+    >
       {/* Topbar */}
-      <header className="shell-topbar px-5 gap-0">
+      <header className="shell-topbar gap-0 px-5">
         {/* Logo */}
-        <div className="hidden md:flex mouse:flex shrink-0 items-center gap-2 mr-3">
-          <div className="flex h-6 w-6 items-center justify-center rounded-md" style={{ background: 'var(--accent)' }}>
+        <div className="mr-3 hidden shrink-0 items-center gap-2 mouse:flex md:flex">
+          <div
+            className="flex h-6 w-6 items-center justify-center rounded-md"
+            style={{ background: 'var(--accent)' }}
+          >
             <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
-              <rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.2" fill="white"/>
-              <rect x="9" y="1.5" width="5.5" height="5.5" rx="1.2" fill="white" fillOpacity=".7"/>
-              <rect x="1.5" y="9" width="5.5" height="5.5" rx="1.2" fill="white" fillOpacity=".7"/>
-              <rect x="9" y="9" width="5.5" height="5.5" rx="1.2" fill="white"/>
+              <rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.2" fill="white" />
+              <rect x="9" y="1.5" width="5.5" height="5.5" rx="1.2" fill="white" fillOpacity=".7" />
+              <rect x="1.5" y="9" width="5.5" height="5.5" rx="1.2" fill="white" fillOpacity=".7" />
+              <rect x="9" y="9" width="5.5" height="5.5" rx="1.2" fill="white" />
             </svg>
           </div>
-          <span style={{ fontFamily: 'var(--font-display)', fontSize: 13.5, fontWeight: 700, color: 'var(--text)' }}>CaléPlan</span>
+          <span
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 13.5,
+              fontWeight: 700,
+              color: 'var(--text)',
+            }}
+          >
+            CaléPlan
+          </span>
         </div>
 
-        <div className="hidden md:block mouse:block h-4 w-px mx-3" style={{ background: 'var(--bdr)' }} />
+        <div
+          className="mx-3 hidden h-4 w-px mouse:block md:block"
+          style={{ background: 'var(--bdr)' }}
+        />
 
         {/* Mobile-only back button */}
         <button
           type="button"
           onClick={() => router.push('/dashboard')}
-          className="flex md:hidden mouse:hidden btn-icon mr-1"
+          className="btn-icon mr-1 flex mouse:hidden md:hidden"
           aria-label="Retour aux projets"
         >
           <ChevronLeft size={18} />
         </button>
 
         {/* Breadcrumb */}
-        <div className="flex min-w-0 shrink items-center gap-1.5 text-[12.5px]" style={{ color: 'var(--text2)' }}>
-          <button type="button" onClick={() => router.push('/dashboard')} className="hover:underline hidden md:inline mouse:inline shrink-0" style={{ color: 'var(--text2)' }}>
+        <div
+          className="flex min-w-0 shrink items-center gap-1.5 text-[12.5px]"
+          style={{ color: 'var(--text2)' }}
+        >
+          <button
+            type="button"
+            onClick={() => router.push('/dashboard')}
+            className="hidden shrink-0 hover:underline mouse:inline md:inline"
+            style={{ color: 'var(--text2)' }}
+          >
             Projets
           </button>
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="hidden md:block mouse:block shrink-0" style={{ opacity: 0.4 }}><path d="M4 2l4 4-4 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 12 12"
+            fill="none"
+            className="hidden shrink-0 mouse:block md:block"
+            style={{ opacity: 0.4 }}
+          >
+            <path
+              d="M4 2l4 4-4 4"
+              stroke="currentColor"
+              strokeWidth="1.3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
           <input
             type="text"
             value={activeProject.name}
             onChange={(e) => rename(activeProject.id, e.target.value)}
             readOnly={isReadOnly}
-            className="hidden md:block mouse:block min-w-0 truncate"
+            className="hidden min-w-0 truncate mouse:block md:block"
             style={{
-              background: 'transparent', border: 'none', outline: 'none',
-              fontFamily: 'var(--font-display)', fontSize: 13.5, fontWeight: 600,
-              color: 'var(--text)', maxWidth: 260,
+              background: 'transparent',
+              border: 'none',
+              outline: 'none',
+              fontFamily: 'var(--font-display)',
+              fontSize: 13.5,
+              fontWeight: 600,
+              color: 'var(--text)',
+              maxWidth: 260,
             }}
-            onFocus={(e) => { e.target.style.background = 'var(--surf2)'; e.target.style.borderRadius = 'var(--rs)'; e.target.style.padding = '2px 6px'; }}
-            onBlur={(e) => { e.target.style.background = 'transparent'; e.target.style.padding = '0'; }}
+            onFocus={(e) => {
+              e.target.style.background = 'var(--surf2)';
+              e.target.style.borderRadius = 'var(--rs)';
+              e.target.style.padding = '2px 6px';
+            }}
+            onBlur={(e) => {
+              e.target.style.background = 'transparent';
+              e.target.style.padding = '0';
+            }}
           />
         </div>
 
-
-        <button type="button" className="hidden md:flex mouse:flex btn-icon disabled:opacity-40 disabled:cursor-not-allowed" aria-label="Paramètres" title={isReadOnly ? 'Lecture seule' : 'Paramètres du projet'} onClick={() => setShowSettings(true)} disabled={isReadOnly}>
+        <button
+          type="button"
+          className="btn-icon hidden disabled:cursor-not-allowed disabled:opacity-40 mouse:flex md:flex"
+          aria-label="Paramètres"
+          title={isReadOnly ? 'Lecture seule' : 'Paramètres du projet'}
+          onClick={() => setShowSettings(true)}
+          disabled={isReadOnly}
+        >
           <Settings size={14} />
         </button>
 
         {/* Client + status */}
-        <div className="hidden md:flex mouse:flex shrink min-w-0 mx-3 items-center gap-1.5 text-[12px]" style={{ color: 'var(--muted)' }}>
+        <div
+          className="mx-3 hidden min-w-0 shrink items-center gap-1.5 text-[12px] mouse:flex md:flex"
+          style={{ color: 'var(--muted)' }}
+        >
           {activeProject.client?.name && (
             <>
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="shrink-0"><circle cx="6" cy="4" r="2.5" stroke="currentColor" strokeWidth="1.2"/><path d="M1.5 10c0-2 2-3.5 4.5-3.5S10.5 8 10.5 10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="shrink-0">
+                <circle cx="6" cy="4" r="2.5" stroke="currentColor" strokeWidth="1.2" />
+                <path
+                  d="M1.5 10c0-2 2-3.5 4.5-3.5S10.5 8 10.5 10"
+                  stroke="currentColor"
+                  strokeWidth="1.2"
+                  strokeLinecap="round"
+                />
+              </svg>
               <span className="truncate">{activeProject.client.name}</span>
-              <span className="shrink-0" style={{ opacity: 0.4 }}>·</span>
+              <span className="shrink-0" style={{ opacity: 0.4 }}>
+                ·
+              </span>
             </>
           )}
-          <span className="shrink-0">{new Date(activeProject.updatedAt).toLocaleDateString('fr-FR')}</span>
-          <span className="shrink-0" style={{ opacity: 0.4 }}>·</span>
+          <span className="shrink-0">
+            {new Date(activeProject.updatedAt).toLocaleDateString('fr-FR')}
+          </span>
+          <span className="shrink-0" style={{ opacity: 0.4 }}>
+            ·
+          </span>
           <button
             type="button"
             onClick={() => setStatus(STATUS_CYCLE[activeProject.status])}
@@ -418,52 +732,90 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
         </div>
 
         {/* Actions */}
-        <div className="ml-auto shrink-0 flex items-center gap-2">
+        <div className="ml-auto flex shrink-0 items-center gap-2">
           <button type="button" onClick={toggleDarkMode} className="btn-icon" aria-label="Thème">
             {darkMode ? <Sun size={14} /> : <Moon size={14} />}
           </button>
           <button
             type="button"
-            className="hidden md:flex mouse:flex btn-secondary items-center gap-1.5 text-[12.5px]"
+            className="btn-secondary hidden items-center gap-1.5 text-[12.5px] mouse:flex md:flex"
             style={{ padding: '5px 10px' }}
             onClick={handlePrint}
           >
             <FileDown size={13} /> PDF
           </button>
 
-
           {/* User menu */}
           <div className="relative" ref={userMenuRef}>
-            <button type="button"
+            <button
+              type="button"
               onClick={() => setShowUserMenu((v) => !v)}
               className="flex items-center gap-2 rounded-[var(--rs)] px-2 py-1.5 transition-colors"
-              style={{ background: 'var(--surf2)', border: '1px solid var(--bdr)' }}>
-              <div className="flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold text-white" style={{ background: 'var(--accent)' }}>{initials}</div>
-              {user?.plan && <span className="tag-pro rounded-full px-1.5 py-0.5 text-[10px] font-semibold">{planLabel[user.plan] ?? user.plan}</span>}
+              style={{ background: 'var(--surf2)', border: '1px solid var(--bdr)' }}
+            >
+              <div
+                className="flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold text-white"
+                style={{ background: 'var(--accent)' }}
+              >
+                {initials}
+              </div>
+              {user?.plan && (
+                <span className="tag-pro rounded-full px-1.5 py-0.5 text-[10px] font-semibold">
+                  {planLabel[user.plan] ?? user.plan}
+                </span>
+              )}
             </button>
             {showUserMenu && (
-              <div className="absolute right-0 top-full z-50 mt-1 w-52 rounded-xl p-1 shadow-xl"
-                style={{ background: 'var(--surf)', border: '1px solid var(--bdr)' }}>
+              <div
+                className="absolute right-0 top-full z-50 mt-1 w-52 rounded-xl p-1 shadow-xl"
+                style={{ background: 'var(--surf)', border: '1px solid var(--bdr)' }}
+              >
                 <div className="px-3 py-2">
-                  <p className="text-[13px] font-semibold" style={{ color: 'var(--text)' }}>{user?.name ?? 'Utilisateur'}</p>
-                  <p className="text-[11.5px]" style={{ color: 'var(--muted)' }}>{user?.email ?? ''}</p>
+                  <p className="text-[13px] font-semibold" style={{ color: 'var(--text)' }}>
+                    {user?.name ?? 'Utilisateur'}
+                  </p>
+                  <p className="text-[11.5px]" style={{ color: 'var(--muted)' }}>
+                    {user?.email ?? ''}
+                  </p>
                 </div>
                 <div className="my-1 h-px" style={{ background: 'var(--bdr)' }} />
-                <button type="button"
-                  onClick={() => { setShowUserMenu(false); router.push('/auth?tab=plans'); }}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowUserMenu(false);
+                    router.push('/auth?tab=plans');
+                  }}
                   className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[13px] transition-colors"
                   style={{ color: 'var(--text2)' }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--surf2)'; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}>
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1L9 5h4l-3.2 2.4 1.2 3.9L7 9.1 3 11.3l1.2-3.9L1 5h4L7 1z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/></svg>
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.background = 'var(--surf2)';
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.background = 'transparent';
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path
+                      d="M7 1L9 5h4l-3.2 2.4 1.2 3.9L7 9.1 3 11.3l1.2-3.9L1 5h4L7 1z"
+                      stroke="currentColor"
+                      strokeWidth="1.2"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
                   Changer de forfait
                 </button>
-                <button type="button"
+                <button
+                  type="button"
                   onClick={() => void logout().then(() => router.push('/auth'))}
                   className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[13px] transition-colors"
                   style={{ color: '#ef4444' }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--surf2)'; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}>
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.background = 'var(--surf2)';
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.background = 'transparent';
+                  }}
+                >
                   <LogOut size={13} />
                   Se déconnecter
                 </button>
@@ -477,36 +829,62 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
       {lockStatus === 'locked_by_other' && (
         <div
           className="flex items-center gap-2 border-b px-5 py-2 text-[12px]"
-          style={{ background: 'rgba(249,115,22,0.08)', borderColor: 'var(--bdr)', color: '#f97316' }}
+          style={{
+            background: 'rgba(249,115,22,0.08)',
+            borderColor: 'var(--bdr)',
+            color: '#f97316',
+          }}
         >
           <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-            <rect x="3" y="6" width="8" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.3"/>
-            <path d="M5 6V4.5a2 2 0 1 1 4 0V6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+            <rect
+              x="3"
+              y="6"
+              width="8"
+              height="7"
+              rx="1.5"
+              stroke="currentColor"
+              strokeWidth="1.3"
+            />
+            <path
+              d="M5 6V4.5a2 2 0 1 1 4 0V6"
+              stroke="currentColor"
+              strokeWidth="1.3"
+              strokeLinecap="round"
+            />
           </svg>
           Édition en cours par{' '}
-          <strong>{lockInfo?.lockedByDisplayName ?? 'un autre utilisateur'}</strong>.{' '}
-          Vous êtes en lecture seule.
+          <strong>{lockInfo?.lockedByDisplayName ?? 'un autre utilisateur'}</strong>. Vous êtes en
+          lecture seule.
         </div>
       )}
 
       {/* Tab bar */}
       <div className="shell-tabs px-1">
-        {([
-          { id: 'PLAN', label: 'Plan 2D' },
-          { id: 'TILING', label: 'Calepinage' },
-          { id: 'QUANTITIES', label: 'Quantitatif', badge: roomCount > 0 ? roomCount : undefined },
-        ] as { id: WorkspaceTab; label: string; badge?: number }[]).map((t) => (
+        {(
+          [
+            { id: 'PLAN', label: 'Plan 2D' },
+            { id: 'TILING', label: 'Calepinage' },
+            {
+              id: 'QUANTITIES',
+              label: 'Quantitatif',
+              badge: roomCount > 0 ? roomCount : undefined,
+            },
+          ] as { id: WorkspaceTab; label: string; badge?: number }[]
+        ).map((t) => (
           <button
             key={t.id}
             type="button"
             aria-disabled={t.id !== 'PLAN' && !canGoTiling}
             onClick={() => (canGoTiling || t.id === 'PLAN' ? setTab(t.id) : setTabHint(true))}
-            className={`shell-tab${tab === t.id ? ' active' : ''}${t.id !== 'PLAN' && !canGoTiling ? ' opacity-40' : ''}`}
+            className={`shell-tab${tab === t.id ? 'active' : ''}${t.id !== 'PLAN' && !canGoTiling ? 'opacity-40' : ''}`}
           >
             {TAB_ICONS[t.id]}
             {t.label}
             {t.badge !== undefined && (
-              <span className="rounded-full px-1.5 py-0.5 text-[10px] font-bold" style={{ background: 'var(--surf3)', color: 'var(--text2)' }}>
+              <span
+                className="rounded-full px-1.5 py-0.5 text-[10px] font-bold"
+                style={{ background: 'var(--surf3)', color: 'var(--text2)' }}
+              >
                 {t.badge}
               </span>
             )}
@@ -515,9 +893,13 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
       </div>
 
       {tabHint && (
-        <div role="status" className="border-b px-5 py-2 text-[12.5px]"
-          style={{ background: 'var(--surf2)', borderColor: 'var(--bdr)', color: 'var(--text2)' }}>
-          Tracez d&apos;abord une pièce fermée dans le Plan 2D pour accéder au calepinage et au quantitatif.
+        <div
+          role="status"
+          className="border-b px-5 py-2 text-[12.5px]"
+          style={{ background: 'var(--surf2)', borderColor: 'var(--bdr)', color: 'var(--text2)' }}
+        >
+          Tracez d&apos;abord une pièce fermée dans le Plan 2D pour accéder au calepinage et au
+          quantitatif.
         </div>
       )}
 
@@ -533,12 +915,19 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
 
       {/* Cible d'impression — portal sur document.body pour que @media print
           puisse masquer tous les autres enfants de body sans position:fixed */}
-      {printMounted && createPortal(
-        <div id="quantities-print-target">
-          {activeProject && <QuantitiesPrintView project={activeProject} rooms={rooms} doorOpenings={doorOpenings} />}
-        </div>,
-        document.body,
-      )}
+      {printMounted &&
+        createPortal(
+          <div id="quantities-print-target">
+            {activeProject && (
+              <QuantitiesPrintView
+                project={activeProject}
+                rooms={rooms}
+                doorOpenings={doorOpenings}
+              />
+            )}
+          </div>,
+          document.body,
+        )}
 
       {/* Settings Modal */}
       {showSettings && (
@@ -554,7 +943,14 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
             setProjectInfo({
               name,
               description,
-              client: clientName ? { name: clientName, phone: clientPhone, email: clientEmail, address: clientAddress } : undefined,
+              client: clientName
+                ? {
+                    name: clientName,
+                    phone: clientPhone,
+                    email: clientEmail,
+                    address: clientAddress,
+                  }
+                : undefined,
             });
           }}
           onAddNote={(text) => addNote(text, user?.name ?? 'Utilisateur')}

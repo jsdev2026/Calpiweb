@@ -12,19 +12,20 @@
 
 ## Fichiers
 
-| Fichier | Action |
-|---------|--------|
-| `src/engine/geometry/wallFaces.ts` | Extraire `wallFaceCycles`, refactorer `wallsToRooms` |
-| `src/engine/geometry/wallFaces.test.ts` | Ajouter tests pour `wallFaceCycles` |
-| `src/engine/geometry/wallCotation.ts` | Remplacer `detectClosedPolygons` par `wallFaceCycles`, supprimer `detectClosedPolygons` |
-| `src/engine/geometry/wallCotation.test.ts` | Retirer tests `detectClosedPolygons`, ajouter test T-junction |
-| `src/components/plan/WallDrawingCanvas.tsx` | Ajouter `splitWillCreateLink`, corriger condition `onAddWall` |
+| Fichier                                     | Action                                                                                  |
+| ------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `src/engine/geometry/wallFaces.ts`          | Extraire `wallFaceCycles`, refactorer `wallsToRooms`                                    |
+| `src/engine/geometry/wallFaces.test.ts`     | Ajouter tests pour `wallFaceCycles`                                                     |
+| `src/engine/geometry/wallCotation.ts`       | Remplacer `detectClosedPolygons` par `wallFaceCycles`, supprimer `detectClosedPolygons` |
+| `src/engine/geometry/wallCotation.test.ts`  | Retirer tests `detectClosedPolygons`, ajouter test T-junction                           |
+| `src/components/plan/WallDrawingCanvas.tsx` | Ajouter `splitWillCreateLink`, corriger condition `onAddWall`                           |
 
 ---
 
 ### Task 1 : `wallFaceCycles` — extraction + tests
 
 **Files:**
+
 - Modify: `src/engine/geometry/wallFaces.ts`
 - Modify: `src/engine/geometry/wallFaces.test.ts`
 
@@ -45,37 +46,37 @@ describe('wallFaceCycles', () => {
   });
 
   it('rectangle 4 murs → 1 cycle, 4 nodeIds, 4 wallIds', () => {
-    const nodes = [nd('a',0,0), nd('b',200,0), nd('c',200,140), nd('d',0,140)];
+    const nodes = [nd('a', 0, 0), nd('b', 200, 0), nd('c', 200, 140), nd('d', 0, 140)];
     const walls: Wall[] = [
-      { id:'w1', node1Id:'a', node2Id:'b', thickness:10 },
-      { id:'w2', node1Id:'b', node2Id:'c', thickness:10 },
-      { id:'w3', node1Id:'c', node2Id:'d', thickness:10 },
-      { id:'w4', node1Id:'d', node2Id:'a', thickness:10 },
+      { id: 'w1', node1Id: 'a', node2Id: 'b', thickness: 10 },
+      { id: 'w2', node1Id: 'b', node2Id: 'c', thickness: 10 },
+      { id: 'w3', node1Id: 'c', node2Id: 'd', thickness: 10 },
+      { id: 'w4', node1Id: 'd', node2Id: 'a', thickness: 10 },
     ];
     const result = wallFaceCycles(walls, nodes);
     expect(result).toHaveLength(1);
     expect(result[0]!.nodeIds).toHaveLength(4);
     expect(result[0]!.wallIds).toHaveLength(4);
-    expect(new Set(result[0]!.wallIds)).toEqual(new Set(['w1','w2','w3','w4']));
+    expect(new Set(result[0]!.wallIds)).toEqual(new Set(['w1', 'w2', 'w3', 'w4']));
   });
 
   it('wallIds[i] est le mur entre nodeIds[i] et nodeIds[(i+1)%n]', () => {
-    const nodes = [nd('a',0,0), nd('b',200,0), nd('c',200,140), nd('d',0,140)];
+    const nodes = [nd('a', 0, 0), nd('b', 200, 0), nd('c', 200, 140), nd('d', 0, 140)];
     const walls: Wall[] = [
-      { id:'w1', node1Id:'a', node2Id:'b', thickness:10 },
-      { id:'w2', node1Id:'b', node2Id:'c', thickness:10 },
-      { id:'w3', node1Id:'c', node2Id:'d', thickness:10 },
-      { id:'w4', node1Id:'d', node2Id:'a', thickness:10 },
+      { id: 'w1', node1Id: 'a', node2Id: 'b', thickness: 10 },
+      { id: 'w2', node1Id: 'b', node2Id: 'c', thickness: 10 },
+      { id: 'w3', node1Id: 'c', node2Id: 'd', thickness: 10 },
+      { id: 'w4', node1Id: 'd', node2Id: 'a', thickness: 10 },
     ];
     const [cycle] = wallFaceCycles(walls, nodes);
     for (let i = 0; i < cycle!.nodeIds.length; i++) {
       const n1 = cycle!.nodeIds[i]!;
       const n2 = cycle!.nodeIds[(i + 1) % cycle!.nodeIds.length]!;
       const wId = cycle!.wallIds[i]!;
-      const wall = walls.find(w => w.id === wId)!;
+      const wall = walls.find((w) => w.id === wId)!;
       expect(
         (wall.node1Id === n1 && wall.node2Id === n2) ||
-        (wall.node1Id === n2 && wall.node2Id === n1)
+          (wall.node1Id === n2 && wall.node2Id === n1),
       ).toBe(true);
     }
   });
@@ -83,17 +84,21 @@ describe('wallFaceCycles', () => {
   it('T-junction (2 pièces partageant un mur) → 2 cycles', () => {
     // Pièce gauche a-b-e-f, pièce droite b-c-d-e, mur partagé e-b
     const nodes = [
-      nd('a',0,0), nd('b',100,0), nd('c',200,0),
-      nd('d',200,100), nd('e',100,100), nd('f',0,100),
+      nd('a', 0, 0),
+      nd('b', 100, 0),
+      nd('c', 200, 0),
+      nd('d', 200, 100),
+      nd('e', 100, 100),
+      nd('f', 0, 100),
     ];
     const walls: Wall[] = [
-      { id:'w1', node1Id:'a', node2Id:'b', thickness:10 },
-      { id:'w2', node1Id:'b', node2Id:'c', thickness:10 },
-      { id:'w3', node1Id:'c', node2Id:'d', thickness:10 },
-      { id:'w4', node1Id:'d', node2Id:'e', thickness:10 },
-      { id:'w5', node1Id:'e', node2Id:'b', thickness:10 },
-      { id:'w6', node1Id:'e', node2Id:'f', thickness:10 },
-      { id:'w7', node1Id:'f', node2Id:'a', thickness:10 },
+      { id: 'w1', node1Id: 'a', node2Id: 'b', thickness: 10 },
+      { id: 'w2', node1Id: 'b', node2Id: 'c', thickness: 10 },
+      { id: 'w3', node1Id: 'c', node2Id: 'd', thickness: 10 },
+      { id: 'w4', node1Id: 'd', node2Id: 'e', thickness: 10 },
+      { id: 'w5', node1Id: 'e', node2Id: 'b', thickness: 10 },
+      { id: 'w6', node1Id: 'e', node2Id: 'f', thickness: 10 },
+      { id: 'w7', node1Id: 'f', node2Id: 'a', thickness: 10 },
     ];
     const result = wallFaceCycles(walls, nodes);
     expect(result).toHaveLength(2);
@@ -102,10 +107,10 @@ describe('wallFaceCycles', () => {
   });
 
   it('chaîne ouverte → 0 cycles', () => {
-    const nodes = [nd('a',0,0), nd('b',100,0), nd('c',200,0)];
+    const nodes = [nd('a', 0, 0), nd('b', 100, 0), nd('c', 200, 0)];
     const walls: Wall[] = [
-      { id:'w1', node1Id:'a', node2Id:'b', thickness:10 },
-      { id:'w2', node1Id:'b', node2Id:'c', thickness:10 },
+      { id: 'w1', node1Id: 'a', node2Id: 'b', thickness: 10 },
+      { id: 'w2', node1Id: 'b', node2Id: 'c', thickness: 10 },
     ];
     expect(wallFaceCycles(walls, nodes)).toHaveLength(0);
   });
@@ -138,12 +143,12 @@ export interface FaceCycle {
 export function wallFaceCycles(walls: Wall[], nodes: WallNode[]): FaceCycle[] {
   if (walls.length === 0 || nodes.length === 0) return [];
 
-  const nodeMap = new Map(nodes.map(n => [n.id, n]));
-  const validWalls = walls.filter(w => nodeMap.has(w.node1Id) && nodeMap.has(w.node2Id));
+  const nodeMap = new Map(nodes.map((n) => [n.id, n]));
+  const validWalls = walls.filter((w) => nodeMap.has(w.node1Id) && nodeMap.has(w.node2Id));
   const getPos = (id: string) => nodeMap.get(id)!;
 
   type HE = { from: string; to: string };
-  const halfEdges: HE[] = validWalls.flatMap(w => [
+  const halfEdges: HE[] = validWalls.flatMap((w) => [
     { from: w.node1Id, to: w.node2Id },
     { from: w.node2Id, to: w.node1Id },
   ]);
@@ -160,12 +165,15 @@ export function wallFaceCycles(walls: Wall[], nodes: WallNode[]): FaceCycle[] {
     const θRev = Math.atan2(u.y - v.y, u.x - v.x);
     let best: HE | null = null;
     let bestCw = Infinity;
-    for (const e of (out.get(he.to) ?? [])) {
+    for (const e of out.get(he.to) ?? []) {
       if (e.to === he.from) continue;
       const w = getPos(e.to);
       const θOut = Math.atan2(w.y - v.y, w.x - v.x);
-      const cw = ((θRev - θOut) + 2 * Math.PI) % (2 * Math.PI);
-      if (cw < bestCw) { bestCw = cw; best = e; }
+      const cw = (θRev - θOut + 2 * Math.PI) % (2 * Math.PI);
+      if (cw < bestCw) {
+        bestCw = cw;
+        best = e;
+      }
     }
     return best;
   };
@@ -191,7 +199,10 @@ export function wallFaceCycles(walls: Wall[], nodes: WallNode[]): FaceCycle[] {
       cur = nextHE(cur);
     }
     if (cur && key(cur) === key(start) && cycle.length >= 3) {
-      const pts = cycle.map(he => { const p = getPos(he.from); return { x: p.x, y: p.y }; });
+      const pts = cycle.map((he) => {
+        const p = getPos(he.from);
+        return { x: p.x, y: p.y };
+      });
       // Faces intérieures : aire de shoelace positive (SVG Y-down, sens horaire = positif)
       let s = 0;
       for (let i = 0; i < pts.length; i++) {
@@ -200,8 +211,8 @@ export function wallFaceCycles(walls: Wall[], nodes: WallNode[]): FaceCycle[] {
       }
       if (s / 2 > 0) {
         cycles.push({
-          nodeIds: cycle.map(he => he.from),
-          wallIds: cycle.map(he => wallLookup.get(`${he.from}\x00${he.to}`) ?? ''),
+          nodeIds: cycle.map((he) => he.from),
+          wallIds: cycle.map((he) => wallLookup.get(`${he.from}\x00${he.to}`) ?? ''),
         });
       }
     }
@@ -221,8 +232,11 @@ export function wallsToRooms(
   nodes: WallNode[],
   excludedZones: WallExcludedZone[] = [],
 ): Room[] {
-  const nodeMap = new Map(nodes.map(n => [n.id, n]));
-  const getPos = (id: string) => { const n = nodeMap.get(id)!; return { x: n.x, y: n.y }; };
+  const nodeMap = new Map(nodes.map((n) => [n.id, n]));
+  const getPos = (id: string) => {
+    const n = nodeMap.get(id)!;
+    return { x: n.x, y: n.y };
+  };
 
   const cycles = wallFaceCycles(walls, nodes);
 
@@ -233,13 +247,15 @@ export function wallsToRooms(
     const cya = ptsA.reduce((s, p) => s + p.y, 0) / ptsA.length;
     const cyb = ptsB.reduce((s, p) => s + p.y, 0) / ptsB.length;
     if (Math.abs(cya - cyb) > 1) return cya - cyb;
-    return (ptsA.reduce((s, p) => s + p.x, 0) / ptsA.length) -
-           (ptsB.reduce((s, p) => s + p.x, 0) / ptsB.length);
+    return (
+      ptsA.reduce((s, p) => s + p.x, 0) / ptsA.length -
+      ptsB.reduce((s, p) => s + p.x, 0) / ptsB.length
+    );
   });
 
   return cycles.map((cycle, idx) => {
-    const facePts = cycle.nodeIds.map(id => getPos(id));
-    const roomZones = excludedZones.filter(zone => {
+    const facePts = cycle.nodeIds.map((id) => getPos(id));
+    const roomZones = excludedZones.filter((zone) => {
       if (zone.points.length < 3) return false;
       const cx = zone.points.reduce((s, p) => s + p.x, 0) / zone.points.length;
       const cy = zone.points.reduce((s, p) => s + p.y, 0) / zone.points.length;
@@ -287,6 +303,7 @@ git commit -m "feat(wallFaces): extraire wallFaceCycles — gère T-junctions, r
 ### Task 2 : `computeAutoCotations` — remplacer `detectClosedPolygons` par `wallFaceCycles`
 
 **Files:**
+
 - Modify: `src/engine/geometry/wallCotation.ts`
 - Modify: `src/engine/geometry/wallCotation.test.ts`
 
@@ -311,12 +328,21 @@ describe('computeAutoCotations — T-junction (2 pièces adjacentes)', () => {
   // Pièce gauche a-b-e-f (100×100), pièce droite b-c-d-e (100×100)
   // Mur partagé e-b
   const nodes = [
-    nd('a',0,0), nd('b',100,0), nd('c',200,0),
-    nd('d',200,100), nd('e',100,100), nd('f',0,100),
+    nd('a', 0, 0),
+    nd('b', 100, 0),
+    nd('c', 200, 0),
+    nd('d', 200, 100),
+    nd('e', 100, 100),
+    nd('f', 0, 100),
   ];
   const walls = [
-    w('w1','a','b'), w('w2','b','c'), w('w3','c','d'),
-    w('w4','d','e'), w('w5','e','b'), w('w6','e','f'), w('w7','f','a'),
+    w('w1', 'a', 'b'),
+    w('w2', 'b', 'c'),
+    w('w3', 'c', 'd'),
+    w('w4', 'd', 'e'),
+    w('w5', 'e', 'b'),
+    w('w6', 'e', 'f'),
+    w('w7', 'f', 'a'),
   ];
 
   it('retourne des cotations (non vide malgré la T-junction)', () => {
@@ -326,7 +352,7 @@ describe('computeAutoCotations — T-junction (2 pièces adjacentes)', () => {
 
   it('le mur partagé w5 a au moins une cotation', () => {
     const result = computeAutoCotations(walls, nodes);
-    expect(result.some(c => c.wallId === 'w5')).toBe(true);
+    expect(result.some((c) => c.wallId === 'w5')).toBe(true);
   });
 });
 ```
@@ -387,6 +413,7 @@ git commit -m "fix(wallCotation): remplacer detectClosedPolygons par wallFaceCyc
 ### Task 3 : Canvas — `splitWillCreateLink` (doublon de mur)
 
 **Files:**
+
 - Modify: `src/components/plan/WallDrawingCanvas.tsx`
 
 - [ ] **Step 1 : Localiser le bloc à modifier**
@@ -394,9 +421,10 @@ git commit -m "fix(wallCotation): remplacer detectClosedPolygons par wallFaceCyc
 Dans `src/components/plan/WallDrawingCanvas.tsx`, trouver le bloc chain-extension `else` qui contient :
 
 ```ts
-const alreadyConnected = walls.some(w =>
-  (w.node1Id === prevNodeId && w.node2Id === targetNodeId) ||
-  (w.node1Id === targetNodeId && w.node2Id === prevNodeId)
+const alreadyConnected = walls.some(
+  (w) =>
+    (w.node1Id === prevNodeId && w.node2Id === targetNodeId) ||
+    (w.node1Id === targetNodeId && w.node2Id === prevNodeId),
 );
 
 onPushHistory();
@@ -408,7 +436,12 @@ if (splitWallId !== null) {
 }
 
 if (!alreadyConnected) {
-  onAddWall({ id: generateId(), node1Id: prevNodeId, node2Id: targetNodeId, thickness: chain.thickness });
+  onAddWall({
+    id: generateId(),
+    node1Id: prevNodeId,
+    node2Id: targetNodeId,
+    thickness: chain.thickness,
+  });
 }
 ```
 
@@ -417,15 +450,16 @@ if (!alreadyConnected) {
 Remplacer le bloc ci-dessus par :
 
 ```ts
-const alreadyConnected = walls.some(w =>
-  (w.node1Id === prevNodeId && w.node2Id === targetNodeId) ||
-  (w.node1Id === targetNodeId && w.node2Id === prevNodeId)
+const alreadyConnected = walls.some(
+  (w) =>
+    (w.node1Id === prevNodeId && w.node2Id === targetNodeId) ||
+    (w.node1Id === targetNodeId && w.node2Id === prevNodeId),
 );
 
 // Quand le split crée lui-même le lien prevNodeId→targetNodeId, ne pas doubler le mur.
 // splitWallInEngine crée toujours wall.node1Id→newNode et newNode→wall.node2Id.
 // Si prevNodeId est l'une de ces extrémités, le lien est déjà créé par le split.
-const snapWallObj = splitWallId !== null ? walls.find(w => w.id === splitWallId) : null;
+const snapWallObj = splitWallId !== null ? walls.find((w) => w.id === splitWallId) : null;
 const splitWillCreateLink =
   snapWallObj !== null &&
   (snapWallObj.node1Id === prevNodeId || snapWallObj.node2Id === prevNodeId);
@@ -439,7 +473,12 @@ if (splitWallId !== null) {
 }
 
 if (!alreadyConnected && !splitWillCreateLink) {
-  onAddWall({ id: generateId(), node1Id: prevNodeId, node2Id: targetNodeId, thickness: chain.thickness });
+  onAddWall({
+    id: generateId(),
+    node1Id: prevNodeId,
+    node2Id: targetNodeId,
+    thickness: chain.thickness,
+  });
 }
 ```
 

@@ -10,6 +10,7 @@ When a free-plan user clicks "Nouveau projet" while already at the 1-project lim
 A self-contained modal component, controlled by a `showUpgradeModal` boolean state in `src/app/dashboard/page.tsx`.
 
 **Modified file:** `src/app/dashboard/page.tsx`
+
 - Add `showUpgradeModal` state (default `false`).
 - Replace the "Nouveau projet" click handler logic:
   ```ts
@@ -26,6 +27,7 @@ The existing upsell banner (`user.plan === 'free' && projects.length >= 1`) stay
 ## UpgradeModal component
 
 **Props:**
+
 ```ts
 interface UpgradeModalProps {
   onClose: () => void;
@@ -33,11 +35,13 @@ interface UpgradeModalProps {
 ```
 
 **Layout (overlay modal):**
+
 - Full-screen semi-transparent backdrop (`rgba(0,0,0,0.45)`), `z-50`
 - Centered card, max-width `400px`, background `var(--surf)`, rounded-2xl, shadow
 - Close button (×) top-right corner
 
 **Content:**
+
 - Title: "Passez au plan Pro" (`var(--font-display)`, 20px bold)
 - Subtitle: "Vous avez atteint la limite du plan gratuit (1 projet)."
 - Feature list (3 items with checkmark icons):
@@ -49,6 +53,7 @@ interface UpgradeModalProps {
 - Secondary link: "Continuer avec le plan gratuit" → `onClose()`
 
 **Behavior:**
+
 - Clicking the backdrop closes the modal (`onClose()`).
 - Escape key closes the modal.
 - `router` from `useRouter()` inside the component.
@@ -66,6 +71,7 @@ Consistent with existing modals in the dashboard (same backdrop, card radius, bu
 ## Testing
 
 One test file: `src/components/home/UpgradeModal.test.tsx`
+
 - Renders title and feature list
 - Clicking backdrop calls `onClose`
 - Pressing Escape calls `onClose`

@@ -7,6 +7,7 @@ Améliorer la visualisation du plan de calepinage annoté dans la page quantitat
 ## Architecture
 
 Deux évolutions indépendantes sur deux composants distincts :
+
 - `QuantitiesPanel` — gestion du repli des bandeaux (état React + handler scroll)
 - `QuantityPlanView` — zoom/pan SVG natif via manipulation de viewBox
 
@@ -27,6 +28,7 @@ Les deux bandeaux supérieurs de `QuantitiesPanel` — le header (titre + méta)
 **Déclencheur :** `onScroll` sur la `div` coupes → `collapsed = scrollTop > 20`
 
 **État replié :**
+
 - Les deux bandeaux disparaissent via transition `max-height` (0.25s ease)
 - Un bandeau résiduel de 32px reste visible contenant :
   - Le titre "Tableau des quantités" (tronqué, style discret)
@@ -36,6 +38,7 @@ Les deux bandeaux supérieurs de `QuantitiesPanel` — le header (titre + méta)
 **Restauration automatique :** quand `scrollTop` revient à 0, `collapsed` repasse à `false` — sauf si `pinned = true`.
 
 **Épingle 📌 :**
+
 - Quand `pinned = true`, le repli automatique au scroll est désactivé
 - Les bandeaux restent toujours visibles
 - L'épingle est indépendante de `collapsed` : elle empêche la prochaine mise à jour de `collapsed` depuis le scroll
@@ -49,6 +52,7 @@ const [pinned, setPinned] = useState(false);
 ```
 
 Handler scroll sur la div coupes :
+
 ```ts
 const handleCoupesScroll = (e: React.UIEvent<HTMLDivElement>) => {
   if (pinned) return;
@@ -103,25 +107,27 @@ overflow: hidden;
 
 Le SVG du plan de calepinage annoté dans `QuantityPlanView` devient interactif :
 
-| Interaction | Effet |
-|---|---|
-| Molette souris | Zoom centré sur le curseur |
-| Drag souris (bouton gauche) | Panoramique |
-| Pinch (2 doigts mobile) | Zoom |
-| Drag 1 doigt mobile | Panoramique |
-| Bouton ⊙ Ajuster | Reset viewBox à la valeur initiale |
+| Interaction                 | Effet                              |
+| --------------------------- | ---------------------------------- |
+| Molette souris              | Zoom centré sur le curseur         |
+| Drag souris (bouton gauche) | Panoramique                        |
+| Pinch (2 doigts mobile)     | Zoom                               |
+| Drag 1 doigt mobile         | Panoramique                        |
+| Bouton ⊙ Ajuster            | Reset viewBox à la valeur initiale |
 
 ### Approche technique — Manipulation du viewBox
 
 Au lieu de CSS transform, on recalcule le `viewBox` SVG dynamiquement. Cela reste dans le système de coordonnées SVG et évite toute conversion pixel↔SVG complexe.
 
 **État interne dans `QuantityPlanView` :**
+
 ```ts
 const [vb, setVb] = useState({ x: vbX, y: vbY, w: vbW, h: vbH });
 const isDirty = vb.x !== vbX || vb.y !== vbY || vb.w !== vbW || vb.h !== vbH;
 ```
 
 **Zoom centré sur le curseur (wheel) :**
+
 ```ts
 // factor = 0.9 (zoom in) ou 1.1 (zoom out), selon e.deltaY
 const rect = svgRef.current.getBoundingClientRect();
@@ -141,22 +147,26 @@ setVb({ x: newX, y: newY, w: newW, h: newH });
 Limites de zoom : `w` clampé entre `originalW * 0.1` (zoom max ×10) et `originalW * 5` (dézoom max ×0.2).
 
 **Panoramique (drag) :**
+
 ```ts
 // Sur mousedown : mémoriser position de départ
 // Sur mousemove (si dragging) :
 const dx = e.movementX * (vb.w / rect.width);
 const dy = e.movementY * (vb.h / rect.height);
-setVb(v => ({ ...v, x: v.x - dx, y: v.y - dy }));
+setVb((v) => ({ ...v, x: v.x - dx, y: v.y - dy }));
 ```
 
 **Touch pinch :**
+
 - `onTouchStart` : mémoriser distance entre 2 points → `startDist`, `startVb`
 - `onTouchMove` : calculer nouvelle distance → `factor = startDist / newDist` → appliquer même formule que wheel, centrée sur le midpoint des 2 doigts
 
 **Touch drag (1 doigt) :**
+
 - `onTouchMove` avec 1 point : même logique que drag souris via `touch.clientX - prevTouch.clientX`
 
 **Bouton ⊙ Ajuster :**
+
 - `onClick={() => setVb({ x: vbX, y: vbY, w: vbW, h: vbH })}`
 - Affiché uniquement si `isDirty` (zoom/pan actif)
 - Position : overlay `absolute bottom-3 right-3` dans la zone plan
@@ -186,9 +196,9 @@ Le SVG reçoit le `ref` et les gestionnaires d'événements mouse/touch. Le whee
 
 ## Fichiers modifiés
 
-| Fichier | Changement |
-|---|---|
-| `src/components/quantities/QuantitiesPanel.tsx` | Ajout état `collapsed`/`pinned`, handler scroll, bandeau résiduel, icône épingle |
-| `src/components/quantities/QuantityPlanView.tsx` | Ajout état `vb`, handlers wheel/mouse/touch, bouton ⊙, ref SVG |
-| `src/components/quantities/QuantitiesPanel.test.tsx` | Tests repli/épingle |
-| `src/components/quantities/QuantityPlanView.test.tsx` | Tests zoom/pan/reset |
+| Fichier                                               | Changement                                                                       |
+| ----------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `src/components/quantities/QuantitiesPanel.tsx`       | Ajout état `collapsed`/`pinned`, handler scroll, bandeau résiduel, icône épingle |
+| `src/components/quantities/QuantityPlanView.tsx`      | Ajout état `vb`, handlers wheel/mouse/touch, bouton ⊙, ref SVG                   |
+| `src/components/quantities/QuantitiesPanel.test.tsx`  | Tests repli/épingle                                                              |
+| `src/components/quantities/QuantityPlanView.test.tsx` | Tests zoom/pan/reset                                                             |

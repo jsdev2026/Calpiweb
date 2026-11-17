@@ -12,17 +12,18 @@
 
 ## Fichiers modifiés
 
-| Fichier | Rôle |
-|---|---|
-| `src/components/plan/PlanToolbar.tsx` | Toolbar mobile — changer `absolute` → `fixed` |
-| `src/components/plan/PlanToolbar.test.tsx` | Ajouter assertion sur la classe `fixed` |
-| `src/app/project/[id]/page.tsx` | Conteneur racine — ajouter `style={{ height: '100svh' }}` |
+| Fichier                                    | Rôle                                                      |
+| ------------------------------------------ | --------------------------------------------------------- |
+| `src/components/plan/PlanToolbar.tsx`      | Toolbar mobile — changer `absolute` → `fixed`             |
+| `src/components/plan/PlanToolbar.test.tsx` | Ajouter assertion sur la classe `fixed`                   |
+| `src/app/project/[id]/page.tsx`            | Conteneur racine — ajouter `style={{ height: '100svh' }}` |
 
 ---
 
 ## Task 1 : PlanToolbar — `absolute` → `fixed`
 
 **Files:**
+
 - Modify: `src/components/plan/PlanToolbar.tsx:128`
 - Test: `src/components/plan/PlanToolbar.test.tsx:80-107`
 
@@ -35,12 +36,12 @@ Le div `data-testid="plan-toolbar-mobile"` est actuellement `absolute bottom-0`.
 Dans `src/components/plan/PlanToolbar.test.tsx`, dans le describe `'PlanToolbar mobile — deux lignes'` (à la suite des 4 tests existants, avant la dernière accolade `}`), ajouter :
 
 ```tsx
-  it('toolbar mobile a la classe fixed (pas absolute)', () => {
-    render(<PlanToolbar {...defaultProps} />);
-    const toolbar = screen.getByTestId('plan-toolbar-mobile');
-    expect(toolbar.className).toContain('fixed');
-    expect(toolbar.className).not.toContain('absolute');
-  });
+it('toolbar mobile a la classe fixed (pas absolute)', () => {
+  render(<PlanToolbar {...defaultProps} />);
+  const toolbar = screen.getByTestId('plan-toolbar-mobile');
+  expect(toolbar.className).toContain('fixed');
+  expect(toolbar.className).not.toContain('absolute');
+});
 ```
 
 - [ ] **Step 2 : Vérifier que le test échoue**
@@ -103,6 +104,7 @@ git commit -m "fix(mobile): toolbar position fixed — reste visible sous la bar
 ## Task 2 : Root container — `100svh`
 
 **Files:**
+
 - Modify: `src/app/project/[id]/page.tsx:340`
 
 ### Contexte

@@ -13,6 +13,7 @@
 ### Task 1 : Bandeaux repliables dans `QuantitiesPanel`
 
 **Files:**
+
 - Modify: `src/components/quantities/QuantitiesPanel.tsx`
 - Modify: `src/components/quantities/QuantitiesPanel.test.tsx`
 
@@ -23,46 +24,46 @@
 Dans `src/components/quantities/QuantitiesPanel.test.tsx`, ajouter ces 5 tests à la fin du `describe` existant (après le dernier `it`) :
 
 ```tsx
-  it('collapsed-bar is absent by default', () => {
-    render(<QuantitiesPanel />);
-    expect(screen.queryByTestId('collapsed-bar')).toBeNull();
-  });
+it('collapsed-bar is absent by default', () => {
+  render(<QuantitiesPanel />);
+  expect(screen.queryByTestId('collapsed-bar')).toBeNull();
+});
 
-  it('coupes scroll > 20px shows collapsed-bar', () => {
-    render(<QuantitiesPanel />);
-    const coupes = screen.getByTestId('coupes-section');
-    Object.defineProperty(coupes, 'scrollTop', { value: 50, writable: true });
-    fireEvent.scroll(coupes);
-    expect(screen.getByTestId('collapsed-bar')).toBeDefined();
-  });
+it('coupes scroll > 20px shows collapsed-bar', () => {
+  render(<QuantitiesPanel />);
+  const coupes = screen.getByTestId('coupes-section');
+  Object.defineProperty(coupes, 'scrollTop', { value: 50, writable: true });
+  fireEvent.scroll(coupes);
+  expect(screen.getByTestId('collapsed-bar')).toBeDefined();
+});
 
-  it('"▲ Afficher" button restores bandeaux', () => {
-    render(<QuantitiesPanel />);
-    const coupes = screen.getByTestId('coupes-section');
-    Object.defineProperty(coupes, 'scrollTop', { value: 50, writable: true });
-    fireEvent.scroll(coupes);
-    fireEvent.click(screen.getByLabelText('Afficher les statistiques'));
-    expect(screen.queryByTestId('collapsed-bar')).toBeNull();
-  });
+it('"▲ Afficher" button restores bandeaux', () => {
+  render(<QuantitiesPanel />);
+  const coupes = screen.getByTestId('coupes-section');
+  Object.defineProperty(coupes, 'scrollTop', { value: 50, writable: true });
+  fireEvent.scroll(coupes);
+  fireEvent.click(screen.getByLabelText('Afficher les statistiques'));
+  expect(screen.queryByTestId('collapsed-bar')).toBeNull();
+});
 
-  it('scroll back to top auto-restores when not pinned', () => {
-    render(<QuantitiesPanel />);
-    const coupes = screen.getByTestId('coupes-section');
-    Object.defineProperty(coupes, 'scrollTop', { value: 50, writable: true });
-    fireEvent.scroll(coupes);
-    Object.defineProperty(coupes, 'scrollTop', { value: 0, writable: true });
-    fireEvent.scroll(coupes);
-    expect(screen.queryByTestId('collapsed-bar')).toBeNull();
-  });
+it('scroll back to top auto-restores when not pinned', () => {
+  render(<QuantitiesPanel />);
+  const coupes = screen.getByTestId('coupes-section');
+  Object.defineProperty(coupes, 'scrollTop', { value: 50, writable: true });
+  fireEvent.scroll(coupes);
+  Object.defineProperty(coupes, 'scrollTop', { value: 0, writable: true });
+  fireEvent.scroll(coupes);
+  expect(screen.queryByTestId('collapsed-bar')).toBeNull();
+});
 
-  it('pin prevents auto-collapse on scroll', () => {
-    render(<QuantitiesPanel />);
-    fireEvent.click(screen.getByLabelText('Épingler les statistiques'));
-    const coupes = screen.getByTestId('coupes-section');
-    Object.defineProperty(coupes, 'scrollTop', { value: 50, writable: true });
-    fireEvent.scroll(coupes);
-    expect(screen.queryByTestId('collapsed-bar')).toBeNull();
-  });
+it('pin prevents auto-collapse on scroll', () => {
+  render(<QuantitiesPanel />);
+  fireEvent.click(screen.getByLabelText('Épingler les statistiques'));
+  const coupes = screen.getByTestId('coupes-section');
+  Object.defineProperty(coupes, 'scrollTop', { value: 50, writable: true });
+  fireEvent.scroll(coupes);
+  expect(screen.queryByTestId('collapsed-bar')).toBeNull();
+});
 ```
 
 - [ ] **Step 2 : Vérifier que les tests échouent**
@@ -104,7 +105,7 @@ export const QuantitiesPanel = () => {
 
   if (result.totalTiles === 0) {
     return (
-      <div className="flex flex-1 items-center justify-center bg-gray-50 dark:bg-zinc-950 text-gray-400 dark:text-zinc-500">
+      <div className="flex flex-1 items-center justify-center bg-gray-50 text-gray-400 dark:bg-zinc-950 dark:text-zinc-500">
         Tracez au moins une pièce fermée pour voir le quantitatif.
       </div>
     );
@@ -129,7 +130,11 @@ export const QuantitiesPanel = () => {
     <button
       type="button"
       aria-label={pinned ? 'Désépingler les statistiques' : 'Épingler les statistiques'}
-      title={pinned ? 'Statistiques épinglées — cliquer pour désépingler' : 'Épingler pour garder les statistiques visibles'}
+      title={
+        pinned
+          ? 'Statistiques épinglées — cliquer pour désépingler'
+          : 'Épingler pour garder les statistiques visibles'
+      }
       onClick={handlePin}
       className={`shrink-0 rounded p-1 text-sm leading-none transition-colors ${
         inBar ? '' : 'mt-0.5'
@@ -145,7 +150,6 @@ export const QuantitiesPanel = () => {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden bg-gray-50 dark:bg-zinc-950">
-
       {/* ── Bandeaux repliables ── */}
       <div
         data-testid="bandeaux-wrapper"
@@ -158,16 +162,31 @@ export const QuantitiesPanel = () => {
         }}
       >
         {/* Header */}
-        <div className="border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-5 md:px-8 py-4 md:py-5">
+        <div className="border-b border-gray-200 bg-white px-5 py-4 md:px-8 md:py-5 dark:border-zinc-800 dark:bg-zinc-900">
           <div className="flex items-start justify-between gap-2">
             <div>
-              <h2 className="text-lg font-black text-gray-900 dark:text-zinc-100">Tableau des quantités</h2>
-              <div className="mt-0.5 flex flex-col gap-0.5 md:flex-row text-xs text-gray-400 dark:text-zinc-500">
-                <span>Format&nbsp;: <span className="font-bold text-gray-700 dark:text-zinc-300">{tileLabel}</span></span>
-                <span className="hidden md:inline mx-1">—</span>
-                <span>Joint&nbsp;: <span className="font-bold text-gray-700 dark:text-zinc-300">{result.joint}&nbsp;mm</span></span>
-                <span className="hidden md:inline mx-1">—</span>
-                <span>Surface&nbsp;: <span className="font-bold text-gray-700 dark:text-zinc-300">{formatM2(result.roomArea)}</span></span>
+              <h2 className="text-lg font-black text-gray-900 dark:text-zinc-100">
+                Tableau des quantités
+              </h2>
+              <div className="mt-0.5 flex flex-col gap-0.5 text-xs text-gray-400 md:flex-row dark:text-zinc-500">
+                <span>
+                  Format&nbsp;:{' '}
+                  <span className="font-bold text-gray-700 dark:text-zinc-300">{tileLabel}</span>
+                </span>
+                <span className="mx-1 hidden md:inline">—</span>
+                <span>
+                  Joint&nbsp;:{' '}
+                  <span className="font-bold text-gray-700 dark:text-zinc-300">
+                    {result.joint}&nbsp;mm
+                  </span>
+                </span>
+                <span className="mx-1 hidden md:inline">—</span>
+                <span>
+                  Surface&nbsp;:{' '}
+                  <span className="font-bold text-gray-700 dark:text-zinc-300">
+                    {formatM2(result.roomArea)}
+                  </span>
+                </span>
               </div>
             </div>
             <PinButton inBar={false} />
@@ -175,26 +194,42 @@ export const QuantitiesPanel = () => {
         </div>
 
         {/* Stat strip */}
-        <div className="border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-5 md:px-8 py-3">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+        <div className="border-b border-gray-200 bg-white px-5 py-3 md:px-8 dark:border-zinc-800 dark:bg-zinc-900">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
             {/* Carreaux entiers */}
-            <div className="rounded-xl border-l-[3px] border-blue-500 bg-gray-50 dark:bg-zinc-800/60 px-4 py-2">
-              <div className="text-xl font-black tabular-nums text-gray-900 dark:text-zinc-100">{result.wholeCount}</div>
-              <div className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">Carreaux entiers</div>
-              <div className="mt-0.5 text-[11px] text-gray-400 dark:text-zinc-500">{formatM2(result.wholeCount * result.tileW * result.tileH)}</div>
+            <div className="rounded-xl border-l-[3px] border-blue-500 bg-gray-50 px-4 py-2 dark:bg-zinc-800/60">
+              <div className="text-xl font-black tabular-nums text-gray-900 dark:text-zinc-100">
+                {result.wholeCount}
+              </div>
+              <div className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                Carreaux entiers
+              </div>
+              <div className="mt-0.5 text-[11px] text-gray-400 dark:text-zinc-500">
+                {formatM2(result.wholeCount * result.tileW * result.tileH)}
+              </div>
             </div>
             {/* Carreaux à couper */}
-            <div className="rounded-xl border-l-[3px] border-orange-500 bg-gray-50 dark:bg-zinc-800/60 px-4 py-2">
-              <div className="text-xl font-black tabular-nums text-gray-900 dark:text-zinc-100">{result.cuts.length}</div>
-              <div className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">Carreaux à couper</div>
-              <div className="mt-0.5 text-[11px] text-gray-400 dark:text-zinc-500">{formatM2(totalCutArea)} posés</div>
+            <div className="rounded-xl border-l-[3px] border-orange-500 bg-gray-50 px-4 py-2 dark:bg-zinc-800/60">
+              <div className="text-xl font-black tabular-nums text-gray-900 dark:text-zinc-100">
+                {result.cuts.length}
+              </div>
+              <div className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                Carreaux à couper
+              </div>
+              <div className="mt-0.5 text-[11px] text-gray-400 dark:text-zinc-500">
+                {formatM2(totalCutArea)} posés
+              </div>
             </div>
             {/* Récupérées */}
-            <div className="rounded-xl border-l-[3px] border-emerald-500 bg-gray-50 dark:bg-zinc-800/60 px-4 py-2">
-              <div className={`text-xl font-black tabular-nums ${result.totalReuseCount > 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-gray-400 dark:text-zinc-600'}`}>
+            <div className="rounded-xl border-l-[3px] border-emerald-500 bg-gray-50 px-4 py-2 dark:bg-zinc-800/60">
+              <div
+                className={`text-xl font-black tabular-nums ${result.totalReuseCount > 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-gray-400 dark:text-zinc-600'}`}
+              >
                 {result.totalReuseCount}
               </div>
-              <div className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">Récupérées</div>
+              <div className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                Récupérées
+              </div>
               <div className="mt-0.5 text-[11px] text-gray-400 dark:text-zinc-500">
                 {result.totalReuseCount > 0 ? 'dans une chute' : '—'}
               </div>
@@ -202,14 +237,21 @@ export const QuantitiesPanel = () => {
             {/* Total à commander */}
             <div className="flex items-center justify-between rounded-xl border border-orange-500/20 bg-orange-500/5 px-4 py-2">
               <div>
-                <div className="text-[10px] font-bold uppercase tracking-wider text-orange-500/80">Total à commander</div>
-                <div className="mt-0.5 text-[11px] text-gray-400 dark:text-zinc-500">
-                  {result.wholeCount} + ({result.cuts.length}−{result.totalReuseCount}) = {result.totalTiles} × 1.10
+                <div className="text-[10px] font-bold uppercase tracking-wider text-orange-500/80">
+                  Total à commander
                 </div>
-                <div className="text-[11px] text-orange-400/70">{formatM2(result.toOrder * result.tileW * result.tileH)}</div>
+                <div className="mt-0.5 text-[11px] text-gray-400 dark:text-zinc-500">
+                  {result.wholeCount} + ({result.cuts.length}−{result.totalReuseCount}) ={' '}
+                  {result.totalTiles} × 1.10
+                </div>
+                <div className="text-[11px] text-orange-400/70">
+                  {formatM2(result.toOrder * result.tileW * result.tileH)}
+                </div>
               </div>
               <div className="shrink-0 text-right">
-                <div className="text-2xl font-black tabular-nums text-orange-400">{result.toOrder}</div>
+                <div className="text-2xl font-black tabular-nums text-orange-400">
+                  {result.toOrder}
+                </div>
                 <div className="text-[10px] font-bold text-orange-500/60">carreaux</div>
               </div>
             </div>
@@ -221,7 +263,7 @@ export const QuantitiesPanel = () => {
       {collapsed && (
         <div
           data-testid="collapsed-bar"
-          className="flex shrink-0 items-center gap-2 border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-5 py-1.5"
+          className="flex shrink-0 items-center gap-2 border-b border-gray-200 bg-white px-5 py-1.5 dark:border-zinc-800 dark:bg-zinc-900"
         >
           <span className="flex-1 truncate text-xs font-semibold text-gray-400 dark:text-zinc-500">
             Tableau des quantités
@@ -239,7 +281,11 @@ export const QuantitiesPanel = () => {
       )}
 
       {/* ── Mobile tab bar ── */}
-      <div role="tablist" className="flex shrink-0 border-b border-gray-200 dark:border-zinc-800 md:hidden" style={{ background: 'var(--surf, #fff)' }}>
+      <div
+        role="tablist"
+        className="flex shrink-0 border-b border-gray-200 md:hidden dark:border-zinc-800"
+        style={{ background: 'var(--surf, #fff)' }}
+      >
         {(['plan', 'coupes'] as const).map((tab) => (
           <button
             key={tab}
@@ -248,9 +294,13 @@ export const QuantitiesPanel = () => {
             aria-selected={mobileTab === tab}
             onClick={() => setMobileTab(tab)}
             className="flex-1 py-2.5 text-[13px] font-semibold transition-colors"
-            style={mobileTab === tab
-              ? { borderBottom: '2px solid var(--accent, #f97316)', color: 'var(--accent, #f97316)' }
-              : { borderBottom: '2px solid transparent', color: 'var(--text2, #6b7280)' }
+            style={
+              mobileTab === tab
+                ? {
+                    borderBottom: '2px solid var(--accent, #f97316)',
+                    color: 'var(--accent, #f97316)',
+                  }
+                : { borderBottom: '2px solid transparent', color: 'var(--text2, #6b7280)' }
             }
           >
             {tab === 'plan' ? 'Plan' : 'Coupes'}
@@ -283,14 +333,14 @@ export const QuantitiesPanel = () => {
           <div
             data-testid="coupes-section"
             onScroll={handleCoupesScroll}
-            className={`${mobileTab === 'plan' ? 'hidden md:flex' : 'flex'} w-full md:w-[360px] shrink-0 flex-col gap-4 overflow-y-auto p-5`}
+            className={`${mobileTab === 'plan' ? 'hidden md:flex' : 'flex'} w-full shrink-0 flex-col gap-4 overflow-y-auto p-5 md:w-[360px]`}
           >
             <div className="flex items-center justify-between">
               <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 dark:text-zinc-500">
                 Groupes de coupes
               </h3>
               <button
-                className="hidden md:flex h-5 w-5 items-center justify-center rounded text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+                className="hidden h-5 w-5 items-center justify-center rounded text-gray-400 hover:bg-gray-100 hover:text-gray-600 md:flex dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
                 onClick={() => setSidebarOpen(false)}
                 aria-label="Masquer le panneau"
               >
@@ -311,13 +361,15 @@ export const QuantitiesPanel = () => {
                 />
               ))}
             </div>
-            <div className="flex items-center justify-between border-t border-gray-200 dark:border-zinc-800 pt-3 text-xs">
+            <div className="flex items-center justify-between border-t border-gray-200 pt-3 text-xs dark:border-zinc-800">
               <span className="text-gray-400 dark:text-zinc-500">Carreaux nets pour coupes</span>
-              <span className="font-mono font-black text-gray-900 dark:text-zinc-100">{result.tilesForCuts} carreaux</span>
+              <span className="font-mono font-black text-gray-900 dark:text-zinc-100">
+                {result.tilesForCuts} carreaux
+              </span>
             </div>
           </div>
         ) : (
-          <div className="hidden md:flex w-8 shrink-0 items-center justify-center border-l border-gray-200 dark:border-zinc-800">
+          <div className="hidden w-8 shrink-0 items-center justify-center border-l border-gray-200 md:flex dark:border-zinc-800">
             <button
               className="flex h-5 w-5 items-center justify-center rounded text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
               onClick={() => setSidebarOpen(true)}
@@ -361,6 +413,7 @@ git commit -m "feat(quantities): collapsible bandeaux with auto-hide on scroll a
 ### Task 2 : Zoom et panoramique dans `QuantityPlanView`
 
 **Files:**
+
 - Modify: `src/components/quantities/QuantityPlanView.tsx`
 - Modify: `src/components/quantities/QuantityPlanView.test.tsx`
 
@@ -373,52 +426,92 @@ git commit -m "feat(quantities): collapsible bandeaux with auto-hide on scroll a
 Dans `src/components/quantities/QuantityPlanView.test.tsx`, ajouter ces 4 tests à la suite des existants :
 
 ```tsx
-  it('plan-wrapper has data-testid and cursor-grab class', () => {
-    const tile = { id: 't1', type: 'WHOLE' as const, rect: { x: 0, y: 0, w: 300, h: 300 } };
-    const { container } = render(
-      <QuantityPlanView result={makeResult({ tiles: [tile] })} config={config} rooms={[room]} highlightGroup={null} />,
-    );
-    const wrapper = container.querySelector('[data-testid="plan-wrapper"]');
-    expect(wrapper).not.toBeNull();
-    expect(wrapper!.className).toContain('cursor-grab');
-  });
+it('plan-wrapper has data-testid and cursor-grab class', () => {
+  const tile = { id: 't1', type: 'WHOLE' as const, rect: { x: 0, y: 0, w: 300, h: 300 } };
+  const { container } = render(
+    <QuantityPlanView
+      result={makeResult({ tiles: [tile] })}
+      config={config}
+      rooms={[room]}
+      highlightGroup={null}
+    />,
+  );
+  const wrapper = container.querySelector('[data-testid="plan-wrapper"]');
+  expect(wrapper).not.toBeNull();
+  expect(wrapper!.className).toContain('cursor-grab');
+});
 
-  it('⊙ Ajuster button is absent by default', () => {
-    const tile = { id: 't1', type: 'WHOLE' as const, rect: { x: 0, y: 0, w: 300, h: 300 } };
-    const { queryByLabelText } = render(
-      <QuantityPlanView result={makeResult({ tiles: [tile] })} config={config} rooms={[room]} highlightGroup={null} />,
-    );
-    expect(queryByLabelText('Ajuster la vue')).toBeNull();
-  });
+it('⊙ Ajuster button is absent by default', () => {
+  const tile = { id: 't1', type: 'WHOLE' as const, rect: { x: 0, y: 0, w: 300, h: 300 } };
+  const { queryByLabelText } = render(
+    <QuantityPlanView
+      result={makeResult({ tiles: [tile] })}
+      config={config}
+      rooms={[room]}
+      highlightGroup={null}
+    />,
+  );
+  expect(queryByLabelText('Ajuster la vue')).toBeNull();
+});
 
-  it('⊙ Ajuster button appears after wheel event changes viewBox', () => {
-    const tile = { id: 't1', type: 'WHOLE' as const, rect: { x: 0, y: 0, w: 300, h: 300 } };
-    const { container, getByLabelText } = render(
-      <QuantityPlanView result={makeResult({ tiles: [tile] })} config={config} rooms={[room]} highlightGroup={null} />,
-    );
-    const wrapper = container.querySelector('[data-testid="plan-wrapper"]')!;
-    Object.defineProperty(wrapper, 'getBoundingClientRect', {
-      value: () => ({ left: 0, top: 0, width: 400, height: 400, right: 400, bottom: 400, x: 0, y: 0, toJSON: () => ({}) }),
-      configurable: true,
-    });
-    fireEvent.wheel(wrapper, { deltaY: 100 });
-    expect(getByLabelText('Ajuster la vue')).toBeDefined();
+it('⊙ Ajuster button appears after wheel event changes viewBox', () => {
+  const tile = { id: 't1', type: 'WHOLE' as const, rect: { x: 0, y: 0, w: 300, h: 300 } };
+  const { container, getByLabelText } = render(
+    <QuantityPlanView
+      result={makeResult({ tiles: [tile] })}
+      config={config}
+      rooms={[room]}
+      highlightGroup={null}
+    />,
+  );
+  const wrapper = container.querySelector('[data-testid="plan-wrapper"]')!;
+  Object.defineProperty(wrapper, 'getBoundingClientRect', {
+    value: () => ({
+      left: 0,
+      top: 0,
+      width: 400,
+      height: 400,
+      right: 400,
+      bottom: 400,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    }),
+    configurable: true,
   });
+  fireEvent.wheel(wrapper, { deltaY: 100 });
+  expect(getByLabelText('Ajuster la vue')).toBeDefined();
+});
 
-  it('clicking ⊙ Ajuster resets viewBox (button disappears)', () => {
-    const tile = { id: 't1', type: 'WHOLE' as const, rect: { x: 0, y: 0, w: 300, h: 300 } };
-    const { container, getByLabelText, queryByLabelText } = render(
-      <QuantityPlanView result={makeResult({ tiles: [tile] })} config={config} rooms={[room]} highlightGroup={null} />,
-    );
-    const wrapper = container.querySelector('[data-testid="plan-wrapper"]')!;
-    Object.defineProperty(wrapper, 'getBoundingClientRect', {
-      value: () => ({ left: 0, top: 0, width: 400, height: 400, right: 400, bottom: 400, x: 0, y: 0, toJSON: () => ({}) }),
-      configurable: true,
-    });
-    fireEvent.wheel(wrapper, { deltaY: 100 });
-    fireEvent.click(getByLabelText('Ajuster la vue'));
-    expect(queryByLabelText('Ajuster la vue')).toBeNull();
+it('clicking ⊙ Ajuster resets viewBox (button disappears)', () => {
+  const tile = { id: 't1', type: 'WHOLE' as const, rect: { x: 0, y: 0, w: 300, h: 300 } };
+  const { container, getByLabelText, queryByLabelText } = render(
+    <QuantityPlanView
+      result={makeResult({ tiles: [tile] })}
+      config={config}
+      rooms={[room]}
+      highlightGroup={null}
+    />,
+  );
+  const wrapper = container.querySelector('[data-testid="plan-wrapper"]')!;
+  Object.defineProperty(wrapper, 'getBoundingClientRect', {
+    value: () => ({
+      left: 0,
+      top: 0,
+      width: 400,
+      height: 400,
+      right: 400,
+      bottom: 400,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    }),
+    configurable: true,
   });
+  fireEvent.wheel(wrapper, { deltaY: 100 });
+  fireEvent.click(getByLabelText('Ajuster la vue'));
+  expect(queryByLabelText('Ajuster la vue')).toBeNull();
+});
 ```
 
 Note : le fichier doit déjà importer `fireEvent` depuis `@testing-library/react`. Ajouter l'import si manquant :
@@ -455,7 +548,12 @@ export interface QuantityPlanViewProps {
   highlightGroup: number | null;
 }
 
-export const QuantityPlanView = ({ result, config, rooms, highlightGroup }: QuantityPlanViewProps) => {
+export const QuantityPlanView = ({
+  result,
+  config,
+  rooms,
+  highlightGroup,
+}: QuantityPlanViewProps) => {
   const uid = useId().replace(/:/g, '');
   const clipId = `qty-plan-clip-${uid}`;
 
@@ -463,9 +561,8 @@ export const QuantityPlanView = ({ result, config, rooms, highlightGroup }: Quan
   const allPoints = validRooms.flatMap((r) => r.points);
 
   // Bounding box (fallback si pas de pièces valides)
-  const bbox = allPoints.length > 0
-    ? getBoundingBox(allPoints)
-    : { minX: 0, minY: 0, maxX: 1000, maxY: 1000 };
+  const bbox =
+    allPoints.length > 0 ? getBoundingBox(allPoints) : { minX: 0, minY: 0, maxX: 1000, maxY: 1000 };
   const pad = Math.max(bbox.maxX - bbox.minX, bbox.maxY - bbox.minY) * 0.1;
   const initX = bbox.minX - pad;
   const initY = bbox.minY - pad;
@@ -482,8 +579,7 @@ export const QuantityPlanView = ({ result, config, rooms, highlightGroup }: Quan
   const dragRef = useRef<{ x: number; y: number } | null>(null);
   const touchRef = useRef<{ dist: number; midX: number; midY: number; vb: typeof vb } | null>(null);
 
-  const isDirty =
-    vb.x !== initX || vb.y !== initY || vb.w !== initW || vb.h !== initH;
+  const isDirty = vb.x !== initX || vb.y !== initY || vb.w !== initW || vb.h !== initH;
 
   // ── Wheel (passive: false) + touchmove (passive: false) via useEffect ──
   useEffect(() => {
@@ -493,7 +589,16 @@ export const QuantityPlanView = ({ result, config, rooms, highlightGroup }: Quan
     const minW = initW * 0.1;
     const maxW = initW * 5;
 
-    const clampAndApply = (uncW: number, uncH: number, svgMx: number, svgMy: number, mx: number, my: number, rectW: number, rectH: number) => {
+    const clampAndApply = (
+      uncW: number,
+      uncH: number,
+      svgMx: number,
+      svgMy: number,
+      mx: number,
+      my: number,
+      rectW: number,
+      rectH: number,
+    ) => {
       const nw = Math.max(minW, Math.min(maxW, uncW));
       const nh = uncH * (nw / uncW);
       return { x: svgMx - mx * (nw / rectW), y: svgMy - my * (nh / rectH), w: nw, h: nh };
@@ -509,7 +614,16 @@ export const QuantityPlanView = ({ result, config, rooms, highlightGroup }: Quan
       setVb((prev) => {
         const svgMx = prev.x + mx * (prev.w / rect.width);
         const svgMy = prev.y + my * (prev.h / rect.height);
-        return clampAndApply(prev.w * factor, prev.h * factor, svgMx, svgMy, mx, my, rect.width, rect.height);
+        return clampAndApply(
+          prev.w * factor,
+          prev.h * factor,
+          svgMx,
+          svgMy,
+          mx,
+          my,
+          rect.width,
+          rect.height,
+        );
       });
     };
 
@@ -539,7 +653,18 @@ export const QuantityPlanView = ({ result, config, rooms, highlightGroup }: Quan
         const my = midY - rect.top;
         const svgMx = startVb.x + mx * (startVb.w / rect.width);
         const svgMy = startVb.y + my * (startVb.h / rect.height);
-        setVb(clampAndApply(startVb.w * factor, startVb.h * factor, svgMx, svgMy, mx, my, rect.width, rect.height));
+        setVb(
+          clampAndApply(
+            startVb.w * factor,
+            startVb.h * factor,
+            svgMx,
+            svgMy,
+            mx,
+            my,
+            rect.width,
+            rect.height,
+          ),
+        );
       }
     };
 
@@ -621,7 +746,7 @@ export const QuantityPlanView = ({ result, config, rooms, highlightGroup }: Quan
       <div
         ref={wrapperRef}
         data-testid="plan-wrapper"
-        className={`relative flex flex-1 overflow-hidden rounded-2xl border border-gray-200 bg-gray-100 dark:border-zinc-800 dark:bg-zinc-950 select-none ${
+        className={`relative flex flex-1 select-none overflow-hidden rounded-2xl border border-gray-200 bg-gray-100 dark:border-zinc-800 dark:bg-zinc-950 ${
           dragging ? 'cursor-grabbing' : 'cursor-grab'
         }`}
         onMouseDown={handleMouseDown}
@@ -639,10 +764,7 @@ export const QuantityPlanView = ({ result, config, rooms, highlightGroup }: Quan
           <defs>
             <clipPath id={clipId}>
               {validRooms.map((room) => (
-                <polygon
-                  key={room.id}
-                  points={room.points.map((p) => `${p.x},${p.y}`).join(' ')}
-                />
+                <polygon key={room.id} points={room.points.map((p) => `${p.x},${p.y}`).join(' ')} />
               ))}
             </clipPath>
           </defs>
@@ -663,7 +785,9 @@ export const QuantityPlanView = ({ result, config, rooms, highlightGroup }: Quan
                 const isReused = cut ? cut.coveredById !== null : false;
 
                 const groupInfo = cut
-                  ? groupMap.get(`${cut.usedW}×${cut.usedH}|${cut.pieceEdges.left}|${cut.pieceEdges.right}|${cut.pieceEdges.top}|${cut.pieceEdges.bottom}`)
+                  ? groupMap.get(
+                      `${cut.usedW}×${cut.usedH}|${cut.pieceEdges.left}|${cut.pieceEdges.right}|${cut.pieceEdges.top}|${cut.pieceEdges.bottom}`,
+                    )
                   : undefined;
                 const groupColor = groupInfo?.color;
                 const groupNumber = groupInfo ? groupInfo.index + 1 : null;
@@ -672,7 +796,8 @@ export const QuantityPlanView = ({ result, config, rooms, highlightGroup }: Quan
                 if (highlightGroup !== null) {
                   dimOpacity = !isWhole && groupNumber === highlightGroup ? 1 : 0.12;
                 }
-                const isHighlighted = highlightGroup !== null && !isWhole && groupNumber === highlightGroup;
+                const isHighlighted =
+                  highlightGroup !== null && !isWhole && groupNumber === highlightGroup;
 
                 const fill = isWhole
                   ? config.color
@@ -687,7 +812,10 @@ export const QuantityPlanView = ({ result, config, rooms, highlightGroup }: Quan
                     style={{
                       opacity: dimOpacity,
                       transition: 'opacity 0.15s ease, filter 0.15s ease',
-                      filter: isHighlighted && groupColor ? `drop-shadow(0 0 8px ${groupColor}88)` : undefined,
+                      filter:
+                        isHighlighted && groupColor
+                          ? `drop-shadow(0 0 8px ${groupColor}88)`
+                          : undefined,
                     }}
                   >
                     <rect
@@ -700,7 +828,12 @@ export const QuantityPlanView = ({ result, config, rooms, highlightGroup }: Quan
                     />
                     {cut && groupInfo && (
                       <>
-                        <circle cx={cut.clipCx} cy={cut.clipCy} r={labelSize * 0.62} fill="rgba(0,0,0,0.50)" />
+                        <circle
+                          cx={cut.clipCx}
+                          cy={cut.clipCy}
+                          r={labelSize * 0.62}
+                          fill="rgba(0,0,0,0.50)"
+                        />
                         <text
                           x={cut.clipCx}
                           y={cut.clipCy}
@@ -728,8 +861,10 @@ export const QuantityPlanView = ({ result, config, rooms, highlightGroup }: Quan
               return (
                 <line
                   key={`edge-${room.id}-${i}`}
-                  x1={p.x} y1={p.y}
-                  x2={nextP.x} y2={nextP.y}
+                  x1={p.x}
+                  y1={p.y}
+                  x2={nextP.x}
+                  y2={nextP.y}
                   stroke={isDoor ? '#f97316' : '#ea580c'}
                   strokeWidth={isDoor ? 50 : 80}
                   strokeLinecap="round"

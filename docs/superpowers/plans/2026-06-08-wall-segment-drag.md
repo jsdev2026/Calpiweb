@@ -12,17 +12,18 @@
 
 ## File Structure
 
-| File | Action | Responsibility |
-|------|--------|----------------|
-| `src/engine/geometry/wallDrag.ts` | Create | Pure math: `computeWallNormal`, `computeWallPerpMove` |
-| `src/engine/geometry/wallDrag.test.ts` | Create | Unit tests for the above |
-| `src/components/plan/WallDrawingCanvas.tsx` | Modify | State, pointer handlers, cursor CSS |
+| File                                        | Action | Responsibility                                        |
+| ------------------------------------------- | ------ | ----------------------------------------------------- |
+| `src/engine/geometry/wallDrag.ts`           | Create | Pure math: `computeWallNormal`, `computeWallPerpMove` |
+| `src/engine/geometry/wallDrag.test.ts`      | Create | Unit tests for the above                              |
+| `src/components/plan/WallDrawingCanvas.tsx` | Modify | State, pointer handlers, cursor CSS                   |
 
 ---
 
 ### Task 1: Pure geometry helpers + tests (TDD)
 
 **Files:**
+
 - Create: `src/engine/geometry/wallDrag.ts`
 - Create: `src/engine/geometry/wallDrag.test.ts`
 
@@ -32,12 +33,14 @@ Study `src/engine/geometry/wallSnap.ts` for conventions (types, dot product patt
 
 **`computeWallNormal(wall, nodes): Point | null`**
 Returns the unit left-hand normal of the wall direction.
+
 - Find n1 = node with id === wall.node1Id, n2 = wall.node2Id.
 - If either missing, return null.
 - dir = (n2 - n1). If |dir| < 1e-10, return null (zero-length wall).
 - Return `{ x: -dy/len, y: dx/len }`.
 
 **`computeWallPerpMove(n1Start, n2Start, pointerStart, cursor, normal, otherNodes, scale, snapPx): { node1Target, node2Target }`**
+
 - `n1Start`, `n2Start`: original node positions at drag start (from ref — NOT current node props)
 - `pointerStart`: world position where drag started
 - `cursor`: current world position
@@ -46,6 +49,7 @@ Returns the unit left-hand normal of the wall direction.
 - `scale`, `snapPx`: snap threshold in screen pixels
 
 Computation:
+
 ```
 delta = cursor - pointerStart
 t = dot(delta, normal)           // scalar projection onto normal (world units)
@@ -74,7 +78,9 @@ import { describe, it, expect } from 'vitest';
 import { computeWallNormal, computeWallPerpMove } from './wallDrag';
 import type { Wall, WallNode } from '@/types/wall';
 
-function nd(id: string, x: number, y: number): WallNode { return { id, x, y }; }
+function nd(id: string, x: number, y: number): WallNode {
+  return { id, x, y };
+}
 
 describe('computeWallNormal', () => {
   it('mur horizontal → normale (0, 1)', () => {
@@ -108,24 +114,42 @@ describe('computeWallNormal', () => {
 });
 
 describe('computeWallPerpMove', () => {
-  const n1Start = { x: 0,   y: 0 };
+  const n1Start = { x: 0, y: 0 };
   const n2Start = { x: 200, y: 0 };
-  const normal  = { x: 0,   y: 1 }; // horizontal wall normal = up
-  const pStart  = { x: 100, y: 0 };
+  const normal = { x: 0, y: 1 }; // horizontal wall normal = up
+  const pStart = { x: 100, y: 0 };
   const noSnap: WallNode[] = [];
   const scale = 1;
   const snapPx = 28;
 
   it('déplace les deux nœuds de la même valeur perpendiculaire', () => {
-    const r = computeWallPerpMove(n1Start, n2Start, pStart, { x: 100, y: 50 }, normal, noSnap, scale, snapPx);
-    expect(r.node1Target).toEqual({ x: 0,   y: 50 });
+    const r = computeWallPerpMove(
+      n1Start,
+      n2Start,
+      pStart,
+      { x: 100, y: 50 },
+      normal,
+      noSnap,
+      scale,
+      snapPx,
+    );
+    expect(r.node1Target).toEqual({ x: 0, y: 50 });
     expect(r.node2Target).toEqual({ x: 200, y: 50 });
   });
 
   it('ignore la composante parallèle au mur', () => {
     // moved 100 along wall axis, 30 perpendicular
-    const r = computeWallPerpMove(n1Start, n2Start, pStart, { x: 200, y: 30 }, normal, noSnap, scale, snapPx);
-    expect(r.node1Target.x).toBeCloseTo(0);   // x unchanged
+    const r = computeWallPerpMove(
+      n1Start,
+      n2Start,
+      pStart,
+      { x: 200, y: 30 },
+      normal,
+      noSnap,
+      scale,
+      snapPx,
+    );
+    expect(r.node1Target.x).toBeCloseTo(0); // x unchanged
     expect(r.node1Target.y).toBeCloseTo(30);
     expect(r.node2Target.x).toBeCloseTo(200);
     expect(r.node2Target.y).toBeCloseTo(30);
@@ -133,14 +157,32 @@ describe('computeWallPerpMove', () => {
 
   it('snappe vers un nœud proche dans la direction normale', () => {
     const snapNode = nd('s', 50, 48); // 48mm in y, target is 50 → diff=2 < snapRadius=28
-    const r = computeWallPerpMove(n1Start, n2Start, pStart, { x: 100, y: 50 }, normal, [snapNode], scale, snapPx);
+    const r = computeWallPerpMove(
+      n1Start,
+      n2Start,
+      pStart,
+      { x: 100, y: 50 },
+      normal,
+      [snapNode],
+      scale,
+      snapPx,
+    );
     expect(r.node1Target.y).toBeCloseTo(48);
     expect(r.node2Target.y).toBeCloseTo(48);
   });
 
   it('ne snappe pas si le nœud est trop loin', () => {
     const farNode = nd('f', 50, 100); // 100mm in y, target is 50 → diff=50 > snapRadius=28
-    const r = computeWallPerpMove(n1Start, n2Start, pStart, { x: 100, y: 50 }, normal, [farNode], scale, snapPx);
+    const r = computeWallPerpMove(
+      n1Start,
+      n2Start,
+      pStart,
+      { x: 100, y: 50 },
+      normal,
+      [farNode],
+      scale,
+      snapPx,
+    );
     expect(r.node1Target.y).toBeCloseTo(50); // no snap
   });
 
@@ -152,13 +194,22 @@ describe('computeWallPerpMove', () => {
 
   it('mur diagonal — déplace dans la direction normale', () => {
     // 45° wall: dir=(1,1)/√2, normal=(-1,1)/√2
-    const diag_n1  = { x: 0,   y: 0   };
-    const diag_n2  = { x: 100, y: 100 };
+    const diag_n1 = { x: 0, y: 0 };
+    const diag_n2 = { x: 100, y: 100 };
     const diag_nor = { x: -1 / Math.SQRT2, y: 1 / Math.SQRT2 };
-    const diag_ps  = { x: 50,  y: 50  };
+    const diag_ps = { x: 50, y: 50 };
     // move 10√2 along normal = (-10, 10) displacement
-    const cursor   = { x: 40,  y: 60  };
-    const r = computeWallPerpMove(diag_n1, diag_n2, diag_ps, cursor, diag_nor, noSnap, scale, snapPx);
+    const cursor = { x: 40, y: 60 };
+    const r = computeWallPerpMove(
+      diag_n1,
+      diag_n2,
+      diag_ps,
+      cursor,
+      diag_nor,
+      noSnap,
+      scale,
+      snapPx,
+    );
     expect(r.node1Target.x).toBeCloseTo(-10);
     expect(r.node1Target.y).toBeCloseTo(10);
     expect(r.node2Target.x).toBeCloseTo(90);
@@ -247,6 +298,7 @@ git commit -m "feat: pure helpers computeWallNormal + computeWallPerpMove + test
 ### Task 2: WallDrawingCanvas — wall segment drag interaction
 
 **Files:**
+
 - Modify: `src/components/plan/WallDrawingCanvas.tsx`
 
 Read the file carefully before editing. All edits are in this one file.
@@ -268,6 +320,7 @@ There are no unit tests for this task — verify via the full test suite and man
 - [ ] **Step 1: Add import**
 
 At the top of `src/components/plan/WallDrawingCanvas.tsx`, after line 7 (the existing geometry imports):
+
 ```typescript
 import { computeWallNormal, computeWallPerpMove } from '@/engine/geometry/wallDrag';
 ```
@@ -277,114 +330,118 @@ import { computeWallNormal, computeWallPerpMove } from '@/engine/geometry/wallDr
 After line 103 (after `const dragSnapRef = useRef...`), add:
 
 ```typescript
-  // Wall segment drag state
-  const [draggingWallId, setDraggingWallId] = useState<string | null>(null);
-  const wallDragRef = useRef<{
-    node1Start: Point;
-    node2Start: Point;
-    pointerStart: Point;
-    normal: Point;
-    hasMoved: boolean;
-  } | null>(null);
-  const [hoveredWallId, setHoveredWallId] = useState<string | null>(null);
-  const lastWallClickRef = useRef<{ time: number; wallId: string } | null>(null);
+// Wall segment drag state
+const [draggingWallId, setDraggingWallId] = useState<string | null>(null);
+const wallDragRef = useRef<{
+  node1Start: Point;
+  node2Start: Point;
+  pointerStart: Point;
+  normal: Point;
+  hasMoved: boolean;
+} | null>(null);
+const [hoveredWallId, setHoveredWallId] = useState<string | null>(null);
+const lastWallClickRef = useRef<{ time: number; wallId: string } | null>(null);
 ```
 
 - [ ] **Step 3: Clear wall drag state on tool change**
 
 Find the `useEffect` at line ~113:
+
 ```typescript
-  useEffect(() => {
-    setSelectedWallId(null);
-    setEditingWallId(null);
-    setChain(null);
-    setExcludePoints([]);
-    setSelectedCot(null);
-    setRenamingRoom(null);
-  }, [tool]);
+useEffect(() => {
+  setSelectedWallId(null);
+  setEditingWallId(null);
+  setChain(null);
+  setExcludePoints([]);
+  setSelectedCot(null);
+  setRenamingRoom(null);
+}, [tool]);
 ```
 
 Replace with:
+
 ```typescript
-  useEffect(() => {
-    setSelectedWallId(null);
-    setEditingWallId(null);
-    setChain(null);
-    setExcludePoints([]);
-    setSelectedCot(null);
-    setRenamingRoom(null);
-    setDraggingWallId(null);
-    wallDragRef.current = null;
-    setHoveredWallId(null);
-  }, [tool]);
+useEffect(() => {
+  setSelectedWallId(null);
+  setEditingWallId(null);
+  setChain(null);
+  setExcludePoints([]);
+  setSelectedCot(null);
+  setRenamingRoom(null);
+  setDraggingWallId(null);
+  wallDragRef.current = null;
+  setHoveredWallId(null);
+}, [tool]);
 ```
 
 - [ ] **Step 4: Modify `handlePointerDown` SELECT branch**
 
 Find the SELECT branch in `handlePointerDown` (~line 408):
+
 ```typescript
-    if (tool === 'SELECT') {
-      const hitNode = hitTestNode(world);
-      if (hitNode) {
-        setDraggingNodeId(hitNode.id);
-        dragSnapRef.current = null;
-        (e.currentTarget as SVGSVGElement).setPointerCapture(e.pointerId);
-        return;
-      }
-      const hit = hitTestWall(world);
-      setSelectedWallId(hit?.id ?? null);
-      if (hit) {
-        setEditingWallId(hit.id);
-        setEditThickness((hit.thickness / 10).toFixed(0)); // afficher en cm
-      } else {
-        setEditingWallId(null);
-        // Clic gauche sur zone vide → pan
-        setIsPanning(true);
-        const sp = getSvgPos(e);
-        panStart.current = { panX: pan.x, panY: pan.y, clientX: sp.x, clientY: sp.y };
-        (e.currentTarget as SVGSVGElement).setPointerCapture(e.pointerId);
-      }
-      return;
-    }
+if (tool === 'SELECT') {
+  const hitNode = hitTestNode(world);
+  if (hitNode) {
+    setDraggingNodeId(hitNode.id);
+    dragSnapRef.current = null;
+    (e.currentTarget as SVGSVGElement).setPointerCapture(e.pointerId);
+    return;
+  }
+  const hit = hitTestWall(world);
+  setSelectedWallId(hit?.id ?? null);
+  if (hit) {
+    setEditingWallId(hit.id);
+    setEditThickness((hit.thickness / 10).toFixed(0)); // afficher en cm
+  } else {
+    setEditingWallId(null);
+    // Clic gauche sur zone vide → pan
+    setIsPanning(true);
+    const sp = getSvgPos(e);
+    panStart.current = { panX: pan.x, panY: pan.y, clientX: sp.x, clientY: sp.y };
+    (e.currentTarget as SVGSVGElement).setPointerCapture(e.pointerId);
+  }
+  return;
+}
 ```
 
 Replace with:
+
 ```typescript
-    if (tool === 'SELECT') {
-      const hitNode = hitTestNode(world);
-      if (hitNode) {
-        setDraggingNodeId(hitNode.id);
-        dragSnapRef.current = null;
-        (e.currentTarget as SVGSVGElement).setPointerCapture(e.pointerId);
-        return;
-      }
-      const hit = hitTestWall(world);
-      setSelectedWallId(hit?.id ?? null);
-      if (hit) {
-        const n1 = nodes.find((n) => n.id === hit.node1Id);
-        const n2 = nodes.find((n) => n.id === hit.node2Id);
-        const normal = computeWallNormal(hit, nodes);
-        if (n1 && n2 && normal) {
-          wallDragRef.current = {
-            node1Start:   { x: n1.x, y: n1.y },
-            node2Start:   { x: n2.x, y: n2.y },
-            pointerStart: world,
-            normal,
-            hasMoved: false,
-          };
-          setDraggingWallId(hit.id);
-          (e.currentTarget as SVGSVGElement).setPointerCapture(e.pointerId);
-        }
-      } else {
-        setEditingWallId(null);
-        // Clic gauche sur zone vide → pan
-        setIsPanning(true);
-        const sp = getSvgPos(e);
-        panStart.current = { panX: pan.x, panY: pan.y, clientX: sp.x, clientY: sp.y };
-        (e.currentTarget as SVGSVGElement).setPointerCapture(e.pointerId);
-      }
-      return;
+if (tool === 'SELECT') {
+  const hitNode = hitTestNode(world);
+  if (hitNode) {
+    setDraggingNodeId(hitNode.id);
+    dragSnapRef.current = null;
+    (e.currentTarget as SVGSVGElement).setPointerCapture(e.pointerId);
+    return;
+  }
+  const hit = hitTestWall(world);
+  setSelectedWallId(hit?.id ?? null);
+  if (hit) {
+    const n1 = nodes.find((n) => n.id === hit.node1Id);
+    const n2 = nodes.find((n) => n.id === hit.node2Id);
+    const normal = computeWallNormal(hit, nodes);
+    if (n1 && n2 && normal) {
+      wallDragRef.current = {
+        node1Start: { x: n1.x, y: n1.y },
+        node2Start: { x: n2.x, y: n2.y },
+        pointerStart: world,
+        normal,
+        hasMoved: false,
+      };
+      setDraggingWallId(hit.id);
+      (e.currentTarget as SVGSVGElement).setPointerCapture(e.pointerId);
     }
+  } else {
+    setEditingWallId(null);
+    // Clic gauche sur zone vide → pan
+    setIsPanning(true);
+    const sp = getSvgPos(e);
+    panStart.current = { panX: pan.x, panY: pan.y, clientX: sp.x, clientY: sp.y };
+    (e.currentTarget as SVGSVGElement).setPointerCapture(e.pointerId);
+  }
+  return;
+}
 ```
 
 - [ ] **Step 5: Add wall drag branch in `handlePointerMove`**
@@ -392,32 +449,38 @@ Replace with:
 Find `handlePointerMove`. After `let world = getWorldPos(e)` (line ~448) and BEFORE `if (draggingNodeId)`, insert:
 
 ```typescript
-    if (draggingWallId && wallDragRef.current) {
-      const ref = wallDragRef.current;
-      const wall = walls.find((w) => w.id === draggingWallId);
-      if (wall) {
-        const otherNodes = nodes.filter((n) => n.id !== wall.node1Id && n.id !== wall.node2Id);
-        const result = computeWallPerpMove(
-          ref.node1Start, ref.node2Start, ref.pointerStart, world,
-          ref.normal, otherNodes, scale, HV_SNAP_DRAG_PX,
-        );
-        const dx = (world.x - ref.pointerStart.x) * scale;
-        const dy = (world.y - ref.pointerStart.y) * scale;
-        if (Math.sqrt(dx * dx + dy * dy) > 4) ref.hasMoved = true;
-        onUpdateNode(wall.node1Id, result.node1Target);
-        onUpdateNode(wall.node2Id, result.node2Target);
-      }
-      return;
-    }
+if (draggingWallId && wallDragRef.current) {
+  const ref = wallDragRef.current;
+  const wall = walls.find((w) => w.id === draggingWallId);
+  if (wall) {
+    const otherNodes = nodes.filter((n) => n.id !== wall.node1Id && n.id !== wall.node2Id);
+    const result = computeWallPerpMove(
+      ref.node1Start,
+      ref.node2Start,
+      ref.pointerStart,
+      world,
+      ref.normal,
+      otherNodes,
+      scale,
+      HV_SNAP_DRAG_PX,
+    );
+    const dx = (world.x - ref.pointerStart.x) * scale;
+    const dy = (world.y - ref.pointerStart.y) * scale;
+    if (Math.sqrt(dx * dx + dy * dy) > 4) ref.hasMoved = true;
+    onUpdateNode(wall.node1Id, result.node1Target);
+    onUpdateNode(wall.node2Id, result.node2Target);
+  }
+  return;
+}
 ```
 
 Also, at the END of `handlePointerMove` (before the final closing `}`), after all the existing snap computation, add hover detection:
 
 ```typescript
-    if (tool === 'SELECT' && !draggingNodeId && !draggingWallId) {
-      const hitNode = hitTestNode(world);
-      setHoveredWallId(hitNode ? null : (hitTestWall(world)?.id ?? null));
-    }
+if (tool === 'SELECT' && !draggingNodeId && !draggingWallId) {
+  const hitNode = hitTestNode(world);
+  setHoveredWallId(hitNode ? null : (hitTestWall(world)?.id ?? null));
+}
 ```
 
 - [ ] **Step 6: Add wall drag branch in `handlePointerUp`**
@@ -425,31 +488,31 @@ Also, at the END of `handlePointerMove` (before the final closing `}`), after al
 Find `handlePointerUp`. After the `isPanning` block and BEFORE `if (draggingNodeId)`, insert:
 
 ```typescript
-    if (draggingWallId) {
-      const ref = wallDragRef.current;
-      if (ref?.hasMoved) {
-        onPushHistory();
-      } else {
-        // No movement — check for double-click to open thickness editor
-        const now = Date.now();
-        const last = lastWallClickRef.current;
-        if (last && last.wallId === draggingWallId && now - last.time < 300) {
-          const wall = walls.find((w) => w.id === draggingWallId);
-          if (wall) {
-            setEditingWallId(wall.id);
-            setEditThickness((wall.thickness / 10).toFixed(0));
-          }
-          lastWallClickRef.current = null;
-        } else {
-          lastWallClickRef.current = { time: now, wallId: draggingWallId };
-        }
+if (draggingWallId) {
+  const ref = wallDragRef.current;
+  if (ref?.hasMoved) {
+    onPushHistory();
+  } else {
+    // No movement — check for double-click to open thickness editor
+    const now = Date.now();
+    const last = lastWallClickRef.current;
+    if (last && last.wallId === draggingWallId && now - last.time < 300) {
+      const wall = walls.find((w) => w.id === draggingWallId);
+      if (wall) {
+        setEditingWallId(wall.id);
+        setEditThickness((wall.thickness / 10).toFixed(0));
       }
-      setDraggingWallId(null);
-      wallDragRef.current = null;
-      setHoveredWallId(null);
-      (e.currentTarget as SVGSVGElement).releasePointerCapture(e.pointerId);
-      return;
+      lastWallClickRef.current = null;
+    } else {
+      lastWallClickRef.current = { time: now, wallId: draggingWallId };
     }
+  }
+  setDraggingWallId(null);
+  wallDragRef.current = null;
+  setHoveredWallId(null);
+  (e.currentTarget as SVGSVGElement).releasePointerCapture(e.pointerId);
+  return;
+}
 ```
 
 - [ ] **Step 7: Dynamic SVG cursor**
@@ -457,32 +520,35 @@ Find `handlePointerUp`. After the `isPanning` block and BEFORE `if (draggingNode
 Before the `return (` in the component (just above the JSX), add the cursor computation:
 
 ```typescript
-  const svgCursor = (() => {
-    if (tool !== 'SELECT') return 'crosshair';
-    if (draggingWallId) return 'grabbing';
-    if (hoveredWallId) {
-      const w = walls.find((wl) => wl.id === hoveredWallId);
-      if (w) {
-        const n1 = nodes.find((n) => n.id === w.node1Id);
-        const n2 = nodes.find((n) => n.id === w.node2Id);
-        if (n1 && n2) {
-          const dx = Math.abs(n2.x - n1.x);
-          const dy = Math.abs(n2.y - n1.y);
-          if (dy < dx * 0.1) return 'ns-resize';   // ~horizontal wall → drag vertically
-          if (dx < dy * 0.1) return 'ew-resize';   // ~vertical wall → drag horizontally
-          return 'move';
-        }
+const svgCursor = (() => {
+  if (tool !== 'SELECT') return 'crosshair';
+  if (draggingWallId) return 'grabbing';
+  if (hoveredWallId) {
+    const w = walls.find((wl) => wl.id === hoveredWallId);
+    if (w) {
+      const n1 = nodes.find((n) => n.id === w.node1Id);
+      const n2 = nodes.find((n) => n.id === w.node2Id);
+      if (n1 && n2) {
+        const dx = Math.abs(n2.x - n1.x);
+        const dy = Math.abs(n2.y - n1.y);
+        if (dy < dx * 0.1) return 'ns-resize'; // ~horizontal wall → drag vertically
+        if (dx < dy * 0.1) return 'ew-resize'; // ~vertical wall → drag horizontally
+        return 'move';
       }
     }
-    return 'crosshair';
-  })();
+  }
+  return 'crosshair';
+})();
 ```
 
 Then find the `<svg` element and change its className from:
+
 ```tsx
-        className="h-full w-full cursor-crosshair select-none"
+className = 'h-full w-full cursor-crosshair select-none';
 ```
+
 to:
+
 ```tsx
         className="h-full w-full select-none"
         style={{ cursor: svgCursor }}
@@ -497,6 +563,7 @@ npx vitest run
 Expected: all tests pass (408+).
 
 Also check TypeScript:
+
 ```
 npx tsc --noEmit
 ```

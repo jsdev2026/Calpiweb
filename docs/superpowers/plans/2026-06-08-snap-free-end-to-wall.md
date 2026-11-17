@@ -13,6 +13,7 @@
 ### Task 1: Pure helper `connectNodeToWallInEngine` + tests (TDD)
 
 **Files:**
+
 - Modify: `src/store/projectStore.ts` (after `splitWallInEngine`, ~line 106)
 - Modify: `src/store/splitWall.test.ts` (append new describe block)
 
@@ -41,7 +42,7 @@ describe('connectNodeToWallInEngine', () => {
 
   it('déplace le nœud existant vers newPos', () => {
     const result = connectNodeToWallInEngine(we, 'w1', 'free', { x: 100, y: 0 });
-    const moved = result.nodes.find(n => n.id === 'free');
+    const moved = result.nodes.find((n) => n.id === 'free');
     expect(moved).toEqual({ id: 'free', x: 100, y: 0 });
   });
 
@@ -53,20 +54,20 @@ describe('connectNodeToWallInEngine', () => {
   it('supprime le mur original et crée deux sous-murs', () => {
     const result = connectNodeToWallInEngine(we, 'w1', 'free', { x: 100, y: 0 });
     expect(result.walls).toHaveLength(2);
-    expect(result.walls.find(w => w.id === 'w1')).toBeUndefined();
+    expect(result.walls.find((w) => w.id === 'w1')).toBeUndefined();
   });
 
   it('les deux sous-murs relient a → free et free → b', () => {
     const result = connectNodeToWallInEngine(we, 'w1', 'free', { x: 100, y: 0 });
-    const w1 = result.walls.find(w => w.node1Id === 'a');
-    const w2 = result.walls.find(w => w.node1Id === 'free');
+    const w1 = result.walls.find((w) => w.node1Id === 'a');
+    const w2 = result.walls.find((w) => w.node1Id === 'free');
     expect(w1?.node2Id).toBe('free');
     expect(w2?.node2Id).toBe('b');
   });
 
-  it('préserve l\'épaisseur sur les deux sous-murs', () => {
+  it("préserve l'épaisseur sur les deux sous-murs", () => {
     const result = connectNodeToWallInEngine(we, 'w1', 'free', { x: 100, y: 0 });
-    result.walls.forEach(w => expect(w.thickness).toBe(100));
+    result.walls.forEach((w) => expect(w.thickness).toBe(100));
   });
 
   it('retourne le même objet si wallId introuvable', () => {
@@ -101,16 +102,16 @@ export function connectNodeToWallInEngine(
   nodeId: string,
   newPos: Point,
 ): { nodes: WallNode[]; walls: Wall[]; excludedZones: WallExcludedZone[] } {
-  const wall = we.walls.find(w => w.id === wallId);
-  const node = we.nodes.find(n => n.id === nodeId);
+  const wall = we.walls.find((w) => w.id === wallId);
+  const node = we.nodes.find((n) => n.id === nodeId);
   if (!wall || !node) return we;
   const movedNode: WallNode = { ...node, x: newPos.x, y: newPos.y };
   const wall1: Wall = { ...wall, id: generateId(), node1Id: wall.node1Id, node2Id: nodeId };
-  const wall2: Wall = { ...wall, id: generateId(), node1Id: nodeId,       node2Id: wall.node2Id };
+  const wall2: Wall = { ...wall, id: generateId(), node1Id: nodeId, node2Id: wall.node2Id };
   return {
     ...we,
-    nodes: we.nodes.map(n => n.id === nodeId ? movedNode : n),
-    walls: [...we.walls.filter(w => w.id !== wallId), wall1, wall2],
+    nodes: we.nodes.map((n) => (n.id === nodeId ? movedNode : n)),
+    walls: [...we.walls.filter((w) => w.id !== wallId), wall1, wall2],
   };
 }
 ```
@@ -137,6 +138,7 @@ git commit -m "feat: pure helper connectNodeToWallInEngine + tests"
 ### Task 2: Store interface + action `connectNodeToWall`
 
 **Files:**
+
 - Modify: `src/store/projectStore.ts`
 
 Two edits: (1) add to the `ProjectState` interface, (2) add the implementation.
@@ -144,11 +146,13 @@ Two edits: (1) add to the `ProjectState` interface, (2) add the implementation.
 - [ ] **Step 1: Add to `ProjectState` interface**
 
 In `src/store/projectStore.ts`, find the interface block around line 82:
+
 ```typescript
   splitWall: (wallId: string, newNode: WallNode) => void;
 ```
 
 Add immediately after it:
+
 ```typescript
   connectNodeToWall: (wallId: string, nodeId: string, newPos: Point) => void;
 ```
@@ -156,6 +160,7 @@ Add immediately after it:
 - [ ] **Step 2: Add implementation**
 
 Find the `splitWall` action implementation (~line 507):
+
 ```typescript
   splitWall: (wallId, newNode) => {
     get().updateActive((p) => {
@@ -166,6 +171,7 @@ Find the `splitWall` action implementation (~line 507):
 ```
 
 Add immediately after it:
+
 ```typescript
   connectNodeToWall: (wallId, nodeId, newPos) => {
     get().updateActive((p) => {
@@ -195,6 +201,7 @@ git commit -m "feat: store action connectNodeToWall"
 ### Task 3: Canvas prop + pointer up handler + PlanEditor wiring
 
 **Files:**
+
 - Modify: `src/components/plan/WallDrawingCanvas.tsx`
 - Modify: `src/components/plan/PlanEditor.tsx`
 
@@ -203,12 +210,14 @@ No unit tests for this task — it's wiring. Verify visually that the snap works
 - [ ] **Step 1: Add prop to `WallDrawingCanvasProps` interface**
 
 In `src/components/plan/WallDrawingCanvas.tsx`, find the interface (line ~30):
+
 ```typescript
   onSplitWall: (wallId: string, newNode: WallNode) => void;
   wallRoomNames?: Record<string, string>;
 ```
 
 Add after `onSplitWall`:
+
 ```typescript
   onConnectNodeToWall: (wallId: string, nodeId: string, newPos: Point) => void;
 ```
@@ -218,6 +227,7 @@ Note: `Point` is already imported (`import type { Point } from '@/types/plan'`).
 - [ ] **Step 2: Add to destructuring**
 
 Find the component function destructuring (~line 62):
+
 ```typescript
 export const WallDrawingCanvas = ({
   walls, nodes, tool,
@@ -232,6 +242,7 @@ export const WallDrawingCanvas = ({
 ```
 
 Add `onConnectNodeToWall,` after `onSplitWall,`:
+
 ```typescript
 export const WallDrawingCanvas = ({
   walls, nodes, tool,
@@ -249,43 +260,47 @@ export const WallDrawingCanvas = ({
 - [ ] **Step 3: Update `handlePointerUp`**
 
 Find the current `handlePointerUp` handler (lines ~518–529):
+
 ```typescript
-    if (draggingNodeId) {
-      const snap = dragSnapRef.current;
-      if (snap?.type === 'endpoint' && snap.nodeId && snap.nodeId !== draggingNodeId) {
-        onPushHistory();
-        onMergeNodes(snap.nodeId, draggingNodeId);
-      } else {
-        onPushHistory();
-      }
-      setDraggingNodeId(null);
-      dragSnapRef.current = null;
-      (e.currentTarget as SVGSVGElement).releasePointerCapture(e.pointerId);
-    }
+if (draggingNodeId) {
+  const snap = dragSnapRef.current;
+  if (snap?.type === 'endpoint' && snap.nodeId && snap.nodeId !== draggingNodeId) {
+    onPushHistory();
+    onMergeNodes(snap.nodeId, draggingNodeId);
+  } else {
+    onPushHistory();
+  }
+  setDraggingNodeId(null);
+  dragSnapRef.current = null;
+  (e.currentTarget as SVGSVGElement).releasePointerCapture(e.pointerId);
+}
 ```
 
 Replace with:
+
 ```typescript
-    if (draggingNodeId) {
-      const snap = dragSnapRef.current;
-      if (snap?.type === 'endpoint' && snap.nodeId && snap.nodeId !== draggingNodeId) {
-        onPushHistory();
-        onMergeNodes(snap.nodeId, draggingNodeId);
-      } else if (snap?.type === 'face' && snap.wallId) {
-        const degree = walls.filter(w => w.node1Id === draggingNodeId || w.node2Id === draggingNodeId).length;
-        if (degree === 1) {
-          onPushHistory();
-          onConnectNodeToWall(snap.wallId, draggingNodeId, snap.point);
-        } else {
-          onPushHistory();
-        }
-      } else {
-        onPushHistory();
-      }
-      setDraggingNodeId(null);
-      dragSnapRef.current = null;
-      (e.currentTarget as SVGSVGElement).releasePointerCapture(e.pointerId);
+if (draggingNodeId) {
+  const snap = dragSnapRef.current;
+  if (snap?.type === 'endpoint' && snap.nodeId && snap.nodeId !== draggingNodeId) {
+    onPushHistory();
+    onMergeNodes(snap.nodeId, draggingNodeId);
+  } else if (snap?.type === 'face' && snap.wallId) {
+    const degree = walls.filter(
+      (w) => w.node1Id === draggingNodeId || w.node2Id === draggingNodeId,
+    ).length;
+    if (degree === 1) {
+      onPushHistory();
+      onConnectNodeToWall(snap.wallId, draggingNodeId, snap.point);
+    } else {
+      onPushHistory();
     }
+  } else {
+    onPushHistory();
+  }
+  setDraggingNodeId(null);
+  dragSnapRef.current = null;
+  (e.currentTarget as SVGSVGElement).releasePointerCapture(e.pointerId);
+}
 ```
 
 - [ ] **Step 4: Wire in `PlanEditor.tsx`**
@@ -293,18 +308,21 @@ Replace with:
 In `src/components/plan/PlanEditor.tsx`, find the `connectNodeToWall` action (it needs to be read from the store first):
 
 After line 78 (after `splitWall`):
+
 ```typescript
-  const splitWall              = useProjectStore((s) => s.splitWall);
+const splitWall = useProjectStore((s) => s.splitWall);
 ```
 
 Add:
+
 ```typescript
-  const connectNodeToWall      = useProjectStore((s) => s.connectNodeToWall);
+const connectNodeToWall = useProjectStore((s) => s.connectNodeToWall);
 ```
 
 Then find the `<WallDrawingCanvas` props block and add after `onSplitWall={splitWall}`:
+
 ```tsx
-          onConnectNodeToWall={connectNodeToWall}
+onConnectNodeToWall = { connectNodeToWall };
 ```
 
 - [ ] **Step 5: Run full test suite + TypeScript check**
@@ -314,6 +332,7 @@ npx vitest run
 ```
 
 Then verify TypeScript compiles clean:
+
 ```
 npx tsc --noEmit
 ```

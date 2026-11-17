@@ -33,12 +33,12 @@ La traversée half-edge tourne ensuite sur le graphe nettoyé. Les murs élagué
 
 ### Cas traités
 
-| Configuration | Avant | Après |
-|---|---|---|
-| Cloison libre (2 bouts libres) | Pièce OK | Pièce OK |
-| Cloison connectée en T (1 bout libre) | Pièce disparaît | Pièce détectée |
-| Cloison connectée aux 2 bouts (pont) | Peut créer une pièce | Pièce détectée si cycle fermé |
-| Pièce simple sans cloison | Pièce OK | Pièce OK (inchangé) |
+| Configuration                         | Avant                | Après                         |
+| ------------------------------------- | -------------------- | ----------------------------- |
+| Cloison libre (2 bouts libres)        | Pièce OK             | Pièce OK                      |
+| Cloison connectée en T (1 bout libre) | Pièce disparaît      | Pièce détectée                |
+| Cloison connectée aux 2 bouts (pont)  | Peut créer une pièce | Pièce détectée si cycle fermé |
+| Pièce simple sans cloison             | Pièce OK             | Pièce OK (inchangé)           |
 
 ---
 
@@ -70,6 +70,7 @@ anchor1 = node1.pos
 anchor2 = node2.pos
 label   = dist(anchor1, anchor2)
 ```
+
 Comportement identique à l'actuel — aucun changement.
 
 ### Affichage
@@ -83,12 +84,12 @@ Comportement identique à l'actuel — aucun changement.
 
 ## Fichiers modifiés
 
-| Fichier | Changement |
-|---|---|
-| `src/engine/geometry/wallFaces.ts` | Ajouter leaf-pruning dans `wallFaceCycles` |
-| `src/engine/geometry/wallCotation.ts` | Remplacer la boucle "murs isolés" par la logique cloison Cas 1 / Cas 2 |
-| `src/engine/geometry/wallFaces.test.ts` | Tests : cloison en T ne supprime pas la pièce |
-| `src/engine/geometry/wallCotation.test.ts` | Tests : Cas 1 anchor ajusté, Cas 2 inchangé |
+| Fichier                                    | Changement                                                             |
+| ------------------------------------------ | ---------------------------------------------------------------------- |
+| `src/engine/geometry/wallFaces.ts`         | Ajouter leaf-pruning dans `wallFaceCycles`                             |
+| `src/engine/geometry/wallCotation.ts`      | Remplacer la boucle "murs isolés" par la logique cloison Cas 1 / Cas 2 |
+| `src/engine/geometry/wallFaces.test.ts`    | Tests : cloison en T ne supprime pas la pièce                          |
+| `src/engine/geometry/wallCotation.test.ts` | Tests : Cas 1 anchor ajusté, Cas 2 inchangé                            |
 
 ---
 

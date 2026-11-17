@@ -5,7 +5,7 @@ import { useDraggableSnap } from './useDraggableSnap';
 
 beforeEach(() => {
   localStorage.clear();
-  Object.defineProperty(window, 'innerWidth',  { writable: true, configurable: true, value: 1280 });
+  Object.defineProperty(window, 'innerWidth', { writable: true, configurable: true, value: 1280 });
   Object.defineProperty(window, 'innerHeight', { writable: true, configurable: true, value: 800 });
 });
 

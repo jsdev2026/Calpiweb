@@ -19,6 +19,7 @@ La topbar contient en une seule ligne horizontale : logo CaléPlan + séparateur
 ### Solution
 
 **Mobile (`< md`) :**
+
 - **Masqués** : logo CaléPlan (div logo + texte "CaléPlan"), les deux séparateurs verticaux, le badge statut, le bloc client (nom + date), le bouton PDF.
 - **Conservés** : bouton retour "← Projets" (le `<button>` du fil d'ariane devient un bouton `← Projets` ou simplement la flèche `←`), l'input nom du projet (tronqué, `max-w-[160px]`), icône thème, icône settings, avatar/menu utilisateur.
 - **Résultat** : une ligne de ~5 éléments compacts qui tient en 375px.
@@ -38,6 +39,7 @@ La barre de contrôles positionnée en `absolute bottom-4` est un flex horizonta
 ### Solution
 
 **Mobile (`< md`) — 2 lignes empilées :**
+
 - Conteneur : `flex-col gap-2 md:flex-row md:gap-5`
 - Largeur : `w-[calc(100%-2rem)]` sur mobile (au lieu de `w-auto` centré)
 - **Ligne 1** : bouton Côtes (à gauche, flex-shrink-0) + séparateur vertical + Angle (label + slider `w-full flex-1` + valeur)
@@ -55,6 +57,7 @@ La barre de contrôles positionnée en `absolute bottom-4` est un flex horizonta
 ### Problème
 
 Trois sous-zones problématiques :
+
 1. Header : titre + infos (Format / Joint / Surface) sur une ligne → déborde.
 2. Stat strip : `grid-cols-4` → 4 colonnes cramées sur 375px.
 3. Corps : 2 colonnes côte à côte (plan annoté + sidebar `w-[360px]` fixe) → sidebar prend tout l'écran.
@@ -62,12 +65,15 @@ Trois sous-zones problématiques :
 ### Solution
 
 **Header mobile :**
+
 - Le paragraphe d'infos passe en `flex-col gap-0.5 md:flex-row` : Format, Joint, Surface empilés verticalement sur mobile.
 
 **Stat strip :**
+
 - `grid-cols-2 md:grid-cols-4` — 2×2 sur mobile, 4 colonnes sur desktop.
 
 **Corps — onglets internes (même pattern que Aperçu/Réglages) :**
+
 - Ajout d'un état `mobileTab: 'plan' | 'coupes'` (défaut : `'plan'`).
 - Barre d'onglets visible uniquement sur mobile (`md:hidden`) : "Plan" et "Coupes", positionnée entre le stat strip et le corps.
 - **Onglet "Plan"** → `<QuantityPlanView>` plein écran.
@@ -89,17 +95,18 @@ Trois sous-zones problématiques :
 
 ## Fichiers modifiés
 
-| Fichier | Changement |
-|---------|------------|
-| `src/app/project/[id]/page.tsx` | Masquage/affichage conditionnel dans la topbar |
-| `src/components/tiling/TilingEditor.tsx` | Barre de contrôles en 2 lignes sur mobile |
-| `src/components/quantities/QuantitiesPanel.tsx` | Grid 2×2, onglets Plan/Coupes, header empilé |
+| Fichier                                         | Changement                                     |
+| ----------------------------------------------- | ---------------------------------------------- |
+| `src/app/project/[id]/page.tsx`                 | Masquage/affichage conditionnel dans la topbar |
+| `src/components/tiling/TilingEditor.tsx`        | Barre de contrôles en 2 lignes sur mobile      |
+| `src/components/quantities/QuantitiesPanel.tsx` | Grid 2×2, onglets Plan/Coupes, header empilé   |
 
 ---
 
 ## Tests
 
 Vérification via DevTools à 375px (iPhone SE) et 390px (iPhone 14 Pro) en portrait :
+
 1. Topbar projet : tient en une ligne, nom du projet visible, bouton retour cliquable.
 2. Calepinage Aperçu : barre de contrôles en 2 lignes, sliders utilisables au doigt.
 3. Quantitatif : stat strip 2×2, onglets Plan/Coupes fonctionnels, aucun débordement horizontal.

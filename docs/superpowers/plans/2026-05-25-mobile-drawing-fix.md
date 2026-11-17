@@ -12,22 +12,24 @@
 
 ## Fichiers modifiés
 
-| Fichier | Rôle |
-|---|---|
-| `src/components/plan/PlanEditor.tsx` | Tous les changements : pointer-events overlay, pinch sur wrapper, isTouchDevice, coords éditeurs |
-| `src/components/plan/PlanEditor.mobile.test.tsx` | **Créé** — tests unitaires des nouvelles règles de rendu |
+| Fichier                                          | Rôle                                                                                             |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| `src/components/plan/PlanEditor.tsx`             | Tous les changements : pointer-events overlay, pinch sur wrapper, isTouchDevice, coords éditeurs |
+| `src/components/plan/PlanEditor.mobile.test.tsx` | **Créé** — tests unitaires des nouvelles règles de rendu                                         |
 
 ---
 
 ## Task 1 — Overlay tactile conditionnel + pinch-zoom sur wrapper
 
 **Files:**
+
 - Modify: `src/components/plan/PlanEditor.tsx:260-312` (handlers touch) et `:1383-1392` (overlay div) et `:1383` (wrapper div)
 - Create: `src/components/plan/PlanEditor.mobile.test.tsx`
 
 **Contexte :**
 
 L'overlay actuel (`data-testid` absent — on va en ajouter un) bloque tout touch. On veut :
+
 - `pointer-events: none` sur l'overlay quand `tool !== 'SELECT'` → les pointer events tombent sur le SVG
 - `pointer-events: auto` quand `tool === 'SELECT'` → le pan 1-doigt fonctionne comme avant
 - Le pinch-zoom (2 doigts) migre sur le wrapper du canvas (qui englobe l'overlay ET le SVG) pour fonctionner quel que soit l'outil
@@ -46,8 +48,18 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // ── Tests logique pointer-events overlay ─────────────────────────────────────
 
 describe('overlay pointer-events logic', () => {
-  const tools = ['WALL', 'DOOR', 'PARTITION', 'EXCLUDE', 'APPLY_H', 'APPLY_V',
-                 'DIMENSION', 'COINCIDE', 'ANCHOR', 'THICKNESS'] as const;
+  const tools = [
+    'WALL',
+    'DOOR',
+    'PARTITION',
+    'EXCLUDE',
+    'APPLY_H',
+    'APPLY_V',
+    'DIMENSION',
+    'COINCIDE',
+    'ANCHOR',
+    'THICKNESS',
+  ] as const;
 
   it('overlay a pointer-events: none pour chaque outil de dessin', () => {
     for (const tool of tools) {
@@ -126,7 +138,13 @@ const handleTouchStart = (e: React.TouchEvent) => {
   if (e.touches.length !== 1) return;
   e.preventDefault();
   const t = e.touches;
-  touchRef.current = { dist: 0, midX: t[0]!.clientX, midY: t[0]!.clientY, panX: pan.x, panY: pan.y };
+  touchRef.current = {
+    dist: 0,
+    midX: t[0]!.clientX,
+    midY: t[0]!.clientY,
+    panX: pan.x,
+    panY: pan.y,
+  };
 };
 
 const handleTouchMove = (e: React.TouchEvent) => {
@@ -191,28 +209,32 @@ const handleWrapperTouchEnd = () => {
 Localiser le bloc (vers ligne 1385) :
 
 ```tsx
-      {/* Mobile: touch overlay for pan + pinch-to-zoom */}
-      <div
-        className="absolute inset-0 z-10 md:hidden"
-        style={{ touchAction: 'none' }}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      />
+{
+  /* Mobile: touch overlay for pan + pinch-to-zoom */
+}
+<div
+  className="absolute inset-0 z-10 md:hidden"
+  style={{ touchAction: 'none' }}
+  onTouchStart={handleTouchStart}
+  onTouchMove={handleTouchMove}
+  onTouchEnd={handleTouchEnd}
+/>;
 ```
 
 Le remplacer par :
 
 ```tsx
-      {/* Mobile: touch overlay for 1-finger pan (SELECT only) */}
-      <div
-        data-testid="mobile-touch-overlay"
-        className="absolute inset-0 z-10 md:hidden"
-        style={{ touchAction: 'none', pointerEvents: tool === 'SELECT' ? 'auto' : 'none' }}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      />
+{
+  /* Mobile: touch overlay for 1-finger pan (SELECT only) */
+}
+<div
+  data-testid="mobile-touch-overlay"
+  className="absolute inset-0 z-10 md:hidden"
+  style={{ touchAction: 'none', pointerEvents: tool === 'SELECT' ? 'auto' : 'none' }}
+  onTouchStart={handleTouchStart}
+  onTouchMove={handleTouchMove}
+  onTouchEnd={handleTouchEnd}
+/>;
 ```
 
 - [ ] **Étape 5 : Mettre à jour le wrapper div du canvas**
@@ -254,11 +276,13 @@ cd /workspaces/Calpiweb && git add src/components/plan/PlanEditor.tsx src/compon
 ## Task 2 — Éditeurs de cotation repositionnés sur écran tactile
 
 **Files:**
+
 - Modify: `src/components/plan/PlanEditor.tsx:~208` (useMemo isTouchDevice) et `:1467-1501` (5 éditeurs flottants)
 
 **Contexte :**
 
 `WallEdgeEditor` et `DimensionEditor` ont déjà un fallback de positionnement quand `screenX`/`screenY` sont `undefined` :
+
 ```tsx
 style={
   positioned
@@ -266,6 +290,7 @@ style={
     : { left: '50%', top: '1rem', transform: 'translateX(-50%)' }  // ← fallback haut-centré
 }
 ```
+
 Sur mobile tactile, passer `undefined` suffit à activer ce fallback — zéro changement dans les composants éditeurs.
 
 ---
@@ -286,6 +311,7 @@ Placer ce `useMemo` **avant** tout `return` conditionnel dans le composant (resp
 - [ ] **Étape 2 : Conditionner les coordonnées des 5 éditeurs**
 
 **WallEdgeEditor** (1 occurrence, vers ligne 1467) — remplacer :
+
 ```tsx
 <WallEdgeEditor
   screenX={editorScreen?.x} screenY={editorScreen?.y}
@@ -293,7 +319,9 @@ Placer ce `useMemo` **avant** tout `return` conditionnel dans le composant (resp
   ...
 />
 ```
+
 par :
+
 ```tsx
 <WallEdgeEditor
   screenX={isTouchDevice ? undefined : editorScreen?.x}
@@ -304,46 +332,61 @@ par :
 ```
 
 **DimensionEditor zoneEdge** (vers ligne 1479) — remplacer :
+
 ```tsx
 <DimensionEditor screenX={zoneEditorScreen?.x} screenY={zoneEditorScreen?.y}
 ```
+
 par :
+
 ```tsx
 <DimensionEditor screenX={isTouchDevice ? undefined : zoneEditorScreen?.x} screenY={isTouchDevice ? undefined : zoneEditorScreen?.y}
 ```
 
 **DimensionEditor partition** (vers ligne 1484) — remplacer :
+
 ```tsx
 <DimensionEditor screenX={partitionEditorScreen?.x} screenY={partitionEditorScreen?.y}
 ```
+
 par :
+
 ```tsx
 <DimensionEditor screenX={isTouchDevice ? undefined : partitionEditorScreen?.x} screenY={isTouchDevice ? undefined : partitionEditorScreen?.y}
 ```
 
 **DimensionEditor partitionThickness** (vers ligne 1489) — remplacer :
+
 ```tsx
 <DimensionEditor screenX={partitionThicknessEditorScreen?.x} screenY={partitionThicknessEditorScreen?.y}
 ```
+
 par :
+
 ```tsx
 <DimensionEditor screenX={isTouchDevice ? undefined : partitionThicknessEditorScreen?.x} screenY={isTouchDevice ? undefined : partitionThicknessEditorScreen?.y}
 ```
 
 **DimensionEditor thicknessEdge** (vers ligne 1494) — remplacer :
+
 ```tsx
 <DimensionEditor screenX={thicknessEdgeEditorScreen?.x} screenY={thicknessEdgeEditorScreen?.y}
 ```
+
 par :
+
 ```tsx
 <DimensionEditor screenX={isTouchDevice ? undefined : thicknessEdgeEditorScreen?.x} screenY={isTouchDevice ? undefined : thicknessEdgeEditorScreen?.y}
 ```
 
 **DimensionEditor partitionDim** (vers ligne 1499) — remplacer :
+
 ```tsx
 <DimensionEditor screenX={partitionDimEditorScreen?.x} screenY={partitionDimEditorScreen?.y}
 ```
+
 par :
+
 ```tsx
 <DimensionEditor screenX={isTouchDevice ? undefined : partitionDimEditorScreen?.x} screenY={isTouchDevice ? undefined : partitionDimEditorScreen?.y}
 ```

@@ -43,7 +43,9 @@ export const RoomTabs = ({
   };
 
   return (
-    <div className={`${vertical ? 'flex-col' : 'flex items-center'} flex gap-1 rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 p-1.5 shadow-2xl backdrop-blur-md`}>
+    <div
+      className={`${vertical ? 'flex-col' : 'flex items-center'} flex gap-1 rounded-2xl border border-gray-200 bg-white/90 p-1.5 shadow-2xl backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-900/90`}
+    >
       {rooms.map((room, i) => (
         <div key={room.id} className="group relative">
           {renamingId === room.id ? (
@@ -56,15 +58,28 @@ export const RoomTabs = ({
                 if (e.key === 'Enter') commitRename();
                 if (e.key === 'Escape') setRenamingId(null);
               }}
-              className="h-8 w-28 rounded-lg bg-gray-100 dark:bg-zinc-700 px-3 text-center text-[11px] font-bold text-orange-600 dark:text-orange-400 outline-none"
+              className="h-8 w-28 rounded-lg bg-gray-100 px-3 text-center text-[11px] font-bold text-orange-600 outline-none dark:bg-zinc-700 dark:text-orange-400"
             />
           ) : (
             <button
               type="button"
-              title={room.id === activeRoomId && onClearRoom ? 'Clic droit pour effacer la pièce' : room.name ? `${room.name} (double-clic pour renommer)` : `Pièce ${i + 1} — double-clic pour nommer`}
+              title={
+                room.id === activeRoomId && onClearRoom
+                  ? 'Clic droit pour effacer la pièce'
+                  : room.name
+                    ? `${room.name} (double-clic pour renommer)`
+                    : `Pièce ${i + 1} — double-clic pour nommer`
+              }
               onClick={() => onSelectRoom(room.id)}
               onDoubleClick={() => startRename(room)}
-              onContextMenu={room.id === activeRoomId && onClearRoom ? (e) => { e.preventDefault(); onClearRoom(); } : undefined}
+              onContextMenu={
+                room.id === activeRoomId && onClearRoom
+                  ? (e) => {
+                      e.preventDefault();
+                      onClearRoom();
+                    }
+                  : undefined
+              }
               className={`flex h-8 min-w-[2.5rem] items-center justify-center rounded-xl px-3 text-[11px] font-bold transition-all ${
                 room.id === activeRoomId
                   ? 'bg-orange-600 text-white shadow-md'
@@ -86,12 +101,18 @@ export const RoomTabs = ({
           )}
         </div>
       ))}
-      <div className={vertical ? 'my-0.5 h-px w-full bg-gray-200 dark:bg-zinc-700' : 'mx-1 h-5 w-px bg-gray-200 dark:bg-zinc-700'} />
+      <div
+        className={
+          vertical
+            ? 'my-0.5 h-px w-full bg-gray-200 dark:bg-zinc-700'
+            : 'mx-1 h-5 w-px bg-gray-200 dark:bg-zinc-700'
+        }
+      />
       <button
         type="button"
         onClick={onAddRoom}
         title="Ajouter une pièce"
-        className="flex h-8 w-8 items-center justify-center rounded-xl text-gray-400 dark:text-zinc-500 transition-colors hover:bg-gray-100 dark:hover:bg-zinc-800 hover:text-gray-700 dark:hover:text-zinc-300"
+        className="flex h-8 w-8 items-center justify-center rounded-xl text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
       >
         <Plus size={16} />
       </button>

@@ -4,13 +4,22 @@ import { groupCuts } from './groupCuts';
 import type { CutRecord, PieceEdges } from './types';
 
 const FACTORY: PieceEdges = {
-  left: 'factory', right: 'factory', top: 'factory', bottom: 'factory',
+  left: 'factory',
+  right: 'factory',
+  top: 'factory',
+  bottom: 'factory',
 };
 const RIGHT_CUT: PieceEdges = {
-  left: 'factory', right: 'cut', top: 'factory', bottom: 'factory',
+  left: 'factory',
+  right: 'cut',
+  top: 'factory',
+  bottom: 'factory',
 };
 const LEFT_CUT: PieceEdges = {
-  left: 'cut', right: 'factory', top: 'factory', bottom: 'factory',
+  left: 'cut',
+  right: 'factory',
+  top: 'factory',
+  bottom: 'factory',
 };
 
 function makeRecord(
@@ -21,12 +30,19 @@ function makeRecord(
   coveredById: string | null = null,
 ): CutRecord {
   return {
-    id, roomId: 'r1',
-    tileW: 100, tileH: 100,
-    usedW, usedH,
+    id,
+    roomId: 'r1',
+    tileW: 100,
+    tileH: 100,
+    usedW,
+    usedH,
     pieceEdges,
-    chuteW: 0, chuteH: 0, chuteEdges: FACTORY, chuteArea: 0,
-    clipCx: 0, clipCy: 0,
+    chuteW: 0,
+    chuteH: 0,
+    chuteEdges: FACTORY,
+    chuteArea: 0,
+    clipCx: 0,
+    clipCy: 0,
     coveredById,
     reusedForId: null,
   };

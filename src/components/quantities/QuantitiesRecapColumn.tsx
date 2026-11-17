@@ -20,8 +20,17 @@ interface ConsumableCardProps {
 }
 
 const ConsumableCard = ({
-  label, unit, bags, bagSize, bagUnit, rendement, rendementUnit,
-  totalKg, onRendementChange, onBagSizeChange, color,
+  label,
+  unit,
+  bags,
+  bagSize,
+  bagUnit,
+  rendement,
+  rendementUnit,
+  totalKg,
+  onRendementChange,
+  onBagSizeChange,
+  color,
 }: ConsumableCardProps) => {
   const accent = color === 'blue' ? 'text-blue-500' : 'text-violet-500';
   const border = color === 'blue' ? 'border-blue-500/30' : 'border-violet-500/30';
@@ -30,9 +39,11 @@ const ConsumableCard = ({
   return (
     <div className={`rounded-xl border ${border} ${bg} px-4 py-3`}>
       <div className={`text-[10px] font-bold uppercase tracking-wider ${accent} mb-2`}>{label}</div>
-      <div className="flex items-end gap-1 mb-2">
-        <span className="text-2xl font-black tabular-nums text-gray-900 dark:text-zinc-100">{bags}</span>
-        <span className="text-xs text-gray-400 dark:text-zinc-500 mb-0.5">{unit}</span>
+      <div className="mb-2 flex items-end gap-1">
+        <span className="text-2xl font-black tabular-nums text-gray-900 dark:text-zinc-100">
+          {bags}
+        </span>
+        <span className="mb-0.5 text-xs text-gray-400 dark:text-zinc-500">{unit}</span>
       </div>
       <div className="space-y-1 text-[11px] text-gray-400 dark:text-zinc-500">
         <div className="flex items-center gap-1">
@@ -47,9 +58,11 @@ const ConsumableCard = ({
               const v = parseFloat(e.target.value);
               if (!isNaN(v) && v > 0) onBagSizeChange(v);
             }}
-            className="w-14 rounded border border-gray-300 dark:border-zinc-600 bg-transparent px-1 text-center text-gray-700 dark:text-zinc-300 outline-none focus:border-blue-400"
+            className="w-14 rounded border border-gray-300 bg-transparent px-1 text-center text-gray-700 outline-none focus:border-blue-400 dark:border-zinc-600 dark:text-zinc-300"
           />
-          <span>{bagUnit}/{unit.slice(0, -1)}</span>
+          <span>
+            {bagUnit}/{unit.slice(0, -1)}
+          </span>
         </div>
         {onRendementChange !== null && (
           <div className="flex items-center gap-1">
@@ -64,12 +77,14 @@ const ConsumableCard = ({
                 const v = parseFloat(e.target.value);
                 if (!isNaN(v) && v > 0) onRendementChange(v);
               }}
-              className="w-14 rounded border border-gray-300 dark:border-zinc-600 bg-transparent px-1 text-center text-gray-700 dark:text-zinc-300 outline-none focus:border-blue-400"
+              className="w-14 rounded border border-gray-300 bg-transparent px-1 text-center text-gray-700 outline-none focus:border-blue-400 dark:border-zinc-600 dark:text-zinc-300"
             />
             <span>{rendementUnit}</span>
           </div>
         )}
-        <div className="text-[10px]">{totalKg.toFixed(1)} {bagUnit} total</div>
+        <div className="text-[10px]">
+          {totalKg.toFixed(1)} {bagUnit} total
+        </div>
       </div>
     </div>
   );
@@ -123,17 +138,24 @@ export const QuantitiesRecapColumn = ({
   return (
     <div
       data-testid="recap-column"
-      className={className ?? 'order-1 flex max-h-[45vh] w-full shrink-0 flex-col gap-3 overflow-y-auto border-b border-gray-200 p-4 dark:border-zinc-800 md:order-2 md:max-h-full md:w-[230px] md:border-b-0 md:border-l'}
+      className={
+        className ??
+        'order-1 flex max-h-[45vh] w-full shrink-0 flex-col gap-3 overflow-y-auto border-b border-gray-200 p-4 md:order-2 md:max-h-full md:w-[230px] md:border-b-0 md:border-l dark:border-zinc-800'
+      }
     >
       {/* Hero — Total à commander */}
       <div className="rounded-xl bg-orange-500 px-4 py-3 text-center text-white">
-        <div className="text-[10px] font-bold uppercase tracking-wider opacity-85">Total à commander</div>
-        <div className="text-3xl font-black leading-tight tabular-nums">{result.toOrder}</div>
+        <div className="text-[10px] font-bold uppercase tracking-wider opacity-85">
+          Total à commander
+        </div>
+        <div className="text-3xl font-black tabular-nums leading-tight">{result.toOrder}</div>
         <div className="text-[11px] opacity-90">
           carreaux · {formatM2(result.toOrder * result.tileW * result.tileH)}
         </div>
         <div className="mt-1 flex items-center justify-center gap-1 text-[10px] opacity-75">
-          <span>{result.wholeCount} + ({result.cuts.length}−{result.totalReuseCount})</span>
+          <span>
+            {result.wholeCount} + ({result.cuts.length}−{result.totalReuseCount})
+          </span>
           {editingMargin ? (
             <span className="flex items-center gap-1">
               ×
@@ -174,7 +196,7 @@ export const QuantitiesRecapColumn = ({
       <button
         type="button"
         onClick={() => setMobileExpanded((o) => !o)}
-        className="flex items-center justify-between text-xs font-bold text-gray-400 dark:text-zinc-500 md:hidden"
+        className="flex items-center justify-between text-xs font-bold text-gray-400 md:hidden dark:text-zinc-500"
       >
         Détails
         <span>{mobileExpanded ? '▲' : '▼'}</span>
@@ -185,17 +207,23 @@ export const QuantitiesRecapColumn = ({
         <div className="flex flex-col gap-1 text-sm">
           <div className="flex items-center justify-between border-l-[3px] border-blue-500 bg-gray-50 px-3 py-1.5 dark:bg-zinc-800/60">
             <span className="text-gray-500 dark:text-zinc-400">Carreaux entiers</span>
-            <span className="font-black tabular-nums text-gray-900 dark:text-zinc-100">{result.wholeCount}</span>
+            <span className="font-black tabular-nums text-gray-900 dark:text-zinc-100">
+              {result.wholeCount}
+            </span>
           </div>
           <div className="flex items-center justify-between border-l-[3px] border-orange-500 bg-gray-50 px-3 py-1.5 dark:bg-zinc-800/60">
             <span className="text-gray-500 dark:text-zinc-400">Carreaux à couper</span>
-            <span className="font-black tabular-nums text-gray-900 dark:text-zinc-100">{result.cuts.length}</span>
+            <span className="font-black tabular-nums text-gray-900 dark:text-zinc-100">
+              {result.cuts.length}
+            </span>
           </div>
           <div className="flex items-center justify-between border-l-[3px] border-emerald-500 bg-gray-50 px-3 py-1.5 dark:bg-zinc-800/60">
             <span className="text-gray-500 dark:text-zinc-400">Récupérées</span>
             <span
               className={`font-black tabular-nums ${
-                result.totalReuseCount > 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-gray-400 dark:text-zinc-600'
+                result.totalReuseCount > 0
+                  ? 'text-emerald-500 dark:text-emerald-400'
+                  : 'text-gray-400 dark:text-zinc-600'
               }`}
             >
               {result.totalReuseCount}
@@ -229,7 +257,7 @@ export const QuantitiesRecapColumn = ({
                     const v = parseFloat(e.target.value);
                     if (!isNaN(v) && v > 0) onConsumableParamChange({ tileThickness: v });
                   }}
-                  className="w-14 rounded border border-gray-300 dark:border-zinc-600 bg-transparent px-1 text-center text-gray-700 dark:text-zinc-300 outline-none focus:border-blue-400"
+                  className="w-14 rounded border border-gray-300 bg-transparent px-1 text-center text-gray-700 outline-none focus:border-blue-400 dark:border-zinc-600 dark:text-zinc-300"
                 />
                 <span>mm</span>
               </div>

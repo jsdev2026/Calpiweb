@@ -15,9 +15,16 @@
 ```typescript
 // src/components/plan/PlanToolbar.tsx
 type PlanTool =
-  | 'WALL' | 'SELECT' | 'DOOR' | 'EXCLUDE' | 'PARTITION'
-  | 'APPLY_H' | 'APPLY_V' | 'COINCIDE' | 'DIMENSION'
-  | 'DELETE'  // ← nouveau
+  | 'WALL'
+  | 'SELECT'
+  | 'DOOR'
+  | 'EXCLUDE'
+  | 'PARTITION'
+  | 'APPLY_H'
+  | 'APPLY_V'
+  | 'COINCIDE'
+  | 'DIMENSION'
+  | 'DELETE'; // ← nouveau
 ```
 
 ### Nouveau type `DeleteHoverTarget`
@@ -25,10 +32,10 @@ type PlanTool =
 ```typescript
 // src/components/plan/PlanEditor.tsx
 type DeleteHoverTarget =
-  | { type: 'wall';      roomId: string; edgeIndex: number }
-  | { type: 'door';      roomId: string; edgeIndex: number }
+  | { type: 'wall'; roomId: string; edgeIndex: number }
+  | { type: 'door'; roomId: string; edgeIndex: number }
   | { type: 'partition'; roomId: string; partitionId: string }
-  | { type: 'zone';      roomId: string; zoneId: string }
+  | { type: 'zone'; roomId: string; zoneId: string };
 ```
 
 ### Nouveau state dans `PlanEditor`
@@ -40,6 +47,7 @@ const [deleteHover, setDeleteHover] = useState<DeleteHoverTarget | null>(null);
 ### Suppressions
 
 Ces éléments **disparaissent** car le concept de "sélection avant suppression" est remplacé :
+
 - `canDelete` (boolean dérivé)
 - `editingContext` ('wall' | 'door' | 'partition' | 'zone' | null)
 - `deleteTooltipLabel` (string)
@@ -87,11 +95,11 @@ Si rien trouvé (clic sur le vide) :
 
 ### Sortie du mode DELETE
 
-| Action | Résultat |
-|--------|----------|
-| Touche Échap | `setTool('SELECT')` (handler clavier existant) |
-| Clic sur le vide du canvas | `setTool('SELECT')` |
-| Clic sur un autre outil toolbar | Comportement normal existant |
+| Action                          | Résultat                                       |
+| ------------------------------- | ---------------------------------------------- |
+| Touche Échap                    | `setTool('SELECT')` (handler clavier existant) |
+| Clic sur le vide du canvas      | `setTool('SELECT')`                            |
+| Clic sur un autre outil toolbar | Comportement normal existant                   |
 
 Quand on quitte le mode DELETE (quelle que soit la cause), `setDeleteHover(null)` est appelé pour effacer le highlight rouge.
 
@@ -124,7 +132,7 @@ Quand on quitte le mode DELETE (quelle que soit la cause), `setDeleteHover(null)
 ### Nouveau prop
 
 ```typescript
-deleteHover: DeleteHoverTarget | null
+deleteHover: DeleteHoverTarget | null;
 ```
 
 ### Rendu du hover rouge

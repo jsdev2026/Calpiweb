@@ -1,5 +1,14 @@
 import { create } from 'zustand';
-import type { Project, Room, EdgeType, ProjectStatus, ClientInfo, Constraint, ProjectNote, TilingDimension } from '@/types/project';
+import type {
+  Project,
+  Room,
+  EdgeType,
+  ProjectStatus,
+  ClientInfo,
+  Constraint,
+  ProjectNote,
+  TilingDimension,
+} from '@/types/project';
 import type { Plan, Point } from '@/types/plan';
 import type { TilingConfig } from '@/types/tiling';
 import type { Wall, WallNode, WallExcludedZone, ExcludeNode, DoorOpening } from '@/types/wall';
@@ -48,7 +57,7 @@ export interface ProjectState {
   restoreSnapshot: (
     rooms: Room[],
     constraints: Constraint[],
-    wallEngine?: { nodes: WallNode[]; walls: Wall[]; excludedZones: WallExcludedZone[] }
+    wallEngine?: { nodes: WallNode[]; walls: Wall[]; excludedZones: WallExcludedZone[] },
   ) => void;
 
   // Partition actions
@@ -96,14 +105,14 @@ export function splitWallInEngine(
   wallId: string,
   newNode: WallNode,
 ): { nodes: WallNode[]; walls: Wall[]; excludedZones: WallExcludedZone[] } {
-  const wall = we.walls.find(w => w.id === wallId);
+  const wall = we.walls.find((w) => w.id === wallId);
   if (!wall) return we;
   const wall1: Wall = { ...wall, id: generateId(), node1Id: wall.node1Id, node2Id: newNode.id };
-  const wall2: Wall = { ...wall, id: generateId(), node1Id: newNode.id,  node2Id: wall.node2Id };
+  const wall2: Wall = { ...wall, id: generateId(), node1Id: newNode.id, node2Id: wall.node2Id };
   return {
     ...we,
     nodes: [...we.nodes, newNode],
-    walls:  [...we.walls.filter(w => w.id !== wallId), wall1, wall2],
+    walls: [...we.walls.filter((w) => w.id !== wallId), wall1, wall2],
   };
 }
 
@@ -114,18 +123,18 @@ export function connectNodeToWallInEngine(
   nodeId: string,
   newPos: Point,
 ): { nodes: WallNode[]; walls: Wall[]; excludedZones: WallExcludedZone[] } {
-  const wall = we.walls.find(w => w.id === wallId);
+  const wall = we.walls.find((w) => w.id === wallId);
   if (!wall) return we;
-  const node = we.nodes.find(n => n.id === nodeId);
+  const node = we.nodes.find((n) => n.id === nodeId);
   if (!node) return we;
 
   const wall1: Wall = { ...wall, id: generateId(), node1Id: wall.node1Id, node2Id: nodeId };
-  const wall2: Wall = { ...wall, id: generateId(), node1Id: nodeId,       node2Id: wall.node2Id };
+  const wall2: Wall = { ...wall, id: generateId(), node1Id: nodeId, node2Id: wall.node2Id };
 
   return {
     ...we,
-    nodes: we.nodes.map(n => n.id === nodeId ? { ...n, x: newPos.x, y: newPos.y } : n),
-    walls: [...we.walls.filter(w => w.id !== wallId), wall1, wall2],
+    nodes: we.nodes.map((n) => (n.id === nodeId ? { ...n, x: newPos.x, y: newPos.y } : n)),
+    walls: [...we.walls.filter((w) => w.id !== wallId), wall1, wall2],
   };
 }
 
@@ -136,15 +145,17 @@ export function updateExcludeZoneNodeInEngine(
   nodeId: string,
   pos: Point,
 ): { nodes: WallNode[]; walls: Wall[]; excludedZones: WallExcludedZone[] } {
-  const zone = we.excludedZones.find(z => z.id === zoneId);
+  const zone = we.excludedZones.find((z) => z.id === zoneId);
   if (!zone) return we;
   return {
     ...we,
-    excludedZones: we.excludedZones.map(z =>
-      z.id !== zoneId ? z : {
-        ...z,
-        nodes: z.nodes.map(n => n.id === nodeId ? { ...n, x: pos.x, y: pos.y } : n),
-      },
+    excludedZones: we.excludedZones.map((z) =>
+      z.id !== zoneId
+        ? z
+        : {
+            ...z,
+            nodes: z.nodes.map((n) => (n.id === nodeId ? { ...n, x: pos.x, y: pos.y } : n)),
+          },
     ),
   };
 }
@@ -188,7 +199,11 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   },
 
   rename: (id, name) => {
-    set({ projects: get().projects.map((p) => (p.id === id ? { ...p, name, updatedAt: Date.now() } : p)) });
+    set({
+      projects: get().projects.map((p) =>
+        p.id === id ? { ...p, name, updatedAt: Date.now() } : p,
+      ),
+    });
     const target = get().projects.find((p) => p.id === id);
     if (target) void supabaseDb.save(target);
   },
@@ -216,7 +231,10 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
 
   addRoom: () => {
     const id = generateId();
-    get().updateActive((p) => ({ ...p, rooms: [...p.rooms, { id, points: [], edges: [], partitions: [], excludedZones: [] }] }));
+    get().updateActive((p) => ({
+      ...p,
+      rooms: [...p.rooms, { id, points: [], edges: [], partitions: [], excludedZones: [] }],
+    }));
     return id;
   },
 
@@ -300,9 +318,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   updateConstraintDisplayOffset: (id, offset) => {
     get().updateActive((p) => ({
       ...p,
-      constraints: p.constraints.map((c) =>
-        c.id === id ? { ...c, displayOffset: offset } : c
-      ),
+      constraints: p.constraints.map((c) => (c.id === id ? { ...c, displayOffset: offset } : c)),
     }));
   },
 
@@ -336,7 +352,9 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     get().updateActive((p) => ({
       ...p,
       rooms: p.rooms.map((r) =>
-        r.id === roomId ? { ...r, partitions: [...(r.partitions ?? []), { id, p1, p2, thickness }] } : r,
+        r.id === roomId
+          ? { ...r, partitions: [...(r.partitions ?? []), { id, p1, p2, thickness }] }
+          : r,
       ),
     }));
   },
@@ -345,7 +363,14 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     get().updateActive((p) => ({
       ...p,
       rooms: p.rooms.map((r) =>
-        r.id === roomId ? { ...r, partitions: (r.partitions ?? []).map((pt) => pt.id === partitionId ? { ...pt, p1, p2 } : pt) } : r,
+        r.id === roomId
+          ? {
+              ...r,
+              partitions: (r.partitions ?? []).map((pt) =>
+                pt.id === partitionId ? { ...pt, p1, p2 } : pt,
+              ),
+            }
+          : r,
       ),
     }));
   },
@@ -354,7 +379,9 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     get().updateActive((p) => ({
       ...p,
       rooms: p.rooms.map((r) =>
-        r.id === roomId ? { ...r, partitions: (r.partitions ?? []).filter((pt) => pt.id !== partitionId) } : r,
+        r.id === roomId
+          ? { ...r, partitions: (r.partitions ?? []).filter((pt) => pt.id !== partitionId) }
+          : r,
       ),
     }));
   },
@@ -364,7 +391,10 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       ...p,
       rooms: p.rooms.map((r) => {
         if (r.id !== roomId) return r;
-        const thicknesses = [...(r.edgeThicknesses ?? new Array(r.edges.length).fill(undefined) as (number | undefined)[])];
+        const thicknesses = [
+          ...(r.edgeThicknesses ??
+            (new Array(r.edges.length).fill(undefined) as (number | undefined)[])),
+        ];
         thicknesses[edgeIdx] = thickness;
         return { ...r, edgeThicknesses: thicknesses };
       }),
@@ -376,7 +406,12 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       ...p,
       rooms: p.rooms.map((r) =>
         r.id === roomId
-          ? { ...r, partitions: (r.partitions ?? []).map((pt) => pt.id === partitionId ? { ...pt, thickness } : pt) }
+          ? {
+              ...r,
+              partitions: (r.partitions ?? []).map((pt) =>
+                pt.id === partitionId ? { ...pt, thickness } : pt,
+              ),
+            }
           : r,
       ),
     }));
@@ -396,7 +431,9 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     get().updateActive((p) => ({
       ...p,
       rooms: p.rooms.map((r) =>
-        r.id === roomId ? { ...r, excludedZones: (r.excludedZones ?? []).filter((z) => z.id !== zoneId) } : r,
+        r.id === roomId
+          ? { ...r, excludedZones: (r.excludedZones ?? []).filter((z) => z.id !== zoneId) }
+          : r,
       ),
       constraints: p.constraints.filter((c) => !c.pts.some((pt) => pt.roomId === zoneId)),
     }));
@@ -407,7 +444,12 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       ...p,
       rooms: p.rooms.map((r) =>
         r.id === roomId
-          ? { ...r, excludedZones: (r.excludedZones ?? []).map((z) => (z.id === zoneId ? { ...z, points } : z)) }
+          ? {
+              ...r,
+              excludedZones: (r.excludedZones ?? []).map((z) =>
+                z.id === zoneId ? { ...z, points } : z,
+              ),
+            }
           : r,
       ),
     }));
@@ -415,10 +457,14 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
 
   clearPartitionsAndZones: (roomId) => {
     get().updateActive((p) => {
-      const zoneIds = new Set((p.rooms.find((r) => r.id === roomId)?.excludedZones ?? []).map((z) => z.id));
+      const zoneIds = new Set(
+        (p.rooms.find((r) => r.id === roomId)?.excludedZones ?? []).map((z) => z.id),
+      );
       return {
         ...p,
-        rooms: p.rooms.map((r) => (r.id === roomId ? { ...r, partitions: [], excludedZones: [] } : r)),
+        rooms: p.rooms.map((r) =>
+          r.id === roomId ? { ...r, partitions: [], excludedZones: [] } : r,
+        ),
         constraints: p.constraints.filter((c) => !c.pts.some((pt) => zoneIds.has(pt.roomId))),
       };
     });
@@ -438,7 +484,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         ...p,
         wallEngine: {
           ...p.wallEngine,
-          nodes: p.wallEngine.nodes.map((n) => n.id === id ? { ...n, ...patch } : n),
+          nodes: p.wallEngine.nodes.map((n) => (n.id === id ? { ...n, ...patch } : n)),
         },
       };
     });
@@ -447,7 +493,10 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   removeNode: (id) => {
     get().updateActive((p) => {
       if (!p.wallEngine) return p;
-      return { ...p, wallEngine: { ...p.wallEngine, nodes: p.wallEngine.nodes.filter((n) => n.id !== id) } };
+      return {
+        ...p,
+        wallEngine: { ...p.wallEngine, nodes: p.wallEngine.nodes.filter((n) => n.id !== id) },
+      };
     });
   },
 
@@ -469,7 +518,10 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         }))
         .filter((w) => w.node1Id !== w.node2Id);
       const nodes = p.wallEngine.nodes.filter((n) => n.id !== dropId);
-      return { ...p, wallEngine: { nodes, walls, excludedZones: p.wallEngine.excludedZones ?? [] } };
+      return {
+        ...p,
+        wallEngine: { nodes, walls, excludedZones: p.wallEngine.excludedZones ?? [] },
+      };
     });
   },
 
@@ -486,7 +538,10 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       const walls = p.wallEngine.walls.filter((w) => w.id !== id);
       const referencedIds = new Set(walls.flatMap((w) => [w.node1Id, w.node2Id]));
       const nodes = p.wallEngine.nodes.filter((n) => referencedIds.has(n.id));
-      return { ...p, wallEngine: { nodes, walls, excludedZones: p.wallEngine.excludedZones ?? [] } };
+      return {
+        ...p,
+        wallEngine: { nodes, walls, excludedZones: p.wallEngine.excludedZones ?? [] },
+      };
     });
   },
 
@@ -497,7 +552,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         ...p,
         wallEngine: {
           ...p.wallEngine,
-          walls: p.wallEngine.walls.map((w) => w.id === id ? { ...w, ...patch } : w),
+          walls: p.wallEngine.walls.map((w) => (w.id === id ? { ...w, ...patch } : w)),
         },
       };
     });
@@ -525,10 +580,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         updatedAt: Date.now(),
         wallEngine: {
           ...p.wallEngine,
-          excludedZones: [
-            ...(p.wallEngine.excludedZones ?? []),
-            { id: generateId(), nodes },
-          ],
+          excludedZones: [...(p.wallEngine.excludedZones ?? []), { id: generateId(), nodes }],
         },
       };
     });
@@ -553,7 +605,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         updatedAt: Date.now(),
         wallEngine: {
           ...p.wallEngine,
-          excludedZones: (p.wallEngine.excludedZones ?? []).filter(z => z.id !== id),
+          excludedZones: (p.wallEngine.excludedZones ?? []).filter((z) => z.id !== id),
         },
       };
     });
@@ -573,29 +625,33 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     });
   },
 
-  addTilingDimension: (dim) => get().updateActive((p) => ({
-    ...p,
-    tilingDimensions: [...(p.tilingDimensions ?? []), dim],
-  })),
+  addTilingDimension: (dim) =>
+    get().updateActive((p) => ({
+      ...p,
+      tilingDimensions: [...(p.tilingDimensions ?? []), dim],
+    })),
 
-  removeTilingDimension: (id) => get().updateActive((p) => ({
-    ...p,
-    tilingDimensions: (p.tilingDimensions ?? []).filter((d) => d.id !== id),
-  })),
+  removeTilingDimension: (id) =>
+    get().updateActive((p) => ({
+      ...p,
+      tilingDimensions: (p.tilingDimensions ?? []).filter((d) => d.id !== id),
+    })),
 
-  updateTilingDimensionPerpOffset: (id, perpOffset) => get().updateActive((p) => ({
-    ...p,
-    tilingDimensions: (p.tilingDimensions ?? []).map((d) =>
-      d.id === id ? { ...d, perpOffset } : d,
-    ),
-  })),
+  updateTilingDimensionPerpOffset: (id, perpOffset) =>
+    get().updateActive((p) => ({
+      ...p,
+      tilingDimensions: (p.tilingDimensions ?? []).map((d) =>
+        d.id === id ? { ...d, perpOffset } : d,
+      ),
+    })),
 
-  updateTilingDimension: (id, patch) => get().updateActive((p) => ({
-    ...p,
-    tilingDimensions: (p.tilingDimensions ?? []).map((d) =>
-      d.id === id ? { ...d, ...patch } : d,
-    ),
-  })),
+  updateTilingDimension: (id, patch) =>
+    get().updateActive((p) => ({
+      ...p,
+      tilingDimensions: (p.tilingDimensions ?? []).map((d) =>
+        d.id === id ? { ...d, ...patch } : d,
+      ),
+    })),
 }));
 
 export const selectActiveProject = (state: ProjectState): Project | null =>

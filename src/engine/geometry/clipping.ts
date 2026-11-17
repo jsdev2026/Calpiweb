@@ -87,10 +87,7 @@ export const classifyTile = (
   return 'OUTSIDE';
 };
 
-export const classifyPolygonTile = (
-  tilePoints: Point[],
-  roomPoly: Point[],
-): TileType => {
+export const classifyPolygonTile = (tilePoints: Point[], roomPoly: Point[]): TileType => {
   let inside = 0;
   for (const p of tilePoints) {
     if (pointInPolygon(p, roomPoly)) inside++;

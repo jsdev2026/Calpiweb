@@ -12,7 +12,13 @@ export interface CutGroupsTableProps {
   onHighlight: (group: number | null) => void;
 }
 
-export const CutGroupsTable = ({ groups, tileW, tileH, tileColor, onHighlight }: CutGroupsTableProps) => {
+export const CutGroupsTable = ({
+  groups,
+  tileW,
+  tileH,
+  tileColor,
+  onHighlight,
+}: CutGroupsTableProps) => {
   return (
     <table className="w-full text-xs">
       <thead>
@@ -32,7 +38,7 @@ export const CutGroupsTable = ({ groups, tileW, tileH, tileColor, onHighlight }:
           return (
             <tr
               key={group.originalIndices.join(',')}
-              className="border-t border-gray-100 dark:border-zinc-800 hover:bg-gray-50 dark:hover:bg-zinc-800"
+              className="border-t border-gray-100 hover:bg-gray-50 dark:border-zinc-800 dark:hover:bg-zinc-800"
               // Plan highlighting is keyed by the original (pre-merge) cutGroups
               // index, not the merged display index `i` — use originalIndices[0].
               onMouseEnter={() => onHighlight(group.originalIndices[0]! + 1)}
@@ -77,7 +83,9 @@ export const CutGroupsTable = ({ groups, tileW, tileH, tileColor, onHighlight }:
               </td>
               <td
                 className={`px-2 py-1 text-right font-black tabular-nums ${
-                  group.reuseCount > 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-gray-900 dark:text-zinc-100'
+                  group.reuseCount > 0
+                    ? 'text-emerald-500 dark:text-emerald-400'
+                    : 'text-gray-900 dark:text-zinc-100'
                 }`}
               >
                 {group.netTiles}

@@ -42,8 +42,14 @@ export const DimensionPopup = ({
   const positioned = screenX !== undefined && screenY !== undefined;
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') { e.preventDefault(); onSubmit(); }
-    if (e.key === 'Escape') { e.preventDefault(); onCancel(); }
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      onSubmit();
+    }
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      onCancel();
+    }
   };
 
   return (
@@ -54,9 +60,7 @@ export const DimensionPopup = ({
           ? {
               left: screenX,
               top: screenY,
-              transform: above
-                ? 'translate(-50%, calc(-100% - 10px))'
-                : 'translate(-50%, 10px)',
+              transform: above ? 'translate(-50%, calc(-100% - 10px))' : 'translate(-50%, 10px)',
             }
           : { left: '50%', top: '1rem', transform: 'translateX(-50%)' }
       }
@@ -76,14 +80,18 @@ export const DimensionPopup = ({
               key={t}
               type="button"
               aria-label={
-                t === 'H_DISTANCE' ? 'Distance horizontale'
-                  : t === 'V_DISTANCE' ? 'Distance verticale'
-                  : 'Longueur'
+                t === 'H_DISTANCE'
+                  ? 'Distance horizontale'
+                  : t === 'V_DISTANCE'
+                    ? 'Distance verticale'
+                    : 'Longueur'
               }
               title={
-                t === 'H_DISTANCE' ? 'Distance horizontale'
-                  : t === 'V_DISTANCE' ? 'Distance verticale'
-                  : 'Longueur'
+                t === 'H_DISTANCE'
+                  ? 'Distance horizontale'
+                  : t === 'V_DISTANCE'
+                    ? 'Distance verticale'
+                    : 'Longueur'
               }
               onClick={() => onDimTypeChange(t)}
               className={`h-6 w-6 rounded text-[10px] font-black transition-colors ${

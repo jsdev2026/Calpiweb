@@ -3,12 +3,12 @@ import type { Point } from '@/types/plan';
 export type TileLayout = 'STRAIGHT' | 'HERRINGBONE' | 'CHEVRON';
 
 export interface ConsumableParams {
-  tileThickness?: number;       // mm, défaut 10
-  colleRendement?: number;      // kg/m², défaut 4
-  colleBagSize?: number;        // kg/sac, défaut 25
-  jointRendement?: number;      // kg/m², si défini = override ISO 13007
-  jointBagSize?: number;        // kg/sac, défaut 5
-  croisillonsBagSize?: number;  // unités/sachet, défaut 200
+  tileThickness?: number; // mm, défaut 10
+  colleRendement?: number; // kg/m², défaut 4
+  colleBagSize?: number; // kg/sac, défaut 25
+  jointRendement?: number; // kg/m², si défini = override ISO 13007
+  jointBagSize?: number; // kg/sac, défaut 5
+  croisillonsBagSize?: number; // unités/sachet, défaut 200
 }
 
 export interface TilingConfig {
@@ -22,7 +22,7 @@ export interface TilingConfig {
   chevronAngle: number;
   color: string;
   layout: TileLayout;
-  marginOverride?: number;          // si défini, remplace la marge auto-calibrée
+  marginOverride?: number; // si défini, remplace la marge auto-calibrée
   consumableParams?: ConsumableParams;
 }
 

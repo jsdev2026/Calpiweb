@@ -12,22 +12,24 @@
 
 ## Fichiers
 
-| Fichier | Action |
-|---------|--------|
+| Fichier                                  | Action                                                                                       |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------- |
 | `src/components/tiling/TilingCanvas.tsx` | Ajouter prop `doorOpenings`, helper `doorRectPath`, étendre le `<clipPath>` et le fond joint |
-| `src/components/tiling/TilingEditor.tsx` | Passer `doorOpenings={doorOpenings}` à `<TilingCanvas>` |
+| `src/components/tiling/TilingEditor.tsx` | Passer `doorOpenings={doorOpenings}` à `<TilingCanvas>`                                      |
 
 ---
 
 ## Task 1 : Étendre `TilingCanvas` + câbler `TilingEditor`
 
 **Files:**
+
 - Modify: `src/components/tiling/TilingCanvas.tsx`
 - Modify: `src/components/tiling/TilingEditor.tsx`
 
 ### Contexte sur le code existant
 
 `TilingCanvas.tsx` (lignes 12-26) — interface actuelle :
+
 ```ts
 interface TilingCanvasProps {
   svgRef: RefObject<SVGSVGElement>;
@@ -47,6 +49,7 @@ interface TilingCanvasProps {
 ```
 
 Le `<clipPath>` (lignes 66-87) construit son chemin `d` avec trois spread :
+
 ```ts
 d={[
   ...validRooms.map((r) =>
@@ -67,22 +70,29 @@ d={[
 ```
 
 Le fond joint des pièces (lignes 90-96) :
+
 ```tsx
-{validRooms.map((room) => (
-  <polygon
-    key={`bg-${room.id}`}
-    points={insetRoomPolygon(room, wallThickness).map((p) => `${p.x},${p.y}`).join(' ')}
-    fill="var(--tile-joint)"
-  />
-))}
+{
+  validRooms.map((room) => (
+    <polygon
+      key={`bg-${room.id}`}
+      points={insetRoomPolygon(room, wallThickness)
+        .map((p) => `${p.x},${p.y}`)
+        .join(' ')}
+      fill="var(--tile-joint)"
+    />
+  ));
+}
 ```
 
 `TilingEditor.tsx` ligne 87 :
+
 ```ts
 const doorOpenings = useProjectStore(useShallow(selectDoorOpenings));
 ```
 
 `TilingEditor.tsx` lignes 254-268 :
+
 ```tsx
 <TilingCanvas
   svgRef={svgRef}
@@ -106,6 +116,7 @@ const doorOpenings = useProjectStore(useShallow(selectDoorOpenings));
 - [ ] **Step 1 : Modifier `TilingCanvas.tsx`**
 
 Remplacer le contenu de `src/components/tiling/TilingCanvas.tsx` par la version suivante. Les changements sont :
+
 1. Ajout de l'import `DoorOpening` (ligne 7)
 2. Ajout de `doorOpenings?: DoorOpening[]` dans l'interface (ligne 25)
 3. Ajout de `doorOpenings = []` dans le destructuring (ligne 41)
@@ -144,14 +155,16 @@ interface TilingCanvasProps {
 }
 
 function doorRectPath(door: DoorOpening): string {
-  const dx = door.to.x - door.from.x, dy = door.to.y - door.from.y;
+  const dx = door.to.x - door.from.x,
+    dy = door.to.y - door.from.y;
   const L = Math.sqrt(dx * dx + dy * dy);
   if (L < 1) return '';
-  const px = (-dy / L) * door.thickness, py = (dx / L) * door.thickness;
+  const px = (-dy / L) * door.thickness,
+    py = (dx / L) * door.thickness;
   const pts = [
     { x: door.from.x + px, y: door.from.y + py },
-    { x: door.to.x   + px, y: door.to.y   + py },
-    { x: door.to.x   - px, y: door.to.y   - py },
+    { x: door.to.x + px, y: door.to.y + py },
+    { x: door.to.x - px, y: door.to.y - py },
     { x: door.from.x - px, y: door.from.y - py },
   ];
   return `M ${pts.map((p) => `${p.x},${p.y}`).join(' L ')} Z`;
@@ -179,7 +192,8 @@ export const TilingCanvas = ({
   const centerX = (bbox.minX + bbox.maxX) / 2;
   const centerY = (bbox.minY + bbox.maxY) / 2;
 
-  const canShowDims = activeTool === 'dimension' && config.angle === 0 && config.layout === 'STRAIGHT';
+  const canShowDims =
+    activeTool === 'dimension' && config.angle === 0 && config.layout === 'STRAIGHT';
   const effectiveAngle = config.angle;
 
   return (
@@ -191,7 +205,9 @@ export const TilingCanvas = ({
       onPointerUp={onPointerUp}
       onPointerLeave={onPointerUp}
       onClick={onClick}
-      onContextMenu={(e) => { if (activeTool === 'dimension') e.preventDefault(); }}
+      onContextMenu={(e) => {
+        if (activeTool === 'dimension') e.preventDefault();
+      }}
     >
       <g transform={`translate(${pan.x}, ${pan.y}) scale(${scale})`}>
         <defs>
@@ -200,19 +216,22 @@ export const TilingCanvas = ({
               clipRule="evenodd"
               fillRule="evenodd"
               d={[
-                ...validRooms.map((r) =>
-                  `M ${insetRoomPolygon(r, wallThickness).map((p) => `${p.x},${p.y}`).join(' L ')} Z`
+                ...validRooms.map(
+                  (r) =>
+                    `M ${insetRoomPolygon(r, wallThickness)
+                      .map((p) => `${p.x},${p.y}`)
+                      .join(' L ')} Z`,
                 ),
                 ...validRooms.flatMap((r) =>
-                  (r.excludedZones ?? []).map((z) =>
-                    `M ${z.points.map((p) => `${p.x},${p.y}`).join(' L ')} Z`
-                  )
+                  (r.excludedZones ?? []).map(
+                    (z) => `M ${z.points.map((p) => `${p.x},${p.y}`).join(' L ')} Z`,
+                  ),
                 ),
                 ...validRooms.flatMap((r) =>
                   (r.partitions ?? []).map((pt) => {
                     const poly = partitionToPolygon(pt);
                     return `M ${poly.map((p) => `${p.x},${p.y}`).join(' L ')} Z`;
-                  })
+                  }),
                 ),
                 ...doorOpenings.map(doorRectPath).filter(Boolean),
               ].join(' ')}
@@ -223,7 +242,9 @@ export const TilingCanvas = ({
         {validRooms.map((room) => (
           <polygon
             key={`bg-${room.id}`}
-            points={insetRoomPolygon(room, wallThickness).map((p) => `${p.x},${p.y}`).join(' ')}
+            points={insetRoomPolygon(room, wallThickness)
+              .map((p) => `${p.x},${p.y}`)
+              .join(' ')}
             fill="var(--tile-joint)"
           />
         ))}
@@ -252,7 +273,7 @@ export const TilingCanvas = ({
                   height={tile.rect.h}
                   fill={tile.type === 'WHOLE' ? config.color : 'var(--tile-cut-bg)'}
                 />
-              )
+              ),
             )}
           </g>
         </g>
@@ -269,7 +290,7 @@ export const TilingCanvas = ({
               strokeDasharray="120,80"
               className="pointer-events-none"
             />
-          ))
+          )),
         )}
 
         {/* Room walls and doors */}
@@ -281,7 +302,10 @@ export const TilingCanvas = ({
             return (
               <line
                 key={`edge-${room.id}-${i}`}
-                x1={p.x} y1={p.y} x2={nextP.x} y2={nextP.y}
+                x1={p.x}
+                y1={p.y}
+                x2={nextP.x}
+                y2={nextP.y}
                 stroke={isDoor ? '#f97316' : '#ea580c'}
                 strokeWidth={isDoor ? edgeThick * 0.5 : edgeThick}
                 strokeLinecap="round"
@@ -306,34 +330,39 @@ export const TilingCanvas = ({
                 className="pointer-events-none"
               />
             );
-          })
+          }),
         )}
 
         {/* Reference dimensions */}
-        {canShowDims && validRooms.map((room) => {
-          const pts = room.points;
-          if (pts.length < 3) return null;
-          const rb = getBoundingBox(pts);
-          const roomW = rb.maxX - rb.minX;
-          const roomH = rb.maxY - rb.minY;
-          const offset = 600;
-          return (
-            <g key={`dims-${room.id}`}>
-              <DimLine
-                x1={rb.minX} y1={rb.minY}
-                x2={rb.maxX} y2={rb.minY}
-                label={formatCm(roomW)}
-                perpOffset={-offset}
-              />
-              <DimLine
-                x1={rb.maxX} y1={rb.minY}
-                x2={rb.maxX} y2={rb.maxY}
-                label={formatCm(roomH)}
-                perpOffset={offset}
-              />
-            </g>
-          );
-        })}
+        {canShowDims &&
+          validRooms.map((room) => {
+            const pts = room.points;
+            if (pts.length < 3) return null;
+            const rb = getBoundingBox(pts);
+            const roomW = rb.maxX - rb.minX;
+            const roomH = rb.maxY - rb.minY;
+            const offset = 600;
+            return (
+              <g key={`dims-${room.id}`}>
+                <DimLine
+                  x1={rb.minX}
+                  y1={rb.minY}
+                  x2={rb.maxX}
+                  y2={rb.minY}
+                  label={formatCm(roomW)}
+                  perpOffset={-offset}
+                />
+                <DimLine
+                  x1={rb.maxX}
+                  y1={rb.minY}
+                  x2={rb.maxX}
+                  y2={rb.maxY}
+                  label={formatCm(roomH)}
+                  perpOffset={offset}
+                />
+              </g>
+            );
+          })}
         {dimensionLayer}
       </g>
     </svg>

@@ -1,4 +1,15 @@
-import type { Project, Room, EdgeType, ProjectStatus, ClientInfo, Constraint, ProjectNote, Partition, ExcludedZone, TilingDimension } from '@/types/project';
+import type {
+  Project,
+  Room,
+  EdgeType,
+  ProjectStatus,
+  ClientInfo,
+  Constraint,
+  ProjectNote,
+  Partition,
+  ExcludedZone,
+  TilingDimension,
+} from '@/types/project';
 import type { Wall, WallNode, WallExcludedZone, ExcludeNode } from '@/types/wall';
 import type { MyRole, ShareRole } from '@/types/sharing';
 import type { Point } from '@/types/plan';
@@ -17,14 +28,27 @@ function migrateProject(raw: unknown): Project {
       id: r.id as string,
       name: r.name as string | undefined,
       points: (r.points as Point[]) ?? [],
-      edges: (r.edges as EdgeType[]) ?? new Array<EdgeType>(((r.points as Point[]) ?? []).length).fill('WALL'),
+      edges:
+        (r.edges as EdgeType[]) ??
+        new Array<EdgeType>(((r.points as Point[]) ?? []).length).fill('WALL'),
       edgeThicknesses: (r.edgeThicknesses as (number | undefined)[] | undefined) ?? [],
-      partitions: ((r.partitions as Partition[] | undefined) ?? []).map((pt) => ({ ...pt, thickness: pt.thickness ?? 100 })),
+      partitions: ((r.partitions as Partition[] | undefined) ?? []).map((pt) => ({
+        ...pt,
+        thickness: pt.thickness ?? 100,
+      })),
       excludedZones: (r.excludedZones as ExcludedZone[] | undefined) ?? [],
     }));
   } else {
     const legacyPoints = (p.plan as Point[] | undefined) ?? [];
-    rooms = [{ id: generateId(), points: legacyPoints, edges: new Array<EdgeType>(legacyPoints.length).fill('WALL'), partitions: [], excludedZones: [] }];
+    rooms = [
+      {
+        id: generateId(),
+        points: legacyPoints,
+        edges: new Array<EdgeType>(legacyPoints.length).fill('WALL'),
+        partitions: [],
+        excludedZones: [],
+      },
+    ];
   }
 
   const rawConfig = (p.config as TilingConfig | undefined) ?? { ...DEFAULT_TILING_CONFIG };
@@ -89,7 +113,9 @@ function migrateProject(raw: unknown): Project {
 export const supabaseDb = {
   async getAll(): Promise<Project[]> {
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) return [];
 
     const { data: rows, error } = await supabase
@@ -104,26 +130,33 @@ export const supabaseDb = {
       .order('created_at', { ascending: true });
 
     const projectIds = (rows ?? []).map((r) => r.id as string);
-    const { data: locks } = projectIds.length > 0
-      ? await supabase
-          .from('project_locks')
-          .select('project_id, locked_by, expires_at, profiles(display_name, email)')
-          .in('project_id', projectIds)
-          .gt('expires_at', new Date().toISOString())
-      : { data: [] };
+    const { data: locks } =
+      projectIds.length > 0
+        ? await supabase
+            .from('project_locks')
+            .select('project_id, locked_by, expires_at, profiles(display_name, email)')
+            .in('project_id', projectIds)
+            .gt('expires_at', new Date().toISOString())
+        : { data: [] };
 
     const shareMap = new Map(
       (shares ?? []).map((s) => [s.project_id as string, s.role as ShareRole]),
     );
     const lockMap = new Map(
       (locks ?? []).map((l) => {
-        const profile = l.profiles as unknown as { display_name: string | null; email: string } | null;
-        return [l.project_id as string, {
-          projectId: l.project_id as string,
-          lockedBy: l.locked_by as string,
-          lockedByDisplayName: profile?.display_name ?? profile?.email ?? 'Autre utilisateur',
-          expiresAt: l.expires_at as string,
-        }];
+        const profile = l.profiles as unknown as {
+          display_name: string | null;
+          email: string;
+        } | null;
+        return [
+          l.project_id as string,
+          {
+            projectId: l.project_id as string,
+            lockedBy: l.locked_by as string,
+            lockedByDisplayName: profile?.display_name ?? profile?.email ?? 'Autre utilisateur',
+            expiresAt: l.expires_at as string,
+          },
+        ];
       }),
     );
 
@@ -138,11 +171,7 @@ export const supabaseDb = {
 
   async get(id: string): Promise<Project | undefined> {
     const supabase = createClient();
-    const { data, error } = await supabase
-      .from('projects')
-      .select('data')
-      .eq('id', id)
-      .single();
+    const { data, error } = await supabase.from('projects').select('data').eq('id', id).single();
     if (error) return undefined;
     return data?.data as Project | undefined;
   },
@@ -171,7 +200,9 @@ export const supabaseDb = {
 
   async getProfile(): Promise<{ plan: 'free' | 'pro' }> {
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) return { plan: 'free' };
     const { data, error } = await supabase
       .from('profiles')
