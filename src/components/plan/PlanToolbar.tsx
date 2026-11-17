@@ -238,6 +238,7 @@ export const PlanToolbar = ({
 
     <div
       data-testid="plan-toolbar-mobile"
+      data-canvas-overlay
       className="fixed bottom-0 left-0 right-0 z-20 flex flex-col border-t border-gray-200 bg-white/95 backdrop-blur-md mouse:hidden md:hidden dark:border-zinc-800 dark:bg-zinc-900/95"
     >
       {/* Ligne 1 : outils + épaisseur */}

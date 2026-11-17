@@ -182,6 +182,7 @@ export const TileSettingsSheet = ({
   return (
     <div
       data-testid="tile-settings-sheet"
+      data-canvas-overlay
       className="absolute inset-x-0 bottom-0 z-20 flex flex-col rounded-t-2xl border-t mouse:inset-x-auto mouse:bottom-auto mouse:right-3 mouse:top-3 mouse:max-h-[calc(100%-1.5rem)] mouse:w-[320px] mouse:rounded-2xl mouse:border md:inset-x-auto md:bottom-auto md:right-3 md:top-3 md:max-h-[calc(100%-1.5rem)] md:w-[320px] md:rounded-2xl md:border"
       style={{
         background: 'var(--surf)',
