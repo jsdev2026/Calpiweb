@@ -413,6 +413,17 @@ export const TileSettingsSheet = ({
               <RotateCcw size={14} />
             </Chip>
           </div>
+          <Chip
+            active={!!config.showStartTile}
+            onClick={() => update({ showStartTile: !config.showStartTile })}
+          >
+            📐 Coter le carreau de départ
+          </Chip>
+          {config.showStartTile && (
+            <span className="text-[11.5px] leading-snug" style={{ color: 'var(--text2)' }}>
+              Le carreau « D » est coté depuis les murs de l&apos;angle haut-gauche de chaque pièce.
+            </span>
+          )}
         </Row>
 
         <button

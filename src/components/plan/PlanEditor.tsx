@@ -23,6 +23,8 @@ import {
 } from '@/engine/tiling/layoutOrigin';
 import { TileLayer } from '@/components/tiling/TileLayer';
 import { TileSettingsSheet } from '@/components/tiling/TileSettingsSheet';
+import { StartTileLayer } from '@/components/tiling/StartTileLayer';
+import { computeStartTiles } from '@/engine/tiling/startTile';
 import { QuantitiesSheet } from '@/components/quantities/QuantitiesSheet';
 import { PlanToolbar, type PlanTool } from './PlanToolbar';
 import { ToolStatusBar } from './ToolStatusBar';
@@ -189,6 +191,15 @@ export const PlanEditor = ({
   const result = useMemo(
     () => (showTiles ? analyzeQuantities(rooms, config, wallThickness, doorOpenings) : null),
     [showTiles, rooms, config, wallThickness, doorOpenings],
+  );
+
+  // Carreau de départ coté (repère de pose pour le chantier)
+  const startMarks = useMemo(
+    () =>
+      result && config.showStartTile
+        ? computeStartTiles(rooms, result.tiles, config, wallThickness)
+        : [],
+    [result, config, rooms, wallThickness],
   );
 
   // Aide gestuelle affichée quelques secondes à l'entrée du Calepinage
@@ -460,15 +471,18 @@ export const PlanEditor = ({
           viewOnly={showTiles}
           worldLayer={
             showTiles && result ? (
-              <TileLayer
-                rooms={rooms}
-                result={result}
-                config={config}
-                wallThickness={wallThickness}
-                doorOpenings={doorOpenings}
-                showCutLabels={mode === 'QUANTITIES'}
-                highlightGroup={mode === 'QUANTITIES' ? highlightGroup : null}
-              />
+              <>
+                <TileLayer
+                  rooms={rooms}
+                  result={result}
+                  config={config}
+                  wallThickness={wallThickness}
+                  doorOpenings={doorOpenings}
+                  showCutLabels={mode === 'QUANTITIES'}
+                  highlightGroup={mode === 'QUANTITIES' ? highlightGroup : null}
+                />
+                <StartTileLayer marks={startMarks} scale={scale} />
+              </>
             ) : undefined
           }
           onViewDrag={mode === 'TILING' && !readOnly ? handleTileDrag : null}

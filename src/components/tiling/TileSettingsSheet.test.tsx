@@ -72,6 +72,12 @@ describe('TileSettingsSheet', () => {
     );
   });
 
+  it('active la cotation du carreau de départ', () => {
+    const { onChange } = setup();
+    fireEvent.click(screen.getByRole('button', { name: /Coter le carreau de départ/ }));
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ showStartTile: true }));
+  });
+
   it('règle la rotation par bouton rapide et par curseur', () => {
     const { onChange } = setup();
     fireEvent.click(screen.getByRole('button', { name: 'Rotation 45°' }));

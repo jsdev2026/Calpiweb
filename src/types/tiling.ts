@@ -23,6 +23,8 @@ export interface TilingConfig {
   color: string;
   layout: TileLayout;
   marginOverride?: number; // si défini, remplace la marge auto-calibrée
+  /** Affiche et cote le carreau de départ (repère de pose pour le chantier) */
+  showStartTile?: boolean;
   consumableParams?: ConsumableParams;
 }
 
