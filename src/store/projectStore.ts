@@ -190,8 +190,9 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       updatedAt: now,
       rooms: [],
       wallEngine: { nodes: [], walls: [], excludedZones: [] },
-      config: { ...DEFAULT_TILING_CONFIG },
-      wallThickness: WALL_THICKNESS_MM,
+      // Préférences de l'utilisateur (Paramètres → Préférences), sinon valeurs par défaut
+      config: { ...DEFAULT_TILING_CONFIG, ...(profile.defaultTileConfig ?? {}) },
+      wallThickness: profile.defaultWallThickness ?? WALL_THICKNESS_MM,
       constraints: [],
       notes: [],
     };

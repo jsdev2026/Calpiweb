@@ -3,6 +3,8 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { ACQUISITION_SOURCES, PROFILE_TYPES, type ProfileType } from '@/types/profile';
+import { clean, phoneError } from '@/lib/validation';
 
 type Step = 'login' | 'register' | 'forgot';
 
@@ -108,7 +110,13 @@ function AuthPageInner() {
   const [step, setStep] = useState<Step>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [profileType, setProfileType] = useState<ProfileType | ''>('');
+  const [companyName, setCompanyName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [acquisitionSource, setAcquisitionSource] = useState('');
+  const [newsletter, setNewsletter] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
@@ -144,14 +152,42 @@ function AuthPageInner() {
     setLoading(false);
   };
 
+  const isPro = profileType !== '' && profileType !== 'particulier';
+
+  const validateRegister = (): string | null => {
+    if (!clean(firstName) || !clean(lastName)) return 'Indiquez votre prénom et votre nom.';
+    if (!profileType) return 'Indiquez votre profil.';
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) return 'Adresse e-mail invalide.';
+    if (password.length < 8) return 'Le mot de passe doit comporter au moins 8 caractères.';
+    return phoneError(phone);
+  };
+
   const handleRegister = async () => {
+    const invalid = validateRegister();
+    if (invalid) {
+      setError(invalid);
+      return;
+    }
     setLoading(true);
     setError(null);
+    const first = clean(firstName)!;
+    const last = clean(lastName)!;
+    // Les métadonnées sont recopiées dans public.profiles par le trigger handle_new_user (migration 004)
     const { data, error } = await supabase.auth.signUp({
-      email,
+      email: email.trim(),
       password,
       options: {
-        data: { name: name.trim() || email.split('@')[0] },
+        data: {
+          name: `${first} ${last}`,
+          full_name: `${first} ${last}`,
+          first_name: first,
+          last_name: last,
+          profile_type: profileType,
+          company_name: isPro ? clean(companyName) : null,
+          phone: clean(phone),
+          acquisition_source: acquisitionSource || null,
+          newsletter_opt_in: newsletter,
+        },
         emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     });
@@ -331,14 +367,77 @@ function AuthPageInner() {
                   </p>
                 )}
                 <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className={labelCls} style={labelStyle}>
+                        Prénom *
+                      </label>
+                      <input
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        placeholder="Jean"
+                        autoComplete="given-name"
+                        className={inputCls}
+                        style={inputStyle}
+                      />
+                    </div>
+                    <div>
+                      <label className={labelCls} style={labelStyle}>
+                        Nom *
+                      </label>
+                      <input
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        placeholder="Dupont"
+                        autoComplete="family-name"
+                        className={inputCls}
+                        style={inputStyle}
+                      />
+                    </div>
+                  </div>
                   <div>
                     <label className={labelCls} style={labelStyle}>
-                      Prénom et nom
+                      Vous êtes *
+                    </label>
+                    <select
+                      value={profileType}
+                      onChange={(e) => setProfileType(e.target.value as ProfileType | '')}
+                      className={inputCls}
+                      style={inputStyle}
+                    >
+                      <option value="">Choisir…</option>
+                      {PROFILE_TYPES.map((p) => (
+                        <option key={p.value} value={p.value}>
+                          {p.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  {isPro && (
+                    <div>
+                      <label className={labelCls} style={labelStyle}>
+                        Entreprise
+                      </label>
+                      <input
+                        value={companyName}
+                        onChange={(e) => setCompanyName(e.target.value)}
+                        placeholder="Dupont Carrelage"
+                        autoComplete="organization"
+                        className={inputCls}
+                        style={inputStyle}
+                      />
+                    </div>
+                  )}
+                  <div>
+                    <label className={labelCls} style={labelStyle}>
+                      Téléphone <span className="normal-case">(facultatif)</span>
                     </label>
                     <input
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="Jean Dupont"
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="06 12 34 56 78"
+                      autoComplete="tel"
                       className={inputCls}
                       style={inputStyle}
                     />
@@ -365,11 +464,44 @@ function AuthPageInner() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="8 caractères minimum"
+                      autoComplete="new-password"
                       className={inputCls}
                       style={inputStyle}
                       onKeyDown={(e) => e.key === 'Enter' && void handleRegister()}
                     />
                   </div>
+                  <div>
+                    <label className={labelCls} style={labelStyle}>
+                      Comment nous avez-vous connus ?{' '}
+                      <span className="normal-case">(facultatif)</span>
+                    </label>
+                    <select
+                      value={acquisitionSource}
+                      onChange={(e) => setAcquisitionSource(e.target.value)}
+                      className={inputCls}
+                      style={inputStyle}
+                    >
+                      <option value="">—</option>
+                      {ACQUISITION_SOURCES.map((s) => (
+                        <option key={s} value={s}>
+                          {s}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <label
+                    className="flex cursor-pointer items-start gap-2.5 text-[12.5px]"
+                    style={{ color: 'var(--text2)' }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={newsletter}
+                      onChange={(e) => setNewsletter(e.target.checked)}
+                      className="mt-0.5 h-4 w-4 shrink-0 accent-orange-500"
+                    />
+                    J&apos;accepte de recevoir les nouveautés et conseils CaléPlan par e-mail
+                    (désinscription possible à tout moment dans Paramètres).
+                  </label>
                 </div>
                 <button
                   type="button"

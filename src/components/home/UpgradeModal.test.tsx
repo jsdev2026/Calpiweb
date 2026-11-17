@@ -41,17 +41,17 @@ describe('UpgradeModal', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it('navigates to /account and calls onClose when Acheter is clicked', () => {
+  it('navigates to the Forfait settings and calls onClose when Acheter is clicked', () => {
     render(<UpgradeModal onClose={onClose} />);
     fireEvent.click(screen.getByText('Acheter →'));
-    expect(mockPush).toHaveBeenCalledWith('/account');
+    expect(mockPush).toHaveBeenCalledWith('/settings?tab=forfait');
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it("navigates to /account and calls onClose when S'abonner is clicked", () => {
+  it("navigates to the Forfait settings and calls onClose when S'abonner is clicked", () => {
     render(<UpgradeModal onClose={onClose} />);
     fireEvent.click(screen.getByText("S'abonner →"));
-    expect(mockPush).toHaveBeenCalledWith('/account');
+    expect(mockPush).toHaveBeenCalledWith('/settings?tab=forfait');
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 

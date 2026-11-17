@@ -1097,7 +1097,25 @@ export default function DashboardPage() {
                     type="button"
                     onClick={() => {
                       setShowUserMenu(false);
-                      router.push('/account');
+                      router.push('/settings');
+                    }}
+                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[13px] transition-colors"
+                    style={{ color: 'var(--text2)' }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.background = 'var(--surf2)';
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.background = 'transparent';
+                    }}
+                  >
+                    <Settings size={14} />
+                    Paramètres
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowUserMenu(false);
+                      router.push('/settings?tab=forfait');
                     }}
                     className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[13px] transition-colors"
                     style={{ color: 'var(--text2)' }}
@@ -1259,7 +1277,7 @@ export default function DashboardPage() {
                 Passez à la formule supérieure pour des projets illimités
               </p>
             </div>
-            <a href="/account" className="btn-primary shrink-0 px-4 py-2 text-[12px]">
+            <a href="/settings?tab=forfait" className="btn-primary shrink-0 px-4 py-2 text-[12px]">
               Passer Pro →
             </a>
           </div>

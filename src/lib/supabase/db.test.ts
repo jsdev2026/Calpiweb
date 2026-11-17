@@ -207,7 +207,23 @@ describe('supabaseDb.getProfile', () => {
       data: { plan: 'free', project_credits: 2 },
       error: null,
     });
-    expect(await supabaseDb.getProfile()).toEqual({ plan: 'free', projectCredits: 2 });
+    expect(await supabaseDb.getProfile()).toMatchObject({ plan: 'free', projectCredits: 2 });
+  });
+
+  it('returns the default project preferences', async () => {
+    mockGetUser.mockResolvedValueOnce({ data: { user: { id: 'user-1' } } });
+    mockMaybeSingle.mockResolvedValueOnce({
+      data: {
+        plan: 'free',
+        default_tile_config: { width: 600, height: 600 },
+        default_wall_thickness: 150,
+      },
+      error: null,
+    });
+    expect(await supabaseDb.getProfile()).toMatchObject({
+      defaultTileConfig: { width: 600, height: 600 },
+      defaultWallThickness: 150,
+    });
   });
 
   it('returns free plan when profile row does not exist', async () => {

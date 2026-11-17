@@ -20,7 +20,7 @@ export function UpgradeModal({ onClose }: UpgradeModalProps) {
   }, [onClose]);
 
   const handleUpgrade = () => {
-    router.push('/account');
+    router.push('/settings?tab=forfait');
     onClose();
   };
 

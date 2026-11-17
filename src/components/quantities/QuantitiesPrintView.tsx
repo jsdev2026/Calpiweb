@@ -66,17 +66,30 @@ const LAYOUT_LABELS: Record<string, string> = {
   CHEVRON: 'Chevron',
 };
 
+/** Coordonnées de l'entreprise de l'utilisateur, imprimées en tête du PDF (Paramètres → Entreprise). */
+export interface PrintCompany {
+  name: string | null;
+  logoUrl: string | null;
+  address: string | null;
+  phone: string | null;
+  email: string | null;
+  siret: string | null;
+}
+
 export interface QuantitiesPrintViewProps {
   project: Project;
   rooms?: Room[]; // override project.rooms (e.g. wall-engine derived rooms)
   doorOpenings?: DoorOpening[];
+  company?: PrintCompany | null;
 }
 
 export const QuantitiesPrintView = ({
   project,
   rooms: roomsProp,
   doorOpenings = [],
+  company = null,
 }: QuantitiesPrintViewProps) => {
+  const hasCompany = !!company && !!(company.name || company.logoUrl);
   const { config, wallThickness, client, name, description } = project;
   const rooms = roomsProp ?? project.rooms;
   const wallEngine = project.wallEngine;
@@ -137,6 +150,40 @@ export const QuantitiesPrintView = ({
           </div>
         </div>
       </div>
+
+      {/* ①bis Entreprise de l'utilisateur (logo + coordonnées) */}
+      {hasCompany && company && (
+        <div
+          data-testid="print-company"
+          style={{
+            margin: '12px 24px 0',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 14,
+            paddingBottom: 10,
+            borderBottom: '1px solid #e5e7eb',
+          }}
+        >
+          {company.logoUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={company.logoUrl}
+              alt={company.name ?? 'Logo'}
+              style={{ maxHeight: 48, maxWidth: 140, objectFit: 'contain' }}
+            />
+          )}
+          <div style={{ fontSize: 10.5, color: '#4b5563', lineHeight: 1.45 }}>
+            {company.name && (
+              <div style={{ fontSize: 13, fontWeight: 800, color: '#111827' }}>{company.name}</div>
+            )}
+            {company.address && <div>{company.address}</div>}
+            {(company.phone || company.email) && (
+              <div>{[company.phone, company.email].filter(Boolean).join(' · ')}</div>
+            )}
+            {company.siret && <div>SIRET {company.siret}</div>}
+          </div>
+        </div>
+      )}
 
       {/* ② Récapitulatif chantier */}
       {globalResult.totalTiles > 0 && (
