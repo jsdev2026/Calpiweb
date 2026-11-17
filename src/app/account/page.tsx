@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useUiStore } from '@/store/uiStore';
+import { PRICE_EXTRA_PROJECT, PRICE_PRO_MONTHLY } from '@/constants/pricing';
 
 export default function AccountPage() {
   const router = useRouter();
@@ -116,6 +117,13 @@ export default function AccountPage() {
                   >
                     Achetez un crédit pour débloquer un projet supplémentaire.
                   </p>
+                  <p className="mb-2 text-[15px] font-bold" style={{ color: 'var(--text)' }}>
+                    {PRICE_EXTRA_PROJECT}
+                    <span className="text-[11px] font-medium" style={{ color: 'var(--muted)' }}>
+                      {' '}
+                      TTC / projet
+                    </span>
+                  </p>
                   <p className="text-[11px]" style={{ color: 'var(--muted)', fontStyle: 'italic' }}>
                     Disponible prochainement
                   </p>
@@ -132,6 +140,13 @@ export default function AccountPage() {
                     style={{ color: 'var(--text2)', lineHeight: 1.4 }}
                   >
                     Abonnement — accès illimité, sauvegarde cloud, tous appareils.
+                  </p>
+                  <p className="mb-2 text-[15px] font-bold" style={{ color: 'var(--text)' }}>
+                    {PRICE_PRO_MONTHLY}
+                    <span className="text-[11px] font-medium" style={{ color: 'var(--muted)' }}>
+                      {' '}
+                      TTC / mois
+                    </span>
                   </p>
                   <p className="text-[11px]" style={{ color: 'var(--muted)', fontStyle: 'italic' }}>
                     Disponible prochainement

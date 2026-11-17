@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { PRICE_EXTRA_PROJECT, PRICE_PRO_MONTHLY } from '@/constants/pricing';
 
 // ── Product canvas mockup ─────────────────────────────────────────────────────
 
@@ -864,7 +865,12 @@ export default function LandingPage() {
                 <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)' }}>pour toujours</span>
               </div>
               <ul className="mb-8 space-y-3">
-                {['1 projet cloud', 'Toutes les fonctions', 'Sauvegarde automatique'].map((f) => (
+                {[
+                  '1 projet cloud',
+                  'Toutes les fonctions',
+                  'Sauvegarde automatique',
+                  `Projet supplémentaire : ${PRICE_EXTRA_PROJECT} l'unité`,
+                ].map((f) => (
                   <li
                     key={f}
                     className="flex items-center gap-3"
@@ -971,9 +977,9 @@ export default function LandingPage() {
                     letterSpacing: '-0.5px',
                   }}
                 >
-                  9€
+                  {PRICE_PRO_MONTHLY}
                 </span>
-                <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>/mois</span>
+                <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>TTC / mois</span>
               </div>
               <ul className="mb-8 space-y-3">
                 {[

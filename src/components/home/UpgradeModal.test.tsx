@@ -19,7 +19,14 @@ describe('UpgradeModal', () => {
     expect(screen.getByText('Limite atteinte')).toBeDefined();
     expect(screen.getByText('+1 projet')).toBeDefined();
     expect(screen.getByText('Illimité')).toBeDefined();
-    expect(screen.queryByText(/9 €/)).toBeNull();
+    // l'ancien prix Pro (9 €) ne doit plus apparaître
+    expect(screen.queryByText(/(^|[^,\d])9 €/)).toBeNull();
+  });
+
+  it('affiche les prix validés', () => {
+    render(<UpgradeModal onClose={onClose} />);
+    expect(screen.getByText('1,99 €')).toBeDefined();
+    expect(screen.getByText('6,90 €')).toBeDefined();
   });
 
   it('calls onClose when backdrop is clicked', () => {
