@@ -223,22 +223,35 @@ export const supabaseDb = {
     if (error) throw new Error(`[${error.code}] ${error.message}`);
   },
 
-  async getProfile(): Promise<PlanInfo> {
+  async getProfile(): Promise<
+    PlanInfo & {
+      defaultTileConfig?: Partial<TilingConfig> | null;
+      defaultWallThickness?: number | null;
+    }
+  > {
     const supabase = createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) return { plan: 'free', projectCredits: 0 };
+    // select('*') : compatible avant / après la migration 004
     const { data, error } = await supabase
       .from('profiles')
-      .select('plan, project_credits')
+      .select('*')
       .eq('id', user.id)
       .maybeSingle();
     if (error) throw new Error(`[${error.code}] ${error.message}`);
-    const row = data as { plan?: string; project_credits?: number | null } | null;
+    const row = data as {
+      plan?: string;
+      project_credits?: number | null;
+      default_tile_config?: Partial<TilingConfig> | null;
+      default_wall_thickness?: number | null;
+    } | null;
     return {
       plan: row?.plan === 'pro' ? 'pro' : 'free',
       projectCredits: row?.project_credits ?? 0,
+      defaultTileConfig: row?.default_tile_config ?? null,
+      defaultWallThickness: row?.default_wall_thickness ?? null,
     };
   },
 };

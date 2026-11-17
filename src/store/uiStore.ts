@@ -44,16 +44,23 @@ export const useUiStore = create<UiState>((set, get) => ({
     }
 
     // Read plan from profiles table
+    // select('*') : reste compatible avant / après la migration 004 (nouvelles colonnes)
     const { data: profile } = await supabase
       .from('profiles')
-      .select('plan, project_credits')
+      .select('*')
       .eq('id', authUser.id)
       .maybeSingle();
+
+    const profileName = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ').trim();
 
     set({
       user: {
         id: authUser.id,
-        name: authUser.user_metadata?.name ?? authUser.email?.split('@')[0] ?? 'Utilisateur',
+        name:
+          profileName ||
+          authUser.user_metadata?.name ||
+          authUser.email?.split('@')[0] ||
+          'Utilisateur',
         email: authUser.email ?? '',
         plan: profile?.plan === 'pro' ? 'pro' : 'free',
         projectCredits: (profile?.project_credits as number | null | undefined) ?? 0,

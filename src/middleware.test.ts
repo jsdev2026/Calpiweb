@@ -16,6 +16,10 @@ describe('classifyRoute', () => {
     expect(classifyRoute('/account')).toBe('protected');
   });
 
+  it('marks /settings as protected', () => {
+    expect(classifyRoute('/settings')).toBe('protected');
+  });
+
   it('marks /auth as auth-only', () => {
     expect(classifyRoute('/auth')).toBe('auth');
   });

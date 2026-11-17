@@ -5,7 +5,11 @@ import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, FileDown, LogOut, Moon, Settings, Sun, Trash2, X } from 'lucide-react';
 import { PlanEditor } from '@/components/plan/PlanEditor';
-import { QuantitiesPrintView } from '@/components/quantities/QuantitiesPrintView';
+import {
+  QuantitiesPrintView,
+  type PrintCompany,
+} from '@/components/quantities/QuantitiesPrintView';
+import { profileDb } from '@/lib/supabase/profile';
 import {
   selectActiveProject,
   selectDoorOpenings,
@@ -466,6 +470,28 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
   useEffect(() => {
     setPrintMounted(true);
   }, []);
+
+  // Coordonnées de l'entreprise de l'utilisateur pour l'en-tête du PDF (Paramètres → Entreprise)
+  const [printCompany, setPrintCompany] = useState<PrintCompany | null>(null);
+  useEffect(() => {
+    profileDb
+      .get()
+      .then((p) => {
+        if (!p) return;
+        const address = [p.addressLine, [p.postalCode, p.city].filter(Boolean).join(' ')]
+          .filter(Boolean)
+          .join(', ');
+        setPrintCompany({
+          name: p.companyName,
+          logoUrl: profileDb.logoUrl(p.logoPath),
+          address: address || null,
+          phone: p.phone,
+          email: p.email,
+          siret: p.siret,
+        });
+      })
+      .catch(() => setPrintCompany(null));
+  }, []);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
@@ -783,7 +809,25 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
                   type="button"
                   onClick={() => {
                     setShowUserMenu(false);
-                    router.push('/auth?tab=plans');
+                    router.push('/settings');
+                  }}
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[13px] transition-colors"
+                  style={{ color: 'var(--text2)' }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.background = 'var(--surf2)';
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.background = 'transparent';
+                  }}
+                >
+                  <Settings size={14} />
+                  Paramètres
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowUserMenu(false);
+                    router.push('/settings?tab=forfait');
                   }}
                   className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[13px] transition-colors"
                   style={{ color: 'var(--text2)' }}
@@ -923,6 +967,7 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
                 project={activeProject}
                 rooms={rooms}
                 doorOpenings={doorOpenings}
+                company={printCompany}
               />
             )}
           </div>,

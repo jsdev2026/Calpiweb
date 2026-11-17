@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
-const PROTECTED = ['/dashboard', '/account', '/project'];
+const PROTECTED = ['/dashboard', '/account', '/settings', '/project'];
 const AUTH_ONLY = ['/auth'];
 
 export function classifyRoute(pathname: string): 'protected' | 'auth' | 'public' {
