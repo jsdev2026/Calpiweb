@@ -11,6 +11,8 @@ const mockDelete = vi.fn();
 const mockGetUser = vi.fn();
 const mockIn = vi.fn();
 const mockGt = vi.fn();
+const mockUpdate = vi.fn();
+const mockInsert = vi.fn();
 
 const mockChain = {
   select: mockSelect,
@@ -22,15 +24,21 @@ const mockChain = {
   delete: mockDelete,
   in: mockIn,
   gt: mockGt,
+  update: mockUpdate,
+  insert: mockInsert,
 };
 
 // Each method returns mockChain so calls can be chained
-mockSelect.mockReturnValue(mockChain);
-mockEq.mockReturnValue(mockChain);
-mockOrder.mockReturnValue(mockChain);
-mockDelete.mockReturnValue(mockChain);
-mockIn.mockReturnValue(mockChain);
-mockGt.mockReturnValue(mockChain);
+const resetChain = () => {
+  mockSelect.mockReturnValue(mockChain);
+  mockEq.mockReturnValue(mockChain);
+  mockOrder.mockReturnValue(mockChain);
+  mockDelete.mockReturnValue(mockChain);
+  mockIn.mockReturnValue(mockChain);
+  mockGt.mockReturnValue(mockChain);
+  mockUpdate.mockReturnValue(mockChain);
+};
+resetChain();
 
 vi.mock('@/lib/supabase/client', () => ({
   createClient: () => ({
@@ -121,16 +129,50 @@ describe('supabaseDb.get', () => {
 });
 
 describe('supabaseDb.save', () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    resetChain();
+  });
 
-  it('upserts project with user_id', async () => {
+  it('met à jour un projet existant sans jamais toucher user_id', async () => {
+    mockGetUser.mockResolvedValueOnce({ data: { user: { id: 'editor-2' } } });
+    // update(...).eq(...).select('id') → une ligne mise à jour
+    mockSelect.mockResolvedValueOnce({ data: [{ id: 'proj-1' }], error: null });
+    await supabaseDb.save({ ...makeProject(), myRole: 'editor' });
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.not.objectContaining({ user_id: expect.anything() }),
+    );
+    expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ name: 'Test' }));
+    expect(mockInsert).not.toHaveBeenCalled();
+    expect(mockUpsert).not.toHaveBeenCalled();
+  });
+
+  it('insère un nouveau projet avec user_id', async () => {
     mockGetUser.mockResolvedValueOnce({ data: { user: { id: 'user-1' } } });
-    mockUpsert.mockResolvedValueOnce({ error: null });
-    const p = makeProject();
-    await supabaseDb.save(p);
-    expect(mockUpsert).toHaveBeenCalledWith(
+    mockSelect.mockResolvedValueOnce({ data: [], error: null });
+    mockInsert.mockResolvedValueOnce({ error: null });
+    await supabaseDb.save(makeProject());
+    expect(mockInsert).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'proj-1', user_id: 'user-1', name: 'Test' }),
     );
+  });
+
+  it('traduit le refus RLS en PROJECT_LIMIT_REACHED', async () => {
+    mockGetUser.mockResolvedValueOnce({ data: { user: { id: 'user-1' } } });
+    mockSelect.mockResolvedValueOnce({ data: [], error: null });
+    mockInsert.mockResolvedValueOnce({
+      error: { code: '42501', message: 'new row violates row-level security policy' },
+    });
+    await expect(supabaseDb.save(makeProject())).rejects.toThrow('PROJECT_LIMIT_REACHED');
+  });
+
+  it("ne recrée jamais à son nom un projet partagé qu'il ne peut pas modifier", async () => {
+    mockGetUser.mockResolvedValueOnce({ data: { user: { id: 'viewer-3' } } });
+    mockSelect.mockResolvedValueOnce({ data: [], error: null });
+    await expect(supabaseDb.save({ ...makeProject(), myRole: 'viewer' })).rejects.toThrow(
+      'PROJECT_READ_ONLY',
+    );
+    expect(mockInsert).not.toHaveBeenCalled();
   });
 
   it('throws when not authenticated', async () => {
@@ -157,6 +199,15 @@ describe('supabaseDb.getProfile', () => {
     mockMaybeSingle.mockResolvedValueOnce({ data: { plan: 'pro' }, error: null });
     const profile = await supabaseDb.getProfile();
     expect(profile.plan).toBe('pro');
+  });
+
+  it('returns project credits', async () => {
+    mockGetUser.mockResolvedValueOnce({ data: { user: { id: 'user-1' } } });
+    mockMaybeSingle.mockResolvedValueOnce({
+      data: { plan: 'free', project_credits: 2 },
+      error: null,
+    });
+    expect(await supabaseDb.getProfile()).toEqual({ plan: 'free', projectCredits: 2 });
   });
 
   it('returns free plan when profile row does not exist', async () => {

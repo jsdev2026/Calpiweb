@@ -8,6 +8,8 @@ export interface AuthUser {
   name: string;
   email: string;
   plan: 'free' | 'pro';
+  /** Crédits « +1 projet » achetés (profiles.project_credits). */
+  projectCredits: number;
 }
 
 interface UiState {
@@ -42,7 +44,11 @@ export const useUiStore = create<UiState>((set, get) => ({
     }
 
     // Read plan from profiles table
-    const { data: profile } = await supabase.from('profiles').select('plan').single();
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('plan, project_credits')
+      .eq('id', authUser.id)
+      .maybeSingle();
 
     set({
       user: {
@@ -50,6 +56,7 @@ export const useUiStore = create<UiState>((set, get) => ({
         name: authUser.user_metadata?.name ?? authUser.email?.split('@')[0] ?? 'Utilisateur',
         email: authUser.email ?? '',
         plan: profile?.plan === 'pro' ? 'pro' : 'free',
+        projectCredits: (profile?.project_credits as number | null | undefined) ?? 0,
       },
     });
   },

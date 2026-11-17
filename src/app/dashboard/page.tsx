@@ -20,6 +20,7 @@ import type { Project, ProjectStatus } from '@/types/project';
 import { NewProjectModal } from '@/components/NewProjectModal';
 import { SharePanel } from '@/components/home/SharePanel';
 import { UpgradeModal } from '@/components/home/UpgradeModal';
+import { canCreateProject } from '@/lib/entitlements';
 import type { ClientInfo } from '@/types/project';
 import { wallsToRooms } from '@/engine/geometry/wallFaces';
 
@@ -850,8 +851,13 @@ export default function DashboardPage() {
     }
   };
 
+  // Limite du forfait : seuls les projets possédés comptent (pas ceux partagés avec moi)
+  const atProjectLimit =
+    !!user &&
+    !canCreateProject({ plan: user.plan, projectCredits: user.projectCredits ?? 0 }, projects);
+
   const handleNewProject = () => {
-    if (user?.plan === 'free' && projects.length >= 1) {
+    if (atProjectLimit) {
       setShowUpgradeModal(true);
     } else {
       setShowNewModal(true);
@@ -1240,7 +1246,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Upsell banner — free users at project limit */}
-        {user?.plan === 'free' && projects.length >= 1 && (
+        {atProjectLimit && (
           <div
             className="mb-5 flex items-center justify-between rounded-xl border px-5 py-3"
             style={{ background: 'var(--accent-l)', borderColor: 'var(--accent)' }}
