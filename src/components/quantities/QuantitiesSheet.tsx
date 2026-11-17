@@ -41,6 +41,7 @@ export const QuantitiesSheet = ({
   return (
     <div
       data-testid="quantities-sheet"
+      data-canvas-overlay
       className="absolute inset-x-0 bottom-0 z-20 flex flex-col rounded-t-2xl border-t mouse:inset-x-auto mouse:bottom-3 mouse:right-3 mouse:top-3 mouse:w-[340px] mouse:rounded-2xl mouse:border md:inset-x-auto md:bottom-3 md:right-3 md:top-3 md:w-[340px] md:rounded-2xl md:border"
       style={{
         background: 'var(--surf)',

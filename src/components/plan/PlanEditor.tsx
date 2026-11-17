@@ -48,7 +48,24 @@ export function computeInitialView(
   viewW: number,
   viewH: number,
 ): { scale: number; pan: { x: number; y: number } } | null {
-  const allPoints = rooms.flatMap((r) => r.points);
+  return computeFitView(
+    rooms.flatMap((r) => r.points),
+    viewW,
+    viewH,
+  );
+}
+
+/**
+ * Cadre un ensemble de points dans une zone visible de viewW × viewH,
+ * décalée de (offsetX, offsetY) par rapport au coin haut-gauche du canevas.
+ */
+export function computeFitView(
+  allPoints: Point[],
+  viewW: number,
+  viewH: number,
+  offsetX = 0,
+  offsetY = 0,
+): { scale: number; pan: { x: number; y: number } } | null {
   if (allPoints.length === 0) return null;
 
   const xs = allPoints.map((p) => p.x);
@@ -62,7 +79,8 @@ export function computeInitialView(
   const cx = (minX + maxX) / 2;
   const cy = (minY + maxY) / 2;
 
-  const PADDING = 80;
+  // Marge proportionnelle : 80 px sur ordinateur, ~30 px sur smartphone
+  const PADDING = Math.min(80, Math.max(24, Math.min(viewW, viewH) * 0.08));
   const newScale = Math.max(
     0.005,
     Math.min((viewW - PADDING * 2) / bboxW, (viewH - PADDING * 2) / bboxH, 0.5),
@@ -70,7 +88,44 @@ export function computeInitialView(
 
   return {
     scale: newScale,
-    pan: { x: viewW / 2 - cx * newScale, y: viewH / 2 - cy * newScale },
+    pan: {
+      x: offsetX + viewW / 2 - cx * newScale,
+      y: offsetY + viewH / 2 - cy * newScale,
+    },
+  };
+}
+
+/**
+ * Zone du canevas réellement visible : on retire les éléments posés par-dessus
+ * (barre d'outils mobile, panneaux Calepinage / Quantitatif) repérés par
+ * l'attribut data-canvas-overlay. Mesuré dans le DOM, donc juste quelle que soit
+ * la taille d'écran.
+ */
+export function visibleCanvasArea(container: HTMLElement): {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+} {
+  const c = container.getBoundingClientRect();
+  let top = c.top;
+  let bottom = c.bottom;
+  let right = c.right;
+  container.querySelectorAll<HTMLElement>('[data-canvas-overlay]').forEach((el) => {
+    const r = el.getBoundingClientRect();
+    if (r.width === 0 || r.height === 0) return; // masqué (display:none)
+    const fullWidth = r.width >= c.width * 0.9;
+    if (fullWidth && r.top > c.top + c.height / 2) bottom = Math.min(bottom, r.top);
+    else if (fullWidth) top = Math.max(top, r.bottom);
+    // Panneau latéral (ordinateur) : seulement s'il occupe une bonne partie de la hauteur
+    else if (r.left > c.left + c.width / 2 && r.height > c.height * 0.4)
+      right = Math.min(right, r.left);
+  });
+  return {
+    x: 0,
+    y: top - c.top,
+    w: Math.max(120, right - c.left),
+    h: Math.max(120, bottom - top),
   };
 }
 
@@ -144,27 +199,32 @@ export const PlanEditor = ({
     return () => clearTimeout(t);
   }, [mode]);
 
-  // Recadrage : en Calepinage / Quantitatif, la pièce est centrée dans la zone
-  // laissée libre par le panneau (bas sur mobile, droite sur ordinateur).
-  const sheetOpen = mode === 'TILING' ? tileSheetOpen : qtySheetOpen;
-  useEffect(() => {
-    if (mode === 'PLAN') return;
+  // Recadrage : à l'ouverture et à chaque changement d'onglet (Plan 2D / Calepinage /
+  // Quantitatif) ou de panneau, le plan est centré dans la zone réellement visible
+  // (hors barre d'outils mobile et panneaux posés sur le canevas).
+  const sheetOpen =
+    mode === 'TILING' ? tileSheetOpen : mode === 'QUANTITIES' ? qtySheetOpen : false;
+  const fitView = useCallback(() => {
     const el = containerRef.current;
     if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const wide = window.matchMedia('(min-width: 768px), (pointer: fine)').matches;
-    // Quantitatif : panneau toujours ouvert sur ordinateur ; Calepinage : seulement s'il est déplié
-    const reserveRight = wide && (mode === 'QUANTITIES' || sheetOpen) ? 360 : 0;
-    const reserveBottom = wide ? 0 : sheetOpen ? window.innerHeight * 0.42 + 64 : 64;
-    const view = computeInitialView(
-      selectRooms(useProjectStore.getState()),
-      Math.max(120, rect.width - reserveRight),
-      Math.max(120, rect.height - reserveBottom),
-    );
+    const state = useProjectStore.getState();
+    const nodes = selectActiveProject(state)?.wallEngine?.nodes ?? [];
+    const points =
+      nodes.length > 0
+        ? nodes.map((n) => ({ x: n.x, y: n.y }))
+        : selectRooms(state).flatMap((r) => r.points);
+    const area = visibleCanvasArea(el);
+    const view = computeFitView(points, area.w, area.h, area.x, area.y);
     if (!view) return;
     setScale(view.scale);
     setPan(view.pan);
-  }, [mode, sheetOpen]);
+  }, []);
+
+  useEffect(() => {
+    // Attendre la mise en page (panneaux affichés / masqués) avant de mesurer
+    const id = requestAnimationFrame(fitView);
+    return () => cancelAnimationFrame(id);
+  }, [mode, sheetOpen, fitView]);
 
   const liveRef = useRef<TilingConfig | null>(null);
 
@@ -241,15 +301,6 @@ export const PlanEditor = ({
   useEffect(() => {
     if (wallEngine === undefined) initWallEngine();
   }, []);
-
-  // Centrage initial sur le contenu existant
-  useEffect(() => {
-    const rooms = selectRooms(useProjectStore.getState());
-    const view = computeInitialView(rooms, window.innerWidth, window.innerHeight - 92);
-    if (!view) return;
-    setScale(view.scale);
-    setPan(view.pan);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── History ────────────────────────────────────────────────────────────
 
