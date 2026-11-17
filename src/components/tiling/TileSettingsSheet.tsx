@@ -1,11 +1,10 @@
 'use client';
 
-import { useState } from 'react';
-import { ArrowLeftRight, ChevronDown, ChevronUp, Hand, RotateCcw } from 'lucide-react';
+import { ArrowLeftRight, ChevronDown, ChevronUp, RotateCcw } from 'lucide-react';
 import type { TileLayout, TilingConfig } from '@/types/tiling';
 import type { QuantityResult } from '@/engine/quantities/quantityEngine';
 import { formatM2 } from '@/utils/formatters';
-import { NumberStepper } from './NumberStepper';
+import { CompactNumberInput } from './NumberStepper';
 
 // ── Données ──────────────────────────────────────────────────────────────────
 
@@ -27,13 +26,14 @@ const CHEVRON_PRESETS = [30, 45, 60];
 
 type PoseId = 'STRAIGHT_0' | 'STRAIGHT_33' | 'STRAIGHT_50' | 'HERRINGBONE' | 'CHEVRON';
 
-const POSES: { id: PoseId; label: string; layout: TileLayout; stagger?: number }[] = [
-  { id: 'STRAIGHT_0', label: 'Droit', layout: 'STRAIGHT', stagger: 0 },
-  { id: 'STRAIGHT_33', label: 'Décalé 1/3', layout: 'STRAIGHT', stagger: 33 },
-  { id: 'STRAIGHT_50', label: 'Décalé 1/2', layout: 'STRAIGHT', stagger: 50 },
-  { id: 'HERRINGBONE', label: 'Bâton rompu', layout: 'HERRINGBONE' },
-  { id: 'CHEVRON', label: 'Pt de Hongrie', layout: 'CHEVRON' },
-];
+const POSES: { id: PoseId; label: string; short: string; layout: TileLayout; stagger?: number }[] =
+  [
+    { id: 'STRAIGHT_0', label: 'Droit', short: 'Droit', layout: 'STRAIGHT', stagger: 0 },
+    { id: 'STRAIGHT_33', label: 'Décalé 1/3', short: '1/3', layout: 'STRAIGHT', stagger: 33 },
+    { id: 'STRAIGHT_50', label: 'Décalé 1/2', short: '1/2', layout: 'STRAIGHT', stagger: 50 },
+    { id: 'HERRINGBONE', label: 'Bâton rompu', short: 'Bâton', layout: 'HERRINGBONE' },
+    { id: 'CHEVRON', label: 'Pt de Hongrie', short: 'Hongrie', layout: 'CHEVRON' },
+  ];
 
 export function poseIdOf(config: TilingConfig): PoseId {
   if (config.layout === 'HERRINGBONE') return 'HERRINGBONE';
@@ -47,7 +47,8 @@ const cm = (mm: number) => String(Math.round(mm) / 10).replace('.', ',');
 
 export function tileSummary(config: TilingConfig): string {
   const pose = POSES.find((p) => p.id === poseIdOf(config))!.label;
-  return `${cm(config.width)} × ${cm(config.height)} cm · joint ${String(config.joint).replace('.', ',')} mm · ${pose}`;
+  const rot = config.angle ? ` · ${config.angle}°` : '';
+  return `${cm(config.width)} × ${cm(config.height)} cm · joint ${String(config.joint).replace('.', ',')} mm · ${pose}${rot}`;
 }
 
 // ── Vignettes de pose ────────────────────────────────────────────────────────
@@ -58,7 +59,7 @@ const PoseIcon = ({ id }: { id: PoseId }) => {
   switch (id) {
     case 'STRAIGHT_0':
       return (
-        <svg viewBox="0 0 36 24" width="36" height="24">
+        <svg viewBox="0 0 36 24" width="30" height="20">
           <rect x="0" y="0" width="17" height="11" {...s} />
           <rect x="19" y="0" width="17" height="11" {...g} />
           <rect x="0" y="13" width="17" height="11" {...g} />
@@ -67,7 +68,7 @@ const PoseIcon = ({ id }: { id: PoseId }) => {
       );
     case 'STRAIGHT_33':
       return (
-        <svg viewBox="0 0 36 24" width="36" height="24">
+        <svg viewBox="0 0 36 24" width="30" height="20">
           <rect x="0" y="0" width="17" height="11" {...s} />
           <rect x="19" y="0" width="17" height="11" {...g} />
           <rect x="-6" y="13" width="17" height="11" {...g} />
@@ -77,7 +78,7 @@ const PoseIcon = ({ id }: { id: PoseId }) => {
       );
     case 'STRAIGHT_50':
       return (
-        <svg viewBox="0 0 36 24" width="36" height="24">
+        <svg viewBox="0 0 36 24" width="30" height="20">
           <rect x="0" y="0" width="17" height="11" {...s} />
           <rect x="19" y="0" width="17" height="11" {...g} />
           <rect x="-9" y="13" width="17" height="11" {...g} />
@@ -87,7 +88,7 @@ const PoseIcon = ({ id }: { id: PoseId }) => {
       );
     case 'HERRINGBONE':
       return (
-        <svg viewBox="0 0 36 24" width="36" height="24">
+        <svg viewBox="0 0 36 24" width="30" height="20">
           <rect x="2" y="2" width="16" height="7" {...s} />
           <rect x="18" y="2" width="7" height="16" {...g} />
           <rect x="11" y="11" width="7" height="13" {...g} />
@@ -96,7 +97,7 @@ const PoseIcon = ({ id }: { id: PoseId }) => {
       );
     case 'CHEVRON':
       return (
-        <svg viewBox="0 0 36 24" width="36" height="24">
+        <svg viewBox="0 0 36 24" width="30" height="20">
           <path d="M2 4 L18 12 L18 19 L2 11 Z" {...s} />
           <path d="M18 12 L34 4 L34 11 L18 19 Z" {...g} />
           <path d="M2 13 L18 21 L18 24 L8 24 L2 21 Z" {...g} />
@@ -106,49 +107,50 @@ const PoseIcon = ({ id }: { id: PoseId }) => {
   }
 };
 
-// ── UI ───────────────────────────────────────────────────────────────────────
+// ── UI compacte ──────────────────────────────────────────────────────────────
+
+const activeStyle = {
+  borderColor: 'var(--accent)',
+  background: 'color-mix(in srgb, var(--accent) 12%, transparent)',
+  color: 'var(--accent)',
+};
+const idleStyle = { borderColor: 'var(--bdr)', background: 'var(--surf2)', color: 'var(--text2)' };
 
 const Chip = ({
   active,
   onClick,
   children,
   ariaLabel,
+  className = '',
 }: {
   active: boolean;
   onClick: () => void;
   children: React.ReactNode;
   ariaLabel?: string;
+  className?: string;
 }) => (
   <button
     type="button"
     aria-pressed={active}
     aria-label={ariaLabel}
     onClick={onClick}
-    className="flex min-h-[44px] items-center justify-center rounded-xl border px-3 text-[13px] font-semibold transition-colors active:scale-95"
-    style={
-      active
-        ? {
-            borderColor: 'var(--accent)',
-            background: 'color-mix(in srgb, var(--accent) 12%, transparent)',
-            color: 'var(--accent)',
-          }
-        : { borderColor: 'var(--bdr)', background: 'var(--surf2)', color: 'var(--text2)' }
-    }
+    className={`flex h-9 shrink-0 items-center justify-center whitespace-nowrap rounded-lg border px-2.5 text-[12.5px] font-semibold transition-colors active:scale-95 ${className}`}
+    style={active ? activeStyle : idleStyle}
   >
     {children}
   </button>
 );
 
-const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
-  <section className="flex flex-col gap-2">
-    <h4
-      className="text-[11px] font-bold uppercase tracking-wider"
+const Row = ({ label, children }: { label: string; children: React.ReactNode }) => (
+  <div className="flex flex-col gap-1.5">
+    <span
+      className="text-[10.5px] font-bold uppercase tracking-wider"
       style={{ color: 'var(--muted)' }}
     >
-      {title}
-    </h4>
+      {label}
+    </span>
     {children}
-  </section>
+  </div>
 );
 
 export interface TileSettingsSheetProps {
@@ -157,8 +159,6 @@ export interface TileSettingsSheetProps {
   result: QuantityResult;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  moveMode: boolean;
-  onMoveModeChange: (on: boolean) => void;
   onOrigin: (origin: 'CORNER' | 'CENTER') => void;
   onShowQuantities: () => void;
   readOnly?: boolean;
@@ -170,24 +170,19 @@ export const TileSettingsSheet = ({
   result,
   open,
   onOpenChange,
-  moveMode,
-  onMoveModeChange,
   onOrigin,
   onShowQuantities,
   readOnly = false,
 }: TileSettingsSheetProps) => {
-  const [advancedOpen, setAdvancedOpen] = useState(false);
   const update = (patch: Partial<TilingConfig>) => {
     if (!readOnly) onChange({ ...config, ...patch });
   };
-
   const poseId = poseIdOf(config);
-  const isPreset = FORMAT_PRESETS.some(([w, h]) => w === config.width && h === config.height);
 
   return (
     <div
       data-testid="tile-settings-sheet"
-      className="absolute inset-x-0 bottom-0 z-20 flex flex-col rounded-t-2xl border-t mouse:inset-x-auto mouse:bottom-3 mouse:right-3 mouse:top-3 mouse:w-[340px] mouse:rounded-2xl mouse:border md:inset-x-auto md:bottom-3 md:right-3 md:top-3 md:w-[340px] md:rounded-2xl md:border"
+      className="absolute inset-x-0 bottom-0 z-20 flex flex-col rounded-t-2xl border-t mouse:inset-x-auto mouse:bottom-auto mouse:right-3 mouse:top-3 mouse:max-h-[calc(100%-1.5rem)] mouse:w-[320px] mouse:rounded-2xl mouse:border md:inset-x-auto md:bottom-auto md:right-3 md:top-3 md:max-h-[calc(100%-1.5rem)] md:w-[320px] md:rounded-2xl md:border"
       style={{
         background: 'var(--surf)',
         borderColor: 'var(--bdr)',
@@ -195,62 +190,57 @@ export const TileSettingsSheet = ({
         paddingBottom: 'env(safe-area-inset-bottom)',
       }}
     >
-      {/* En-tête = résumé toujours visible, touche pour ouvrir / fermer */}
+      {/* Bandeau résumé — toujours visible, touche pour ouvrir / fermer */}
       <button
         type="button"
         onClick={() => onOpenChange(!open)}
         aria-expanded={open}
-        className="flex w-full shrink-0 flex-col items-stretch px-4 pb-2.5 pt-1.5 text-left"
+        aria-label="Réglages du carreau"
+        className="flex w-full shrink-0 items-center gap-2 px-3 py-2 text-left"
       >
         <span
-          className="mx-auto mb-1.5 h-1 w-10 rounded-full mouse:hidden md:hidden"
-          style={{ background: 'var(--bdr2, var(--bdr))' }}
+          className="h-3.5 w-3.5 shrink-0 rounded"
+          style={{ background: config.color, border: '1px solid var(--bdr)' }}
         />
-        <span className="flex items-center gap-2">
-          <span
-            className="h-4 w-4 shrink-0 rounded"
-            style={{ background: config.color, border: '1px solid var(--bdr)' }}
-          />
-          <span
-            className="min-w-0 flex-1 truncate text-[14px] font-bold"
-            style={{ color: 'var(--text)' }}
-          >
+        <span className="flex min-w-0 flex-1 flex-col">
+          <span className="truncate text-[13px] font-bold" style={{ color: 'var(--text)' }}>
             {tileSummary(config)}
           </span>
-          <span className="mouse:hidden md:hidden">
-            {open ? (
-              <ChevronDown size={18} style={{ color: 'var(--muted)' }} />
-            ) : (
-              <ChevronUp size={18} style={{ color: 'var(--muted)' }} />
-            )}
-          </span>
+          {result.roomArea > 0 && (
+            <span className="truncate text-[11.5px]" style={{ color: 'var(--muted)' }}>
+              {formatM2(result.roomArea)} ·{' '}
+              <strong style={{ color: 'var(--text2)' }}>{result.toOrder} carreaux</strong> à
+              commander
+            </span>
+          )}
         </span>
-        {result.roomArea > 0 && (
-          <span className="mt-0.5 pl-6 text-[12px]" style={{ color: 'var(--muted)' }}>
-            {formatM2(result.roomArea)} ·{' '}
-            <strong style={{ color: 'var(--text2)' }}>{result.toOrder} carreaux</strong> à commander
-          </span>
+        {open ? (
+          <ChevronDown size={18} style={{ color: 'var(--muted)' }} />
+        ) : (
+          <ChevronUp size={18} style={{ color: 'var(--muted)' }} />
         )}
       </button>
 
-      {/* Mobile : ouvert / fermé. Ordinateur : toujours ouvert (panneau latéral). */}
       <div
         data-open={open}
-        className={`${open ? 'flex' : 'hidden'} max-h-[46svh] flex-col gap-5 overflow-y-auto border-t px-4 pb-4 pt-4 mouse:flex mouse:max-h-none mouse:flex-1 md:flex md:max-h-none md:flex-1`}
+        className={`${open ? 'flex' : 'hidden'} max-h-[42svh] flex-col gap-3 overflow-y-auto border-t px-3 pb-3 pt-2.5 mouse:max-h-none md:max-h-none`}
         style={{ borderColor: 'var(--bdr)' }}
       >
         {readOnly && (
           <p
-            className="rounded-lg px-3 py-2 text-[12px]"
+            className="rounded-lg px-2.5 py-1.5 text-[12px]"
             style={{ background: 'var(--surf2)', color: 'var(--muted)' }}
           >
             Lecture seule — les réglages ne peuvent pas être modifiés.
           </p>
         )}
 
-        {/* Format */}
-        <Section title="Format du carreau">
-          <div className="grid grid-cols-4 gap-2">
+        {/* Format : formats courants (défilement horizontal) + saisie libre */}
+        <Row label="Format (cm)">
+          <div
+            className="-mx-3 flex gap-1.5 overflow-x-auto px-3 pb-0.5"
+            style={{ scrollbarWidth: 'none' }}
+          >
             {FORMAT_PRESETS.map(([w, h]) => (
               <Chip
                 key={`${w}x${h}`}
@@ -262,242 +252,175 @@ export const TileSettingsSheet = ({
               </Chip>
             ))}
           </div>
-          <div className="mt-1 grid grid-cols-1 gap-2">
-            <NumberStepper
+          <div className="flex items-center gap-1.5">
+            <CompactNumberInput
               label="Largeur"
               unit="cm"
               value={config.width / 10}
-              step={1}
               min={1}
               max={400}
               onChange={(v) => update({ width: Math.round(v * 10) })}
+              className="flex-1"
             />
-            <NumberStepper
+            <span className="text-[13px]" style={{ color: 'var(--muted)' }}>
+              ×
+            </span>
+            <CompactNumberInput
               label="Longueur"
               unit="cm"
               value={config.height / 10}
-              step={1}
               min={1}
               max={400}
               onChange={(v) => update({ height: Math.round(v * 10) })}
+              className="flex-1"
             />
             <button
               type="button"
               aria-label="Inverser largeur et longueur"
+              title="Inverser"
               onClick={() => update({ width: config.height, height: config.width })}
-              className="flex min-h-[40px] items-center justify-center gap-1.5 rounded-xl text-[12px] font-semibold"
-              style={{ color: 'var(--text2)' }}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border"
+              style={idleStyle}
             >
-              <ArrowLeftRight size={15} /> Inverser (pose en largeur / en longueur)
+              <ArrowLeftRight size={15} />
             </button>
           </div>
-          {!isPreset && (
-            <p className="text-[11px]" style={{ color: 'var(--muted)' }}>
-              Format sur mesure
-            </p>
-          )}
-        </Section>
+        </Row>
 
         {/* Joint */}
-        <Section title="Joint">
-          <div className="flex items-end gap-2">
-            <div className="grid flex-1 grid-cols-4 gap-2">
-              {JOINT_PRESETS.map((j) => (
-                <Chip
-                  key={j}
-                  active={config.joint === j}
-                  onClick={() => update({ joint: j })}
-                  ariaLabel={`Joint ${j} mm`}
-                >
-                  {j} mm
-                </Chip>
-              ))}
-            </div>
+        <Row label="Joint (mm)">
+          <div className="flex items-center gap-1.5">
+            {JOINT_PRESETS.map((j) => (
+              <Chip
+                key={j}
+                active={config.joint === j}
+                onClick={() => update({ joint: j })}
+                ariaLabel={`Joint ${j} mm`}
+                className="flex-1"
+              >
+                {j}
+              </Chip>
+            ))}
+            <CompactNumberInput
+              label="Joint"
+              unit="mm"
+              value={config.joint}
+              min={0}
+              max={30}
+              onChange={(v) => update({ joint: v })}
+              className="w-[76px] shrink-0"
+            />
           </div>
-          {!JOINT_PRESETS.includes(config.joint) && (
-            <p className="text-[11px]" style={{ color: 'var(--muted)' }}>
-              Joint actuel : {String(config.joint).replace('.', ',')} mm
-            </p>
-          )}
-          <NumberStepper
-            label="Autre valeur"
-            unit="mm"
-            value={config.joint}
-            step={0.5}
-            min={0}
-            max={30}
-            onChange={(v) => update({ joint: v })}
-          />
-        </Section>
+        </Row>
 
         {/* Pose */}
-        <Section title="Pose">
-          <div className="grid grid-cols-3 gap-2 mouse:grid-cols-3 sm:grid-cols-5 md:grid-cols-3">
+        <Row label="Pose">
+          <div className="grid grid-cols-5 gap-1.5">
             {POSES.map((p) => (
               <button
                 key={p.id}
                 type="button"
                 aria-pressed={poseId === p.id}
+                aria-label={p.label}
+                title={p.label}
                 onClick={() =>
                   update({
                     layout: p.layout,
                     ...(p.stagger !== undefined ? { stagger: p.stagger } : {}),
                   })
                 }
-                className="flex min-h-[64px] flex-col items-center justify-center gap-1 rounded-xl border px-1 py-2 text-[12px] font-semibold transition-colors active:scale-95"
-                style={
-                  poseId === p.id
-                    ? {
-                        borderColor: 'var(--accent)',
-                        background: 'color-mix(in srgb, var(--accent) 12%, transparent)',
-                        color: 'var(--accent)',
-                      }
-                    : {
-                        borderColor: 'var(--bdr)',
-                        background: 'var(--surf2)',
-                        color: 'var(--text2)',
-                      }
-                }
+                className="flex h-12 flex-col items-center justify-center gap-0.5 rounded-lg border text-[10.5px] font-semibold transition-colors active:scale-95"
+                style={poseId === p.id ? activeStyle : idleStyle}
               >
                 <PoseIcon id={p.id} />
-                <span className="leading-tight">{p.label}</span>
+                <span className="leading-none">{p.short}</span>
               </button>
             ))}
           </div>
           {config.layout === 'CHEVRON' && (
-            <div className="mt-1 flex flex-col gap-2">
-              <span className="text-[12px] font-semibold" style={{ color: 'var(--text2)' }}>
-                Angle de coupe
+            <div className="flex items-center gap-1.5">
+              <span className="text-[12px]" style={{ color: 'var(--text2)' }}>
+                Coupe
               </span>
-              <div className="grid grid-cols-3 gap-2">
-                {CHEVRON_PRESETS.map((a) => (
-                  <Chip
-                    key={a}
-                    active={config.chevronAngle === a}
-                    onClick={() => update({ chevronAngle: a })}
-                  >
-                    {a}°
-                  </Chip>
-                ))}
-              </div>
+              {CHEVRON_PRESETS.map((a) => (
+                <Chip
+                  key={a}
+                  active={config.chevronAngle === a}
+                  onClick={() => update({ chevronAngle: a })}
+                  className="flex-1"
+                >
+                  {a}°
+                </Chip>
+              ))}
             </div>
           )}
-        </Section>
+        </Row>
 
-        {/* Ajustements */}
-        <section
-          className="flex flex-col gap-3 rounded-xl border p-3"
-          style={{ borderColor: 'var(--bdr)' }}
-        >
-          <button
-            type="button"
-            onClick={() => setAdvancedOpen((v) => !v)}
-            aria-expanded={advancedOpen}
-            className="flex min-h-[32px] items-center justify-between text-[13px] font-bold"
-            style={{ color: 'var(--text)' }}
-          >
-            Ajustements
-            {advancedOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-          </button>
-
-          {/* Déplacer la pose au doigt : toujours accessible */}
-          <button
-            type="button"
-            aria-pressed={moveMode}
-            onClick={() => onMoveModeChange(!moveMode)}
-            disabled={readOnly}
-            className="flex min-h-[44px] items-center gap-2 rounded-xl border px-3 text-[13px] font-semibold transition-colors"
-            style={
-              moveMode
-                ? { borderColor: 'var(--accent)', background: 'var(--accent)', color: '#fff' }
-                : { borderColor: 'var(--bdr)', background: 'var(--surf2)', color: 'var(--text2)' }
-            }
-          >
-            <Hand size={16} />
-            {moveMode
-              ? 'Glissez les carreaux sur le plan — toucher pour terminer'
-              : 'Déplacer la pose au doigt'}
-          </button>
-
-          {advancedOpen && (
-            <>
-              <div className="flex flex-col gap-2">
-                <span className="text-[12px] font-semibold" style={{ color: 'var(--text2)' }}>
-                  Point de départ
-                </span>
-                <div className="grid grid-cols-2 gap-2">
-                  <Chip active={false} onClick={() => !readOnly && onOrigin('CENTER')}>
-                    Centré
-                  </Chip>
-                  <Chip active={false} onClick={() => !readOnly && onOrigin('CORNER')}>
-                    {config.layout === 'STRAIGHT' ? 'Depuis l’angle ↖' : 'Réinitialiser'}
-                  </Chip>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <span className="text-[12px] font-semibold" style={{ color: 'var(--text2)' }}>
-                  Orientation
-                </span>
-                <div className="grid grid-cols-3 gap-2">
-                  {ANGLE_PRESETS.map((a) => (
-                    <Chip key={a} active={config.angle === a} onClick={() => update({ angle: a })}>
-                      {a}°
-                    </Chip>
-                  ))}
-                </div>
-                <NumberStepper
-                  label="Angle libre"
-                  unit="°"
-                  value={config.angle}
-                  step={1}
-                  min={0}
-                  max={90}
-                  onChange={(v) => update({ angle: Math.round(v) })}
-                />
-              </div>
-
-              {config.layout === 'STRAIGHT' && (
-                <div className="grid grid-cols-1 gap-2">
-                  <NumberStepper
-                    label="Décalage horizontal"
-                    unit="mm"
-                    value={config.offsetX}
-                    step={5}
-                    min={-10000}
-                    max={10000}
-                    onChange={(v) => update({ offsetX: Math.round(v) })}
-                  />
-                  <NumberStepper
-                    label="Décalage vertical"
-                    unit="mm"
-                    value={config.offsetY}
-                    step={5}
-                    min={-10000}
-                    max={10000}
-                    onChange={(v) => update({ offsetY: Math.round(v) })}
-                  />
-                </div>
-              )}
-
-              <button
-                type="button"
-                onClick={() => update({ offsetX: 0, offsetY: 0, angle: 0 })}
-                className="flex min-h-[40px] items-center justify-center gap-1.5 text-[12px] font-semibold"
-                style={{ color: 'var(--muted)' }}
+        {/* Rotation */}
+        <Row label="Rotation">
+          <div className="flex items-center gap-1.5">
+            {ANGLE_PRESETS.map((a) => (
+              <Chip
+                key={a}
+                active={config.angle === a}
+                onClick={() => update({ angle: a })}
+                ariaLabel={`Rotation ${a}°`}
               >
-                <RotateCcw size={14} /> Remettre la pose à zéro
-              </button>
-            </>
-          )}
-        </section>
+                {a}°
+              </Chip>
+            ))}
+            <input
+              type="range"
+              min={0}
+              max={90}
+              step={1}
+              aria-label="Rotation libre"
+              value={config.angle}
+              disabled={readOnly}
+              onChange={(e) => update({ angle: parseInt(e.target.value, 10) })}
+              className="h-9 min-w-0 flex-1 cursor-pointer accent-orange-500"
+            />
+            <span
+              className="w-9 shrink-0 text-right text-[13px] font-bold tabular-nums"
+              style={{ color: 'var(--accent)' }}
+            >
+              {config.angle}°
+            </span>
+          </div>
+        </Row>
+
+        {/* Point de départ (le réglage fin se fait au doigt sur le plan) */}
+        <Row label="Départ de la pose">
+          <div className="flex items-center gap-1.5">
+            <Chip active={false} onClick={() => !readOnly && onOrigin('CENTER')} className="flex-1">
+              Centré
+            </Chip>
+            {config.layout === 'STRAIGHT' && (
+              <Chip
+                active={false}
+                onClick={() => !readOnly && onOrigin('CORNER')}
+                className="flex-1"
+              >
+                Angle ↖
+              </Chip>
+            )}
+            <Chip
+              active={false}
+              ariaLabel="Remettre la pose à zéro"
+              onClick={() => update({ offsetX: 0, offsetY: 0, angle: 0 })}
+            >
+              <RotateCcw size={14} />
+            </Chip>
+          </div>
+        </Row>
 
         <button
           type="button"
           onClick={onShowQuantities}
-          className="btn-secondary min-h-[44px] text-[13px]"
+          className="self-end text-[12.5px] font-semibold underline-offset-2 hover:underline"
+          style={{ color: 'var(--accent)' }}
         >
-          Voir le quantitatif détaillé
+          Voir le quantitatif →
         </button>
       </div>
     </div>

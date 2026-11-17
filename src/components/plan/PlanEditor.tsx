@@ -124,19 +124,24 @@ export const PlanEditor = ({
   // Valeur « en direct » pendant un glisser — enregistrée au lâcher uniquement
   const [liveConfig, setLiveConfig] = useState<TilingConfig | null>(null);
   const config = liveConfig ?? storedConfig;
-  const [moveMode, setMoveMode] = useState(false);
+  // Le Calepinage s'ouvre sur le plan : panneau replié par défaut
   const [tileSheetOpen, setTileSheetOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const [qtySheetOpen, setQtySheetOpen] = useState(false);
   const [highlightGroup, setHighlightGroup] = useState<number | null>(null);
+  const [gestureHint, setGestureHint] = useState(false);
 
   const result = useMemo(
     () => (showTiles ? analyzeQuantities(rooms, config, wallThickness, doorOpenings) : null),
     [showTiles, rooms, config, wallThickness, doorOpenings],
   );
 
+  // Aide gestuelle affichée quelques secondes à l'entrée du Calepinage
   useEffect(() => {
-    if (mode !== 'TILING') setMoveMode(false);
+    if (mode !== 'TILING') return;
+    setGestureHint(true);
+    const t = setTimeout(() => setGestureHint(false), 4500);
+    return () => clearTimeout(t);
   }, [mode]);
 
   // Recadrage : en Calepinage / Quantitatif, la pièce est centrée dans la zone
@@ -148,8 +153,9 @@ export const PlanEditor = ({
     if (!el) return;
     const rect = el.getBoundingClientRect();
     const wide = window.matchMedia('(min-width: 768px), (pointer: fine)').matches;
-    const reserveRight = wide ? 370 : 0;
-    const reserveBottom = wide ? 0 : sheetOpen ? window.innerHeight * 0.46 + 90 : 90;
+    // Quantitatif : panneau toujours ouvert sur ordinateur ; Calepinage : seulement s'il est déplié
+    const reserveRight = wide && (mode === 'QUANTITIES' || sheetOpen) ? 360 : 0;
+    const reserveBottom = wide ? 0 : sheetOpen ? window.innerHeight * 0.42 + 64 : 64;
     const view = computeInitialView(
       selectRooms(useProjectStore.getState()),
       Math.max(120, rect.width - reserveRight),
@@ -186,6 +192,13 @@ export const PlanEditor = ({
     }
     setLiveConfig(null);
   }, [rooms, wallThickness, doorOpenings, setConfig]);
+
+  // Un 2e doigt transforme le geste en zoom / déplacement du plan :
+  // on annule le léger déplacement de pose fait par le 1er doigt.
+  const handleTileDragCancel = useCallback(() => {
+    liveRef.current = null;
+    setLiveConfig(null);
+  }, []);
 
   const handleOrigin = useCallback(
     (origin: 'CORNER' | 'CENTER') => {
@@ -302,10 +315,7 @@ export const PlanEditor = ({
   // Ctrl+Z / Ctrl+Y
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
-      if (mode !== 'PLAN') {
-        if (e.key === 'Escape') setMoveMode(false);
-        return;
-      }
+      if (mode !== 'PLAN') return;
       if (e.key === 'z' && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
         e.preventDefault();
         if (pastRef.current.length > 0) handleUndo();
@@ -364,25 +374,24 @@ export const PlanEditor = ({
             result={result}
             open={tileSheetOpen}
             onOpenChange={setTileSheetOpen}
-            moveMode={moveMode}
-            onMoveModeChange={(on) => {
-              setMoveMode(on);
-              if (on) setTileSheetOpen(false);
-            }}
             onOrigin={handleOrigin}
             onShowQuantities={() => onModeChange?.('QUANTITIES')}
             readOnly={readOnly}
           />
         )}
-        {mode === 'TILING' && moveMode && (
-          <button
-            type="button"
-            onClick={() => setMoveMode(false)}
-            className="absolute left-1/2 top-3 z-20 flex min-h-[44px] -translate-x-1/2 items-center gap-2 rounded-full px-4 text-[13px] font-semibold text-white shadow-lg"
-            style={{ background: 'var(--accent)' }}
+        {mode === 'TILING' && gestureHint && !readOnly && (
+          <div
+            role="status"
+            data-testid="gesture-hint"
+            className="pointer-events-none absolute left-1/2 top-3 z-20 -translate-x-1/2 whitespace-nowrap rounded-full px-3.5 py-1.5 text-[12px] font-medium shadow-md"
+            style={{
+              background: 'var(--surf)',
+              border: '1px solid var(--bdr)',
+              color: 'var(--text2)',
+            }}
           >
-            Glissez pour déplacer la pose · Terminer
-          </button>
+            1 doigt : déplacer les carreaux · 2 doigts : déplacer le plan
+          </div>
         )}
         {mode === 'QUANTITIES' && result && (
           <QuantitiesSheet
@@ -411,8 +420,9 @@ export const PlanEditor = ({
               />
             ) : undefined
           }
-          onViewDrag={mode === 'TILING' && moveMode && !readOnly ? handleTileDrag : null}
+          onViewDrag={mode === 'TILING' && !readOnly ? handleTileDrag : null}
           onViewDragEnd={handleTileDragEnd}
+          onViewDragCancel={handleTileDragCancel}
           walls={wallEngine?.walls ?? []}
           nodes={wallEngine?.nodes ?? []}
           tool={

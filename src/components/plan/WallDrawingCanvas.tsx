@@ -75,6 +75,8 @@ interface WallDrawingCanvasProps {
   /** Si fourni (et viewOnly), un glisser déplace la pose au lieu de la vue. dx/dy en mm. */
   onViewDrag?: ((dx: number, dy: number) => void) | null;
   onViewDragEnd?: () => void;
+  /** Glisser interrompu par un 2e doigt (le geste devient zoom / déplacement du plan). */
+  onViewDragCancel?: () => void;
 }
 
 function screenToWorld(pt: Point, pan: Point, scale: number): Point {
@@ -140,6 +142,7 @@ export const WallDrawingCanvas = ({
   worldLayer,
   onViewDrag = null,
   onViewDragEnd,
+  onViewDragCancel,
 }: WallDrawingCanvasProps) => {
   const viewDragRef = useRef<Point | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
@@ -977,6 +980,7 @@ export const WallDrawingCanvas = ({
     if (e.touches.length >= 2) {
       e.preventDefault();
       // Le 2e doigt annule un glisser de pose / de vue démarré par le 1er
+      if (viewDragRef.current) onViewDragCancel?.();
       viewDragRef.current = null;
       if (viewOnly) {
         setIsPanning(false);
@@ -1148,6 +1152,7 @@ export const WallDrawingCanvas = ({
   })();
 
   const svgCursor = (() => {
+    if (viewOnly) return onViewDrag ? 'move' : 'grab';
     if (tool === 'LOCK') return 'pointer';
     if (tool !== 'SELECT') return 'crosshair';
     if (draggingWallId) return 'grabbing';

@@ -16,8 +16,6 @@ const setup = (overrides: Partial<React.ComponentProps<typeof TileSettingsSheet>
       result={result}
       open
       onOpenChange={() => {}}
-      moveMode={false}
-      onMoveModeChange={() => {}}
       onOrigin={() => {}}
       onShowQuantities={() => {}}
       {...overrides}
@@ -69,9 +67,27 @@ describe('TileSettingsSheet', () => {
   it('replié, affiche seulement le résumé', () => {
     setup({ open: false });
     expect(screen.getByText(/30 × 60 cm/)).toBeTruthy();
-    // Le corps est masqué sur mobile (classe hidden), toujours visible sur ordinateur via md:flex
-    expect(screen.getByText('Format du carreau').closest('[data-open]')?.className).toMatch(
+    expect(screen.getByText('Format (cm)').closest('[data-open]')?.className).toMatch(
       /(^|\s)hidden(\s|$)/,
     );
+  });
+
+  it('règle la rotation par bouton rapide et par curseur', () => {
+    const { onChange } = setup();
+    fireEvent.click(screen.getByRole('button', { name: 'Rotation 45°' }));
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ angle: 45 }));
+    fireEvent.change(screen.getByRole('slider', { name: 'Rotation libre' }), {
+      target: { value: '12' },
+    });
+    expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ angle: 12 }));
+  });
+
+  it("n'affiche plus de bouton pour déplacer la pose", () => {
+    setup();
+    expect(screen.queryByText(/Déplacer la pose/)).toBeNull();
+  });
+
+  it('affiche la rotation dans le résumé quand elle est non nulle', () => {
+    expect(tileSummary({ ...DEFAULT_TILING_CONFIG, angle: 45 })).toMatch(/· 45°$/);
   });
 });
