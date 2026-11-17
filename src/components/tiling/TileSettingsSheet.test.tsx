@@ -72,6 +72,24 @@ describe('TileSettingsSheet', () => {
     );
   });
 
+  it('active la cotation du carreau de départ', () => {
+    const { onChange } = setup();
+    fireEvent.click(screen.getByRole('button', { name: /Coter le carreau de départ/ }));
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ showStartTile: true }));
+  });
+
+  it('choix du carreau de départ : bouton « Choisir » puis retour en automatique', () => {
+    const onPickStart = vi.fn();
+    const { onChange } = setup({
+      config: { ...DEFAULT_TILING_CONFIG, showStartTile: true, startTile: { x: 10, y: 20 } },
+      onPickStart,
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Choisir le carreau/ }));
+    expect(onPickStart).toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Automatique' }));
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ startTile: undefined }));
+  });
+
   it('règle la rotation par bouton rapide et par curseur', () => {
     const { onChange } = setup();
     fireEvent.click(screen.getByRole('button', { name: 'Rotation 45°' }));
