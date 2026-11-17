@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Room } from '@/types/project';
 import type { Tile, TilingConfig } from '@/types/tiling';
 import { DEFAULT_TILING_CONFIG } from '@/constants/tileDefaults';
-import { computeStartTiles, formatCote } from './startTile';
+import { computeStartTiles, formatCote, pickStartTile } from './startTile';
 
 // Pièce 3000 × 2000 (axes des murs), murs de 100 → faces intérieures de 50 à 2950 / 50 à 1950
 const room: Room = {
@@ -76,5 +76,50 @@ describe('formatCote', () => {
   it('formate en cm avec une décimale', () => {
     expect(formatCote(325)).toBe('32,5 cm');
     expect(formatCote(1000)).toBe('100,0 cm');
+  });
+});
+
+describe('carreau de départ choisi par l’utilisateur', () => {
+  it('pickStartTile mémorise le centre du carreau touché, moins le décalage de pose', () => {
+    const tiles = [tile(300, 200), tile(1200, 700)];
+    const picked = pickStartTile(
+      { x: 1400, y: 900 },
+      [room],
+      tiles,
+      cfg({ offsetX: 40, offsetY: 10 }),
+    );
+    expect(picked).toEqual({ x: 1500 - 40, y: 1000 - 10 });
+  });
+
+  it('pickStartTile renvoie null hors des carreaux', () => {
+    expect(pickStartTile({ x: 5000, y: 5000 }, [room], [tile(300, 200)], cfg())).toBeNull();
+  });
+
+  it('le carreau choisi est coté depuis l’angle de la pièce le plus proche', () => {
+    // Carreau près de l'angle bas-droite (2950, 1950)
+    const tiles = [tile(300, 200), tile(2200, 1200)];
+    const [m] = computeStartTiles(
+      [room],
+      tiles,
+      cfg({ startTile: { x: 2500, y: 1500 }, offsetX: 0, offsetY: 0 }),
+      100,
+    );
+    expect(m!.manual).toBe(true);
+    expect(m!.roomCorner).toEqual({ x: 2950, y: 1950 });
+    expect(m!.corner).toEqual({ x: 2800, y: 1800 });
+    expect(m!.cotes.map((c) => Math.round(c.value)).sort((a, b) => a - b)).toEqual([150, 150]);
+  });
+
+  it('le choix suit la pose quand on la fait glisser (décalage)', () => {
+    // Le carreau choisi (centre 2500,1500 à décalage nul) se retrouve en 2600,1550
+    const tiles = [tile(2300, 1250), tile(2200, 1200, 'OUTSIDE')];
+    const [m] = computeStartTiles(
+      [room],
+      tiles,
+      cfg({ startTile: { x: 2500, y: 1500 }, offsetX: 100, offsetY: 50 }),
+      100,
+    );
+    expect(m!.manual).toBe(true);
+    expect(m!.tile[0]).toEqual({ x: 2300, y: 1250 });
   });
 });

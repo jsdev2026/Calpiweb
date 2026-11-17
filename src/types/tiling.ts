@@ -25,6 +25,12 @@ export interface TilingConfig {
   marginOverride?: number; // si défini, remplace la marge auto-calibrée
   /** Affiche et cote le carreau de départ (repère de pose pour le chantier) */
   showStartTile?: boolean;
+  /**
+   * Carreau de départ choisi par l'utilisateur : centre du carreau dans le repère des
+   * carreaux, moins le décalage de pose (le repère suit donc la pose quand on la fait glisser).
+   * Absent → choix automatique dans l'angle haut-gauche de chaque pièce.
+   */
+  startTile?: { x: number; y: number };
   consumableParams?: ConsumableParams;
 }
 

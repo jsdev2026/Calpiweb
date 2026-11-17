@@ -161,6 +161,8 @@ export interface TileSettingsSheetProps {
   onOpenChange: (open: boolean) => void;
   onOrigin: (origin: 'CORNER' | 'CENTER') => void;
   onShowQuantities: () => void;
+  /** Passe en mode « toucher un carreau » pour choisir le carreau de départ */
+  onPickStart?: () => void;
   readOnly?: boolean;
 }
 
@@ -172,6 +174,7 @@ export const TileSettingsSheet = ({
   onOpenChange,
   onOrigin,
   onShowQuantities,
+  onPickStart,
   readOnly = false,
 }: TileSettingsSheetProps) => {
   const update = (patch: Partial<TilingConfig>) => {
@@ -420,9 +423,29 @@ export const TileSettingsSheet = ({
             📐 Coter le carreau de départ
           </Chip>
           {config.showStartTile && (
-            <span className="text-[11.5px] leading-snug" style={{ color: 'var(--text2)' }}>
-              Le carreau « D » est coté depuis les murs de l&apos;angle haut-gauche de chaque pièce.
-            </span>
+            <>
+              <div className="flex items-center gap-1.5">
+                {onPickStart && !readOnly && (
+                  <Chip active={false} onClick={onPickStart} className="flex-1">
+                    👆 Choisir le carreau
+                  </Chip>
+                )}
+                {config.startTile && (
+                  <Chip
+                    active={false}
+                    onClick={() => update({ startTile: undefined })}
+                    className="flex-1"
+                  >
+                    Automatique
+                  </Chip>
+                )}
+              </div>
+              <span className="text-[11.5px] leading-snug" style={{ color: 'var(--text2)' }}>
+                {config.startTile
+                  ? 'Le carreau « D » choisi est coté depuis les murs de l’angle le plus proche.'
+                  : 'Le carreau « D » est coté depuis les murs de l’angle haut-gauche de chaque pièce.'}
+              </span>
+            </>
           )}
         </Row>
 

@@ -24,7 +24,7 @@ import {
 import { TileLayer } from '@/components/tiling/TileLayer';
 import { TileSettingsSheet } from '@/components/tiling/TileSettingsSheet';
 import { StartTileLayer } from '@/components/tiling/StartTileLayer';
-import { computeStartTiles } from '@/engine/tiling/startTile';
+import { computeStartTiles, pickStartTile } from '@/engine/tiling/startTile';
 import { QuantitiesSheet } from '@/components/quantities/QuantitiesSheet';
 import { PlanToolbar, type PlanTool } from './PlanToolbar';
 import { ToolStatusBar } from './ToolStatusBar';
@@ -187,6 +187,8 @@ export const PlanEditor = ({
   const [qtySheetOpen, setQtySheetOpen] = useState(false);
   const [highlightGroup, setHighlightGroup] = useState<number | null>(null);
   const [gestureHint, setGestureHint] = useState(false);
+  // Mode « choisir le carreau de départ » : un appui sur un carreau le désigne
+  const [pickingStart, setPickingStart] = useState(false);
 
   const result = useMemo(
     () => (showTiles ? analyzeQuantities(rooms, config, wallThickness, doorOpenings) : null),
@@ -201,6 +203,27 @@ export const PlanEditor = ({
         : [],
     [result, config, rooms, wallThickness],
   );
+
+  const handlePickStart = useCallback(() => {
+    setPickingStart(true);
+    setTileSheetOpen(false); // libère le plan sur smartphone
+  }, []);
+
+  const handleStartTap = useCallback(
+    (world: Point) => {
+      if (!result) return;
+      const picked = pickStartTile(world, rooms, result.tiles, storedConfig);
+      if (!picked) return; // appui hors des carreaux : on reste en mode choix
+      setConfig({ ...storedConfig, showStartTile: true, startTile: picked });
+      setPickingStart(false);
+    },
+    [result, rooms, storedConfig, setConfig],
+  );
+
+  // On quitte le mode choix en changeant d'onglet
+  useEffect(() => {
+    if (mode !== 'TILING') setPickingStart(false);
+  }, [mode]);
 
   // Aide gestuelle affichée quelques secondes à l'entrée du Calepinage
   useEffect(() => {
@@ -438,10 +461,28 @@ export const PlanEditor = ({
             onOpenChange={setTileSheetOpen}
             onOrigin={handleOrigin}
             onShowQuantities={() => onModeChange?.('QUANTITIES')}
+            onPickStart={handlePickStart}
             readOnly={readOnly}
           />
         )}
-        {mode === 'TILING' && gestureHint && !readOnly && (
+        {mode === 'TILING' && pickingStart && (
+          <div
+            role="status"
+            data-testid="pick-start-hint"
+            className="absolute left-1/2 top-3 z-30 flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full py-1.5 pl-3.5 pr-1.5 text-[12.5px] font-semibold text-white shadow-lg"
+            style={{ background: '#f97316' }}
+          >
+            Touchez le carreau de départ
+            <button
+              type="button"
+              onClick={() => setPickingStart(false)}
+              className="rounded-full bg-white/25 px-2.5 py-1 text-[12px] font-semibold hover:bg-white/35"
+            >
+              Annuler
+            </button>
+          </div>
+        )}
+        {mode === 'TILING' && gestureHint && !readOnly && !pickingStart && (
           <div
             role="status"
             data-testid="gesture-hint"
@@ -485,7 +526,8 @@ export const PlanEditor = ({
               </>
             ) : undefined
           }
-          onViewDrag={mode === 'TILING' && !readOnly ? handleTileDrag : null}
+          onViewDrag={mode === 'TILING' && !readOnly && !pickingStart ? handleTileDrag : null}
+          onViewTap={mode === 'TILING' && pickingStart ? handleStartTap : null}
           onViewDragEnd={handleTileDragEnd}
           onViewDragCancel={handleTileDragCancel}
           walls={wallEngine?.walls ?? []}

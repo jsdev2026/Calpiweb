@@ -31,6 +31,8 @@ export interface StartTileMark {
   roomCorner: Point;
   /** Deux cotes : une par mur formant l'angle de référence */
   cotes: [StartCote, StartCote];
+  /** Carreau choisi par l'utilisateur (sinon choix automatique) */
+  manual: boolean;
 }
 
 /** Projection orthogonale de p sur la droite (a, b). */
@@ -43,15 +45,15 @@ function project(p: Point, a: Point, b: Point): Point {
   return { x: a.x + t * dx, y: a.y + t * dy };
 }
 
-/** Contour d'un carreau dans le repère monde (les carreaux sont tournés autour du pivot). */
-function tileOutline(tile: Tile, angle: number, cx: number, cy: number): Point[] {
-  const pts = tile.points ?? [
-    { x: tile.rect.x, y: tile.rect.y },
-    { x: tile.rect.x + tile.rect.w, y: tile.rect.y },
-    { x: tile.rect.x + tile.rect.w, y: tile.rect.y + tile.rect.h },
-    { x: tile.rect.x, y: tile.rect.y + tile.rect.h },
-  ];
-  return angle !== 0 ? pts.map((p) => rotatePoint(p.x, p.y, angle, cx, cy)) : pts;
+function tileSpaceOutline(tile: Tile): Point[] {
+  return (
+    tile.points ?? [
+      { x: tile.rect.x, y: tile.rect.y },
+      { x: tile.rect.x + tile.rect.w, y: tile.rect.y },
+      { x: tile.rect.x + tile.rect.w, y: tile.rect.y + tile.rect.h },
+      { x: tile.rect.x, y: tile.rect.y + tile.rect.h },
+    ]
+  );
 }
 
 function centroid(pts: Point[]): Point {
@@ -59,10 +61,89 @@ function centroid(pts: Point[]): Point {
   return { x: s.x / pts.length, y: s.y / pts.length };
 }
 
+/** Pivot de rotation des carreaux : même calcul que la couche de carreaux (TileLayer). */
+function pivotOf(rooms: Room[]): Point | null {
+  const valid = rooms.filter((r) => r.points.length >= 3);
+  if (valid.length === 0) return null;
+  const bb = getBoundingBox(valid.flatMap((r) => r.points));
+  return { x: (bb.minX + bb.maxX) / 2, y: (bb.minY + bb.maxY) / 2 };
+}
+
+const toWorld = (p: Point, angle: number, pivot: Point) =>
+  angle !== 0 ? rotatePoint(p.x, p.y, angle, pivot.x, pivot.y) : p;
+const toTileSpace = (p: Point, angle: number, pivot: Point) =>
+  angle !== 0 ? rotatePoint(p.x, p.y, -angle, pivot.x, pivot.y) : p;
+
+/** Carreau (repère des carreaux) contenant le point, ou le plus proche à défaut. */
+function tileAt(tiles: Tile[], p: Point): Tile | null {
+  let best: Tile | null = null;
+  let bestD = Infinity;
+  for (const t of tiles) {
+    if (t.type === 'OUTSIDE') continue;
+    const outline = tileSpaceOutline(t);
+    if (pointInPolygon(p, outline)) return t;
+    const d = distance(centroid(outline), p);
+    if (d < bestD) {
+      bestD = d;
+      best = t;
+    }
+  }
+  return best;
+}
+
 /**
- * Pour chaque pièce : l'angle de référence est le coin intérieur en haut à gauche ;
- * le carreau de départ est le carreau entier dont un coin en est le plus proche.
- * Il est coté perpendiculairement aux deux murs qui forment cet angle.
+ * Appui sur le plan → carreau de départ à mémoriser dans la config
+ * (centre du carreau dans le repère des carreaux, moins le décalage de pose).
+ * null si aucun carreau n'est touché.
+ */
+export function pickStartTile(
+  world: Point,
+  rooms: Room[],
+  tiles: Tile[],
+  config: TilingConfig,
+): { x: number; y: number } | null {
+  const pivot = pivotOf(rooms);
+  if (!pivot) return null;
+  const p = toTileSpace(world, config.angle, pivot);
+  const tile = tiles.find((t) => t.type !== 'OUTSIDE' && pointInPolygon(p, tileSpaceOutline(t)));
+  if (!tile) return null;
+  const c = centroid(tileSpaceOutline(tile));
+  return { x: Math.round(c.x - config.offsetX), y: Math.round(c.y - config.offsetY) };
+}
+
+/** Repère complet (angle de référence, coin, cotes) pour un carreau donné dans une pièce. */
+function markFor(
+  roomId: string,
+  inner: Point[],
+  outline: Point[],
+  refIndex: number,
+  manual: boolean,
+): StartTileMark {
+  const n = inner.length;
+  const roomCorner = inner[refIndex]!;
+  const prev = inner[(refIndex - 1 + n) % n]!;
+  const next = inner[(refIndex + 1) % n]!;
+  let corner = outline[0]!;
+  for (const c of outline) if (distance(c, roomCorner) < distance(corner, roomCorner)) corner = c;
+  const cote = (a: Point, b: Point): StartCote => {
+    const from = project(corner, a, b);
+    return { from, to: corner, value: distance(from, corner) };
+  };
+  return {
+    roomId,
+    tile: outline,
+    corner,
+    roomCorner,
+    cotes: [cote(prev, roomCorner), cote(roomCorner, next)],
+    manual,
+  };
+}
+
+/**
+ * Repères de départ, un par pièce :
+ * - carreau choisi (config.startTile) : coté depuis l'angle de sa pièce le plus proche ;
+ * - autres pièces : carreau entier le plus proche de l'angle intérieur haut-gauche.
+ * Les cotes sont perpendiculaires aux deux murs qui forment l'angle de référence.
  */
 export function computeStartTiles(
   rooms: Room[],
@@ -71,58 +152,68 @@ export function computeStartTiles(
   wallThickness: number,
 ): StartTileMark[] {
   const valid = rooms.filter((r) => r.points.length >= 3);
-  if (valid.length === 0) return [];
+  const pivot = pivotOf(valid);
+  if (!pivot) return [];
+  const world = (t: Tile) => tileSpaceOutline(t).map((p) => toWorld(p, config.angle, pivot));
 
-  // Même pivot de rotation que la couche de carreaux (TileLayer)
-  const bb = getBoundingBox(valid.flatMap((r) => r.points));
-  const cx = (bb.minX + bb.maxX) / 2;
-  const cy = (bb.minY + bb.maxY) / 2;
+  const inners = valid.map((r) => insetRoomPolygon(r, wallThickness));
+
+  // Carreau choisi par l'utilisateur (il suit la pose : on rajoute le décalage actuel)
+  let manual: { roomIndex: number; outline: Point[] } | null = null;
+  if (config.startTile) {
+    const target = {
+      x: config.startTile.x + config.offsetX,
+      y: config.startTile.y + config.offsetY,
+    };
+    const tile = tileAt(tiles, target);
+    if (tile) {
+      const outline = world(tile);
+      const center = centroid(outline);
+      const roomIndex = inners.findIndex((inner) => pointInPolygon(center, inner));
+      if (roomIndex >= 0) manual = { roomIndex, outline };
+    }
+  }
 
   const whole = tiles
     .filter((t) => t.type === 'WHOLE')
     .map((t) => {
-      const outline = tileOutline(t, config.angle, cx, cy);
+      const outline = world(t);
       return { outline, center: centroid(outline) };
     });
 
   const marks: StartTileMark[] = [];
-  for (const room of valid) {
-    const inner = insetRoomPolygon(room, wallThickness);
+  valid.forEach((room, ri) => {
+    const inner = inners[ri]!;
     const n = inner.length;
-    if (n < 3) continue;
+    if (n < 3) return;
 
-    // Angle de référence : coin intérieur le plus en haut à gauche
+    if (manual && manual.roomIndex === ri) {
+      // Angle de référence : le coin de la pièce le plus proche du carreau choisi
+      const center = centroid(manual.outline);
+      let ref = 0;
+      for (let i = 1; i < n; i++) {
+        if (distance(inner[i]!, center) < distance(inner[ref]!, center)) ref = i;
+      }
+      marks.push(markFor(room.id, inner, manual.outline, ref, true));
+      return;
+    }
+
+    // Choix automatique : coin intérieur le plus en haut à gauche
     let ref = 0;
     for (let i = 1; i < n; i++) {
       if (inner[i]!.x + inner[i]!.y < inner[ref]!.x + inner[ref]!.y) ref = i;
     }
     const roomCorner = inner[ref]!;
-    const prev = inner[(ref - 1 + n) % n]!;
-    const next = inner[(ref + 1) % n]!;
-
-    let best: { outline: Point[]; corner: Point; d: number } | null = null;
+    let best: { outline: Point[]; d: number } | null = null;
     for (const t of whole) {
       if (!pointInPolygon(t.center, inner)) continue;
       for (const c of t.outline) {
         const d = distance(c, roomCorner);
-        if (!best || d < best.d) best = { outline: t.outline, corner: c, d };
+        if (!best || d < best.d) best = { outline: t.outline, d };
       }
     }
-    if (!best) continue;
-
-    const cote = (a: Point, b: Point): StartCote => {
-      const from = project(best!.corner, a, b);
-      return { from, to: best!.corner, value: distance(from, best!.corner) };
-    };
-
-    marks.push({
-      roomId: room.id,
-      tile: best.outline,
-      corner: best.corner,
-      roomCorner,
-      cotes: [cote(prev, roomCorner), cote(roomCorner, next)],
-    });
-  }
+    if (best) marks.push(markFor(room.id, inner, best.outline, ref, false));
+  });
   return marks;
 }
 

@@ -81,6 +81,8 @@ interface WallDrawingCanvasProps {
   onViewDragEnd?: () => void;
   /** Glisser interrompu par un 2e doigt (le geste devient zoom / déplacement du plan). */
   onViewDragCancel?: () => void;
+  /** Si fourni (et viewOnly), un appui bref sans glisser renvoie le point touché (mm). */
+  onViewTap?: ((world: Point) => void) | null;
 }
 
 function screenToWorld(pt: Point, pan: Point, scale: number): Point {
@@ -147,8 +149,11 @@ export const WallDrawingCanvas = ({
   onViewDrag = null,
   onViewDragEnd,
   onViewDragCancel,
+  onViewTap = null,
 }: WallDrawingCanvasProps) => {
   const viewDragRef = useRef<Point | null>(null);
+  // Appui bref (sélection d'un carreau) : annulé si le doigt bouge ou si un 2e doigt arrive
+  const tapRef = useRef<{ sx: number; sy: number; world: Point } | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
   // Refs mutable pour wheel/touch — évitent les stale closures
   const scaleRef = useRef(scale);
@@ -388,6 +393,10 @@ export const WallDrawingCanvas = ({
     if (e.button !== 0) return;
 
     if (viewOnly) {
+      if (onViewTap) {
+        const sp = getSvgPos(e);
+        tapRef.current = { sx: sp.x, sy: sp.y, world: getWorldPos(e) };
+      }
       try {
         (e.currentTarget as SVGSVGElement).setPointerCapture(e.pointerId);
       } catch {
@@ -724,6 +733,10 @@ export const WallDrawingCanvas = ({
   };
 
   const handlePointerMove = (e: ReactPointerEvent<SVGSVGElement>) => {
+    if (tapRef.current) {
+      const sp = getSvgPos(e);
+      if (Math.hypot(sp.x - tapRef.current.sx, sp.y - tapRef.current.sy) > 8) tapRef.current = null;
+    }
     if (viewDragRef.current && onViewDrag) {
       if (touchRef.current) return; // pincement en cours
       const world = getWorldPos(e);
@@ -899,6 +912,11 @@ export const WallDrawingCanvas = ({
   };
 
   const handlePointerUp = (e: ReactPointerEvent<SVGSVGElement>) => {
+    if (tapRef.current && onViewTap) {
+      const tap = tapRef.current;
+      tapRef.current = null;
+      onViewTap(tap.world);
+    }
     if (viewDragRef.current) {
       viewDragRef.current = null;
       onViewDragEnd?.();
@@ -986,6 +1004,7 @@ export const WallDrawingCanvas = ({
       // Le 2e doigt annule un glisser de pose / de vue démarré par le 1er
       if (viewDragRef.current) onViewDragCancel?.();
       viewDragRef.current = null;
+      tapRef.current = null;
       if (viewOnly) {
         setIsPanning(false);
         panStart.current = null;
