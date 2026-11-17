@@ -13,6 +13,7 @@ import type { Plan, Point } from '@/types/plan';
 import type { TilingConfig } from '@/types/tiling';
 import type { Wall, WallNode, WallExcludedZone, ExcludeNode, DoorOpening } from '@/types/wall';
 import { supabaseDb } from '@/lib/supabase/db';
+import { canCreateProject } from '@/lib/entitlements';
 import { wallsToRooms } from '@/engine/geometry/wallFaces';
 import { generateId } from '@/utils/id';
 import { DEFAULT_TILING_CONFIG } from '@/constants/tileDefaults';
@@ -175,7 +176,8 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
 
   create: async (data) => {
     const profile = await supabaseDb.getProfile();
-    if (profile.plan === 'free' && get().projects.length >= 1) {
+    // Seuls les projets possédés comptent ; la base applique la même règle (RLS).
+    if (!canCreateProject(profile, get().projects)) {
       throw new Error('PROJECT_LIMIT_REACHED');
     }
     const now = Date.now();

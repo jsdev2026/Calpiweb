@@ -15,6 +15,7 @@ import type { MyRole, ShareRole } from '@/types/sharing';
 import type { Point } from '@/types/plan';
 import type { TilingConfig } from '@/types/tiling';
 import { createClient } from './client';
+import type { PlanInfo } from '@/lib/entitlements';
 import { generateId } from '@/utils/id';
 import { DEFAULT_TILING_CONFIG } from '@/constants/tileDefaults';
 import { WALL_THICKNESS_MM } from '@/constants/businessRules';
@@ -182,14 +183,38 @@ export const supabaseDb = {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) throw new Error('NOT_AUTHENTICATED');
-    const { error } = await supabase.from('projects').upsert({
-      id: project.id,
-      user_id: user.id,
+
+    const row = {
       name: project.name,
       data: { ...project, updatedAt: Date.now() },
       updated_at: new Date().toISOString(),
-    });
-    if (error) throw new Error(`[${error.code}] ${error.message}`);
+    };
+
+    // 1. Mise à jour d'un projet existant — sans jamais toucher user_id :
+    //    un éditeur invité qui enregistre un projet partagé ne doit pas en devenir propriétaire.
+    const { data: updated, error: updateError } = await supabase
+      .from('projects')
+      .update(row)
+      .eq('id', project.id)
+      .select('id');
+    if (updateError) throw new Error(`[${updateError.code}] ${updateError.message}`);
+    if (updated && updated.length > 0) return;
+
+    // Projet partagé non modifiable (lecture seule ou verrou d'un autre utilisateur) :
+    // surtout ne pas tenter de le recréer à son nom.
+    if (project.myRole !== undefined && project.myRole !== 'owner') {
+      throw new Error('PROJECT_READ_ONLY');
+    }
+
+    // 2. Nouveau projet : insertion, soumise à la limite du forfait côté base (RLS).
+    const { error: insertError } = await supabase
+      .from('projects')
+      .insert({ id: project.id, user_id: user.id, ...row });
+    if (insertError) {
+      // 42501 = refus RLS : limite de projets atteinte
+      if (insertError.code === '42501') throw new Error('PROJECT_LIMIT_REACHED');
+      throw new Error(`[${insertError.code}] ${insertError.message}`);
+    }
   },
 
   async delete(id: string): Promise<void> {
@@ -198,18 +223,22 @@ export const supabaseDb = {
     if (error) throw new Error(`[${error.code}] ${error.message}`);
   },
 
-  async getProfile(): Promise<{ plan: 'free' | 'pro' }> {
+  async getProfile(): Promise<PlanInfo> {
     const supabase = createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!user) return { plan: 'free' };
+    if (!user) return { plan: 'free', projectCredits: 0 };
     const { data, error } = await supabase
       .from('profiles')
-      .select('plan')
+      .select('plan, project_credits')
       .eq('id', user.id)
       .maybeSingle();
     if (error) throw new Error(`[${error.code}] ${error.message}`);
-    return (data as { plan: 'free' | 'pro' } | null) ?? { plan: 'free' };
+    const row = data as { plan?: string; project_credits?: number | null } | null;
+    return {
+      plan: row?.plan === 'pro' ? 'pro' : 'free',
+      projectCredits: row?.project_credits ?? 0,
+    };
   },
 };

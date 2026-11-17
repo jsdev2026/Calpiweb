@@ -20,7 +20,7 @@ function nd(id: string, x: number, y: number): WallNode {
 
 const mockSupabaseDb = vi.mocked(supabaseDb);
 
-describe('projectStore — free plan limit', () => {
+describe('projectStore â€” free plan limit', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Reset store state between tests
@@ -28,7 +28,7 @@ describe('projectStore — free plan limit', () => {
   });
 
   it('allows creating a project when under the free limit', async () => {
-    mockSupabaseDb.getProfile.mockResolvedValue({ plan: 'free' });
+    mockSupabaseDb.getProfile.mockResolvedValue({ plan: 'free', projectCredits: 0 });
     mockSupabaseDb.save.mockResolvedValue(undefined);
     useProjectStore.setState({ projects: [] });
 
@@ -37,7 +37,7 @@ describe('projectStore — free plan limit', () => {
   });
 
   it('throws PROJECT_LIMIT_REACHED for free users at 1 project', async () => {
-    mockSupabaseDb.getProfile.mockResolvedValue({ plan: 'free' });
+    mockSupabaseDb.getProfile.mockResolvedValue({ plan: 'free', projectCredits: 0 });
     const existing = {
       id: 'existing',
       name: 'Existing',
@@ -56,7 +56,7 @@ describe('projectStore — free plan limit', () => {
   });
 
   it('allows creating a project for pro users regardless of count', async () => {
-    mockSupabaseDb.getProfile.mockResolvedValue({ plan: 'pro' });
+    mockSupabaseDb.getProfile.mockResolvedValue({ plan: 'pro', projectCredits: 0 });
     mockSupabaseDb.save.mockResolvedValue(undefined);
     const existing = {
       id: 'existing',
@@ -75,16 +75,60 @@ describe('projectStore — free plan limit', () => {
     const project = await useProjectStore.getState().create();
     expect(project.id).toBeDefined();
   });
+
+  it('ne compte pas les projets partagÃ©s avec un utilisateur gratuit', async () => {
+    mockSupabaseDb.getProfile.mockResolvedValue({ plan: 'free', projectCredits: 0 });
+    mockSupabaseDb.save.mockResolvedValue(undefined);
+    const sharedWithMe = {
+      id: 'shared',
+      name: 'Projet partagÃ©',
+      status: 'new' as const,
+      createdAt: 1000,
+      updatedAt: 1000,
+      rooms: [],
+      config: {} as never,
+      wallThickness: 100,
+      constraints: [],
+      notes: [],
+      myRole: 'editor' as const,
+    };
+    useProjectStore.setState({ projects: [sharedWithMe] });
+
+    const project = await useProjectStore.getState().create();
+    expect(project.id).toBeDefined();
+  });
+
+  it('un crÃ©dit projet permet un 2e projet', async () => {
+    mockSupabaseDb.getProfile.mockResolvedValue({ plan: 'free', projectCredits: 1 });
+    mockSupabaseDb.save.mockResolvedValue(undefined);
+    const mine = {
+      id: 'mine',
+      name: 'Mon projet',
+      status: 'new' as const,
+      createdAt: 1000,
+      updatedAt: 1000,
+      rooms: [],
+      config: {} as never,
+      wallThickness: 100,
+      constraints: [],
+      notes: [],
+      myRole: 'owner' as const,
+    };
+    useProjectStore.setState({ projects: [mine] });
+
+    const project = await useProjectStore.getState().create();
+    expect(project.id).toBeDefined();
+  });
 });
 
-describe('projectStore — wall engine actions', () => {
+describe('projectStore â€” wall engine actions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     useProjectStore.setState({ projects: [], activeProjectId: null, hydrated: false });
   });
 
   async function createAndInit() {
-    mockSupabaseDb.getProfile.mockResolvedValue({ plan: 'free' });
+    mockSupabaseDb.getProfile.mockResolvedValue({ plan: 'free', projectCredits: 0 });
     mockSupabaseDb.save.mockResolvedValue(undefined);
     await useProjectStore.getState().create();
     useProjectStore.getState().initWallEngine();
@@ -196,7 +240,7 @@ describe('projectStore — wall engine actions', () => {
     const w2: Wall = { id: 'w2', node1Id: 'n2', node2Id: 'n3', thickness: 20 };
     useProjectStore.getState().setWalls([w1, w2]);
 
-    // Merge n3 into n1 — w2 should become n2→n1
+    // Merge n3 into n1 â€” w2 should become n2â†’n1
     useProjectStore.getState().mergeNodes('n1', 'n3');
 
     const active = selectActiveProject(useProjectStore.getState());
@@ -205,7 +249,7 @@ describe('projectStore — wall engine actions', () => {
     // w2 node2Id should now be n1
     const w2updated = active?.wallEngine?.walls.find((w) => w.id === 'w2');
     expect(w2updated?.node2Id).toBe('n1');
-    // w1 (n1→n2) still exists
+    // w1 (n1â†’n2) still exists
     expect(active?.wallEngine?.walls).toHaveLength(2);
   });
 
@@ -217,7 +261,7 @@ describe('projectStore — wall engine actions', () => {
     const wall: Wall = { id: 'w1', node1Id: 'n1', node2Id: 'n2', thickness: 20 };
     useProjectStore.getState().setWalls([wall]);
 
-    // Merge n2 into n1 — wall becomes n1→n1, degenerate, should be removed
+    // Merge n2 into n1 â€” wall becomes n1â†’n1, degenerate, should be removed
     useProjectStore.getState().mergeNodes('n1', 'n2');
 
     const active = selectActiveProject(useProjectStore.getState());
@@ -331,14 +375,14 @@ describe('selectRooms', () => {
   });
 });
 
-describe('projectStore — updateTilingDimension', () => {
+describe('projectStore â€” updateTilingDimension', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     useProjectStore.setState({ projects: [], activeProjectId: null, hydrated: false });
   });
 
   async function createAndInit() {
-    mockSupabaseDb.getProfile.mockResolvedValue({ plan: 'free' });
+    mockSupabaseDb.getProfile.mockResolvedValue({ plan: 'free', projectCredits: 0 });
     mockSupabaseDb.save.mockResolvedValue(undefined);
     await useProjectStore.getState().create();
     useProjectStore.getState().initWallEngine();
@@ -360,8 +404,8 @@ describe('projectStore — updateTilingDimension', () => {
     const dims = selectActiveProject(useProjectStore.getState())?.tilingDimensions ?? [];
     expect(dims).toHaveLength(1);
     expect(dims[0]?.p2.x).toBe(300);
-    expect(dims[0]?.p2NodeId).toBe('n2'); // préservé
-    expect(dims[0]?.perpOffset).toBe(600); // préservé
+    expect(dims[0]?.p2NodeId).toBe('n2'); // prÃ©servÃ©
+    expect(dims[0]?.perpOffset).toBe(600); // prÃ©servÃ©
   });
 
   it('ignore un id inexistant sans erreur', async () => {
