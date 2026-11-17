@@ -19,7 +19,11 @@ import {
   collinearSnap,
   collinearSnapForNode,
 } from '@/engine/geometry/wallSnap';
-import { computeCornerGeometry, computeJointLines } from '@/engine/geometry/wallGeometry';
+import {
+  computeCornerGeometry,
+  computeJointLines,
+  computeNodeCaps,
+} from '@/engine/geometry/wallGeometry';
 import { computeAutoCotations } from '@/engine/geometry/wallCotation';
 import { wallsToRooms } from '@/engine/geometry/wallFaces';
 import { computeWallNormal, computeWallPerpMove } from '@/engine/geometry/wallDrag';
@@ -1072,6 +1076,7 @@ export const WallDrawingCanvas = ({
     () => computeCornerGeometry(nonDoorWalls, nodes),
     [nonDoorWalls, nodes],
   );
+  const nodeCaps = useMemo(() => computeNodeCaps(nonDoorWalls, nodes), [nonDoorWalls, nodes]);
   const jointLines = useMemo(() => computeJointLines(nonDoorWalls, nodes), [nonDoorWalls, nodes]);
   const autoCotations = useMemo(() => computeAutoCotations(walls, nodes), [walls, nodes]);
   const detectedRooms = useMemo(() => wallsToRooms(walls, nodes), [walls, nodes]);
@@ -1263,6 +1268,18 @@ export const WallDrawingCanvas = ({
         {worldLayer && (
           <g transform={`translate(${pan.x} ${pan.y}) scale(${scale})`}>{worldLayer}</g>
         )}
+
+        {/* Bouchons aux nœuds (jonctions multiples, angles très aigus) */}
+        {nodeCaps.map((cap, i) => (
+          <polygon
+            key={`cap-${i}`}
+            points={cap
+              .map((p) => worldToScreen(p))
+              .map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`)
+              .join(' ')}
+            fill={WALL_COLOR}
+          />
+        ))}
 
         {/* Wall polygons */}
         {wallPolygons.map((poly) => {

@@ -1,7 +1,7 @@
 'use client';
 import type { Project, Room } from '@/types/project';
 import type { DoorOpening } from '@/types/wall';
-import { computeCornerGeometry } from '@/engine/geometry/wallGeometry';
+import { computeCornerGeometry, computeNodeCaps } from '@/engine/geometry/wallGeometry';
 import { analyzeQuantities } from '@/engine/quantities/quantityEngine';
 import { mergeSimilarCutGroups } from '@/engine/quantities/mergeSimilarCutGroups';
 import { formatCm, formatM2 } from '@/utils/formatters';
@@ -93,10 +93,13 @@ export const QuantitiesPrintView = ({
   const { config, wallThickness, client, name, description } = project;
   const rooms = roomsProp ?? project.rooms;
   const wallEngine = project.wallEngine;
-  const wallPolygons = computeCornerGeometry(
-    (wallEngine?.walls ?? []).filter((w) => !w.isDoor),
-    wallEngine?.nodes ?? [],
-  );
+  const printWalls = (wallEngine?.walls ?? []).filter((w) => !w.isDoor);
+  const printNodes = wallEngine?.nodes ?? [];
+  // Murs + « bouchons » aux nœuds (jonctions multiples, angles très aigus)
+  const wallPolygons = [
+    ...computeCornerGeometry(printWalls, printNodes),
+    ...computeNodeCaps(printWalls, printNodes).map((points, i) => ({ wallId: `cap-${i}`, points })),
+  ];
 
   const generatedDate = new Date().toLocaleDateString('fr-FR', {
     day: 'numeric',
