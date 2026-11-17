@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { PRICE_EXTRA_PROJECT, PRICE_PRO_MONTHLY } from '@/constants/pricing';
 
 interface UpgradeModalProps {
   onClose: () => void;
@@ -87,6 +88,9 @@ export function UpgradeModal({ onClose }: UpgradeModalProps) {
             <span style={{ fontSize: 11.5, color: 'var(--text2)', lineHeight: 1.4 }}>
               Un crédit projet, sans engagement.
             </span>
+            <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>
+              {PRICE_EXTRA_PROJECT}
+            </span>
             <button
               type="button"
               onClick={handleUpgrade}
@@ -138,6 +142,10 @@ export function UpgradeModal({ onClose }: UpgradeModalProps) {
             <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>Illimité</span>
             <span style={{ fontSize: 11.5, color: 'var(--text2)', lineHeight: 1.4 }}>
               Abonnement — projets, cloud, tous appareils.
+            </span>
+            <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>
+              {PRICE_PRO_MONTHLY}
+              <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--muted)' }}> / mois</span>
             </span>
             <button
               type="button"

@@ -14,7 +14,7 @@ Recommandation :
 - **Stripe** (Checkout hébergé + Customer Portal + webhooks) — aucune donnée de carte ne transite par l'app.
 - **Droits calculés en base (Supabase)** à partir des événements Stripe, et **appliqués par la base** (RLS + fonctions),
   plus seulement par l'interface.
-- **Trois niveaux** : Gratuit (1 projet), crédit « +1 projet » (achat unique), **Pro** (abonnement mensuel / annuel,
+- **Trois niveaux** : Gratuit (1 projet), crédit « +1 projet » (achat unique), **Pro** (abonnement mensuel,
   projets illimités). L'offre Équipe reste hors périmètre.
 - Livraison en **6 lots** ; le **lot 0 (sécurité) est à faire immédiatement**, indépendamment du paywall.
 
@@ -57,25 +57,22 @@ Charge estimée : **8 à 11 jours** de développement + 1 à 2 jours de mise en 
 
 ### Grille
 
-|                                       | **Gratuit**                               | **+1 projet** (achat unique)         | **Pro** (abonnement)                             |
-| ------------------------------------- | ----------------------------------------- | ------------------------------------ | ------------------------------------------------ |
-| Projets actifs                        | 1                                         | +1 par crédit, sans expiration       | Illimités                                        |
-| Plan 2D, calepinage, quantitatif      | ✅                                        | ✅                                   | ✅                                               |
-| Export PDF du quantitatif             | ✅ avec mention « Réalisé avec CaléPlan » | ✅ sans mention sur le projet acheté | ✅ sans mention                                  |
-| Partage de projet (lecture / édition) | Recevoir uniquement                       | Recevoir uniquement                  | ✅ Partager                                      |
-| Prix indicatif\*                      | 0 €                                       | 4,90 € TTC                           | 9 € TTC / mois ou 90 € TTC / an (2 mois offerts) |
+|                                       | **Gratuit**                               | **+1 projet** (achat unique)         | **Pro** (abonnement)                         |
+| ------------------------------------- | ----------------------------------------- | ------------------------------------ | -------------------------------------------- |
+| Projets actifs                        | 1                                         | +1 par crédit, sans expiration       | Illimités                                    |
+| Plan 2D, calepinage, quantitatif      | ✅                                        | ✅                                   | ✅                                           |
+| Export PDF du quantitatif             | ✅ avec mention « Réalisé avec CaléPlan » | ✅ sans mention sur le projet acheté | ✅ sans mention                              |
+| Partage de projet (lecture / édition) | Recevoir uniquement                       | Recevoir uniquement                  | ✅ Partager                                  |
+| Prix (validés le 17/11/2026)          | 0 €                                       | **1,99 € TTC** par projet            | **6,90 € TTC / mois** (pas d'offre annuelle) |
 
-\* Repères issus des specs précédentes (9 €/mois, 2,99 € le projet). Je recommande de **relever le crédit unitaire
-à ~4,90 €** : à 2,99 €, trois projets coûtent autant qu'un mois de Pro, ce qui cannibalise l'abonnement.
-**Les prix restent à valider** (voir §9) ; ils sont configurés dans Stripe, pas dans le code.
+Les prix sont configurés dans Stripe, pas dans le code (sauf l'affichage sur la page d'accueil et le paywall).
 
 ### Principes
 
 - **Le gratuit reste vraiment utile** : un projet complet, sans fonctionnalité bridée — c'est le meilleur argument de vente.
 - **Ne jamais bloquer l'accès aux données** : un utilisateur qui arrête de payer garde ses projets en **lecture seule**
   (consulter, exporter) ; il ne peut plus en créer ni modifier ceux au-delà de sa limite.
-- **Essai gratuit Pro de 14 jours** sans carte bancaire à la première montée en gamme (optionnel, à valider) —
-  Stripe le gère nativement (`trial_period_days`).
+- **Pas d'essai gratuit** pour Pro (décision du 17/11/2026) : le projet gratuit sert de découverte.
 
 ### Points de déclenchement du paywall
 
@@ -188,8 +185,8 @@ Notes :
 
 | Route                                       | Rôle                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `POST /api/billing/checkout`                | Reçoit `{ offer: 'credit' \| 'pro_monthly' \| 'pro_yearly' }`, vérifie la session Supabase, crée / réutilise le `customer` Stripe (stocké dans `profiles.stripe_customer_id`), crée la Checkout Session (`mode: payment` ou `subscription`, `client_reference_id = user.id`, TVA automatique, codes promo autorisés) et renvoie l'URL. **Les `price_id` sont choisis côté serveur** à partir de l'offre, jamais envoyés par le client.                     |
-| `POST /api/billing/portal`                  | Crée une session Customer Portal Stripe (changer de carte, passer en annuel, résilier, télécharger les factures).                                                                                                                                                                                                                                                                                                                                          |
+| `POST /api/billing/checkout`                | Reçoit `{ offer: 'credit' \| 'pro_monthly' }`, vérifie la session Supabase, crée / réutilise le `customer` Stripe (stocké dans `profiles.stripe_customer_id`), crée la Checkout Session (`mode: payment` ou `subscription`, `client_reference_id = user.id`, TVA automatique, codes promo autorisés) et renvoie l'URL. **Les `price_id` sont choisis côté serveur** à partir de l'offre, jamais envoyés par le client.                                     |
+| `POST /api/billing/portal`                  | Crée une session Customer Portal Stripe (changer de carte, résilier, télécharger les factures).                                                                                                                                                                                                                                                                                                                                                            |
 | `POST /api/stripe/webhook`                  | Vérifie la signature (`STRIPE_WEBHOOK_SECRET`), ignore les événements déjà traités (`stripe_events`), puis : `checkout.session.completed` (crédit → ligne `+1` dans le registre ; abonnement → lien client), `customer.subscription.created/updated/deleted` (miroir dans `subscriptions` + mise à jour de `profiles.plan`), `invoice.payment_failed` (statut `past_due`), `charge.refunded` (crédit retiré si non consommé). Runtime Node.js, corps brut. |
 | `GET /api/billing/entitlements` (optionnel) | Renvoie `entitlements()` pour l'interface ; sinon un appel RPC Supabase direct suffit.                                                                                                                                                                                                                                                                                                                                                                     |
 
@@ -197,13 +194,13 @@ Le middleware doit **exclure `/api/stripe/webhook`** de la vérification de sess
 
 ### Variables d'environnement (Vercel, Production et Preview séparés)
 
-| Variable                                                                     | Usage                                                                              |
-| ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `STRIPE_SECRET_KEY`                                                          | Clé secrète (test en Preview, live en Production)                                  |
-| `STRIPE_WEBHOOK_SECRET`                                                      | Secret de signature du webhook                                                     |
-| `STRIPE_PRICE_CREDIT`, `STRIPE_PRICE_PRO_MONTHLY`, `STRIPE_PRICE_PRO_YEARLY` | Identifiants des prix                                                              |
-| `SUPABASE_SERVICE_ROLE_KEY`                                                  | Écriture des droits par le webhook (**serveur uniquement**, jamais `NEXT_PUBLIC_`) |
-| `NEXT_PUBLIC_SITE_URL`                                                       | URLs de retour Checkout                                                            |
+| Variable                                          | Usage                                                                              |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `STRIPE_SECRET_KEY`                               | Clé secrète (test en Preview, live en Production)                                  |
+| `STRIPE_WEBHOOK_SECRET`                           | Secret de signature du webhook                                                     |
+| `STRIPE_PRICE_CREDIT`, `STRIPE_PRICE_PRO_MONTHLY` | Identifiants des prix                                                              |
+| `SUPABASE_SERVICE_ROLE_KEY`                       | Écriture des droits par le webhook (**serveur uniquement**, jamais `NEXT_PUBLIC_`) |
+| `NEXT_PUBLIC_SITE_URL`                            | URLs de retour Checkout                                                            |
 
 Dépendance à ajouter : `stripe` (SDK Node officiel). Aucune bibliothèque côté navigateur n'est nécessaire avec
 Checkout hébergé.
@@ -221,7 +218,7 @@ Checkout hébergé.
 ## 5. Parcours utilisateur (mobile d'abord)
 
 1. **Atteinte de la limite** → panneau paywall : « Votre projet gratuit est utilisé » ; deux cartes (Pro mis en avant
-   avec prix mensuel et mention de l'annuel, +1 projet) ; lien « Continuer en gratuit ».
+   6,90 € / mois, +1 projet à 1,99 €) ; lien « Continuer en gratuit ».
 2. **Choix d'une offre** → bouton désactivé + indicateur de chargement → redirection vers Stripe Checkout
    (Apple Pay / Google Pay proposés automatiquement sur mobile).
 3. **Retour `/account?checkout=success`** → écran « Merci ! » qui **attend la confirmation du webhook** (relecture des droits
@@ -263,7 +260,7 @@ Checkout hébergé.
 - **Recette manuelle en Preview Vercel** avec les **cartes de test Stripe** (succès, refus, 3-D Secure), la commande
   `stripe listen` pour les webhooks en local, et une recette sur **vrai téléphone** (iOS Safari + Android Chrome).
 - **Avant la mise en production** : passer les clés en mode live, créer le webhook live, faire un **vrai achat de
-  4,90 € puis le rembourser**.
+  1,99 € puis le rembourser**.
 
 ## 8. Découpage en lots
 
@@ -278,18 +275,23 @@ Checkout hébergé.
 
 Les lots 3 et 4 peuvent avancer en parallèle une fois le lot 2 terminé. Chaque lot = une PR, testée en préversion Vercel.
 
-**Mesure après lancement** (optionnel, lot 6) : taux d'affichage du paywall → clic → paiement, part annuel / mensuel,
+**Mesure après lancement** (optionnel, lot 6) : taux d'affichage du paywall → clic → paiement, part crédits / abonnement,
 taux de résiliation ; e-mails transactionnels (bienvenue Pro, échec de paiement) via Stripe ou Resend.
 
-## 9. Décisions à prendre
+## 9. Décisions
 
-1. **Prix définitifs** : Pro mensuel, Pro annuel, crédit unitaire (recommandation : 9 € / 90 € / 4,90 € TTC).
-2. **Essai gratuit Pro** : 14 jours sans carte, avec carte, ou pas d'essai.
-3. **Ce qui reste gratuit** : confirmer « 1 projet complet » et le choix pour l'export PDF (mention vs blocage) et le partage.
-4. **Utilisateurs existants** : les comptes passés Pro manuellement pendant la bêta gardent-ils Pro (à vie, 6 mois offerts,
-   code promo) ? Combien sont concernés ?
-5. **Entité de facturation** : Yusco ou une autre structure ; ouverture du compte Stripe.
-6. **Offre Équipe** : confirmée hors périmètre pour cette première version.
+Prises le 17/11/2026 :
+
+1. **Prix** : Pro **6,90 € TTC / mois**, crédit « +1 projet » **1,99 € TTC**. Pas d'abonnement annuel
+   (`STRIPE_PRICE_PRO_YEARLY` et l'offre `pro_yearly` sont donc retirés du périmètre).
+2. **Essai gratuit** : aucun.
+3. **Gratuit** : 1 projet complet ; export PDF avec mention « Réalisé avec CaléPlan » ; partage réservé à Pro. ✅
+4. **Comptes Pro de la bêta** : conservent Pro (pas d'abonnement Stripe ; `entitlements()` doit continuer à considérer
+   `profiles.plan = 'pro'` posé à la main comme Pro, même sans ligne dans `subscriptions`).
+5. **Entité de facturation / compte Stripe** : reporté — les lots 2 à 5 (Stripe) attendent cette étape.
+6. **Offre Équipe** : hors périmètre pour cette première version.
+
+Le lot 1 (droits en base, sans Stripe) peut avancer sans attendre le point 5.
 
 ## 10. Risques
 
