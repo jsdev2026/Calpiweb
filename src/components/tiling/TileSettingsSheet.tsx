@@ -152,10 +152,11 @@ export const TileSettingsSheet = ({
         { id: 'rotation', label: 'Rotation', icon: <RotateCw size={ICON} /> },
         { id: 'depart', label: 'Départ de la pose', icon: <Crosshair size={ICON} /> },
       ]}
-      context={
+      footer={
         result.roomArea > 0 && (
-          <span title={`${formatM2(result.roomArea)} · ${result.toOrder} carreaux à commander`}>
-            <strong style={{ color: 'var(--text2)' }}>{result.toOrder}</strong> carreaux
+          <span className="truncate text-[12px]" style={{ color: 'var(--muted)' }}>
+            {formatM2(result.roomArea)} ·{' '}
+            <strong style={{ color: 'var(--text2)' }}>{result.toOrder} carreaux</strong> à commander
           </span>
         )
       }

@@ -233,11 +233,6 @@ export const PlanToolbar = ({
       icon={<PencilRuler size={18} />}
       title="Plan 2D"
       summary={summary}
-      context={
-        rooms.length > 0
-          ? `${rooms.length} pièce${rooms.length > 1 ? 's' : ''} · ${formatM2(totalArea)}`
-          : 'Aucune pièce fermée'
-      }
       next={onNext ? { label: 'Calepinage', onClick: onNext } : undefined}
       bar={readOnly ? undefined : bar}
       railItems={readOnly ? [railItems[railItems.length - 1]!] : railItems}
@@ -256,7 +251,17 @@ export const PlanToolbar = ({
           </div>
         </PanelSection>
       )}
-      <PanelSection id="pieces" title="Pièces">
+      <PanelSection
+        id="pieces"
+        title="Pièces"
+        aside={
+          rooms.length > 0 && (
+            <span className="text-[11.5px] tabular-nums" style={{ color: 'var(--text2)' }}>
+              {rooms.length} · {formatM2(totalArea)}
+            </span>
+          )
+        }
+      >
         <PlanRoomsList readOnly={readOnly} />
       </PanelSection>
     </SidePanel>

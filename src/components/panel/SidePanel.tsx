@@ -50,8 +50,6 @@ export interface SidePanelProps {
   next?: { label: string; onClick: () => void; icon?: React.ReactNode };
   /** Lien vers l'étape précédente (Calepinage → Plan 2D, Quantitatif → Calepinage) */
   prev?: { label: string; onClick: () => void };
-  /** Information courte affichée à gauche du lien d'étape suivante */
-  context?: React.ReactNode;
   footer?: React.ReactNode;
   children?: React.ReactNode;
 }
@@ -67,7 +65,6 @@ export const SidePanel = ({
   railItems = [],
   next,
   prev,
-  context,
   footer,
   children,
 }: SidePanelProps) => {
@@ -208,7 +205,7 @@ export const SidePanel = ({
         ))}
       </nav>
 
-      {(next || prev || context) && (
+      {(next || prev) && (
         <div
           data-panel-next
           className={`${mobileOpen ? 'flex' : 'hidden'} shrink-0 items-center gap-2 border-y px-3 py-1.5 ${desk(false)}`}
@@ -219,18 +216,13 @@ export const SidePanel = ({
               type="button"
               onClick={prev.onClick}
               className="flex shrink-0 items-center gap-1 text-[12.5px] font-semibold underline-offset-2 hover:underline"
-              style={{ color: 'var(--text2)' }}
+              style={{ color: 'var(--accent)' }}
             >
               <ArrowLeft size={14} aria-hidden />
               {prev.label}
             </button>
           )}
-          <span
-            className={`min-w-0 flex-1 truncate text-[12px] ${prev ? 'text-center' : ''}`}
-            style={{ color: 'var(--muted)' }}
-          >
-            {context}
-          </span>
+          <span className="flex-1" />
           {next && (
             <button
               type="button"
@@ -246,9 +238,7 @@ export const SidePanel = ({
       )}
 
       {bar && (
-        <div
-          className={`shrink-0 px-3 pb-2 ${next || prev || context ? 'pt-2' : ''} ${desk(false)}`}
-        >
+        <div className={`shrink-0 px-3 pb-2 ${next || prev ? 'pt-2' : ''} ${desk(false)}`}>
           {bar}
         </div>
       )}
