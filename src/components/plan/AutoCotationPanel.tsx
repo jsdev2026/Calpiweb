@@ -91,17 +91,27 @@ export const AutoCotationPanel = ({
 
   return (
     <div
-      style={panelStyle}
-      className="w-52 rounded-xl border border-orange-500/60 bg-zinc-900 p-3 shadow-2xl"
+      style={{
+        ...panelStyle,
+        background: 'var(--surf)',
+        borderColor: 'var(--bdr)',
+        boxShadow: 'var(--sh-lg)',
+      }}
+      className="w-52 rounded-xl border p-3"
     >
       <div className="mb-2 flex items-center justify-between">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-orange-400">
-          Côte sélectionnée
+        <span
+          className="text-[10.5px] font-bold uppercase tracking-wider"
+          style={{ color: 'var(--muted)' }}
+        >
+          Cote sélectionnée
         </span>
         <button
           type="button"
+          aria-label="Fermer"
           onClick={onClose}
-          className="text-sm leading-none text-zinc-500 hover:text-zinc-300"
+          className="text-sm leading-none hover:opacity-70"
+          style={{ color: 'var(--muted)' }}
         >
           ✕
         </button>
@@ -114,7 +124,9 @@ export const AutoCotationPanel = ({
       </div>
 
       <div className="mb-3">
-        <div className="mb-1 text-[10px] text-zinc-500">Longueur</div>
+        <div className="mb-1 text-[11px]" style={{ color: 'var(--text2)' }}>
+          Longueur
+        </div>
         <div className="flex items-center gap-2">
           <input
             type="number"
@@ -130,21 +142,31 @@ export const AutoCotationPanel = ({
               if (e.key === 'Enter') handleApply();
               if (e.key === 'Escape') onClose();
             }}
-            className="w-20 rounded border border-orange-500 bg-zinc-800 px-2 py-1 text-sm font-bold text-white outline-none"
+            className="h-9 w-20 rounded-lg border px-2 text-sm font-bold outline-none"
+            style={{
+              borderColor: 'var(--accent)',
+              background: 'var(--surf)',
+              color: 'var(--text)',
+            }}
           />
-          <span className="text-xs text-zinc-500">cm</span>
+          <span className="text-xs" style={{ color: 'var(--muted)' }}>
+            cm
+          </span>
           <button
             type="button"
             onClick={handleApply}
-            className="rounded bg-orange-500 px-2 py-1 text-xs font-bold text-white hover:bg-orange-600"
+            className="h-9 rounded-lg px-3 text-xs font-bold text-white hover:opacity-90"
+            style={{ background: 'var(--accent)' }}
           >
-            ↵
+            Appliquer
           </button>
         </div>
         {error && <p className="mt-1 text-[10px] text-red-500">{error}</p>}
       </div>
 
-      <div className="text-[10px] text-zinc-600">Ancre fixe : nœud 1 — Déplace : nœud 2</div>
+      <div className="text-[11px]" style={{ color: 'var(--muted)' }}>
+        Ancre fixe : nœud 1 — Déplace : nœud 2
+      </div>
     </div>
   );
 };

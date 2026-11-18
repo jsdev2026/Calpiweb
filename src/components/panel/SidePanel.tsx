@@ -1,5 +1,6 @@
 'use client';
 
+import { Fragment } from 'react';
 import { ChevronDown, ChevronUp, PanelLeftClose } from 'lucide-react';
 import { usePanelStore } from '@/store/panelStore';
 import { ToolTooltip } from '@/components/plan/ToolTooltip';
@@ -25,6 +26,11 @@ export interface RailItem {
   description?: string;
   icon: React.ReactNode;
   active?: boolean;
+  /** Rouge réservé à la suppression */
+  tone?: 'default' | 'danger';
+  disabled?: boolean;
+  /** Séparateur avant cet élément */
+  divider?: boolean;
   /** Action directe (ex. choisir un outil). Sinon : déplie le panneau sur la section `id`. */
   onClick?: () => void;
 }
@@ -151,14 +157,19 @@ export const SidePanel = ({
         </ToolTooltip>
         {railItems.length > 0 && <PanelDivider />}
         {railItems.map((item) => (
-          <ToolTooltip key={item.id} label={item.label} description={item.description ?? ''}>
-            <IconToolButton
-              label={item.label}
-              icon={item.icon}
-              active={item.active}
-              onClick={item.onClick ?? (() => expandTo(item.id))}
-            />
-          </ToolTooltip>
+          <Fragment key={item.id}>
+            {item.divider && <PanelDivider />}
+            <ToolTooltip label={item.label} description={item.description ?? ''}>
+              <IconToolButton
+                label={item.label}
+                icon={item.icon}
+                active={item.active}
+                tone={item.tone}
+                disabled={item.disabled}
+                onClick={item.onClick ?? (() => expandTo(item.id))}
+              />
+            </ToolTooltip>
+          </Fragment>
         ))}
       </nav>
 

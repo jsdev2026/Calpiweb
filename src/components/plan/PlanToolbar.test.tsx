@@ -1,13 +1,9 @@
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { usePanelStore } from '@/store/panelStore';
 
-vi.mock('./ToolTooltip', () => ({
-  ToolTooltip: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
-vi.mock('./WallThicknessControl', () => ({
-  WallThicknessControl: ({ compact }: { compact?: boolean }) => (
-    <div data-testid="wall-thickness-control" data-compact={compact ? 'true' : 'false'} />
-  ),
+vi.mock('./PlanRoomsList', () => ({
+  PlanRoomsList: () => <div data-testid="rooms-list" />,
 }));
 
 import { PlanToolbar } from './PlanToolbar';
@@ -21,94 +17,70 @@ const defaultProps = {
   onRedo: vi.fn(),
   wallThickness: 100,
   onWallThicknessChange: vi.fn(),
-  tutorialMode: false,
-  onToggleTutorial: vi.fn(),
 };
 
-describe('PlanToolbar mobile', () => {
-  it('renders the mobile horizontal toolbar', () => {
-    render(<PlanToolbar {...defaultProps} />);
-    expect(screen.getByTestId('plan-toolbar-mobile')).toBeDefined();
-  });
-
-  it('mobile toolbar contains a SELECT tool button', () => {
-    render(<PlanToolbar {...defaultProps} />);
-    const toolbar = screen.getByTestId('plan-toolbar-mobile');
-    // SELECT tool button has aria-label "Sélectionner"
-    const selectBtn = toolbar.querySelector('[aria-label="Sélectionner"]');
-    expect(selectBtn).not.toBeNull();
-  });
-
-  it('clicking SELECT in mobile toolbar calls onChangeTool with SELECT', () => {
-    const onChangeTool = vi.fn();
-    render(<PlanToolbar {...defaultProps} onChangeTool={onChangeTool} />);
-    const toolbar = screen.getByTestId('plan-toolbar-mobile');
-    const selectBtn = toolbar.querySelector('[aria-label="Sélectionner"]') as HTMLButtonElement;
-    fireEvent.click(selectBtn);
-    expect(onChangeTool).toHaveBeenCalledWith('SELECT');
-  });
-
-  it('clicking WALL in mobile toolbar calls onChangeTool with WALL', () => {
-    const onChangeTool = vi.fn();
-    render(<PlanToolbar {...defaultProps} onChangeTool={onChangeTool} />);
-    const toolbar = screen.getByTestId('plan-toolbar-mobile');
-    const wallBtn = toolbar.querySelector('[aria-label="Tracer des murs"]') as HTMLButtonElement;
-    fireEvent.click(wallBtn);
-    expect(onChangeTool).toHaveBeenCalledWith('WALL');
-  });
+beforeEach(() => {
+  act(() => usePanelStore.setState({ collapsed: false, mobileOpen: false }));
 });
 
-describe('PlanToolbar — bouton DELETE', () => {
-  it('clicking Trash in mobile toolbar calls onChangeTool with DELETE', () => {
-    const onChangeTool = vi.fn();
-    render(<PlanToolbar {...defaultProps} onChangeTool={onChangeTool} />);
-    const toolbar = screen.getByTestId('plan-toolbar-mobile');
-    const trashBtn = toolbar.querySelector('[aria-label="Mode suppression"]') as HTMLButtonElement;
-    expect(trashBtn).not.toBeNull();
-    fireEvent.click(trashBtn);
-    expect(onChangeTool).toHaveBeenCalledWith('DELETE');
-  });
+/** Rangée d'icônes smartphone = premier bloc de la barre toujours visible */
+const mobileRow = () => {
+  const panel = screen.getByTestId('plan-toolbar');
+  return within(panel.querySelector('.mouse\\:hidden.md\\:hidden.flex') as HTMLElement);
+};
 
-  it('Trash button is always enabled (no disabled attr)', () => {
-    render(<PlanToolbar {...defaultProps} />);
-    const toolbar = screen.getByTestId('plan-toolbar-mobile');
-    const trashBtn = toolbar.querySelector('[aria-label="Mode suppression"]') as HTMLButtonElement;
-    expect(trashBtn.disabled).toBe(false);
-  });
-});
-
-describe('PlanToolbar mobile — deux lignes', () => {
-  it('toolbar mobile a la classe bottom-0 (pas bottom-20)', () => {
-    render(<PlanToolbar {...defaultProps} />);
-    const toolbar = screen.getByTestId('plan-toolbar-mobile');
-    expect(toolbar.className).toContain('bottom-0');
-    expect(toolbar.className).not.toContain('bottom-20');
-  });
-
-  it('WallThicknessControl est rendu en mode compact dans la toolbar mobile', () => {
-    render(<PlanToolbar {...defaultProps} />);
-    const toolbar = screen.getByTestId('plan-toolbar-mobile');
-    const ctrl = toolbar.querySelector('[data-testid="wall-thickness-control"]');
-    expect(ctrl).not.toBeNull();
-    expect(ctrl!.getAttribute('data-compact')).toBe('true');
-  });
-
-  it("texte d'outil actif visible quand tool=WALL", () => {
+describe('PlanToolbar — panneau latéral Plan 2D', () => {
+  it('affiche l’en-tête du mode et l’outil actif', () => {
     render(<PlanToolbar {...defaultProps} tool="WALL" />);
-    const toolbar = screen.getByTestId('plan-toolbar-mobile');
-    expect(toolbar.textContent).toContain('Cliquez pour poser un point');
+    expect(screen.getByText('Plan 2D')).toBeTruthy();
+    expect(screen.getAllByText('Cliquez pour poser un point').length).toBeGreaterThan(0);
   });
 
-  it("pas de texte d'outil actif quand tool=SELECT", () => {
-    render(<PlanToolbar {...defaultProps} tool="SELECT" />);
-    const toolbar = screen.getByTestId('plan-toolbar-mobile');
-    expect(toolbar.textContent).not.toContain('Cliquez');
+  it('smartphone : les outils restent accessibles, panneau replié', () => {
+    const onChangeTool = vi.fn();
+    render(<PlanToolbar {...defaultProps} onChangeTool={onChangeTool} />);
+    fireEvent.click(mobileRow().getByRole('button', { name: 'Tracer des murs' }));
+    expect(onChangeTool).toHaveBeenCalledWith('WALL');
+    fireEvent.click(mobileRow().getByRole('button', { name: 'Verrouiller' }));
+    expect(onChangeTool).toHaveBeenCalledWith('LOCK');
   });
 
-  it('toolbar mobile a la classe fixed (pas absolute)', () => {
+  it('outil actif signalé (aria-pressed), suppression en rouge', () => {
+    render(<PlanToolbar {...defaultProps} tool="DELETE" />);
+    const del = mobileRow().getByRole('button', { name: 'Mode suppression' });
+    expect(del.getAttribute('aria-pressed')).toBe('true');
+    expect(del.style.color).toBe('rgb(220, 38, 38)');
+  });
+
+  it('annuler / rétablir désactivés sans historique', () => {
+    const onUndo = vi.fn();
+    render(<PlanToolbar {...defaultProps} canUndo onUndo={onUndo} />);
+    fireEvent.click(mobileRow().getByRole('button', { name: 'Annuler' }));
+    expect(onUndo).toHaveBeenCalled();
+    expect(
+      (mobileRow().getByRole('button', { name: 'Rétablir' }) as HTMLButtonElement).disabled,
+    ).toBe(true);
+  });
+
+  it('sections Épaisseur des murs et Pièces dans le panneau', () => {
     render(<PlanToolbar {...defaultProps} />);
-    const toolbar = screen.getByTestId('plan-toolbar-mobile');
-    expect(toolbar.className).toContain('fixed');
-    expect(toolbar.className).not.toContain('absolute');
+    expect(screen.getByText('Épaisseur des murs', { selector: 'h3' })).toBeTruthy();
+    expect(screen.getByTestId('rooms-list')).toBeTruthy();
+  });
+
+  it('barre repliée (ordinateur) : choisir un outil sans déplier le panneau', () => {
+    act(() => usePanelStore.setState({ collapsed: true }));
+    const onChangeTool = vi.fn();
+    render(<PlanToolbar {...defaultProps} onChangeTool={onChangeTool} />);
+    const rail = screen.getByRole('navigation', { name: /Plan 2D/ });
+    fireEvent.click(within(rail).getByRole('button', { name: 'Porte / Ouverture' }));
+    expect(onChangeTool).toHaveBeenCalledWith('DOOR');
+    expect(usePanelStore.getState().collapsed).toBe(true);
+  });
+
+  it('lecture seule : pas d’outils de dessin', () => {
+    render(<PlanToolbar {...defaultProps} readOnly />);
+    expect(screen.queryByRole('button', { name: 'Tracer des murs' })).toBeNull();
+    expect(screen.getByTestId('rooms-list')).toBeTruthy();
   });
 });

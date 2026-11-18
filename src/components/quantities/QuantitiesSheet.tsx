@@ -1,12 +1,20 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import {
+  ChevronDown,
+  ChevronUp,
+  ClipboardList,
+  PaintBucket,
+  Scissors,
+  ShoppingCart,
+} from 'lucide-react';
 import type { ConsumableParams, TilingConfig } from '@/types/tiling';
 import type { QuantityResult } from '@/engine/quantities/quantityEngine';
 import { mergeSimilarCutGroups } from '@/engine/quantities/mergeSimilarCutGroups';
 import { formatM2 } from '@/utils/formatters';
 import { tileSummary } from '@/components/tiling/TileSettingsSheet';
+import { PanelSection, SidePanel } from '@/components/panel/SidePanel';
 import { QuantitiesRecapColumn } from './QuantitiesRecapColumn';
 import { CutGroupsTable } from './CutGroupsTable';
 
@@ -14,19 +22,17 @@ export interface QuantitiesSheetProps {
   result: QuantityResult;
   config: TilingConfig;
   onChange: (config: TilingConfig) => void;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
   onHighlight: (group: number | null) => void;
   readOnly?: boolean;
 }
 
-/** Panneau du mode Quantitatif : même emplacement que le panneau Carreau. */
+const ICON = 16;
+
+/** Panneau du mode Quantitatif (panneau latéral commun aux trois modes). */
 export const QuantitiesSheet = ({
   result,
   config,
   onChange,
-  open,
-  onOpenChange,
   onHighlight,
   readOnly = false,
 }: QuantitiesSheetProps) => {
@@ -38,75 +44,66 @@ export const QuantitiesSheet = ({
   const updateConsumable = (patch: Partial<ConsumableParams>) =>
     set({ consumableParams: { ...(config.consumableParams ?? {}), ...patch } });
 
-  return (
-    <div
-      data-testid="quantities-sheet"
-      data-canvas-overlay
-      className="absolute inset-x-0 bottom-0 z-20 flex flex-col rounded-t-2xl border-t mouse:inset-x-auto mouse:bottom-3 mouse:right-3 mouse:top-3 mouse:w-[340px] mouse:rounded-2xl mouse:border md:inset-x-auto md:bottom-3 md:right-3 md:top-3 md:w-[340px] md:rounded-2xl md:border"
-      style={{
-        background: 'var(--surf)',
-        borderColor: 'var(--bdr)',
-        boxShadow: 'var(--sh-lg)',
-        paddingBottom: 'env(safe-area-inset-bottom)',
-      }}
-    >
-      <button
-        type="button"
-        onClick={() => onOpenChange(!open)}
-        aria-expanded={open}
-        className="flex w-full shrink-0 flex-col items-stretch px-4 pb-2.5 pt-1.5 text-left"
-      >
-        <span
-          className="mx-auto mb-1.5 h-1 w-10 rounded-full mouse:hidden md:hidden"
-          style={{ background: 'var(--bdr)' }}
-        />
-        <span className="flex items-center gap-2">
-          <span className="min-w-0 flex-1 text-[14px] font-bold" style={{ color: 'var(--text)' }}>
-            {result.totalTiles === 0 ? (
-              'Aucune pièce fermée'
-            ) : (
-              <>
-                À commander :{' '}
-                <span style={{ color: 'var(--accent)' }}>{result.toOrder} carreaux</span>
-              </>
-            )}
-          </span>
-          <span className="mouse:hidden md:hidden">
-            {open ? (
-              <ChevronDown size={18} style={{ color: 'var(--muted)' }} />
-            ) : (
-              <ChevronUp size={18} style={{ color: 'var(--muted)' }} />
-            )}
-          </span>
-        </span>
-        <span className="mt-0.5 truncate text-[12px]" style={{ color: 'var(--muted)' }}>
-          {formatM2(result.roomArea)} · {tileSummary(config)}
-        </span>
-      </button>
+  const empty = result.totalTiles === 0;
 
-      {result.totalTiles > 0 && (
-        <div
-          className={`${open ? 'flex' : 'hidden'} max-h-[46svh] flex-col gap-3 overflow-y-auto border-t mouse:flex mouse:max-h-none mouse:flex-1 md:flex md:max-h-none md:flex-1`}
-          style={{ borderColor: 'var(--bdr)' }}
-        >
-          <QuantitiesRecapColumn
-            className="flex w-full flex-col gap-3 p-4"
-            result={result}
-            marginOverride={config.marginOverride}
-            onMarginCommit={(pct) => set({ marginOverride: pct / 100 })}
-            onMarginReset={() => set({ marginOverride: undefined })}
-            consumableParams={config.consumableParams}
-            onConsumableParamChange={updateConsumable}
-          />
-          <div className="px-4 pb-4">
+  return (
+    <SidePanel
+      testId="quantities-sheet"
+      icon={<ClipboardList size={18} />}
+      title="Quantitatif"
+      summary={
+        empty ? (
+          'Aucune pièce fermée'
+        ) : (
+          <>
+            À commander :{' '}
+            <strong style={{ color: 'var(--accent)' }}>{result.toOrder} carreaux</strong> ·{' '}
+            {formatM2(result.roomArea)}
+          </>
+        )
+      }
+      railItems={
+        empty
+          ? []
+          : [
+              { id: 'commande', label: 'À commander', icon: <ShoppingCart size={ICON} /> },
+              { id: 'consommables', label: 'Consommables', icon: <PaintBucket size={ICON} /> },
+              { id: 'coupes', label: 'Coupes', icon: <Scissors size={ICON} /> },
+            ]
+      }
+    >
+      {!empty && (
+        <>
+          <PanelSection id="commande" title="À commander">
+            <span className="text-[12px]" style={{ color: 'var(--muted)' }}>
+              {tileSummary(config)}
+            </span>
+            <QuantitiesRecapColumn
+              className="flex w-full flex-col gap-3"
+              result={result}
+              marginOverride={config.marginOverride}
+              onMarginCommit={(pct) => set({ marginOverride: pct / 100 })}
+              onMarginReset={() => set({ marginOverride: undefined })}
+              consumableParams={config.consumableParams}
+              onConsumableParamChange={updateConsumable}
+            />
+          </PanelSection>
+          <PanelSection
+            id="coupes"
+            title={`Coupes · ${merged.length} groupes · ${result.cuts.length} carreaux`}
+          >
             <button
               type="button"
               onClick={() => setCutsOpen((o) => !o)}
               aria-expanded={cutsOpen}
-              className="flex min-h-[44px] w-full items-center justify-between text-[13px] font-bold"
-              style={{ color: 'var(--text)' }}
+              className="flex h-9 w-full items-center justify-between rounded-lg border px-2.5 text-[12.5px] font-semibold"
+              style={{
+                borderColor: 'var(--bdr)',
+                background: 'var(--surf2)',
+                color: 'var(--text2)',
+              }}
             >
-              Coupes ({merged.length} groupes · {result.cuts.length} carreaux)
+              {cutsOpen ? 'Masquer le détail des coupes' : 'Afficher le détail des coupes'}
               {cutsOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
             </button>
             {cutsOpen && (
@@ -118,9 +115,9 @@ export const QuantitiesSheet = ({
                 onHighlight={onHighlight}
               />
             )}
-          </div>
-        </div>
+          </PanelSection>
+        </>
       )}
-    </div>
+    </SidePanel>
   );
 };
