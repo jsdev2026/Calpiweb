@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { PANEL_STORAGE_KEY, usePanelStore } from '@/store/panelStore';
 import { PanelChip, PanelSection, PanelToolButton, SidePanel, sectionDomId } from './SidePanel';
 
@@ -100,6 +100,29 @@ describe('SidePanel', () => {
     expect(document.getElementById(sectionDomId('pose'))).toBeTruthy();
     expect(scroll).toHaveBeenCalled();
     raf.mockRestore();
+  });
+});
+
+describe('liens précédent / suivant', () => {
+  it('smartphone : restent visibles quand le panneau est replié', () => {
+    const prev = vi.fn();
+    const next = vi.fn();
+    render(
+      <SidePanel
+        icon={<Icon />}
+        title="Calepinage"
+        prev={{ label: 'Plan 2D', onClick: prev }}
+        next={{ label: 'Quantitatif', onClick: next }}
+      >
+        <PanelSection title="Format">contenu</PanelSection>
+      </SidePanel>,
+    );
+    expect(usePanelStore.getState().mobileOpen).toBe(false);
+    const row = document.querySelector('[data-panel-next]') as HTMLElement;
+    expect(row.className).toMatch(/^flex /);
+    expect(row.className).not.toMatch(/(^|s)hidden(s|$)/);
+    fireEvent.click(within(row).getByRole('button', { name: 'Quantitatif' }));
+    expect(next).toHaveBeenCalled();
   });
 });
 
