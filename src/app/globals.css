@@ -327,11 +327,23 @@ body {
   #quantities-print-target {
     display: block !important;
   }
-  /* Forcer les couleurs de fond (header orange, cartes stats colorées) */
+  /* Forcer les couleurs de fond (liserés orange, carreau de départ) */
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
+  /* Une feuille A4 par page : les marges sont dans la feuille elle-même */
+  .print-sheet {
+    break-after: page;
+  }
+  .print-sheet:last-child {
+    break-after: auto;
+  }
+}
+
+@page {
+  size: A4;
+  margin: 0;
 }
 
 /* ─── Mobile — prevent iOS Safari auto-zoom on input focus ──────────────────── */
