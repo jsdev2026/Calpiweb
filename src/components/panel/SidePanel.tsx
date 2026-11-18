@@ -10,7 +10,8 @@ import { ToolTooltip } from '@/components/plan/ToolTooltip';
  *
  * - Ordinateur : à gauche, sur toute la hauteur du plan ; déplié (300 px) ou replié
  *   en barre d'icônes (56 px). L'état est partagé par les trois modes et mémorisé.
- * - Smartphone : en bas de l'écran, en-tête toujours visible, contenu déplié d'une touche.
+ * - Smartphone : en bas de l'écran, en-tête et liens précédent / suivant toujours visibles,
+ *   contenu déplié d'une touche.
  *
  * Même anatomie partout : en-tête (icône du mode, titre, résumé), barre optionnelle
  * toujours visible (outils du Plan 2D), sections titrées, pied optionnel.
@@ -208,7 +209,8 @@ export const SidePanel = ({
       {(next || prev) && (
         <div
           data-panel-next
-          className={`${mobileOpen ? 'flex' : 'hidden'} shrink-0 items-center gap-2 border-y px-3 py-1.5 ${desk(false)}`}
+          // Toujours visible sur smartphone, même panneau replié
+          className={`flex shrink-0 items-center gap-2 border-y px-3 py-1.5 ${desk(false)}`}
           style={{ borderColor: 'var(--bdr)', background: 'var(--surf2)' }}
         >
           {prev && (
