@@ -1,10 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useRouter } from 'next/navigation';
-import { ChevronLeft, FileDown, LogOut, Moon, Settings, Sun, Trash2, X } from 'lucide-react';
-import { PlanEditor } from '@/components/plan/PlanEditor';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Lock, Trash2, X } from 'lucide-react';
+import { PlanEditor, type WorkspaceMode } from '@/components/plan/PlanEditor';
+import { ProjectHeader } from '@/components/project/ProjectHeader';
+import { modeFromParam, modeHref } from '@/components/project/workspaceMode';
 import {
   QuantitiesPrintView,
   type PrintCompany,
@@ -19,48 +21,6 @@ import {
 import { useShallow } from 'zustand/react/shallow';
 import { useUiStore } from '@/store/uiStore';
 import { useSharingStore } from '@/store/sharingStore';
-import type { ProjectStatus } from '@/types/project';
-
-type WorkspaceTab = 'PLAN' | 'TILING' | 'QUANTITIES';
-
-const STATUS_CYCLE: Record<ProjectStatus, ProjectStatus> = { new: 'wip', wip: 'done', done: 'new' };
-const STATUS_LABELS: Record<ProjectStatus, string> = {
-  new: 'Nouveau',
-  wip: 'En cours',
-  done: 'Terminé',
-};
-const STATUS_CLASS: Record<ProjectStatus, string> = {
-  new: 'tag-new',
-  wip: 'tag-wip',
-  done: 'tag-ok',
-};
-
-const TAB_ICONS: Record<WorkspaceTab, JSX.Element> = {
-  PLAN: (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-      <rect x="1" y="1" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.3" />
-      <path d="M1 5h12M5 5v8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-    </svg>
-  ),
-  TILING: (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-      <rect x="1" y="1" width="5" height="5" rx="1" fill="currentColor" fillOpacity=".4" />
-      <rect x="8" y="1" width="5" height="5" rx="1" fill="currentColor" />
-      <rect x="1" y="8" width="5" height="5" rx="1" fill="currentColor" />
-      <rect x="8" y="8" width="5" height="5" rx="1" fill="currentColor" fillOpacity=".4" />
-    </svg>
-  ),
-  QUANTITIES: (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-      <path
-        d="M2 4h10M2 7h7M2 10h5"
-        stroke="currentColor"
-        strokeWidth="1.3"
-        strokeLinecap="round"
-      />
-    </svg>
-  ),
-};
 
 // ── Project Settings Modal ─────────────────────────────────────────────────
 
@@ -458,13 +418,13 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
   const user = useUiStore((s) => s.user);
   const logout = useUiStore((s) => s.logout);
 
-  const [tab, setTab] = useState<WorkspaceTab>('PLAN');
-  const [tabHint, setTabHint] = useState(false);
-  useEffect(() => {
-    if (!tabHint) return;
-    const t = setTimeout(() => setTabHint(false), 3500);
-    return () => clearTimeout(t);
-  }, [tabHint]);
+  // Mode affiché (Plan 2D / Calepinage / Quantitatif) : dans l'adresse (?mode=…)
+  const searchParams = useSearchParams();
+  const mode = modeFromParam(searchParams.get('mode'));
+  const setMode = useCallback(
+    (m: WorkspaceMode) => router.push(modeHref(id, m), { scroll: false }),
+    [router, id],
+  );
   const [showSettings, setShowSettings] = useState(false);
   const [printMounted, setPrintMounted] = useState(false);
   useEffect(() => {
@@ -492,9 +452,6 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
       })
       .catch(() => setPrintCompany(null));
   }, []);
-  const [showUserMenu, setShowUserMenu] = useState(false);
-  const userMenuRef = useRef<HTMLDivElement>(null);
-
   const handlePrint = useCallback(() => {
     window.print();
   }, []);
@@ -557,16 +514,6 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
     return () => clearInterval(interval);
   }, [id, lockStatus]);
 
-  // Close user menu on outside click
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node))
-        setShowUserMenu(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
-
   if (!hydrated) {
     return (
       <div
@@ -593,365 +540,56 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
   }
 
   const canGoTiling = rooms.some((r) => r.points.length >= 3);
-  const roomCount = rooms.filter((r) => r.points.length >= 3).length;
   const isReadOnly = lockStatus === 'locked_by_other' || activeProject.myRole === 'viewer';
-  const initials =
-    user?.name
-      .split(' ')
-      .map((w) => w[0])
-      .join('')
-      .slice(0, 2)
-      .toUpperCase() ?? 'CP';
-  const planLabel: Record<string, string> = { free: 'Gratuit', pro: 'Pro', team: 'Équipe' };
 
   return (
     <div
       className="flex h-screen flex-col overflow-hidden"
       style={{ background: 'var(--bg)', height: '100svh' }}
     >
-      {/* Topbar */}
-      <header className="shell-topbar gap-0 px-5">
-        {/* Logo */}
-        <div className="mr-3 hidden shrink-0 items-center gap-2 mouse:flex md:flex">
-          <div
-            className="flex h-6 w-6 items-center justify-center rounded-md"
-            style={{ background: 'var(--accent)' }}
-          >
-            <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
-              <rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.2" fill="white" />
-              <rect x="9" y="1.5" width="5.5" height="5.5" rx="1.2" fill="white" fillOpacity=".7" />
-              <rect x="1.5" y="9" width="5.5" height="5.5" rx="1.2" fill="white" fillOpacity=".7" />
-              <rect x="9" y="9" width="5.5" height="5.5" rx="1.2" fill="white" />
-            </svg>
-          </div>
-          <span
-            style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: 13.5,
-              fontWeight: 700,
-              color: 'var(--text)',
-            }}
-          >
-            CaléPlan
-          </span>
-        </div>
+      <ProjectHeader
+        projectName={activeProject.name}
+        onRename={(name) => rename(activeProject.id, name)}
+        status={activeProject.status}
+        onStatusChange={setStatus}
+        clientName={activeProject.client?.name}
+        updatedAt={activeProject.updatedAt}
+        readOnly={isReadOnly}
+        user={user}
+        darkMode={darkMode}
+        onToggleDarkMode={toggleDarkMode}
+        onBack={() => router.push('/dashboard')}
+        onOpenProjectSettings={() => setShowSettings(true)}
+        onPrint={handlePrint}
+        onOpenAccount={() => router.push('/settings')}
+        onOpenPlan={() => router.push('/settings?tab=forfait')}
+        onLogout={() => void logout().then(() => router.push('/auth'))}
+      />
 
-        <div
-          className="mx-3 hidden h-4 w-px mouse:block md:block"
-          style={{ background: 'var(--bdr)' }}
-        />
-
-        {/* Mobile-only back button */}
-        <button
-          type="button"
-          onClick={() => router.push('/dashboard')}
-          className="btn-icon mr-1 flex mouse:hidden md:hidden"
-          aria-label="Retour aux projets"
-        >
-          <ChevronLeft size={18} />
-        </button>
-
-        {/* Breadcrumb */}
-        <div
-          className="flex min-w-0 shrink items-center gap-1.5 text-[12.5px]"
-          style={{ color: 'var(--text2)' }}
-        >
-          <button
-            type="button"
-            onClick={() => router.push('/dashboard')}
-            className="hidden shrink-0 hover:underline mouse:inline md:inline"
-            style={{ color: 'var(--text2)' }}
-          >
-            Projets
-          </button>
-          <svg
-            width="12"
-            height="12"
-            viewBox="0 0 12 12"
-            fill="none"
-            className="hidden shrink-0 mouse:block md:block"
-            style={{ opacity: 0.4 }}
-          >
-            <path
-              d="M4 2l4 4-4 4"
-              stroke="currentColor"
-              strokeWidth="1.3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          <input
-            type="text"
-            value={activeProject.name}
-            onChange={(e) => rename(activeProject.id, e.target.value)}
-            readOnly={isReadOnly}
-            className="hidden min-w-0 truncate mouse:block md:block"
-            style={{
-              background: 'transparent',
-              border: 'none',
-              outline: 'none',
-              fontFamily: 'var(--font-display)',
-              fontSize: 13.5,
-              fontWeight: 600,
-              color: 'var(--text)',
-              maxWidth: 260,
-            }}
-            onFocus={(e) => {
-              e.target.style.background = 'var(--surf2)';
-              e.target.style.borderRadius = 'var(--rs)';
-              e.target.style.padding = '2px 6px';
-            }}
-            onBlur={(e) => {
-              e.target.style.background = 'transparent';
-              e.target.style.padding = '0';
-            }}
-          />
-        </div>
-
-        <button
-          type="button"
-          className="btn-icon hidden disabled:cursor-not-allowed disabled:opacity-40 mouse:flex md:flex"
-          aria-label="Paramètres"
-          title={isReadOnly ? 'Lecture seule' : 'Paramètres du projet'}
-          onClick={() => setShowSettings(true)}
-          disabled={isReadOnly}
-        >
-          <Settings size={14} />
-        </button>
-
-        {/* Client + status */}
-        <div
-          className="mx-3 hidden min-w-0 shrink items-center gap-1.5 text-[12px] mouse:flex md:flex"
-          style={{ color: 'var(--muted)' }}
-        >
-          {activeProject.client?.name && (
-            <>
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="shrink-0">
-                <circle cx="6" cy="4" r="2.5" stroke="currentColor" strokeWidth="1.2" />
-                <path
-                  d="M1.5 10c0-2 2-3.5 4.5-3.5S10.5 8 10.5 10"
-                  stroke="currentColor"
-                  strokeWidth="1.2"
-                  strokeLinecap="round"
-                />
-              </svg>
-              <span className="truncate">{activeProject.client.name}</span>
-              <span className="shrink-0" style={{ opacity: 0.4 }}>
-                ·
-              </span>
-            </>
-          )}
-          <span className="shrink-0">
-            {new Date(activeProject.updatedAt).toLocaleDateString('fr-FR')}
-          </span>
-          <span className="shrink-0" style={{ opacity: 0.4 }}>
-            ·
-          </span>
-          <button
-            type="button"
-            onClick={() => setStatus(STATUS_CYCLE[activeProject.status])}
-            title="Cliquer pour changer le statut"
-            className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold transition-opacity hover:opacity-75 ${STATUS_CLASS[activeProject.status]}`}
-          >
-            {STATUS_LABELS[activeProject.status]}
-          </button>
-        </div>
-
-        {/* Actions */}
-        <div className="ml-auto flex shrink-0 items-center gap-2">
-          <button type="button" onClick={toggleDarkMode} className="btn-icon" aria-label="Thème">
-            {darkMode ? <Sun size={14} /> : <Moon size={14} />}
-          </button>
-          <button
-            type="button"
-            className="btn-secondary hidden items-center gap-1.5 text-[12.5px] mouse:flex md:flex"
-            style={{ padding: '5px 10px' }}
-            onClick={handlePrint}
-          >
-            <FileDown size={13} /> PDF
-          </button>
-
-          {/* User menu */}
-          <div className="relative" ref={userMenuRef}>
-            <button
-              type="button"
-              onClick={() => setShowUserMenu((v) => !v)}
-              className="flex items-center gap-2 rounded-[var(--rs)] px-2 py-1.5 transition-colors"
-              style={{ background: 'var(--surf2)', border: '1px solid var(--bdr)' }}
-            >
-              <div
-                className="flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold text-white"
-                style={{ background: 'var(--accent)' }}
-              >
-                {initials}
-              </div>
-              {user?.plan && (
-                <span className="tag-pro rounded-full px-1.5 py-0.5 text-[10px] font-semibold">
-                  {planLabel[user.plan] ?? user.plan}
-                </span>
-              )}
-            </button>
-            {showUserMenu && (
-              <div
-                className="absolute right-0 top-full z-50 mt-1 w-52 rounded-xl p-1 shadow-xl"
-                style={{ background: 'var(--surf)', border: '1px solid var(--bdr)' }}
-              >
-                <div className="px-3 py-2">
-                  <p className="text-[13px] font-semibold" style={{ color: 'var(--text)' }}>
-                    {user?.name ?? 'Utilisateur'}
-                  </p>
-                  <p className="text-[11.5px]" style={{ color: 'var(--muted)' }}>
-                    {user?.email ?? ''}
-                  </p>
-                </div>
-                <div className="my-1 h-px" style={{ background: 'var(--bdr)' }} />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowUserMenu(false);
-                    router.push('/settings');
-                  }}
-                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[13px] transition-colors"
-                  style={{ color: 'var(--text2)' }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLButtonElement).style.background = 'var(--surf2)';
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLButtonElement).style.background = 'transparent';
-                  }}
-                >
-                  <Settings size={14} />
-                  Paramètres
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowUserMenu(false);
-                    router.push('/settings?tab=forfait');
-                  }}
-                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[13px] transition-colors"
-                  style={{ color: 'var(--text2)' }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLButtonElement).style.background = 'var(--surf2)';
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLButtonElement).style.background = 'transparent';
-                  }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <path
-                      d="M7 1L9 5h4l-3.2 2.4 1.2 3.9L7 9.1 3 11.3l1.2-3.9L1 5h4L7 1z"
-                      stroke="currentColor"
-                      strokeWidth="1.2"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  Changer de forfait
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void logout().then(() => router.push('/auth'))}
-                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[13px] transition-colors"
-                  style={{ color: '#ef4444' }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLButtonElement).style.background = 'var(--surf2)';
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLButtonElement).style.background = 'transparent';
-                  }}
-                >
-                  <LogOut size={13} />
-                  Se déconnecter
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </header>
-
-      {/* Lock banner */}
+      {/* Verrou : quelqu'un d'autre édite le projet */}
       {lockStatus === 'locked_by_other' && (
         <div
-          className="flex items-center gap-2 border-b px-5 py-2 text-[12px]"
+          role="status"
+          className="flex items-center gap-2 border-b px-3 py-1.5 text-[12px] mouse:px-5 md:px-5"
           style={{
-            background: 'rgba(249,115,22,0.08)',
+            background: 'color-mix(in srgb, var(--accent) 8%, transparent)',
             borderColor: 'var(--bdr)',
-            color: '#f97316',
+            color: 'var(--accent)',
           }}
         >
-          <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-            <rect
-              x="3"
-              y="6"
-              width="8"
-              height="7"
-              rx="1.5"
-              stroke="currentColor"
-              strokeWidth="1.3"
-            />
-            <path
-              d="M5 6V4.5a2 2 0 1 1 4 0V6"
-              stroke="currentColor"
-              strokeWidth="1.3"
-              strokeLinecap="round"
-            />
-          </svg>
-          Édition en cours par{' '}
-          <strong>{lockInfo?.lockedByDisplayName ?? 'un autre utilisateur'}</strong>. Vous êtes en
-          lecture seule.
-        </div>
-      )}
-
-      {/* Tab bar */}
-      <div className="shell-tabs px-1">
-        {(
-          [
-            { id: 'PLAN', label: 'Plan 2D' },
-            { id: 'TILING', label: 'Calepinage' },
-            {
-              id: 'QUANTITIES',
-              label: 'Quantitatif',
-              badge: roomCount > 0 ? roomCount : undefined,
-            },
-          ] as { id: WorkspaceTab; label: string; badge?: number }[]
-        ).map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            aria-disabled={t.id !== 'PLAN' && !canGoTiling}
-            onClick={() => (canGoTiling || t.id === 'PLAN' ? setTab(t.id) : setTabHint(true))}
-            className={`shell-tab${tab === t.id ? 'active' : ''}${t.id !== 'PLAN' && !canGoTiling ? 'opacity-40' : ''}`}
-          >
-            {TAB_ICONS[t.id]}
-            {t.label}
-            {t.badge !== undefined && (
-              <span
-                className="rounded-full px-1.5 py-0.5 text-[10px] font-bold"
-                style={{ background: 'var(--surf3)', color: 'var(--text2)' }}
-              >
-                {t.badge}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
-
-      {tabHint && (
-        <div
-          role="status"
-          className="border-b px-5 py-2 text-[12.5px]"
-          style={{ background: 'var(--surf2)', borderColor: 'var(--bdr)', color: 'var(--text2)' }}
-        >
-          Tracez d&apos;abord une pièce fermée dans le Plan 2D pour accéder au calepinage et au
-          quantitatif.
+          <Lock size={13} aria-hidden className="shrink-0" />
+          <span className="min-w-0 truncate">
+            Lecture seule — édition en cours par{' '}
+            <strong>{lockInfo?.lockedByDisplayName ?? 'un autre utilisateur'}</strong>
+          </span>
         </div>
       )}
 
       {/* Content — un seul plan, trois modes (Plan 2D / Calepinage / Quantitatif) */}
       <main className="flex flex-1 overflow-hidden">
         <PlanEditor
-          mode={canGoTiling ? tab : 'PLAN'}
-          onModeChange={setTab}
+          mode={canGoTiling ? mode : 'PLAN'}
+          onModeChange={setMode}
           readOnly={isReadOnly}
           onNavigateBack={() => router.push('/')}
         />

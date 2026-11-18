@@ -9,6 +9,7 @@ import { create } from 'zustand';
  * - `mobileOpen` (smartphone) : panneau du bas déplié — remis à zéro à chaque visite.
  */
 const STORAGE_KEY = 'caleplan_panel_collapsed';
+const NAV_LEARNED_KEY = 'caleplan_nav_learned';
 
 function readCollapsed(): boolean {
   try {
@@ -18,9 +19,20 @@ function readCollapsed(): boolean {
   }
 }
 
+function readNavLearned(): boolean {
+  try {
+    return typeof window !== 'undefined' && window.localStorage.getItem(NAV_LEARNED_KEY) === 'true';
+  } catch {
+    return false;
+  }
+}
+
 interface PanelState {
   collapsed: boolean;
   mobileOpen: boolean;
+  /** Liens « précédent / suivant » déjà utilisés : on arrête de les faire pulser */
+  navLearned: boolean;
+  markNavLearned: () => void;
   setCollapsed: (collapsed: boolean) => void;
   setMobileOpen: (open: boolean) => void;
 }
@@ -28,6 +40,15 @@ interface PanelState {
 export const usePanelStore = create<PanelState>((set) => ({
   collapsed: readCollapsed(),
   mobileOpen: false,
+  navLearned: readNavLearned(),
+  markNavLearned: () => {
+    try {
+      window.localStorage.setItem(NAV_LEARNED_KEY, 'true');
+    } catch {
+      // stockage indisponible : la pulsation s'arrête pour la session
+    }
+    set({ navLearned: true });
+  },
   setCollapsed: (collapsed) => {
     try {
       window.localStorage.setItem(STORAGE_KEY, String(collapsed));
@@ -40,3 +61,4 @@ export const usePanelStore = create<PanelState>((set) => ({
 }));
 
 export const PANEL_STORAGE_KEY = STORAGE_KEY;
+export const NAV_LEARNED_STORAGE_KEY = NAV_LEARNED_KEY;

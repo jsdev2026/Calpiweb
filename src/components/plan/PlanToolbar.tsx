@@ -39,8 +39,10 @@ interface PlanToolbarProps {
   wallThickness: number;
   onWallThicknessChange: (mm: number) => void;
   readOnly?: boolean;
-  /** Passe au Calepinage (présent dès qu'une pièce est fermée) */
+  /** Passe au Calepinage */
   onNext?: () => void;
+  /** Aucune pièce fermée : lien grisé (le clic explique pourquoi) */
+  nextDisabled?: boolean;
 }
 
 const TOOLS: {
@@ -104,6 +106,7 @@ export const PlanToolbar = ({
   onWallThicknessChange,
   readOnly = false,
   onNext,
+  nextDisabled = false,
 }: PlanToolbarProps) => {
   const rooms = useProjectStore(selectRooms).filter((r) => r.points.length >= 3);
   const totalArea = rooms.reduce((a, r) => a + getPolygonArea(r.points), 0);
@@ -233,7 +236,7 @@ export const PlanToolbar = ({
       icon={<PencilRuler size={18} />}
       title="Plan 2D"
       summary={summary}
-      next={onNext ? { label: 'Calepinage', onClick: onNext } : undefined}
+      next={onNext ? { label: 'Calepinage', onClick: onNext, disabled: nextDisabled } : undefined}
       bar={readOnly ? undefined : bar}
       railItems={readOnly ? [railItems[railItems.length - 1]!] : railItems}
     >
