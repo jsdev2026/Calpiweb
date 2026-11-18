@@ -15,6 +15,7 @@ import {
   SlidersHorizontal,
   Sun,
   User,
+  GraduationCap,
 } from 'lucide-react';
 import type { ProjectStatus } from '@/types/project';
 
@@ -46,6 +47,8 @@ export interface ProjectHeaderProps {
   onPrint: () => void;
   onOpenAccount: () => void;
   onOpenPlan: () => void;
+  /** Rouvre le tutoriel de prise en main */
+  onOpenTutorial?: () => void;
   onLogout: () => void;
 }
 
@@ -151,6 +154,7 @@ export const ProjectHeader = ({
   onPrint,
   onOpenAccount,
   onOpenPlan,
+  onOpenTutorial,
   onLogout,
 }: ProjectHeaderProps) => {
   const [statusOpen, setStatusOpen] = useState(false);
@@ -345,6 +349,14 @@ export const ProjectHeader = ({
             >
               Changer de forfait
             </MenuItem>
+            {onOpenTutorial && (
+              <MenuItem
+                icon={<GraduationCap size={14} />}
+                onClick={run(() => setUserOpen(false), onOpenTutorial)}
+              >
+                Tutoriel
+              </MenuItem>
+            )}
             <MenuDivider />
             <MenuItem
               icon={<LogOut size={13} />}
@@ -425,6 +437,14 @@ export const ProjectHeader = ({
             <MenuItem icon={<ThemeIcon size={14} />} onClick={onToggleDarkMode}>
               {themeLabel}
             </MenuItem>
+            {onOpenTutorial && (
+              <MenuItem
+                icon={<GraduationCap size={14} />}
+                onClick={run(() => setMoreOpen(false), onOpenTutorial)}
+              >
+                Tutoriel
+              </MenuItem>
+            )}
             <MenuDivider />
             <MenuItem
               icon={<User size={14} />}
