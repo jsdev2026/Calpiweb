@@ -1,10 +1,21 @@
 'use client';
 
-import { ArrowLeftRight, ChevronDown, ChevronUp, RotateCcw } from 'lucide-react';
+import {
+  ArrowLeftRight,
+  BrickWall,
+  Crosshair,
+  LayoutGrid,
+  Pointer,
+  RotateCcw,
+  RotateCw,
+  Ruler,
+  SeparatorVertical,
+} from 'lucide-react';
 import type { TileLayout, TilingConfig } from '@/types/tiling';
 import type { QuantityResult } from '@/engine/quantities/quantityEngine';
 import { formatM2 } from '@/utils/formatters';
 import { CompactNumberInput } from './NumberStepper';
+import { PanelChip, PanelSection, SidePanel, panelChipStyle } from '@/components/panel/SidePanel';
 
 // ── Données ──────────────────────────────────────────────────────────────────
 
@@ -107,58 +118,12 @@ const PoseIcon = ({ id }: { id: PoseId }) => {
   }
 };
 
-// ── UI compacte ──────────────────────────────────────────────────────────────
-
-const activeStyle = {
-  borderColor: 'var(--accent)',
-  background: 'color-mix(in srgb, var(--accent) 12%, transparent)',
-  color: 'var(--accent)',
-};
-const idleStyle = { borderColor: 'var(--bdr)', background: 'var(--surf2)', color: 'var(--text2)' };
-
-const Chip = ({
-  active,
-  onClick,
-  children,
-  ariaLabel,
-  className = '',
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-  ariaLabel?: string;
-  className?: string;
-}) => (
-  <button
-    type="button"
-    aria-pressed={active}
-    aria-label={ariaLabel}
-    onClick={onClick}
-    className={`flex h-9 shrink-0 items-center justify-center whitespace-nowrap rounded-lg border px-2.5 text-[12.5px] font-semibold transition-colors active:scale-95 ${className}`}
-    style={active ? activeStyle : idleStyle}
-  >
-    {children}
-  </button>
-);
-
-const Row = ({ label, children }: { label: string; children: React.ReactNode }) => (
-  <div className="flex flex-col gap-1.5">
-    <span
-      className="text-[10.5px] font-bold uppercase tracking-wider"
-      style={{ color: 'var(--muted)' }}
-    >
-      {label}
-    </span>
-    {children}
-  </div>
-);
+// ── Panneau ──────────────────────────────────────────────────────────────────
 
 export interface TileSettingsSheetProps {
   config: TilingConfig;
   onChange: (config: TilingConfig) => void;
   result: QuantityResult;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
   onOrigin: (origin: 'CORNER' | 'CENTER') => void;
   onShowQuantities: () => void;
   /** Passe en mode « toucher un carreau » pour choisir le carreau de départ */
@@ -166,12 +131,13 @@ export interface TileSettingsSheetProps {
   readOnly?: boolean;
 }
 
+const ICON = 16;
+
+/** Panneau du mode Calepinage (panneau latéral commun aux trois modes). */
 export const TileSettingsSheet = ({
   config,
   onChange,
   result,
-  open,
-  onOpenChange,
   onOrigin,
   onShowQuantities,
   onPickStart,
@@ -183,281 +149,246 @@ export const TileSettingsSheet = ({
   const poseId = poseIdOf(config);
 
   return (
-    <div
-      data-testid="tile-settings-sheet"
-      data-canvas-overlay
-      className="absolute inset-x-0 bottom-0 z-20 flex flex-col rounded-t-2xl border-t mouse:inset-x-auto mouse:bottom-auto mouse:right-3 mouse:top-3 mouse:max-h-[calc(100%-1.5rem)] mouse:w-[320px] mouse:rounded-2xl mouse:border md:inset-x-auto md:bottom-auto md:right-3 md:top-3 md:max-h-[calc(100%-1.5rem)] md:w-[320px] md:rounded-2xl md:border"
-      style={{
-        background: 'var(--surf)',
-        borderColor: 'var(--bdr)',
-        boxShadow: 'var(--sh-lg)',
-        paddingBottom: 'env(safe-area-inset-bottom)',
-      }}
-    >
-      {/* Bandeau résumé — toujours visible, touche pour ouvrir / fermer */}
-      <button
-        type="button"
-        onClick={() => onOpenChange(!open)}
-        aria-expanded={open}
-        aria-label="Réglages du carreau"
-        className="flex w-full shrink-0 items-center gap-2 px-3 py-2 text-left"
-      >
-        <span
-          className="h-3.5 w-3.5 shrink-0 rounded"
-          style={{ background: config.color, border: '1px solid var(--bdr)' }}
-        />
-        <span className="flex min-w-0 flex-1 flex-col">
-          <span className="truncate text-[13px] font-bold" style={{ color: 'var(--text)' }}>
-            {tileSummary(config)}
+    <SidePanel
+      testId="tile-settings-sheet"
+      icon={<LayoutGrid size={18} />}
+      title="Calepinage"
+      summary={tileSummary(config)}
+      railItems={[
+        { id: 'format', label: 'Format', icon: <Ruler size={ICON} /> },
+        { id: 'joint', label: 'Joint', icon: <SeparatorVertical size={ICON} /> },
+        { id: 'pose', label: 'Pose', icon: <BrickWall size={ICON} /> },
+        { id: 'rotation', label: 'Rotation', icon: <RotateCw size={ICON} /> },
+        { id: 'depart', label: 'Départ de la pose', icon: <Crosshair size={ICON} /> },
+      ]}
+      footer={
+        <div className="flex w-full items-center gap-2">
+          <span className="min-w-0 flex-1 truncate text-[12px]" style={{ color: 'var(--muted)' }}>
+            {result.roomArea > 0 && (
+              <>
+                {formatM2(result.roomArea)} ·{' '}
+                <strong style={{ color: 'var(--text2)' }}>{result.toOrder} carreaux</strong>
+              </>
+            )}
           </span>
-          {result.roomArea > 0 && (
-            <span className="truncate text-[11.5px]" style={{ color: 'var(--muted)' }}>
-              {formatM2(result.roomArea)} ·{' '}
-              <strong style={{ color: 'var(--text2)' }}>{result.toOrder} carreaux</strong> à
-              commander
-            </span>
-          )}
-        </span>
-        {open ? (
-          <ChevronDown size={18} style={{ color: 'var(--muted)' }} />
-        ) : (
-          <ChevronUp size={18} style={{ color: 'var(--muted)' }} />
-        )}
-      </button>
-
-      <div
-        data-open={open}
-        className={`${open ? 'flex' : 'hidden'} max-h-[42svh] flex-col gap-3 overflow-y-auto border-t px-3 pb-3 pt-2.5 mouse:max-h-none md:max-h-none`}
-        style={{ borderColor: 'var(--bdr)' }}
-      >
-        {readOnly && (
-          <p
-            className="rounded-lg px-2.5 py-1.5 text-[12px]"
-            style={{ background: 'var(--surf2)', color: 'var(--muted)' }}
+          <button
+            type="button"
+            onClick={onShowQuantities}
+            className="shrink-0 text-[12.5px] font-semibold underline-offset-2 hover:underline"
+            style={{ color: 'var(--accent)' }}
           >
-            Lecture seule — les réglages ne peuvent pas être modifiés.
-          </p>
-        )}
+            Voir le quantitatif →
+          </button>
+        </div>
+      }
+    >
+      {readOnly && (
+        <p
+          className="rounded-lg px-2.5 py-1.5 text-[12px]"
+          style={{ background: 'var(--surf2)', color: 'var(--muted)' }}
+        >
+          Lecture seule — les réglages ne peuvent pas être modifiés.
+        </p>
+      )}
 
-        {/* Format : formats courants (défilement horizontal) + saisie libre */}
-        <Row label="Format (cm)">
-          <div
-            className="-mx-3 flex gap-1.5 overflow-x-auto px-3 pb-0.5"
-            style={{ scrollbarWidth: 'none' }}
-          >
-            {FORMAT_PRESETS.map(([w, h]) => (
-              <Chip
-                key={`${w}x${h}`}
-                active={config.width === w && config.height === h}
-                ariaLabel={`Format ${cm(w)} par ${cm(h)} cm`}
-                onClick={() => update({ width: w, height: h })}
-              >
-                {cm(w)}×{cm(h)}
-              </Chip>
-            ))}
-          </div>
-          <div className="flex items-center gap-1.5">
-            <CompactNumberInput
-              label="Largeur"
-              unit="cm"
-              value={config.width / 10}
-              min={1}
-              max={400}
-              onChange={(v) => update({ width: Math.round(v * 10) })}
-              className="flex-1"
-            />
-            <span className="text-[13px]" style={{ color: 'var(--muted)' }}>
-              ×
-            </span>
-            <CompactNumberInput
-              label="Longueur"
-              unit="cm"
-              value={config.height / 10}
-              min={1}
-              max={400}
-              onChange={(v) => update({ height: Math.round(v * 10) })}
-              className="flex-1"
-            />
-            <button
-              type="button"
-              aria-label="Inverser largeur et longueur"
-              title="Inverser"
-              onClick={() => update({ width: config.height, height: config.width })}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border"
-              style={idleStyle}
+      {/* Format : formats courants (défilement horizontal) + saisie libre */}
+      <PanelSection id="format" title="Format (cm)">
+        <div
+          className="-mx-3 flex gap-1.5 overflow-x-auto px-3 pb-0.5"
+          style={{ scrollbarWidth: 'none' }}
+        >
+          {FORMAT_PRESETS.map(([w, h]) => (
+            <PanelChip
+              key={`${w}x${h}`}
+              active={config.width === w && config.height === h}
+              ariaLabel={`Format ${cm(w)} par ${cm(h)} cm`}
+              onClick={() => update({ width: w, height: h })}
             >
-              <ArrowLeftRight size={15} />
+              {cm(w)}×{cm(h)}
+            </PanelChip>
+          ))}
+        </div>
+        <div className="flex items-center gap-1.5">
+          <CompactNumberInput
+            label="Largeur"
+            unit="cm"
+            value={config.width / 10}
+            min={1}
+            max={400}
+            onChange={(v) => update({ width: Math.round(v * 10) })}
+            className="flex-1"
+          />
+          <span className="text-[13px]" style={{ color: 'var(--muted)' }}>
+            ×
+          </span>
+          <CompactNumberInput
+            label="Longueur"
+            unit="cm"
+            value={config.height / 10}
+            min={1}
+            max={400}
+            onChange={(v) => update({ height: Math.round(v * 10) })}
+            className="flex-1"
+          />
+          <PanelChip
+            ariaLabel="Inverser largeur et longueur"
+            title="Inverser"
+            onClick={() => update({ width: config.height, height: config.width })}
+            className="w-9 px-0"
+          >
+            <ArrowLeftRight size={15} />
+          </PanelChip>
+        </div>
+      </PanelSection>
+
+      <PanelSection id="joint" title="Joint (mm)">
+        <div className="flex items-center gap-1.5">
+          {JOINT_PRESETS.map((j) => (
+            <PanelChip
+              key={j}
+              active={config.joint === j}
+              onClick={() => update({ joint: j })}
+              ariaLabel={`Joint ${j} mm`}
+              className="flex-1"
+            >
+              {j}
+            </PanelChip>
+          ))}
+          <CompactNumberInput
+            label="Joint"
+            unit="mm"
+            value={config.joint}
+            min={0}
+            max={30}
+            onChange={(v) => update({ joint: v })}
+            className="w-[76px] shrink-0"
+          />
+        </div>
+      </PanelSection>
+
+      <PanelSection id="pose" title="Pose">
+        <div className="grid grid-cols-5 gap-1.5">
+          {POSES.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              aria-pressed={poseId === p.id}
+              aria-label={p.label}
+              title={p.label}
+              onClick={() =>
+                update({
+                  layout: p.layout,
+                  ...(p.stagger !== undefined ? { stagger: p.stagger } : {}),
+                })
+              }
+              className="flex h-12 flex-col items-center justify-center gap-0.5 rounded-lg border text-[10.5px] font-semibold transition-colors active:scale-95"
+              style={panelChipStyle(poseId === p.id)}
+            >
+              <PoseIcon id={p.id} />
+              <span className="leading-none">{p.short}</span>
             </button>
-          </div>
-        </Row>
-
-        {/* Joint */}
-        <Row label="Joint (mm)">
+          ))}
+        </div>
+        {config.layout === 'CHEVRON' && (
           <div className="flex items-center gap-1.5">
-            {JOINT_PRESETS.map((j) => (
-              <Chip
-                key={j}
-                active={config.joint === j}
-                onClick={() => update({ joint: j })}
-                ariaLabel={`Joint ${j} mm`}
-                className="flex-1"
-              >
-                {j}
-              </Chip>
-            ))}
-            <CompactNumberInput
-              label="Joint"
-              unit="mm"
-              value={config.joint}
-              min={0}
-              max={30}
-              onChange={(v) => update({ joint: v })}
-              className="w-[76px] shrink-0"
-            />
-          </div>
-        </Row>
-
-        {/* Pose */}
-        <Row label="Pose">
-          <div className="grid grid-cols-5 gap-1.5">
-            {POSES.map((p) => (
-              <button
-                key={p.id}
-                type="button"
-                aria-pressed={poseId === p.id}
-                aria-label={p.label}
-                title={p.label}
-                onClick={() =>
-                  update({
-                    layout: p.layout,
-                    ...(p.stagger !== undefined ? { stagger: p.stagger } : {}),
-                  })
-                }
-                className="flex h-12 flex-col items-center justify-center gap-0.5 rounded-lg border text-[10.5px] font-semibold transition-colors active:scale-95"
-                style={poseId === p.id ? activeStyle : idleStyle}
-              >
-                <PoseIcon id={p.id} />
-                <span className="leading-none">{p.short}</span>
-              </button>
-            ))}
-          </div>
-          {config.layout === 'CHEVRON' && (
-            <div className="flex items-center gap-1.5">
-              <span className="text-[12px]" style={{ color: 'var(--text2)' }}>
-                Coupe
-              </span>
-              {CHEVRON_PRESETS.map((a) => (
-                <Chip
-                  key={a}
-                  active={config.chevronAngle === a}
-                  onClick={() => update({ chevronAngle: a })}
-                  className="flex-1"
-                >
-                  {a}°
-                </Chip>
-              ))}
-            </div>
-          )}
-        </Row>
-
-        {/* Rotation */}
-        <Row label="Rotation">
-          <div className="flex items-center gap-1.5">
-            {ANGLE_PRESETS.map((a) => (
-              <Chip
+            <span className="text-[12px]" style={{ color: 'var(--text2)' }}>
+              Coupe
+            </span>
+            {CHEVRON_PRESETS.map((a) => (
+              <PanelChip
                 key={a}
-                active={config.angle === a}
-                onClick={() => update({ angle: a })}
-                ariaLabel={`Rotation ${a}°`}
+                active={config.chevronAngle === a}
+                onClick={() => update({ chevronAngle: a })}
+                className="flex-1"
               >
                 {a}°
-              </Chip>
+              </PanelChip>
             ))}
-            <input
-              type="range"
-              min={0}
-              max={90}
-              step={1}
-              aria-label="Rotation libre"
-              value={config.angle}
-              disabled={readOnly}
-              onChange={(e) => update({ angle: parseInt(e.target.value, 10) })}
-              className="h-9 min-w-0 flex-1 cursor-pointer accent-orange-500"
-            />
-            <span
-              className="w-9 shrink-0 text-right text-[13px] font-bold tabular-nums"
-              style={{ color: 'var(--accent)' }}
-            >
-              {config.angle}°
-            </span>
           </div>
-        </Row>
+        )}
+      </PanelSection>
 
-        {/* Point de départ (le réglage fin se fait au doigt sur le plan) */}
-        <Row label="Départ de la pose">
-          <div className="flex items-center gap-1.5">
-            <Chip active={false} onClick={() => !readOnly && onOrigin('CENTER')} className="flex-1">
-              Centré
-            </Chip>
-            {config.layout === 'STRAIGHT' && (
-              <Chip
-                active={false}
-                onClick={() => !readOnly && onOrigin('CORNER')}
-                className="flex-1"
-              >
-                Angle ↖
-              </Chip>
-            )}
-            <Chip
-              active={false}
-              ariaLabel="Remettre la pose à zéro"
-              onClick={() => update({ offsetX: 0, offsetY: 0, angle: 0 })}
+      <PanelSection id="rotation" title="Rotation">
+        <div className="flex items-center gap-1.5">
+          {ANGLE_PRESETS.map((a) => (
+            <PanelChip
+              key={a}
+              active={config.angle === a}
+              onClick={() => update({ angle: a })}
+              ariaLabel={`Rotation ${a}°`}
             >
-              <RotateCcw size={14} />
-            </Chip>
-          </div>
-          <Chip
-            active={!!config.showStartTile}
-            onClick={() => update({ showStartTile: !config.showStartTile })}
+              {a}°
+            </PanelChip>
+          ))}
+          <input
+            type="range"
+            min={0}
+            max={90}
+            step={1}
+            aria-label="Rotation libre"
+            value={config.angle}
+            disabled={readOnly}
+            onChange={(e) => update({ angle: parseInt(e.target.value, 10) })}
+            className="h-9 min-w-0 flex-1 cursor-pointer accent-orange-500"
+          />
+          <span
+            className="w-9 shrink-0 text-right text-[13px] font-bold tabular-nums"
+            style={{ color: 'var(--accent)' }}
           >
-            📐 Coter le carreau de départ
-          </Chip>
-          {config.showStartTile && (
-            <>
-              <div className="flex items-center gap-1.5">
-                {onPickStart && !readOnly && (
-                  <Chip active={false} onClick={onPickStart} className="flex-1">
-                    👆 Choisir le carreau
-                  </Chip>
-                )}
-                {config.startTile && (
-                  <Chip
-                    active={false}
-                    onClick={() => update({ startTile: undefined })}
-                    className="flex-1"
-                  >
-                    Automatique
-                  </Chip>
-                )}
-              </div>
-              <span className="text-[11.5px] leading-snug" style={{ color: 'var(--text2)' }}>
-                {config.startTile
-                  ? 'Le carreau « D » choisi est coté depuis les murs de l’angle le plus proche.'
-                  : 'Le carreau « D » est coté depuis les murs de l’angle haut-gauche de chaque pièce.'}
-              </span>
-            </>
-          )}
-        </Row>
+            {config.angle}°
+          </span>
+        </div>
+      </PanelSection>
 
-        <button
-          type="button"
-          onClick={onShowQuantities}
-          className="self-end text-[12.5px] font-semibold underline-offset-2 hover:underline"
-          style={{ color: 'var(--accent)' }}
+      {/* Point de départ (le réglage fin se fait au doigt sur le plan) */}
+      <PanelSection id="depart" title="Départ de la pose">
+        <div className="flex items-center gap-1.5">
+          <PanelChip onClick={() => !readOnly && onOrigin('CENTER')} className="flex-1">
+            Centré
+          </PanelChip>
+          {config.layout === 'STRAIGHT' && (
+            <PanelChip onClick={() => !readOnly && onOrigin('CORNER')} className="flex-1">
+              Angle ↖
+            </PanelChip>
+          )}
+          <PanelChip
+            ariaLabel="Remettre la pose à zéro"
+            title="Remettre la pose à zéro"
+            onClick={() => update({ offsetX: 0, offsetY: 0, angle: 0 })}
+          >
+            <RotateCcw size={14} />
+          </PanelChip>
+        </div>
+        <PanelChip
+          active={!!config.showStartTile}
+          onClick={() => update({ showStartTile: !config.showStartTile })}
         >
-          Voir le quantitatif →
-        </button>
-      </div>
-    </div>
+          <Ruler size={14} aria-hidden />
+          Coter le carreau de départ
+        </PanelChip>
+        {config.showStartTile && (
+          <>
+            <div className="flex items-center gap-1.5">
+              {onPickStart && !readOnly && (
+                <PanelChip onClick={onPickStart} className="flex-1">
+                  <Pointer size={14} aria-hidden />
+                  Choisir le carreau
+                </PanelChip>
+              )}
+              {config.startTile && (
+                <PanelChip onClick={() => update({ startTile: undefined })} className="flex-1">
+                  Automatique
+                </PanelChip>
+              )}
+            </div>
+            <span className="text-[11.5px] leading-snug" style={{ color: 'var(--text2)' }}>
+              {config.startTile
+                ? 'Le carreau « D » choisi est coté depuis les murs de l’angle le plus proche.'
+                : 'Le carreau « D » est coté depuis les murs de l’angle haut-gauche de chaque pièce.'}
+            </span>
+          </>
+        )}
+      </PanelSection>
+    </SidePanel>
   );
 };

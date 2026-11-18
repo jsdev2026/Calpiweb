@@ -24,6 +24,7 @@ import {
 import { TileLayer } from '@/components/tiling/TileLayer';
 import { TileSettingsSheet } from '@/components/tiling/TileSettingsSheet';
 import { StartTileLayer } from '@/components/tiling/StartTileLayer';
+import { usePanelStore } from '@/store/panelStore';
 import { computeStartTiles, pickStartTile } from '@/engine/tiling/startTile';
 import { QuantitiesSheet } from '@/components/quantities/QuantitiesSheet';
 import { PlanToolbar, type PlanTool } from './PlanToolbar';
@@ -184,8 +185,10 @@ export const PlanEditor = ({
   // Valeur « en direct » pendant un glisser — enregistrée au lâcher uniquement
   const [liveConfig, setLiveConfig] = useState<TilingConfig | null>(null);
   const config = liveConfig ?? storedConfig;
-  // Le Calepinage s'ouvre sur le plan : panneau replié par défaut
-  const [tileSheetOpen, setTileSheetOpen] = useState(false);
+  // Panneau latéral commun : état partagé par les trois modes
+  const panelMobileOpen = usePanelStore((s) => s.mobileOpen);
+  const setPanelMobileOpen = usePanelStore((s) => s.setMobileOpen);
+  const panelCollapsed = usePanelStore((s) => s.collapsed);
   const containerRef = useRef<HTMLDivElement>(null);
   const [qtySheetOpen, setQtySheetOpen] = useState(false);
   const [highlightGroup, setHighlightGroup] = useState<number | null>(null);
@@ -209,8 +212,8 @@ export const PlanEditor = ({
 
   const handlePickStart = useCallback(() => {
     setPickingStart(true);
-    setTileSheetOpen(false); // libère le plan sur smartphone
-  }, []);
+    setPanelMobileOpen(false); // libère le plan sur smartphone
+  }, [setPanelMobileOpen]);
 
   const handleStartTap = useCallback(
     (world: Point) => {
@@ -240,7 +243,7 @@ export const PlanEditor = ({
   // Quantitatif) ou de panneau, le plan est centré dans la zone réellement visible
   // (hors barre d'outils mobile et panneaux posés sur le canevas).
   const sheetOpen =
-    mode === 'TILING' ? tileSheetOpen : mode === 'QUANTITIES' ? qtySheetOpen : false;
+    mode === 'TILING' ? panelMobileOpen : mode === 'QUANTITIES' ? qtySheetOpen : false;
   const fitView = useCallback(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -261,7 +264,7 @@ export const PlanEditor = ({
     // Attendre la mise en page (panneaux affichés / masqués) avant de mesurer
     const id = requestAnimationFrame(fitView);
     return () => cancelAnimationFrame(id);
-  }, [mode, sheetOpen, fitView]);
+  }, [mode, sheetOpen, panelCollapsed, fitView]);
 
   const liveRef = useRef<TilingConfig | null>(null);
 
@@ -460,8 +463,6 @@ export const PlanEditor = ({
             config={config}
             onChange={setConfig}
             result={result}
-            open={tileSheetOpen}
-            onOpenChange={setTileSheetOpen}
             onOrigin={handleOrigin}
             onShowQuantities={() => onModeChange?.('QUANTITIES')}
             onPickStart={handlePickStart}

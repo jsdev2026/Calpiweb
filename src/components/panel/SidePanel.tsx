@@ -237,6 +237,10 @@ const dangerStyle: React.CSSProperties = {
   color: '#dc2626',
 };
 
+/** Style d'un choix (actif / neutre), pour les boutons sur mesure (vignettes de pose…) */
+export const panelChipStyle = (active: boolean): React.CSSProperties =>
+  active ? activeStyle : idleStyle;
+
 type Tone = 'default' | 'danger';
 const styleOf = (active: boolean | undefined, tone: Tone) =>
   active ? (tone === 'danger' ? dangerStyle : activeStyle) : idleStyle;
