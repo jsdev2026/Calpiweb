@@ -161,26 +161,15 @@ export const TileSettingsSheet = ({
         { id: 'rotation', label: 'Rotation', icon: <RotateCw size={ICON} /> },
         { id: 'depart', label: 'Départ de la pose', icon: <Crosshair size={ICON} /> },
       ]}
-      footer={
-        <div className="flex w-full items-center gap-2">
-          <span className="min-w-0 flex-1 truncate text-[12px]" style={{ color: 'var(--muted)' }}>
-            {result.roomArea > 0 && (
-              <>
-                {formatM2(result.roomArea)} ·{' '}
-                <strong style={{ color: 'var(--text2)' }}>{result.toOrder} carreaux</strong>
-              </>
-            )}
-          </span>
-          <button
-            type="button"
-            onClick={onShowQuantities}
-            className="shrink-0 text-[12.5px] font-semibold underline-offset-2 hover:underline"
-            style={{ color: 'var(--accent)' }}
-          >
-            Voir le quantitatif →
-          </button>
-        </div>
+      context={
+        result.roomArea > 0 && (
+          <>
+            {formatM2(result.roomArea)} ·{' '}
+            <strong style={{ color: 'var(--text2)' }}>{result.toOrder} carreaux</strong>
+          </>
+        )
       }
+      next={{ label: 'Voir le quantitatif', onClick: onShowQuantities }}
     >
       {readOnly && (
         <p
@@ -193,13 +182,11 @@ export const TileSettingsSheet = ({
 
       {/* Format : formats courants (défilement horizontal) + saisie libre */}
       <PanelSection id="format" title="Format (cm)">
-        <div
-          className="-mx-3 flex gap-1.5 overflow-x-auto px-3 pb-0.5"
-          style={{ scrollbarWidth: 'none' }}
-        >
+        <div className="grid grid-cols-4 gap-1">
           {FORMAT_PRESETS.map(([w, h]) => (
             <PanelChip
               key={`${w}x${h}`}
+              size="sm"
               active={config.width === w && config.height === h}
               ariaLabel={`Format ${cm(w)} par ${cm(h)} cm`}
               onClick={() => update({ width: w, height: h })}
@@ -208,7 +195,7 @@ export const TileSettingsSheet = ({
             </PanelChip>
           ))}
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1">
           <CompactNumberInput
             label="Largeur"
             unit="cm"
@@ -231,10 +218,11 @@ export const TileSettingsSheet = ({
             className="flex-1"
           />
           <PanelChip
+            size="sm"
             ariaLabel="Inverser largeur et longueur"
             title="Inverser"
             onClick={() => update({ width: config.height, height: config.width })}
-            className="w-9 px-0"
+            className="w-8 px-0"
           >
             <ArrowLeftRight size={15} />
           </PanelChip>
@@ -246,6 +234,7 @@ export const TileSettingsSheet = ({
           {JOINT_PRESETS.map((j) => (
             <PanelChip
               key={j}
+              size="sm"
               active={config.joint === j}
               onClick={() => update({ joint: j })}
               ariaLabel={`Joint ${j} mm`}

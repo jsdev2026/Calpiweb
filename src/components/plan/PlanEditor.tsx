@@ -435,6 +435,9 @@ export const PlanEditor = ({
               wallThickness={wallThickness}
               onWallThicknessChange={setWallThickness}
               readOnly={readOnly}
+              onNext={
+                rooms.some((r) => r.points.length >= 3) ? () => onModeChange?.('TILING') : undefined
+              }
             />
           </>
         )}

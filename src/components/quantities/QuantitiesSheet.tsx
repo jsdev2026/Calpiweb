@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import {
+  FileDown,
   ChevronDown,
   ChevronUp,
   ClipboardList,
@@ -62,6 +63,16 @@ export const QuantitiesSheet = ({
           </>
         )
       }
+      context={empty ? undefined : tileSummary(config)}
+      next={
+        empty
+          ? undefined
+          : {
+              label: 'Exporter en PDF',
+              icon: <FileDown size={14} aria-hidden />,
+              onClick: () => window.print(),
+            }
+      }
       railItems={
         empty
           ? []
@@ -75,9 +86,6 @@ export const QuantitiesSheet = ({
       {!empty && (
         <>
           <PanelSection id="commande" title="À commander">
-            <span className="text-[12px]" style={{ color: 'var(--muted)' }}>
-              {tileSummary(config)}
-            </span>
             <QuantitiesRecapColumn
               className="flex w-full flex-col gap-3"
               result={result}

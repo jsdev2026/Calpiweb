@@ -65,17 +65,16 @@ export const CompactNumberInput = ({
         onKeyDown={(e) => {
           if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
         }}
-        className={`h-9 w-full rounded-lg border px-2 text-center font-semibold tabular-nums outline-none focus:border-orange-500 ${unit ? 'pr-7' : ''}`}
+        className={`h-9 w-full rounded-lg border px-1.5 text-center text-[16px] font-semibold tabular-nums outline-none focus:border-orange-500 mouse:h-8 mouse:text-[13px] md:h-8 md:text-[13px] ${unit ? 'pr-6' : ''}`}
         style={{
           borderColor: 'var(--bdr)',
           background: 'var(--surf)',
           color: 'var(--text)',
-          fontSize: 16,
         }}
       />
       {unit && (
         <span
-          className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[11px]"
+          className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-[10.5px]"
           style={{ color: 'var(--muted)' }}
         >
           {unit}

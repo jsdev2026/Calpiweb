@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { usePanelStore } from '@/store/panelStore';
 import { DEFAULT_TILING_CONFIG } from '@/constants/tileDefaults';
 import type { QuantityResult } from '@/engine/quantities/quantityEngine';
@@ -117,6 +117,17 @@ describe('TileSettingsSheet', () => {
     for (const name of ['Format', 'Joint', 'Pose', 'Rotation', 'Départ de la pose']) {
       expect(screen.getByRole('button', { name })).toBeTruthy();
     }
+  });
+
+  it('formats courants en grille (sans défilement) et lien « Voir le quantitatif » en haut', () => {
+    const onShowQuantities = vi.fn();
+    setup({ onShowQuantities });
+    const format = screen.getByRole('button', { name: 'Format 30 par 30 cm' });
+    expect(format.parentElement?.className).toMatch(/grid-cols-4/);
+    const row = document.querySelector('[data-panel-next]') as HTMLElement;
+    expect(row.compareDocumentPosition(format) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    fireEvent.click(within(row).getByRole('button', { name: /Voir le quantitatif/ }));
+    expect(onShowQuantities).toHaveBeenCalled();
   });
 
   it('affiche la rotation dans le résumé quand elle est non nulle', () => {

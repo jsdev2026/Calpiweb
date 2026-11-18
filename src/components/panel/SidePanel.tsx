@@ -1,7 +1,7 @@
 'use client';
 
 import { Fragment } from 'react';
-import { ChevronDown, ChevronUp, PanelLeftClose } from 'lucide-react';
+import { ArrowRight, ChevronDown, ChevronUp, PanelLeftClose } from 'lucide-react';
 import { usePanelStore } from '@/store/panelStore';
 import { ToolTooltip } from '@/components/plan/ToolTooltip';
 
@@ -46,6 +46,10 @@ export interface SidePanelProps {
   bar?: React.ReactNode;
   /** Raccourcis de la barre d'icônes (ordinateur, panneau replié) */
   railItems?: RailItem[];
+  /** Lien vers l'étape suivante (Plan 2D → Calepinage → Quantitatif → PDF), en haut du panneau */
+  next?: { label: string; onClick: () => void; icon?: React.ReactNode };
+  /** Information courte affichée à gauche du lien d'étape suivante */
+  context?: React.ReactNode;
   footer?: React.ReactNode;
   children?: React.ReactNode;
 }
@@ -59,6 +63,8 @@ export const SidePanel = ({
   summary,
   bar,
   railItems = [],
+  next,
+  context,
   footer,
   children,
 }: SidePanelProps) => {
@@ -156,7 +162,22 @@ export const SidePanel = ({
           </button>
         </ToolTooltip>
         {railItems.length > 0 && <PanelDivider />}
-        {railItems.map((item) => (
+        {(
+          [
+            ...railItems,
+            ...(next
+              ? [
+                  {
+                    id: 'next',
+                    label: next.label,
+                    icon: next.icon ?? <ArrowRight size={16} />,
+                    onClick: next.onClick,
+                    divider: true,
+                  },
+                ]
+              : []),
+          ] as RailItem[]
+        ).map((item) => (
           <Fragment key={item.id}>
             {item.divider && <PanelDivider />}
             <ToolTooltip label={item.label} description={item.description ?? ''}>
@@ -173,7 +194,34 @@ export const SidePanel = ({
         ))}
       </nav>
 
-      {bar && <div className={`shrink-0 px-3 pb-2 ${desk(false)}`}>{bar}</div>}
+      {(next || context) && (
+        <div
+          data-panel-next
+          className={`${mobileOpen ? 'flex' : 'hidden'} shrink-0 items-center gap-2 border-y px-3 py-1.5 ${desk(false)}`}
+          style={{ borderColor: 'var(--bdr)', background: 'var(--surf2)' }}
+        >
+          <span className="min-w-0 flex-1 truncate text-[12px]" style={{ color: 'var(--muted)' }}>
+            {context}
+          </span>
+          {next && (
+            <button
+              type="button"
+              onClick={next.onClick}
+              className="flex shrink-0 items-center gap-1 text-[12.5px] font-semibold underline-offset-2 hover:underline"
+              style={{ color: 'var(--accent)' }}
+            >
+              {next.label}
+              {next.icon ?? <ArrowRight size={14} aria-hidden />}
+            </button>
+          )}
+        </div>
+      )}
+
+      {bar && (
+        <div className={`shrink-0 px-3 pb-2 ${next || context ? 'pt-2' : ''} ${desk(false)}`}>
+          {bar}
+        </div>
+      )}
 
       {/* ── Contenu ── */}
       {children && (
@@ -264,6 +312,7 @@ export const PanelChip = ({
   ariaLabel,
   title,
   disabled,
+  size = 'md',
   className = '',
 }: {
   active?: boolean;
@@ -272,6 +321,8 @@ export const PanelChip = ({
   ariaLabel?: string;
   title?: string;
   disabled?: boolean;
+  /** sm : grilles compactes (formats…) */
+  size?: 'sm' | 'md';
   className?: string;
 }) => (
   <button
@@ -281,7 +332,9 @@ export const PanelChip = ({
     title={title}
     disabled={disabled}
     onClick={onClick}
-    className={`flex h-9 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border px-2.5 text-[12.5px] font-semibold transition-colors active:scale-95 disabled:opacity-50 ${className}`}
+    className={`flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border font-semibold transition-colors active:scale-95 disabled:opacity-50 ${
+      size === 'sm' ? 'h-8 px-1 text-[12px]' : 'h-9 px-2.5 text-[12.5px]'
+    } ${className}`}
     style={styleOf(active, 'default')}
   >
     {children}

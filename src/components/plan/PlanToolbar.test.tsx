@@ -78,6 +78,16 @@ describe('PlanToolbar — panneau latéral Plan 2D', () => {
     expect(usePanelStore.getState().collapsed).toBe(true);
   });
 
+  it('lien « Voir le calepinage » en haut du panneau, seulement si une pièce est fermée', () => {
+    const onNext = vi.fn();
+    const { rerender } = render(<PlanToolbar {...defaultProps} />);
+    expect(screen.queryByRole('button', { name: /Voir le calepinage/ })).toBeNull();
+    rerender(<PlanToolbar {...defaultProps} onNext={onNext} />);
+    const row = document.querySelector('[data-panel-next]') as HTMLElement;
+    fireEvent.click(within(row).getByRole('button', { name: /Voir le calepinage/ }));
+    expect(onNext).toHaveBeenCalled();
+  });
+
   it('lecture seule : pas d’outils de dessin', () => {
     render(<PlanToolbar {...defaultProps} readOnly />);
     expect(screen.queryByRole('button', { name: 'Tracer des murs' })).toBeNull();

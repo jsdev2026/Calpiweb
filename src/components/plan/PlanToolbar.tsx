@@ -23,6 +23,9 @@ import {
 import { WallThicknessControl } from './WallThicknessControl';
 import { TOOL_STATUS_TEXTS } from './ToolStatusBar';
 import { PlanRoomsList } from './PlanRoomsList';
+import { selectRooms, useProjectStore } from '@/store/projectStore';
+import { getPolygonArea } from '@/engine/geometry/polygon';
+import { formatM2 } from '@/utils/formatters';
 
 export type PlanTool = 'SELECT' | 'WALL' | 'DOOR' | 'EXCLUDE' | 'DELETE' | 'LOCK';
 
@@ -36,6 +39,8 @@ interface PlanToolbarProps {
   wallThickness: number;
   onWallThicknessChange: (mm: number) => void;
   readOnly?: boolean;
+  /** Passe au Calepinage (présent dès qu'une pièce est fermée) */
+  onNext?: () => void;
 }
 
 const TOOLS: {
@@ -98,7 +103,10 @@ export const PlanToolbar = ({
   wallThickness,
   onWallThicknessChange,
   readOnly = false,
+  onNext,
 }: PlanToolbarProps) => {
+  const rooms = useProjectStore(selectRooms).filter((r) => r.points.length >= 3);
+  const totalArea = rooms.reduce((a, r) => a + getPolygonArea(r.points), 0);
   const toolLabel = tool === 'DELETE' ? 'Supprimer' : TOOLS.find((t) => t.id === tool)!.label;
   const summary = TOOL_STATUS_TEXTS[tool] ?? `Outil : ${toolLabel.toLowerCase()}`;
 
@@ -225,6 +233,12 @@ export const PlanToolbar = ({
       icon={<PencilRuler size={18} />}
       title="Plan 2D"
       summary={summary}
+      context={
+        rooms.length > 0
+          ? `${rooms.length} pièce${rooms.length > 1 ? 's' : ''} · ${formatM2(totalArea)}`
+          : 'Aucune pièce fermée'
+      }
+      next={onNext ? { label: 'Voir le calepinage', onClick: onNext } : undefined}
       bar={readOnly ? undefined : bar}
       railItems={readOnly ? [railItems[railItems.length - 1]!] : railItems}
     >
