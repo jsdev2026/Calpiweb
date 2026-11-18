@@ -9,7 +9,8 @@ import { create } from 'zustand';
  * - `mobileOpen` (smartphone) : panneau du bas déplié — remis à zéro à chaque visite.
  */
 const STORAGE_KEY = 'caleplan_panel_collapsed';
-const NAV_LEARNED_KEY = 'caleplan_nav_learned';
+/** Étapes (Plan 2D, Calepinage, Quantitatif) dont le bouton « suivant » a déjà servi */
+const NAV_LEARNED_KEY = 'caleplan_nav_learned_steps';
 
 function readCollapsed(): boolean {
   try {
@@ -19,20 +20,22 @@ function readCollapsed(): boolean {
   }
 }
 
-function readNavLearned(): boolean {
+function readNavLearned(): string[] {
   try {
-    return typeof window !== 'undefined' && window.localStorage.getItem(NAV_LEARNED_KEY) === 'true';
+    if (typeof window === 'undefined') return [];
+    const v: unknown = JSON.parse(window.localStorage.getItem(NAV_LEARNED_KEY) ?? '[]');
+    return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : [];
   } catch {
-    return false;
+    return [];
   }
 }
 
 interface PanelState {
   collapsed: boolean;
   mobileOpen: boolean;
-  /** Liens « précédent / suivant » déjà utilisés : on arrête de les faire pulser */
-  navLearned: boolean;
-  markNavLearned: () => void;
+  /** Étapes dont le bouton « suivant » a déjà été utilisé : il arrête de pulser sur cette étape */
+  navLearned: string[];
+  markNavLearned: (step: string) => void;
   setCollapsed: (collapsed: boolean) => void;
   setMobileOpen: (open: boolean) => void;
 }
@@ -41,14 +44,17 @@ export const usePanelStore = create<PanelState>((set) => ({
   collapsed: readCollapsed(),
   mobileOpen: false,
   navLearned: readNavLearned(),
-  markNavLearned: () => {
-    try {
-      window.localStorage.setItem(NAV_LEARNED_KEY, 'true');
-    } catch {
-      // stockage indisponible : la pulsation s'arrête pour la session
-    }
-    set({ navLearned: true });
-  },
+  markNavLearned: (step) =>
+    set((s) => {
+      if (s.navLearned.includes(step)) return s;
+      const navLearned = [...s.navLearned, step];
+      try {
+        window.localStorage.setItem(NAV_LEARNED_KEY, JSON.stringify(navLearned));
+      } catch {
+        // stockage indisponible : la pulsation s'arrête pour la session
+      }
+      return { navLearned };
+    }),
   setCollapsed: (collapsed) => {
     try {
       window.localStorage.setItem(STORAGE_KEY, String(collapsed));

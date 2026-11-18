@@ -128,7 +128,7 @@ describe('liens précédent / suivant', () => {
 
 describe('aide à la découverte', () => {
   it('le lien suivant pulse jusqu’à sa première utilisation (mémorisé)', () => {
-    act(() => usePanelStore.setState({ navLearned: false }));
+    act(() => usePanelStore.setState({ navLearned: [] }));
     const next = vi.fn();
     render(
       <SidePanel icon={<Icon />} title="Plan 2D" next={{ label: 'Calepinage', onClick: next }}>
@@ -140,13 +140,59 @@ describe('aide à la découverte', () => {
     expect(btn.className).toMatch(/nav-pulse/);
     fireEvent.click(btn);
     expect(next).toHaveBeenCalled();
-    expect(usePanelStore.getState().navLearned).toBe(true);
-    expect(window.localStorage.getItem(NAV_LEARNED_STORAGE_KEY)).toBe('true');
+    expect(usePanelStore.getState().navLearned).toEqual(['Plan 2D']);
+    expect(JSON.parse(window.localStorage.getItem(NAV_LEARNED_STORAGE_KEY)!)).toEqual(['Plan 2D']);
     expect(btn.className).not.toMatch(/nav-pulse/);
   });
 
+  it('chaque étape garde son propre clignotement : Calepinage et Quantitatif pulsent encore', () => {
+    act(() => usePanelStore.setState({ navLearned: ['Plan 2D'] }));
+    const { unmount } = render(
+      <SidePanel
+        icon={<Icon />}
+        title="Calepinage"
+        prev={{ label: 'Plan 2D', onClick: vi.fn() }}
+        next={{ label: 'Quantitatif', onClick: vi.fn() }}
+      />,
+    );
+    let row = document.querySelector('[data-panel-next]') as HTMLElement;
+    expect(within(row).getByRole('button', { name: 'Quantitatif' }).className).toMatch(/nav-pulse/);
+    // Revenir en arrière ne compte pas comme avoir appris le bouton « suivant »
+    fireEvent.click(within(row).getByRole('button', { name: 'Plan 2D' }));
+    expect(usePanelStore.getState().navLearned).toEqual(['Plan 2D']);
+    unmount();
+    render(
+      <SidePanel
+        icon={<Icon />}
+        title="Quantitatif"
+        next={{ label: 'Exporter en PDF', onClick: vi.fn() }}
+      />,
+    );
+    row = document.querySelector('[data-panel-next]') as HTMLElement;
+    expect(within(row).getByRole('button', { name: 'Exporter en PDF' }).className).toMatch(
+      /nav-pulse/,
+    );
+  });
+
+  it('boutons de navigation : « suivant » plein en couleur d’accent, assez grands pour le doigt', () => {
+    render(
+      <SidePanel
+        icon={<Icon />}
+        title="Calepinage"
+        prev={{ label: 'Plan 2D', onClick: vi.fn() }}
+        next={{ label: 'Quantitatif', onClick: vi.fn() }}
+      />,
+    );
+    const row = document.querySelector('[data-panel-next]') as HTMLElement;
+    const next = within(row).getByRole('button', { name: 'Quantitatif' });
+    const prev = within(row).getByRole('button', { name: 'Plan 2D' });
+    expect(next.style.background).toBe('var(--accent)');
+    expect(prev.style.color).toBe('var(--accent)');
+    for (const b of [next, prev]) expect(b.className).toMatch(/(^|\s)h-10(\s|$)/);
+  });
+
   it('lien suivant grisé : pas de pulsation, le clic explique pourquoi', () => {
-    act(() => usePanelStore.setState({ navLearned: false }));
+    act(() => usePanelStore.setState({ navLearned: [] }));
     const next = vi.fn();
     render(
       <SidePanel
@@ -161,7 +207,7 @@ describe('aide à la découverte', () => {
     expect(btn.className).not.toMatch(/nav-pulse/);
     fireEvent.click(btn);
     expect(next).toHaveBeenCalled();
-    expect(usePanelStore.getState().navLearned).toBe(false);
+    expect(usePanelStore.getState().navLearned).toEqual([]);
   });
 });
 

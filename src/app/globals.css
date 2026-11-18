@@ -161,18 +161,18 @@ body {
 /* Aide à la découverte : halo orange qui pulse doucement autour du lien « suivant » */
 @keyframes nav-pulse {
   0% {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 45%, transparent);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 70%, transparent);
   }
   70% {
-    box-shadow: 0 0 0 7px color-mix(in srgb, var(--accent) 0%, transparent);
+    box-shadow: 0 0 0 12px color-mix(in srgb, var(--accent) 0%, transparent);
   }
   100% {
     box-shadow: 0 0 0 0 transparent;
   }
 }
+/* Bouton « étape suivante » : anneau qui s'élargit, tant qu'il n'a pas servi sur l'étape */
 .nav-pulse {
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
-  animation: nav-pulse 2.2s ease-out infinite;
+  animation: nav-pulse 1.6s ease-out infinite;
 }
 @media (prefers-reduced-motion: reduce) {
   .nav-pulse {
