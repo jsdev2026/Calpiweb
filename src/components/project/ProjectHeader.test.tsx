@@ -10,6 +10,7 @@ const setup = (overrides: Partial<ProjectHeaderProps> = {}) => {
     status: 'wip',
     onStatusChange: vi.fn(),
     clientName: 'Dupont',
+    notesCount: 2,
     updatedAt: '2026-11-18T10:00:00Z',
     readOnly: false,
     user: { name: 'Jean Dupont', email: 'jean@exemple.fr', plan: 'pro' },
@@ -28,6 +29,11 @@ const setup = (overrides: Partial<ProjectHeaderProps> = {}) => {
   return props;
 };
 
+const openProject = () => {
+  fireEvent.click(screen.getByRole('button', { name: 'Projet : Salle de bain' }));
+  return screen.getByRole('dialog', { name: 'Projet' });
+};
+
 describe('workspaceMode', () => {
   it('lit et écrit le mode dans l’adresse', () => {
     expect(modeFromParam(null)).toBe('PLAN');
@@ -39,75 +45,98 @@ describe('workspaceMode', () => {
   });
 });
 
-describe('ProjectHeader', () => {
-  it('affiche le nom du projet (aussi sur smartphone), renommable', () => {
+describe('ProjectHeader — bouton Projet', () => {
+  it('résume le projet : nom, statut et client', () => {
+    setup();
+    const btn = screen.getByRole('button', { name: 'Projet : Salle de bain' });
+    expect(btn.textContent).toContain('Salle de bain');
+    expect(btn.textContent).toContain('En cours · Dupont');
+    // Plus d'actions de projet isolées dans le bandeau
+    expect(screen.queryByRole('button', { name: /PDF/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Paramètres du projet' })).toBeNull();
+  });
+
+  it('regroupe tout le projet : nom, statut, client, notes, PDF, date', () => {
     const p = setup();
-    const name = screen.getByRole('textbox', { name: 'Nom du projet' });
-    expect((name as HTMLInputElement).value).toBe('Salle de bain');
-    expect(name.className).not.toMatch(/(^|\s)hidden(\s|$)/);
+    const menu = openProject();
+    const name = within(menu).getByRole('textbox', { name: 'Nom du projet' });
     fireEvent.change(name, { target: { value: 'Cuisine' } });
     expect(p.onRename).toHaveBeenCalledWith('Cuisine');
-  });
 
-  it('statut : liste déroulante au lieu du clic en boucle', () => {
-    const p = setup();
-    fireEvent.click(screen.getByRole('button', { name: 'Statut : En cours' }));
-    const menu = screen.getByRole('menu');
-    fireEvent.click(within(menu).getByRole('menuitemradio', { name: 'Terminé' }));
+    const statut = within(menu).getByRole('radiogroup', { name: 'Statut' });
+    expect(
+      within(statut).getByRole('radio', { name: 'En cours' }).getAttribute('aria-checked'),
+    ).toBe('true');
+    fireEvent.click(within(statut).getByRole('radio', { name: 'Terminé' }));
     expect(p.onStatusChange).toHaveBeenCalledWith('done');
+
+    expect(within(menu).getByText('Modifié le 18/11/2026')).toBeTruthy();
+    expect(within(menu).getByRole('menuitem', { name: /Notes du projet.*2 notes/ })).toBeTruthy();
   });
 
-  it('client et date avec libellé « modifié le »', () => {
+  it('client et notes ouvrent le bon onglet des informations du projet', () => {
+    const p = setup();
+    fireEvent.click(within(openProject()).getByRole('menuitem', { name: /Client : Dupont/ }));
+    expect(p.onOpenProjectSettings).toHaveBeenLastCalledWith('info');
+    expect(screen.queryByRole('dialog')).toBeNull();
+    fireEvent.click(within(openProject()).getByRole('menuitem', { name: /Notes du projet/ }));
+    expect(p.onOpenProjectSettings).toHaveBeenLastCalledWith('notes');
+  });
+
+  it('export PDF depuis le menu Projet', () => {
+    const p = setup();
+    fireEvent.click(within(openProject()).getByRole('menuitem', { name: 'Exporter en PDF' }));
+    expect(p.onPrint).toHaveBeenCalled();
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('se ferme avec Échap', () => {
     setup();
-    expect(screen.getByText('Dupont · modifié le 18/11/2026')).toBeTruthy();
+    openProject();
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(screen.queryByRole('dialog')).toBeNull();
   });
 
-  it('thème dans le menu du compte', () => {
+  it('lecture seule : consultation et PDF seulement', () => {
+    setup({ readOnly: true });
+    const menu = openProject();
+    expect(
+      (within(menu).getByRole('textbox', { name: 'Nom du projet' }) as HTMLInputElement).readOnly,
+    ).toBe(true);
+    expect(
+      (within(menu).getByRole('radio', { name: 'Terminé' }) as HTMLButtonElement).disabled,
+    ).toBe(true);
+    expect(within(menu).queryByRole('menuitem', { name: /Client/ })).toBeNull();
+    expect(within(menu).getByRole('menuitem', { name: 'Exporter en PDF' })).toBeTruthy();
+    expect(within(menu).getByText(/Lecture seule/)).toBeTruthy();
+  });
+});
+
+describe('ProjectHeader — compte', () => {
+  it('le menu du compte ne contient que le compte', () => {
+    const p = setup();
+    fireEvent.click(screen.getByRole('button', { name: 'Mon compte' }));
+    const menu = screen.getByRole('menu');
+    expect(
+      within(menu)
+        .getAllByRole('menuitem')
+        .map((m) => m.textContent),
+    ).toEqual(['Thème sombre', 'Paramètres', 'Changer de forfait', 'Tutoriel', 'Se déconnecter']);
+    fireEvent.click(within(menu).getByRole('menuitem', { name: 'Tutoriel' }));
+    expect(p.onOpenTutorial).toHaveBeenCalled();
+    expect(screen.queryByRole('menu')).toBeNull();
+  });
+
+  it('thème depuis le menu du compte', () => {
     const p = setup();
     fireEvent.click(screen.getByRole('button', { name: 'Mon compte' }));
     fireEvent.click(screen.getByRole('menuitem', { name: 'Thème sombre' }));
     expect(p.onToggleDarkMode).toHaveBeenCalled();
   });
 
-  it('smartphone : le menu ⋯ regroupe toutes les actions', () => {
-    const p = setup();
-    fireEvent.click(screen.getByRole('button', { name: 'Plus d’actions' }));
-    const menu = screen.getByRole('menu');
-    for (const name of [
-      'Renommer',
-      'Paramètres du projet',
-      'Exporter en PDF',
-      'Thème sombre',
-      'Mon compte Pro',
-      'Se déconnecter',
-    ]) {
-      expect(within(menu).getByRole('menuitem', { name })).toBeTruthy();
-    }
-    fireEvent.click(within(menu).getByRole('menuitem', { name: 'Exporter en PDF' }));
-    expect(p.onPrint).toHaveBeenCalled();
-    expect(screen.queryByRole('menu')).toBeNull();
-  });
-
-  it('tutoriel accessible depuis le menu du compte et le menu ⋯', () => {
-    const p = setup();
-    fireEvent.click(screen.getByRole('button', { name: 'Mon compte' }));
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Tutoriel' }));
-    expect(p.onOpenTutorial).toHaveBeenCalledTimes(1);
-    expect(screen.queryByRole('menu')).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Plus d’actions' }));
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Tutoriel' }));
-    expect(p.onOpenTutorial).toHaveBeenCalledTimes(2);
-  });
-
-  it('lecture seule : pas de renommage ni de changement de statut', () => {
-    setup({ readOnly: true });
-    expect(
-      (screen.getByRole('textbox', { name: 'Nom du projet' }) as HTMLInputElement).readOnly,
-    ).toBe(true);
-    expect(
-      (screen.getByRole('button', { name: 'Statut : En cours' }) as HTMLButtonElement).disabled,
-    ).toBe(true);
-    fireEvent.click(screen.getByRole('button', { name: 'Plus d’actions' }));
-    expect(screen.queryByRole('menuitem', { name: 'Renommer' })).toBeNull();
+  it('un seul menu de compte, aussi sur smartphone (plus de menu ⋯)', () => {
+    setup();
+    expect(screen.getAllByRole('button', { name: 'Mon compte' }).length).toBe(1);
+    expect(screen.queryByRole('button', { name: 'Plus d’actions' })).toBeNull();
   });
 });

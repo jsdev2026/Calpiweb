@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Lock, Trash2, X } from 'lucide-react';
 import { PlanEditor, type WorkspaceMode } from '@/components/plan/PlanEditor';
-import { ProjectHeader } from '@/components/project/ProjectHeader';
+import { ProjectHeader, type ProjectSettingsTab } from '@/components/project/ProjectHeader';
 import { Tutorial } from '@/components/onboarding/Tutorial';
 import { useTutorialStore } from '@/store/tutorialStore';
 import { modeFromParam, modeHref } from '@/components/project/workspaceMode';
@@ -45,6 +45,8 @@ interface SettingsModalProps {
   onAddNote: (text: string) => void;
   onDeleteNote: (id: string) => void;
   onClose: () => void;
+  /** Onglet ouvert à l'affichage */
+  initialTab?: ProjectSettingsTab;
 }
 
 const SettingsModal = ({
@@ -59,6 +61,7 @@ const SettingsModal = ({
   onAddNote,
   onDeleteNote,
   onClose,
+  initialTab = 'info',
 }: SettingsModalProps) => {
   const [name, setName] = useState(projectName);
   const [desc, setDesc] = useState(description);
@@ -67,7 +70,7 @@ const SettingsModal = ({
   const [cEmail, setCEmail] = useState(clientEmail);
   const [cAddr, setCAddr] = useState(clientAddress);
   const [noteText, setNoteText] = useState('');
-  const [tab, setTab] = useState<'info' | 'notes'>('info');
+  const [tab, setTab] = useState<ProjectSettingsTab>(initialTab);
 
   const handleSave = () => {
     onSave({
@@ -428,6 +431,7 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
     [router, id],
   );
   const [showSettings, setShowSettings] = useState(false);
+  const [settingsTab, setSettingsTab] = useState<ProjectSettingsTab>('info');
   const [printMounted, setPrintMounted] = useState(false);
   useEffect(() => {
     setPrintMounted(true);
@@ -561,7 +565,11 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
         darkMode={darkMode}
         onToggleDarkMode={toggleDarkMode}
         onBack={() => router.push('/dashboard')}
-        onOpenProjectSettings={() => setShowSettings(true)}
+        notesCount={activeProject.notes?.length ?? 0}
+        onOpenProjectSettings={(t = 'info') => {
+          setSettingsTab(t);
+          setShowSettings(true);
+        }}
         onPrint={handlePrint}
         onOpenAccount={() => router.push('/settings')}
         onOpenPlan={() => router.push('/settings?tab=forfait')}
@@ -621,6 +629,7 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
       {/* Settings Modal */}
       {showSettings && (
         <SettingsModal
+          initialTab={settingsTab}
           projectName={activeProject.name}
           description={activeProject.description ?? ''}
           clientName={activeProject.client?.name ?? ''}
