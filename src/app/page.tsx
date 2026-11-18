@@ -498,7 +498,7 @@ export default function LandingPage() {
             </h2>
           </div>
 
-          <div className="mx-auto grid max-w-3xl gap-5 md:grid-cols-2">
+          <div className="mx-auto grid max-w-5xl gap-5 md:grid-cols-3">
             {/* Free */}
             <div
               style={{
@@ -506,6 +506,8 @@ export default function LandingPage() {
                 border: '1px solid rgba(255,255,255,0.08)',
                 borderRadius: 20,
                 padding: '32px 32px 28px',
+                display: 'flex',
+                flexDirection: 'column',
               }}
             >
               <div
@@ -540,7 +542,7 @@ export default function LandingPage() {
                   '1 projet cloud',
                   'Toutes les fonctions',
                   'Sauvegarde automatique',
-                  `Projet supplémentaire : ${PRICE_EXTRA_PROJECT} l'unité`,
+                  'Export PDF du bon de commande',
                 ].map((f) => (
                   <li
                     key={f}
@@ -570,6 +572,7 @@ export default function LandingPage() {
               <Link
                 href="/auth"
                 style={{
+                  marginTop: 'auto',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -587,6 +590,110 @@ export default function LandingPage() {
               </Link>
             </div>
 
+            {/* À l'unité */}
+            <div
+              data-testid="plan-unit"
+              style={{
+                background: '#161B22',
+                border: '1px solid rgba(232,103,26,0.35)',
+                borderRadius: 20,
+                padding: '32px 32px 28px',
+                display: 'flex',
+                flexDirection: 'column',
+              }}
+            >
+              <div className="mb-5 flex items-start justify-between">
+                <div
+                  style={{
+                    fontFamily: 'var(--font-body)',
+                    fontSize: 13,
+                    fontWeight: 700,
+                    color: 'rgba(255,255,255,0.7)',
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  À l&apos;unité
+                </div>
+                <div
+                  style={{
+                    padding: '3px 10px',
+                    borderRadius: 20,
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: 'rgba(255,255,255,0.6)',
+                  }}
+                >
+                  Sans abonnement
+                </div>
+              </div>
+              <div className="mb-8 flex items-baseline gap-1.5">
+                <span
+                  style={{
+                    fontFamily: 'var(--font-display)',
+                    fontSize: 48,
+                    fontWeight: 400,
+                    color: '#E6EDF3',
+                    letterSpacing: '-0.5px',
+                  }}
+                >
+                  {PRICE_EXTRA_PROJECT}
+                </span>
+                <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>TTC / projet</span>
+              </div>
+              <ul className="mb-8 space-y-3">
+                {[
+                  '1 projet supplémentaire',
+                  'Payé une fois, gardé pour toujours',
+                  'Toutes les fonctions',
+                  'Cumulable : achetez selon vos chantiers',
+                ].map((f) => (
+                  <li
+                    key={f}
+                    className="flex items-center gap-3"
+                    style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.65)' }}
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      style={{ flexShrink: 0 }}
+                    >
+                      <circle cx="8" cy="8" r="7" stroke="rgba(232,103,26,0.4)" strokeWidth="1" />
+                      <path
+                        d="M5 8l2 2 4-4"
+                        stroke="rgba(232,103,26,0.8)"
+                        strokeWidth="1.2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <Link
+                href="/auth"
+                style={{
+                  marginTop: 'auto',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '12px',
+                  borderRadius: 10,
+                  border: '1px solid rgba(232,103,26,0.5)',
+                  color: '#E8671A',
+                  fontSize: 14,
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                }}
+              >
+                Acheter un projet
+              </Link>
+            </div>
+
             {/* Pro */}
             <div
               style={{
@@ -597,6 +704,8 @@ export default function LandingPage() {
                 position: 'relative',
                 overflow: 'hidden',
                 boxShadow: '0 0 60px rgba(232,103,26,0.15)',
+                display: 'flex',
+                flexDirection: 'column',
               }}
             >
               {/* Corner glow */}
@@ -694,6 +803,7 @@ export default function LandingPage() {
               <Link
                 href="/auth"
                 style={{
+                  marginTop: 'auto',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
