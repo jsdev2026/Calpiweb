@@ -129,4 +129,18 @@ describe('visibleCanvasArea', () => {
     c.append(side, collapsed);
     expect(visibleCanvasArea(c).w).toBe(850);
   });
+
+  it('retire le panneau latéral gauche, déplié ou replié en barre d’icônes', () => {
+    const make = (panel: DOMRect) => {
+      const c = document.createElement('div');
+      c.getBoundingClientRect = () => rect(0, 0, 1200, 800);
+      const side = document.createElement('div');
+      side.setAttribute('data-canvas-overlay', '');
+      side.getBoundingClientRect = () => panel;
+      c.append(side);
+      return visibleCanvasArea(c);
+    };
+    expect(make(rect(12, 12, 300, 776))).toEqual({ x: 312, y: 0, w: 888, h: 800 });
+    expect(make(rect(12, 12, 56, 776))).toEqual({ x: 68, y: 0, w: 1132, h: 800 });
+  });
 });

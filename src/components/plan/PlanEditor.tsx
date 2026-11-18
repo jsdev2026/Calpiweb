@@ -99,7 +99,7 @@ export function computeFitView(
 
 /**
  * Zone du canevas réellement visible : on retire les éléments posés par-dessus
- * (barre d'outils mobile, panneaux Calepinage / Quantitatif) repérés par
+ * (panneau latéral à gauche, barre d'outils mobile, panneaux en bas…) repérés par
  * l'attribut data-canvas-overlay. Mesuré dans le DOM, donc juste quelle que soit
  * la taille d'écran.
  */
@@ -112,6 +112,7 @@ export function visibleCanvasArea(container: HTMLElement): {
   const c = container.getBoundingClientRect();
   let top = c.top;
   let bottom = c.bottom;
+  let left = c.left;
   let right = c.right;
   container.querySelectorAll<HTMLElement>('[data-canvas-overlay]').forEach((el) => {
     const r = el.getBoundingClientRect();
@@ -120,13 +121,15 @@ export function visibleCanvasArea(container: HTMLElement): {
     if (fullWidth && r.top > c.top + c.height / 2) bottom = Math.min(bottom, r.top);
     else if (fullWidth) top = Math.max(top, r.bottom);
     // Panneau latéral (ordinateur) : seulement s'il occupe une bonne partie de la hauteur
-    else if (r.left > c.left + c.width / 2 && r.height > c.height * 0.4)
-      right = Math.min(right, r.left);
+    else if (r.height > c.height * 0.4) {
+      if (r.right < c.left + c.width / 2) left = Math.max(left, r.right);
+      else if (r.left > c.left + c.width / 2) right = Math.min(right, r.left);
+    }
   });
   return {
-    x: 0,
+    x: left - c.left,
     y: top - c.top,
-    w: Math.max(120, right - c.left),
+    w: Math.max(120, right - left),
     h: Math.max(120, bottom - top),
   };
 }
