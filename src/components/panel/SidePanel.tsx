@@ -234,24 +234,24 @@ export const SidePanel = ({
             <button
               type="button"
               onClick={goPrev}
-              className="flex h-10 shrink-0 items-center gap-1.5 rounded-lg border px-3 text-[14px] font-semibold transition-colors hover:bg-[color-mix(in_srgb,var(--accent)_10%,transparent)] mouse:h-9"
+              className="flex h-10 min-w-0 items-center gap-1.5 rounded-lg border px-3 text-[14px] font-semibold transition-colors hover:bg-[color-mix(in_srgb,var(--accent)_10%,transparent)] mouse:h-9 mouse:px-2.5 mouse:text-[13px]"
               style={{
                 color: 'var(--accent)',
                 borderColor: 'color-mix(in srgb, var(--accent) 45%, transparent)',
               }}
             >
-              <ArrowLeft size={16} aria-hidden />
-              {prev.label}
+              <ArrowLeft size={16} aria-hidden className="shrink-0" />
+              <span className="truncate">{prev.label}</span>
             </button>
           )}
-          <span className="flex-1" />
+          <span className="min-w-2 flex-1" />
           {next && (
             <button
               type="button"
               onClick={goNext}
               aria-disabled={next.disabled || undefined}
               data-pulse={pulseNext || undefined}
-              className={`flex h-10 shrink-0 items-center gap-1.5 rounded-lg border px-3 text-[14px] font-semibold transition-colors mouse:h-9 ${
+              className={`flex h-10 min-w-0 items-center gap-1.5 rounded-lg border px-3 text-[14px] font-semibold transition-colors mouse:h-9 mouse:px-2.5 mouse:text-[13px] ${
                 next.disabled
                   ? 'cursor-help'
                   : 'hover:bg-[color-mix(in_srgb,var(--accent)_10%,transparent)]'
@@ -265,8 +265,10 @@ export const SidePanel = ({
                     }
               }
             >
-              {next.label}
-              {next.icon ?? <ArrowRight size={16} aria-hidden />}
+              <span className="truncate">{next.label}</span>
+              <span className="flex shrink-0">
+                {next.icon ?? <ArrowRight size={16} aria-hidden />}
+              </span>
             </button>
           )}
         </div>
