@@ -140,7 +140,7 @@ describe('TileSettingsSheet', () => {
     expect(row.textContent).toBe('Plan 2DQuantitatif');
     const [prevBtn, nextBtn] = within(row).getAllByRole('button');
     expect(prevBtn!.style.color).toBe('var(--accent)');
-    expect(nextBtn!.style.background).toBe('var(--accent)');
+    expect(nextBtn!.style.color).toBe('var(--accent)');
     const rail = screen.getByRole('navigation', { name: /Calepinage/ });
     fireEvent.click(within(rail).getByRole('button', { name: 'Plan 2D' }));
     expect(onShowPlan).toHaveBeenCalledTimes(2);

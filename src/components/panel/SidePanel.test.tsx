@@ -174,7 +174,7 @@ describe('aide à la découverte', () => {
     );
   });
 
-  it('boutons de navigation : « suivant » plein en couleur d’accent, assez grands pour le doigt', () => {
+  it('boutons de navigation : même style à contour en couleur d’accent, assez grands pour le doigt', () => {
     render(
       <SidePanel
         icon={<Icon />}
@@ -186,7 +186,7 @@ describe('aide à la découverte', () => {
     const row = document.querySelector('[data-panel-next]') as HTMLElement;
     const next = within(row).getByRole('button', { name: 'Quantitatif' });
     const prev = within(row).getByRole('button', { name: 'Plan 2D' });
-    expect(next.style.background).toBe('var(--accent)');
+    expect(next.style.color).toBe('var(--accent)');
     expect(prev.style.color).toBe('var(--accent)');
     for (const b of [next, prev]) expect(b.className).toMatch(/(^|\s)h-10(\s|$)/);
   });

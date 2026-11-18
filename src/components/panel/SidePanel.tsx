@@ -256,16 +256,17 @@ export const SidePanel = ({
               onClick={goNext}
               aria-disabled={next.disabled || undefined}
               data-pulse={pulseNext || undefined}
-              className={`flex h-10 shrink-0 items-center gap-1.5 rounded-lg px-3.5 text-[14px] font-semibold transition-opacity mouse:h-9 ${
-                next.disabled ? 'cursor-help' : 'hover:opacity-90'
+              className={`flex h-10 shrink-0 items-center gap-1.5 rounded-lg border px-3 text-[14px] font-semibold transition-colors mouse:h-9 ${
+                next.disabled
+                  ? 'cursor-help'
+                  : 'hover:bg-[color-mix(in_srgb,var(--accent)_10%,transparent)]'
               } ${pulseNext ? 'nav-pulse' : ''}`}
               style={
                 next.disabled
-                  ? { background: 'var(--surf3)', color: 'var(--muted)' }
+                  ? { color: 'var(--muted)', borderColor: 'var(--bdr)' }
                   : {
-                      background: 'var(--accent)',
-                      color: '#fff',
-                      boxShadow: '0 2px 8px color-mix(in srgb, var(--accent) 35%, transparent)',
+                      color: 'var(--accent)',
+                      borderColor: 'color-mix(in srgb, var(--accent) 45%, transparent)',
                     }
               }
             >
