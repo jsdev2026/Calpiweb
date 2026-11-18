@@ -53,7 +53,9 @@ function useDemoClock(ref: React.RefObject<HTMLElement>): number {
     let acc = 0;
     const tick = (now: number) => {
       if (last !== null && visible && document.visibilityState === 'visible') {
-        acc = (acc + Math.min(0.1, (now - last) / 1000)) % LOOP;
+        // Temps réel même si l'appareil affiche peu d'images par seconde (sinon ralenti) ;
+        // plafond de 1 s : pas de saut au retour sur l'onglet (le temps masqué n'est pas compté)
+        acc = (acc + Math.min(1, (now - last) / 1000)) % LOOP;
         setT(acc);
       }
       last = now;
