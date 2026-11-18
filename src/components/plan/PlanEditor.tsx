@@ -24,13 +24,13 @@ import {
 import { TileLayer } from '@/components/tiling/TileLayer';
 import { TileSettingsSheet } from '@/components/tiling/TileSettingsSheet';
 import { StartTileLayer } from '@/components/tiling/StartTileLayer';
+import { usePanelStore } from '@/store/panelStore';
+import { CanvasHint } from '@/components/panel/CanvasHint';
 import { computeStartTiles, pickStartTile } from '@/engine/tiling/startTile';
 import { QuantitiesSheet } from '@/components/quantities/QuantitiesSheet';
 import { PlanToolbar, type PlanTool } from './PlanToolbar';
 import { ToolStatusBar } from './ToolStatusBar';
 import { WallDrawingCanvas } from './WallDrawingCanvas';
-import { WallRoomPanel } from './WallRoomPanel';
-import { useDraggableSnap } from './useDraggableSnap';
 
 // ── History ────────────────────────────────────────────────────────────────
 
@@ -99,7 +99,7 @@ export function computeFitView(
 
 /**
  * Zone du canevas réellement visible : on retire les éléments posés par-dessus
- * (barre d'outils mobile, panneaux Calepinage / Quantitatif) repérés par
+ * (panneau latéral à gauche, barre d'outils mobile, panneaux en bas…) repérés par
  * l'attribut data-canvas-overlay. Mesuré dans le DOM, donc juste quelle que soit
  * la taille d'écran.
  */
@@ -112,6 +112,7 @@ export function visibleCanvasArea(container: HTMLElement): {
   const c = container.getBoundingClientRect();
   let top = c.top;
   let bottom = c.bottom;
+  let left = c.left;
   let right = c.right;
   container.querySelectorAll<HTMLElement>('[data-canvas-overlay]').forEach((el) => {
     const r = el.getBoundingClientRect();
@@ -120,13 +121,15 @@ export function visibleCanvasArea(container: HTMLElement): {
     if (fullWidth && r.top > c.top + c.height / 2) bottom = Math.min(bottom, r.top);
     else if (fullWidth) top = Math.max(top, r.bottom);
     // Panneau latéral (ordinateur) : seulement s'il occupe une bonne partie de la hauteur
-    else if (r.left > c.left + c.width / 2 && r.height > c.height * 0.4)
-      right = Math.min(right, r.left);
+    else if (r.height > c.height * 0.4) {
+      if (r.right < c.left + c.width / 2) left = Math.max(left, r.right);
+      else if (r.left > c.left + c.width / 2) right = Math.min(right, r.left);
+    }
   });
   return {
-    x: 0,
+    x: left - c.left,
     y: top - c.top,
-    w: Math.max(120, right - c.left),
+    w: Math.max(120, right - left),
     h: Math.max(120, bottom - top),
   };
 }
@@ -181,10 +184,11 @@ export const PlanEditor = ({
   // Valeur « en direct » pendant un glisser — enregistrée au lâcher uniquement
   const [liveConfig, setLiveConfig] = useState<TilingConfig | null>(null);
   const config = liveConfig ?? storedConfig;
-  // Le Calepinage s'ouvre sur le plan : panneau replié par défaut
-  const [tileSheetOpen, setTileSheetOpen] = useState(false);
+  // Panneau latéral commun : état partagé par les trois modes
+  const panelMobileOpen = usePanelStore((s) => s.mobileOpen);
+  const setPanelMobileOpen = usePanelStore((s) => s.setMobileOpen);
+  const panelCollapsed = usePanelStore((s) => s.collapsed);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [qtySheetOpen, setQtySheetOpen] = useState(false);
   const [highlightGroup, setHighlightGroup] = useState<number | null>(null);
   const [gestureHint, setGestureHint] = useState(false);
   // Mode « choisir le carreau de départ » : un appui sur un carreau le désigne
@@ -206,8 +210,8 @@ export const PlanEditor = ({
 
   const handlePickStart = useCallback(() => {
     setPickingStart(true);
-    setTileSheetOpen(false); // libère le plan sur smartphone
-  }, []);
+    setPanelMobileOpen(false); // libère le plan sur smartphone
+  }, [setPanelMobileOpen]);
 
   const handleStartTap = useCallback(
     (world: Point) => {
@@ -236,8 +240,7 @@ export const PlanEditor = ({
   // Recadrage : à l'ouverture et à chaque changement d'onglet (Plan 2D / Calepinage /
   // Quantitatif) ou de panneau, le plan est centré dans la zone réellement visible
   // (hors barre d'outils mobile et panneaux posés sur le canevas).
-  const sheetOpen =
-    mode === 'TILING' ? tileSheetOpen : mode === 'QUANTITIES' ? qtySheetOpen : false;
+  const sheetOpen = panelMobileOpen;
   const fitView = useCallback(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -258,7 +261,7 @@ export const PlanEditor = ({
     // Attendre la mise en page (panneaux affichés / masqués) avant de mesurer
     const id = requestAnimationFrame(fitView);
     return () => cancelAnimationFrame(id);
-  }, [mode, sheetOpen, fitView]);
+  }, [mode, sheetOpen, panelCollapsed, fitView]);
 
   const liveRef = useRef<TilingConfig | null>(null);
 
@@ -307,7 +310,6 @@ export const PlanEditor = ({
   const [scale, setScale] = useState(0.1);
   const [pan, setPan] = useState<Point>({ x: 0, y: 0 });
   const [tool, setTool] = useState<PlanTool>('SELECT');
-  const [tutorialMode, setTutorialMode] = useState(false);
   const [past, setPast] = useState<WallHistoryEntry[]>([]);
   const [future, setFuture] = useState<WallHistoryEntry[]>([]);
 
@@ -323,12 +325,6 @@ export const PlanEditor = ({
   useEffect(() => {
     futureRef.current = future;
   }, [future]);
-
-  const {
-    zone: roomZone,
-    isDragging: roomDragging,
-    handlePointerDown: handleRoomPointerDown,
-  } = useDraggableSnap({ storageKey: 'calpiweb-room-panel-zone', defaultZone: 'SIDE' });
 
   // Auto-init wallEngine si manquant (migration projets legacy)
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -438,17 +434,11 @@ export const PlanEditor = ({
               onRedo={handleRedo}
               wallThickness={wallThickness}
               onWallThicknessChange={setWallThickness}
-              tutorialMode={tutorialMode}
-              onToggleTutorial={() => setTutorialMode((v) => !v)}
+              readOnly={readOnly}
+              onNext={
+                rooms.some((r) => r.points.length >= 3) ? () => onModeChange?.('TILING') : undefined
+              }
             />
-            <div className="hidden mouse:block md:block">
-              <WallRoomPanel
-                zone={roomZone}
-                isDragging={roomDragging}
-                onPointerDown={handleRoomPointerDown}
-                tutorialMode={tutorialMode}
-              />
-            </div>
           </>
         )}
 
@@ -457,8 +447,6 @@ export const PlanEditor = ({
             config={config}
             onChange={setConfig}
             result={result}
-            open={tileSheetOpen}
-            onOpenChange={setTileSheetOpen}
             onOrigin={handleOrigin}
             onShowQuantities={() => onModeChange?.('QUANTITIES')}
             onPickStart={handlePickStart}
@@ -466,43 +454,24 @@ export const PlanEditor = ({
           />
         )}
         {mode === 'TILING' && pickingStart && (
-          <div
-            role="status"
-            data-testid="pick-start-hint"
-            className="absolute left-1/2 top-3 z-30 flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full py-1.5 pl-3.5 pr-1.5 text-[12.5px] font-semibold text-white shadow-lg"
-            style={{ background: '#f97316' }}
+          <CanvasHint
+            testId="pick-start-hint"
+            tone="action"
+            action={{ label: 'Annuler', onClick: () => setPickingStart(false) }}
           >
             Touchez le carreau de départ
-            <button
-              type="button"
-              onClick={() => setPickingStart(false)}
-              className="rounded-full bg-white/25 px-2.5 py-1 text-[12px] font-semibold hover:bg-white/35"
-            >
-              Annuler
-            </button>
-          </div>
+          </CanvasHint>
         )}
         {mode === 'TILING' && gestureHint && !readOnly && !pickingStart && (
-          <div
-            role="status"
-            data-testid="gesture-hint"
-            className="pointer-events-none absolute left-1/2 top-3 z-20 -translate-x-1/2 whitespace-nowrap rounded-full px-3.5 py-1.5 text-[12px] font-medium shadow-md"
-            style={{
-              background: 'var(--surf)',
-              border: '1px solid var(--bdr)',
-              color: 'var(--text2)',
-            }}
-          >
+          <CanvasHint testId="gesture-hint">
             1 doigt : déplacer les carreaux · 2 doigts : déplacer le plan
-          </div>
+          </CanvasHint>
         )}
         {mode === 'QUANTITIES' && result && (
           <QuantitiesSheet
             result={result}
             config={config}
             onChange={setConfig}
-            open={qtySheetOpen}
-            onOpenChange={setQtySheetOpen}
             onHighlight={setHighlightGroup}
             readOnly={readOnly}
           />

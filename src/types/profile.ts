@@ -71,6 +71,8 @@ export interface UserProfile {
   logoPath: string | null;
   defaultTileConfig: Partial<TilingConfig> | null;
   defaultWallThickness: number | null;
+  /** Formats proposés dans le Calepinage ([largeur, longueur] mm) — null = par défaut */
+  tileFormats: [number, number][] | null;
 }
 
 /** Champs modifiables par l'utilisateur (alignés sur le GRANT UPDATE de la migration 004). */
@@ -95,6 +97,7 @@ export type EditableProfile = Partial<
     | 'logoPath'
     | 'defaultTileConfig'
     | 'defaultWallThickness'
+    | 'tileFormats'
   >
 >;
 

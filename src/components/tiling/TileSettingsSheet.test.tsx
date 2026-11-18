@@ -1,11 +1,17 @@
-import { describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { usePanelStore } from '@/store/panelStore';
 import { DEFAULT_TILING_CONFIG } from '@/constants/tileDefaults';
 import type { QuantityResult } from '@/engine/quantities/quantityEngine';
 import { TileSettingsSheet, tileSummary } from './TileSettingsSheet';
 import { parseDecimal } from './NumberStepper';
 
 const result = { roomArea: 12_000_000, toOrder: 80 } as unknown as QuantityResult;
+
+// Panneau déplié (smartphone) par défaut dans ces tests
+beforeEach(() => {
+  act(() => usePanelStore.setState({ collapsed: false, mobileOpen: true }));
+});
 
 const setup = (overrides: Partial<React.ComponentProps<typeof TileSettingsSheet>> = {}) => {
   const onChange = vi.fn();
@@ -14,8 +20,6 @@ const setup = (overrides: Partial<React.ComponentProps<typeof TileSettingsSheet>
       config={DEFAULT_TILING_CONFIG}
       onChange={onChange}
       result={result}
-      open
-      onOpenChange={() => {}}
       onOrigin={() => {}}
       onShowQuantities={() => {}}
       {...overrides}
@@ -65,7 +69,8 @@ describe('TileSettingsSheet', () => {
   });
 
   it('replié, affiche seulement le résumé', () => {
-    setup({ open: false });
+    act(() => usePanelStore.setState({ mobileOpen: false }));
+    setup();
     expect(screen.getByText(/30 × 60 cm/)).toBeTruthy();
     expect(screen.getByText('Format (cm)').closest('[data-open]')?.className).toMatch(
       /(^|\s)hidden(\s|$)/,
@@ -103,6 +108,26 @@ describe('TileSettingsSheet', () => {
   it("n'affiche plus de bouton pour déplacer la pose", () => {
     setup();
     expect(screen.queryByText(/Déplacer la pose/)).toBeNull();
+  });
+
+  it('panneau commun : titre du mode, raccourcis de la barre repliée', () => {
+    act(() => usePanelStore.setState({ collapsed: true }));
+    setup();
+    expect(screen.getByTestId('tile-settings-sheet').getAttribute('data-collapsed')).toBe('true');
+    for (const name of ['Format', 'Joint', 'Pose', 'Rotation', 'Départ de la pose']) {
+      expect(screen.getByRole('button', { name })).toBeTruthy();
+    }
+  });
+
+  it('formats courants en grille (sans défilement) et lien « Voir le quantitatif » en haut', () => {
+    const onShowQuantities = vi.fn();
+    setup({ onShowQuantities });
+    const format = screen.getByRole('button', { name: 'Format 30 par 30 cm' });
+    expect(format.parentElement?.className).toMatch(/grid-cols-4/);
+    const row = document.querySelector('[data-panel-next]') as HTMLElement;
+    expect(row.compareDocumentPosition(format) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    fireEvent.click(within(row).getByRole('button', { name: /Voir le quantitatif/ }));
+    expect(onShowQuantities).toHaveBeenCalled();
   });
 
   it('affiche la rotation dans le résumé quand elle est non nulle', () => {

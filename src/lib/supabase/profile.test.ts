@@ -35,6 +35,13 @@ describe('profile ↔ colonnes', () => {
     expect(p.projectCredits).toBe(0);
     expect(p.newsletterOptIn).toBe(false);
     expect(p.firstName).toBeNull();
+    expect(p.tileFormats).toBeNull();
+  });
+
+  it('formats de carreaux personnalisés (migration 005)', () => {
+    const p = rowToProfile({ id: 'u1', tile_formats: [[250, 400]] });
+    expect(p.tileFormats).toEqual([[250, 400]]);
+    expect(profilePatchToRow({ tileFormats: null })).toEqual({ tile_formats: null });
   });
 
   it("n'envoie que les colonnes modifiables — jamais plan ni crédits", () => {

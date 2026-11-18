@@ -26,6 +26,7 @@ const COLUMNS: Record<keyof EditableProfile, string> = {
   logoPath: 'logo_path',
   defaultTileConfig: 'default_tile_config',
   defaultWallThickness: 'default_wall_thickness',
+  tileFormats: 'tile_formats',
 };
 
 type Row = Record<string, unknown>;
@@ -58,6 +59,9 @@ export function rowToProfile(r: Row): UserProfile {
     defaultTileConfig: (r.default_tile_config as UserProfile['defaultTileConfig']) ?? null,
     defaultWallThickness:
       r.default_wall_thickness == null ? null : Number(r.default_wall_thickness),
+    tileFormats: Array.isArray(r.tile_formats)
+      ? (r.tile_formats as UserProfile['tileFormats'])
+      : null,
   };
 }
 

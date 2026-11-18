@@ -1,5 +1,6 @@
 'use client';
 import type { PlanTool } from './PlanToolbar';
+import { CanvasHint } from '@/components/panel/CanvasHint';
 
 export const TOOL_STATUS_TEXTS: Partial<Record<PlanTool, string>> = {
   WALL: 'Cliquez pour poser un point',
@@ -11,21 +12,10 @@ export const TOOL_STATUS_TEXTS: Partial<Record<PlanTool, string>> = {
 export const ToolStatusBar = ({ tool }: { tool: PlanTool }) => {
   const text = TOOL_STATUS_TEXTS[tool];
   if (!text) return null;
+  // Sur smartphone, le texte de l'outil est dans l'en-tête du panneau
   return (
-    <div
-      data-testid="tool-status-bar"
-      className="pointer-events-none absolute left-1/2 top-3 z-10 hidden -translate-x-1/2 mouse:block md:block"
-    >
-      <span
-        className="rounded-full px-3 py-1 text-xs backdrop-blur-sm"
-        style={{
-          background: 'var(--surf)',
-          border: '1px solid var(--bdr)',
-          color: 'var(--text2)',
-        }}
-      >
-        {text}
-      </span>
-    </div>
+    <CanvasHint testId="tool-status-bar" desktopOnly>
+      {text}
+    </CanvasHint>
   );
 };
