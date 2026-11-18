@@ -5,8 +5,55 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { ACQUISITION_SOURCES, PROFILE_TYPES, type ProfileType } from '@/types/profile';
 import { clean, phoneError } from '@/lib/validation';
+import { authErrorMessage, isExistingAccount } from '@/lib/authErrors';
 
 type Step = 'login' | 'register' | 'forgot';
+
+/** Délai minimal entre deux renvois de l'e-mail de confirmation (s) */
+const RESEND_COOLDOWN = 60;
+
+const noticeStyle = { background: 'var(--surf2)', color: 'var(--text)', borderColor: 'var(--bdr)' };
+
+/** Renvoi de l'e-mail de confirmation, avec délai d'attente et rappel des spams */
+const ResendConfirmation = ({
+  onResend,
+  sending,
+  sent,
+  cooldown,
+  error,
+}: {
+  onResend: () => void;
+  sending: boolean;
+  sent: boolean;
+  cooldown: number;
+  error: string | null;
+}) => (
+  <div className="mt-3 text-[12.5px]" style={{ color: 'var(--text2)' }}>
+    <p>Rien reçu ? Vérifiez vos courriers indésirables (spams), puis renvoyez l&apos;e-mail.</p>
+    <button
+      type="button"
+      onClick={onResend}
+      disabled={sending || cooldown > 0}
+      className="btn-secondary mt-2 disabled:opacity-50"
+    >
+      {sending
+        ? 'Envoi…'
+        : cooldown > 0
+          ? `Renvoyer l’e-mail (${cooldown} s)`
+          : 'Renvoyer l’e-mail de confirmation'}
+    </button>
+    {sent && !error && (
+      <p className="mt-2" role="status" style={{ color: '#16a34a' }}>
+        E-mail renvoyé.
+      </p>
+    )}
+    {error && (
+      <p className="mt-2" role="alert" style={{ color: '#dc2626' }}>
+        {error}
+      </p>
+    )}
+  </div>
+);
 
 // ─── Brand panel ─────────────────────────────────────────────────────────────
 const BrandPanel = () => (
@@ -121,13 +168,61 @@ function AuthPageInner() {
   const [loading, setLoading] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
   const [confirmationSent, setConfirmationSent] = useState(false);
+  /** Inscription avec l'adresse d'un compte existant */
+  const [existingAccount, setExistingAccount] = useState(false);
+  /** Connexion refusée : adresse pas encore confirmée */
+  const [unconfirmed, setUnconfirmed] = useState(false);
+  const [resendSending, setResendSending] = useState(false);
+  const [resendSent, setResendSent] = useState(false);
+  const [resendError, setResendError] = useState<string | null>(null);
+  const [cooldown, setCooldown] = useState(0);
 
   useEffect(() => {
     if (searchParams.get('error') === 'confirmation_failed') {
       setStep('login');
-      setError('Le lien de confirmation est invalide ou a expiré. Réessayez de vous inscrire.');
+      setError(
+        'Le lien de confirmation est invalide ou a expiré. Si vous l’avez ouvert sur un autre appareil, votre adresse est peut-être déjà confirmée : essayez de vous connecter.',
+      );
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const t = setTimeout(() => setCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [cooldown]);
+
+  const resetResend = () => {
+    setResendSent(false);
+    setResendError(null);
+  };
+
+  const resendConfirmation = async () => {
+    setResendSending(true);
+    resetResend();
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: email.trim(),
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+    });
+    if (error) {
+      setResendError(authErrorMessage(error));
+    } else {
+      setResendSent(true);
+      setCooldown(RESEND_COOLDOWN);
+    }
+    setResendSending(false);
+  };
+
+  const goTo = (next: Step) => {
+    setError(null);
+    setExistingAccount(false);
+    setUnconfirmed(false);
+    setConfirmationSent(false);
+    setForgotSent(false);
+    resetResend();
+    setStep(next);
+  };
 
   const inputCls =
     'w-full rounded-[var(--rs)] border px-[11px] py-2 text-[13.5px] outline-none transition-colors focus:border-[var(--accent)]';
@@ -142,9 +237,12 @@ function AuthPageInner() {
   const handleLogin = async () => {
     setLoading(true);
     setError(null);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    setUnconfirmed(false);
+    resetResend();
+    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
     if (error) {
-      setError('Email ou mot de passe incorrect.');
+      setUnconfirmed(error.code === 'email_not_confirmed');
+      setError(authErrorMessage(error));
     } else {
       router.push('/dashboard');
       router.refresh();
@@ -170,6 +268,8 @@ function AuthPageInner() {
     }
     setLoading(true);
     setError(null);
+    setExistingAccount(false);
+    resetResend();
     const first = clean(firstName)!;
     const last = clean(lastName)!;
     // Les métadonnées sont recopiées dans public.profiles par le trigger handle_new_user (migration 004)
@@ -191,11 +291,15 @@ function AuthPageInner() {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     });
-    if (error) {
-      setError(error.message);
+    if (isExistingAccount(data?.user, error)) {
+      // Adresse déjà inscrite : Supabase n'envoie aucun e-mail, on le dit clairement.
+      setExistingAccount(true);
+    } else if (error) {
+      setError(authErrorMessage(error));
     } else if (!data.session) {
       // Compte créé mais confirmation email requise avant qu'une session existe.
       setConfirmationSent(true);
+      setCooldown(RESEND_COOLDOWN);
     } else {
       router.push('/dashboard');
       router.refresh();
@@ -206,11 +310,11 @@ function AuthPageInner() {
   const handleForgot = async () => {
     setLoading(true);
     setError(null);
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
       redirectTo: `${window.location.origin}/auth?step=reset`,
     });
     if (error) {
-      setError(error.message);
+      setError(authErrorMessage(error));
     } else {
       setForgotSent(true);
     }
@@ -248,6 +352,17 @@ function AuthPageInner() {
                 {error}
               </p>
             )}
+            {unconfirmed && (
+              <div className="-mt-1 mb-4">
+                <ResendConfirmation
+                  onResend={() => void resendConfirmation()}
+                  sending={resendSending}
+                  sent={resendSent}
+                  cooldown={cooldown}
+                  error={resendError}
+                />
+              </div>
+            )}
             <div className="space-y-4">
               <div>
                 <label className={labelCls} style={labelStyle}>
@@ -269,7 +384,7 @@ function AuthPageInner() {
                   </label>
                   <button
                     type="button"
-                    onClick={() => setStep('forgot')}
+                    onClick={() => goTo('forgot')}
                     className="text-[11.5px]"
                     style={{ color: 'var(--accent)' }}
                   >
@@ -299,10 +414,7 @@ function AuthPageInner() {
               Pas encore de compte ?{' '}
               <button
                 type="button"
-                onClick={() => {
-                  setError(null);
-                  setStep('register');
-                }}
+                onClick={() => goTo('register')}
                 className="font-semibold"
                 style={{ color: 'var(--accent)' }}
               >
@@ -319,11 +431,7 @@ function AuthPageInner() {
           >
             <button
               type="button"
-              onClick={() => {
-                setError(null);
-                setConfirmationSent(false);
-                setStep('login');
-              }}
+              onClick={() => goTo('login')}
               className="btn-ghost -ml-2 mb-5 gap-1.5 text-[12.5px]"
             >
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -349,15 +457,54 @@ function AuthPageInner() {
               Créer un compte
             </h2>
             {confirmationSent ? (
-              <p
-                className="rounded-lg p-4 text-[13px]"
-                style={{ background: '#f0fdf4', color: '#16a34a' }}
-              >
-                Un email de confirmation a été envoyé à <strong>{email}</strong>. Cliquez sur le
-                lien qu&apos;il contient pour activer votre compte.
-              </p>
+              <div data-testid="confirmation-sent">
+                <p
+                  className="rounded-lg p-4 text-[13px]"
+                  style={{ background: '#f0fdf4', color: '#16a34a' }}
+                >
+                  Un e-mail de confirmation a été envoyé à <strong>{email.trim()}</strong>. Cliquez
+                  sur le lien qu&apos;il contient pour activer votre compte.
+                </p>
+                <ResendConfirmation
+                  onResend={() => void resendConfirmation()}
+                  sending={resendSending}
+                  sent={resendSent}
+                  cooldown={cooldown}
+                  error={resendError}
+                />
+              </div>
             ) : (
               <>
+                {existingAccount && (
+                  <div
+                    data-testid="existing-account"
+                    role="alert"
+                    className="mb-4 rounded-lg border p-3 text-[12.5px]"
+                    style={noticeStyle}
+                  >
+                    <p>
+                      Un compte existe déjà avec l&apos;adresse <strong>{email.trim()}</strong>.
+                      Connectez-vous, ou réinitialisez votre mot de passe si vous l&apos;avez
+                      oublié.
+                    </p>
+                    <div className="mt-2.5 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => goTo('login')}
+                        className="btn-primary py-1.5"
+                      >
+                        Se connecter
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => goTo('forgot')}
+                        className="btn-secondary py-1.5"
+                      >
+                        Mot de passe oublié
+                      </button>
+                    </div>
+                  </div>
+                )}
                 {error && (
                   <p
                     className="mb-4 rounded-lg p-3 text-[12.5px]"
@@ -449,8 +596,12 @@ function AuthPageInner() {
                     <input
                       type="email"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        setExistingAccount(false);
+                      }}
                       placeholder="vous@exemple.fr"
+                      autoComplete="email"
                       className={inputCls}
                       style={inputStyle}
                     />
@@ -526,11 +677,7 @@ function AuthPageInner() {
           >
             <button
               type="button"
-              onClick={() => {
-                setError(null);
-                setForgotSent(false);
-                setStep('login');
-              }}
+              onClick={() => goTo('login')}
               className="btn-ghost -ml-2 mb-5 gap-1.5 text-[12.5px]"
             >
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
