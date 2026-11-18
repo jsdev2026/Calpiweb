@@ -94,7 +94,9 @@ export const StartTileLayer = ({ marks, scale }: StartTileLayerProps) => {
               stroke={ACCENT}
               strokeWidth={px(2.5)}
             />
-            <circle cx={m.corner.x} cy={m.corner.y} r={px(4)} fill={ACCENT} />
+            {[m.corner, m.secondCorner].map((p, i) => (
+              <circle key={i} cx={p.x} cy={p.y} r={px(4)} fill={ACCENT} />
+            ))}
             <circle cx={center.x} cy={center.y} r={px(11)} fill={ACCENT} />
             <text
               x={center.x}
