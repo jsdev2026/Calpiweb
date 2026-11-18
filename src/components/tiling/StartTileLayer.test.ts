@@ -31,9 +31,10 @@ describe('layoutCoteLabels', () => {
     }
   });
 
-  it('cote longue : étiquette posée sur la cote', () => {
+  it('cote longue : texte à côté du trait, à mi-longueur, sans le recouvrir', () => {
     const long: StartCote = { from: { x: 0, y: 0 }, to: { x: 0, y: 2000 }, value: 2000 };
     const [l] = layoutCoteLabels([long], tile, (v) => v / 0.3);
-    expect(l).toMatchObject({ cx: 0, cy: 1000, text: '200,0 cm' });
+    expect(l).toMatchObject({ cy: 1000, text: '200,0 cm' });
+    expect(Math.abs(l!.cx)).toBeGreaterThan(l!.w / 2);
   });
 });

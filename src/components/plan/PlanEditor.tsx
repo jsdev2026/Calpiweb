@@ -512,19 +512,19 @@ export const PlanEditor = ({
           viewOnly={showTiles}
           worldLayer={
             showTiles && result ? (
-              <>
-                <TileLayer
-                  rooms={rooms}
-                  result={result}
-                  config={config}
-                  wallThickness={wallThickness}
-                  doorOpenings={doorOpenings}
-                  showCutLabels={mode === 'QUANTITIES'}
-                  highlightGroup={mode === 'QUANTITIES' ? highlightGroup : null}
-                />
-                <StartTileLayer marks={startMarks} scale={scale} />
-              </>
+              <TileLayer
+                rooms={rooms}
+                result={result}
+                config={config}
+                wallThickness={wallThickness}
+                doorOpenings={doorOpenings}
+                showCutLabels={mode === 'QUANTITIES'}
+                highlightGroup={mode === 'QUANTITIES' ? highlightGroup : null}
+              />
             ) : undefined
+          }
+          worldOverlay={
+            showTiles && result ? <StartTileLayer marks={startMarks} scale={scale} /> : undefined
           }
           onViewDrag={mode === 'TILING' && !readOnly && !pickingStart ? handleTileDrag : null}
           onViewTap={mode === 'TILING' && pickingStart ? handleStartTap : null}

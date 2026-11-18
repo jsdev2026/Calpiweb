@@ -76,6 +76,8 @@ interface WallDrawingCanvasProps {
   viewOnly?: boolean;
   /** Couche en coordonnées monde (mm) dessinée sous les murs — ex. carreaux. */
   worldLayer?: React.ReactNode;
+  /** Couche en coordonnées monde (mm) dessinée au-dessus des murs — ex. repères de pose. */
+  worldOverlay?: React.ReactNode;
   /** Si fourni (et viewOnly), un glisser déplace la pose au lieu de la vue. dx/dy en mm. */
   onViewDrag?: ((dx: number, dy: number) => void) | null;
   onViewDragEnd?: () => void;
@@ -146,6 +148,7 @@ export const WallDrawingCanvas = ({
   onRenameRoom,
   viewOnly = false,
   worldLayer,
+  worldOverlay,
   onViewDrag = null,
   onViewDragEnd,
   onViewDragCancel,
@@ -1423,6 +1426,11 @@ export const WallDrawingCanvas = ({
             />
           );
         })}
+
+        {/* Couche monde au-dessus des murs (repère du carreau de départ) */}
+        {worldOverlay && (
+          <g transform={`translate(${pan.x} ${pan.y}) scale(${scale})`}>{worldOverlay}</g>
+        )}
 
         {/* Auto-cotations */}
         {visibleCotations.map((c, i) => {

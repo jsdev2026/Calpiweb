@@ -4,8 +4,10 @@ import type { Point } from '@/types/plan';
 import { formatCote, type StartCote, type StartTileMark } from '@/engine/tiling/startTile';
 
 const ACCENT = '#f97316';
-/** Fond des étiquettes : orange foncé, texte blanc lisible (contraste ≈ 5:1) */
-const LABEL_BG = '#c2410c';
+/** Texte des cotes : même style que les cotes de murs (11 px, monospace), orange un peu plus foncé */
+const TEXT_COLOR = '#ea580c';
+const FONT_SIZE = 11;
+const LABEL_FONT = 'monospace';
 const FONT = 'system-ui, -apple-system, sans-serif';
 
 export interface StartTileLayerProps {
@@ -40,9 +42,8 @@ function segmentHits(p: Point, q: Point, b: Box): boolean {
 }
 
 /**
- * Place les étiquettes des cotes sans qu'elles se chevauchent ni masquent les traits :
- * sur la cote quand elle est assez longue, sinon à côté (de part et d'autre) ou
- * au-delà du mur. Toutes les tailles sont en mm (repère monde), `px` convertit des
+ * Place les textes des cotes à côté du trait (comme les cotes de murs), du côté où
+ * ils ne chevauchent ni un autre texte ni un trait, et au-delà du mur en dernier recours. Toutes les tailles sont en mm (repère monde), `px` convertit des
  * pixels écran en mm.
  */
 export function layoutCoteLabels(
@@ -50,7 +51,7 @@ export function layoutCoteLabels(
   tile: Point[],
   px: (v: number) => number,
 ): (CoteLabel | null)[] {
-  const fontSize = px(13);
+  const fontSize = px(FONT_SIZE);
   const xs = tile.map((p) => p.x);
   const ys = tile.map((p) => p.y);
   const tileBox: Box = {
@@ -64,22 +65,21 @@ export function layoutCoteLabels(
     const { from, to, value } = cote;
     if (value < 1) return null;
     const text = formatCote(value);
-    const w = text.length * fontSize * 0.6 + px(14);
-    const h = fontSize + px(10);
+    const w = text.length * fontSize * 0.62 + px(4);
+    const h = fontSize + px(2);
     const len = Math.hypot(to.x - from.x, to.y - from.y);
     const u = { x: (to.x - from.x) / len, y: (to.y - from.y) / len };
     const n = { x: -u.y, y: u.x };
     const along = Math.abs(u.x) * w + Math.abs(u.y) * h; // emprise le long de la cote
     const across = Math.abs(n.x) * w + Math.abs(n.y) * h; // emprise en travers
     const mid = { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 };
-    const gap = px(5);
+    const gap = px(4);
 
     const candidates: { c: Point; penalty: number }[] = [];
-    if (len >= along + px(16)) candidates.push({ c: mid, penalty: 0 });
     for (const s of [1, -1]) {
       candidates.push({
         c: { x: mid.x + s * n.x * (across / 2 + gap), y: mid.y + s * n.y * (across / 2 + gap) },
-        penalty: 1,
+        penalty: s === 1 ? 0 : 0.5,
       });
     }
     candidates.push({
@@ -109,20 +109,11 @@ function CoteLine({ cote, px }: { cote: StartCote; px: (v: number) => number }) 
   if (value < 1) return null;
   const len = Math.hypot(to.x - from.x, to.y - from.y);
   // Petites barres de fin, perpendiculaires à la cote
-  const nx = (-(to.y - from.y) / len) * px(6);
-  const ny = ((to.x - from.x) / len) * px(6);
+  const nx = (-(to.y - from.y) / len) * px(5);
+  const ny = ((to.x - from.x) / len) * px(5);
   return (
     <g>
-      <line
-        x1={from.x}
-        y1={from.y}
-        x2={to.x}
-        y2={to.y}
-        stroke="white"
-        strokeWidth={px(4)}
-        strokeLinecap="round"
-      />
-      <line x1={from.x} y1={from.y} x2={to.x} y2={to.y} stroke={ACCENT} strokeWidth={px(2)} />
+      <line x1={from.x} y1={from.y} x2={to.x} y2={to.y} stroke={ACCENT} strokeWidth={px(1)} />
       {[from, to].map((p, i) => (
         <line
           key={i}
@@ -131,7 +122,7 @@ function CoteLine({ cote, px }: { cote: StartCote; px: (v: number) => number }) 
           x2={p.x + nx}
           y2={p.y + ny}
           stroke={ACCENT}
-          strokeWidth={px(2)}
+          strokeWidth={px(1.5)}
         />
       ))}
     </g>
@@ -139,38 +130,31 @@ function CoteLine({ cote, px }: { cote: StartCote; px: (v: number) => number }) 
 }
 
 function Label({ label, px }: { label: CoteLabel; px: (v: number) => number }) {
+  // Liseré de la couleur du fond des étiquettes du plan : lisible sur les carreaux, sans bulle
   return (
-    <g>
-      <rect
-        x={label.cx - label.w / 2}
-        y={label.cy - label.h / 2}
-        width={label.w}
-        height={label.h}
-        rx={label.h / 2}
-        fill={LABEL_BG}
-        stroke="white"
-        strokeWidth={px(1.5)}
-      />
-      <text
-        x={label.cx}
-        y={label.cy}
-        textAnchor="middle"
-        dominantBaseline="central"
-        fontSize={px(13)}
-        fontWeight="700"
-        fontFamily={FONT}
-        fill="white"
-        style={{ fontVariantNumeric: 'tabular-nums' }}
-      >
-        {label.text}
-      </text>
-    </g>
+    <text
+      x={label.cx}
+      y={label.cy}
+      textAnchor="middle"
+      dominantBaseline="central"
+      fontSize={px(FONT_SIZE)}
+      fontWeight="600"
+      fontFamily={LABEL_FONT}
+      fill={TEXT_COLOR}
+      stroke="var(--canvas-label-bg)"
+      strokeWidth={px(3)}
+      strokeLinejoin="round"
+      paintOrder="stroke"
+      style={{ fontVariantNumeric: 'tabular-nums' }}
+    >
+      {label.text}
+    </text>
   );
 }
 
 /**
- * Repère du carreau de départ, en coordonnées monde (mm), dans le même
- * <g> transformé que la couche de carreaux.
+ * Repère du carreau de départ, en coordonnées monde (mm), dessiné au-dessus des murs
+ * (couche worldOverlay du plan) pour que les cotes ne passent pas dessous.
  */
 export const StartTileLayer = ({ marks, scale }: StartTileLayerProps) => {
   if (marks.length === 0) return null;
@@ -186,15 +170,15 @@ export const StartTileLayer = ({ marks, scale }: StartTileLayerProps) => {
             <polygon
               points={m.tile.map((p) => `${p.x},${p.y}`).join(' ')}
               fill={ACCENT}
-              fillOpacity={0.18}
+              fillOpacity={0.15}
               stroke={ACCENT}
-              strokeWidth={px(2.5)}
+              strokeWidth={px(2)}
             />
             {m.cotes.map((cote, i) => (
               <CoteLine key={i} cote={cote} px={px} />
             ))}
             {[m.corner, m.secondCorner].map((p, i) => (
-              <circle key={i} cx={p.x} cy={p.y} r={px(4)} fill={ACCENT} />
+              <circle key={i} cx={p.x} cy={p.y} r={px(3)} fill={ACCENT} />
             ))}
             <circle cx={center.x} cy={center.y} r={px(11)} fill={ACCENT} />
             <text
