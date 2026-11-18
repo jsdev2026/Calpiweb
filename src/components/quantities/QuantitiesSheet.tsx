@@ -71,6 +71,7 @@ export const QuantitiesSheet = ({
           ? undefined
           : {
               label: 'Exporter en PDF',
+              pulse: false,
               icon: <FileDown size={14} aria-hidden />,
               onClick: () => window.print(),
             }

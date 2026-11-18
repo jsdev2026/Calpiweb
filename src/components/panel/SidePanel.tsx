@@ -56,6 +56,8 @@ export interface SidePanelProps {
     icon?: React.ReactNode;
     /** Grisé (ex. aucune pièce fermée) : le clic reste possible pour expliquer pourquoi */
     disabled?: boolean;
+    /** Clignote à l'arrivée sur la page (changement de page) — false pour une action finale (PDF) */
+    pulse?: boolean;
   };
   /** Lien vers l'étape précédente (Calepinage → Plan 2D, Quantitatif → Calepinage) */
   prev?: { label: string; onClick: () => void };
@@ -81,17 +83,10 @@ export const SidePanel = ({
   const setCollapsed = usePanelStore((s) => s.setCollapsed);
   const mobileOpen = usePanelStore((s) => s.mobileOpen);
   const setMobileOpen = usePanelStore((s) => s.setMobileOpen);
-  const navLearned = usePanelStore((s) => s.navLearned);
-  const markNavLearned = usePanelStore((s) => s.markNavLearned);
   const goPrev = prev?.onClick;
-  const goNext = next
-    ? () => {
-        if (!next.disabled) markNavLearned(title);
-        next.onClick();
-      }
-    : undefined;
-  // Le bouton « suivant » pulse sur chaque étape tant qu'il n'y a jamais servi
-  const pulseNext = !!next && !next.disabled && !navLearned.includes(title);
+  const goNext = next?.onClick;
+  // Le bouton « page suivante » clignote à chaque arrivée sur la page (quelques pulsations)
+  const pulseNext = !!next && !next.disabled && next.pulse !== false;
 
   const expandTo = (sectionId?: string) => {
     setCollapsed(false);
