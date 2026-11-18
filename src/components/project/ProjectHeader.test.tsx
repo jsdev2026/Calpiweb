@@ -30,7 +30,7 @@ const setup = (overrides: Partial<ProjectHeaderProps> = {}) => {
 };
 
 const openProject = () => {
-  fireEvent.click(screen.getByRole('button', { name: 'Projet : Salle de bain' }));
+  fireEvent.click(screen.getByRole('button', { name: /^Projet : Salle de bain/ }));
   return screen.getByRole('dialog', { name: 'Projet' });
 };
 
@@ -48,9 +48,16 @@ describe('workspaceMode', () => {
 describe('ProjectHeader — bouton Projet', () => {
   it('résume le projet : nom, statut et client', () => {
     setup();
-    const btn = screen.getByRole('button', { name: 'Projet : Salle de bain' });
-    expect(btn.textContent).toContain('Salle de bain');
-    expect(btn.textContent).toContain('En cours · Dupont');
+    // Statut lu par les lecteurs d'écran, affiché par un point de couleur
+    const btn = screen.getByRole('button', { name: 'Projet : Salle de bain — En cours' });
+    expect(btn.textContent).toBe('Salle de bain· Dupont');
+    expect(btn.getAttribute('title')).toBe('En cours · Dupont');
+    // Même cadre et même hauteur que le bouton du compte
+    const account = screen.getByRole('button', { name: 'Mon compte' });
+    for (const cls of ['h-9', 'mouse:h-8', 'rounded-[var(--rs)]']) {
+      expect(btn.className.split(' ')).toContain(cls);
+      expect(account.className.split(' ')).toContain(cls);
+    }
     // Plus d'actions de projet isolées dans le bandeau
     expect(screen.queryByRole('button', { name: /PDF/ })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Paramètres du projet' })).toBeNull();

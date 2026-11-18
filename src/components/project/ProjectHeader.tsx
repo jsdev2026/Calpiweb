@@ -109,6 +109,9 @@ const MenuItem = ({
 const MenuDivider = () => <div className="my-1 h-px" style={{ background: 'var(--bdr)' }} />;
 
 const menuStyle = { background: 'var(--surf)', border: '1px solid var(--bdr)' };
+/** Cadre commun des boutons du bandeau (Projet, compte) : même hauteur, même style */
+const CHIP =
+  'flex h-9 shrink-0 items-center rounded-[var(--rs)] transition-colors hover:bg-[var(--surf3)] mouse:h-8 md:h-8';
 const fieldLabel = 'mb-1 block text-[10.5px] font-bold uppercase tracking-wider';
 
 const StatusDot = ({ status }: { status: ProjectStatus }) => (
@@ -204,33 +207,37 @@ export const ProjectHeader = ({
       </button>
 
       {/* ── Projet : tout ce qui concerne le projet, au même endroit ── */}
-      <div className="relative min-w-0 flex-1 mouse:flex-initial md:flex-initial" ref={projectRef}>
+      {/* (.shell-topbar impose gap: 0 sur smartphone : espacement par marges) */}
+      <div
+        className="relative ml-1.5 min-w-0 flex-1 mouse:ml-0 mouse:flex-initial md:ml-0 md:flex-initial"
+        ref={projectRef}
+      >
         <button
           type="button"
           aria-haspopup="dialog"
           aria-expanded={projectOpen}
-          aria-label={`Projet : ${projectName}`}
+          aria-label={`Projet : ${projectName} — ${STATUS_LABELS[status]}`}
           onClick={() => setProjectOpen((o) => !o)}
-          className="flex w-full min-w-0 items-center gap-2 rounded-lg border px-2.5 py-1 text-left transition-colors hover:bg-[var(--surf2)] mouse:max-w-[360px] md:max-w-[360px]"
+          title={subtitle}
+          className={`${CHIP} w-full min-w-0 gap-2 px-2.5 text-left mouse:max-w-[340px] md:max-w-[340px]`}
           style={{
-            borderColor: projectOpen ? 'var(--accent)' : 'var(--bdr)',
-            background: projectOpen ? 'var(--surf2)' : 'transparent',
+            background: 'var(--surf2)',
+            border: `1px solid ${projectOpen ? 'var(--accent)' : 'var(--bdr)'}`,
           }}
         >
-          <span className="flex min-w-0 flex-1 flex-col leading-tight">
-            <span
-              className="truncate text-[13.5px] font-semibold"
-              style={{ color: 'var(--text)', fontFamily: 'var(--font-display)' }}
-            >
+          <StatusDot status={status} />
+          <span className="flex min-w-0 flex-1 items-baseline gap-1.5">
+            <span className="truncate text-[13px] font-semibold" style={{ color: 'var(--text)' }}>
               {projectName || 'Sans nom'}
             </span>
-            <span
-              className="flex min-w-0 items-center gap-1.5 text-[11px]"
-              style={{ color: 'var(--text2)' }}
-            >
-              <StatusDot status={status} />
-              <span className="truncate">{subtitle}</span>
-            </span>
+            {clientName && (
+              <span
+                className="hidden min-w-0 truncate text-[12px] mouse:inline md:inline"
+                style={{ color: 'var(--muted)' }}
+              >
+                · {clientName}
+              </span>
+            )}
           </span>
           <ChevronDown
             size={14}
@@ -343,18 +350,21 @@ export const ProjectHeader = ({
       <span className="hidden flex-1 mouse:block md:block" />
 
       {/* ── Compte (ordinateur et smartphone) ── */}
-      <div className="relative shrink-0" ref={userRef}>
+      <div className="relative ml-2 shrink-0 mouse:ml-0 md:ml-0" ref={userRef}>
         <button
           type="button"
           aria-haspopup="menu"
           aria-expanded={userOpen}
           aria-label="Mon compte"
           onClick={() => setUserOpen((o) => !o)}
-          className="flex items-center gap-2 rounded-[var(--rs)] px-1.5 py-1.5 transition-colors mouse:px-2 md:px-2"
-          style={{ background: 'var(--surf2)', border: '1px solid var(--bdr)' }}
+          className={`${CHIP} gap-2 px-1.5 mouse:px-2 md:px-2`}
+          style={{
+            background: 'var(--surf2)',
+            border: `1px solid ${userOpen ? 'var(--accent)' : 'var(--bdr)'}`,
+          }}
         >
           <span
-            className="flex h-6 w-6 items-center justify-center rounded-full text-[9.5px] font-bold text-white mouse:h-5 mouse:w-5 mouse:text-[9px] md:h-5 md:w-5 md:text-[9px]"
+            className="flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold text-white"
             style={{ background: 'var(--accent)' }}
           >
             {initials}
