@@ -78,13 +78,13 @@ describe('PlanToolbar — panneau latéral Plan 2D', () => {
     expect(usePanelStore.getState().collapsed).toBe(true);
   });
 
-  it('lien « Voir le calepinage » en haut du panneau, seulement si une pièce est fermée', () => {
+  it('lien « Calepinage → » en haut du panneau, seulement si une pièce est fermée', () => {
     const onNext = vi.fn();
     const { rerender } = render(<PlanToolbar {...defaultProps} />);
-    expect(screen.queryByRole('button', { name: /Voir le calepinage/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Calepinage$/ })).toBeNull();
     rerender(<PlanToolbar {...defaultProps} onNext={onNext} />);
     const row = document.querySelector('[data-panel-next]') as HTMLElement;
-    fireEvent.click(within(row).getByRole('button', { name: /Voir le calepinage/ }));
+    fireEvent.click(within(row).getByRole('button', { name: /^Calepinage$/ }));
     expect(onNext).toHaveBeenCalled();
   });
 

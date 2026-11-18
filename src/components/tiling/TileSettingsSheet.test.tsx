@@ -119,15 +119,29 @@ describe('TileSettingsSheet', () => {
     }
   });
 
-  it('formats courants en grille (sans défilement) et lien « Voir le quantitatif » en haut', () => {
+  it('formats courants en grille (sans défilement) et lien « Quantitatif → » en haut', () => {
     const onShowQuantities = vi.fn();
     setup({ onShowQuantities });
     const format = screen.getByRole('button', { name: 'Format 30 par 30 cm' });
     expect(format.parentElement?.className).toMatch(/grid-cols-4/);
     const row = document.querySelector('[data-panel-next]') as HTMLElement;
     expect(row.compareDocumentPosition(format) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    fireEvent.click(within(row).getByRole('button', { name: /Voir le quantitatif/ }));
+    fireEvent.click(within(row).getByRole('button', { name: /^Quantitatif$/ }));
     expect(onShowQuantities).toHaveBeenCalled();
+  });
+
+  it('lien « ← Plan 2D » en haut du panneau et dans la barre repliée', () => {
+    const onShowPlan = vi.fn();
+    setup({ onShowPlan });
+    const row = document.querySelector('[data-panel-next]') as HTMLElement;
+    fireEvent.click(within(row).getByRole('button', { name: 'Plan 2D' }));
+    expect(onShowPlan).toHaveBeenCalledTimes(1);
+    // Le bandeau ne contient que les actions (précédent / suivant), en couleur d'accent
+    expect(row.textContent).toBe('Plan 2DQuantitatif');
+    for (const b of within(row).getAllByRole('button')) expect(b.style.color).toBe('var(--accent)');
+    const rail = screen.getByRole('navigation', { name: /Calepinage/ });
+    fireEvent.click(within(rail).getByRole('button', { name: 'Plan 2D' }));
+    expect(onShowPlan).toHaveBeenCalledTimes(2);
   });
 
   it('affiche la rotation dans le résumé quand elle est non nulle', () => {

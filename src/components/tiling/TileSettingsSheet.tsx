@@ -114,6 +114,8 @@ export interface TileSettingsSheetProps {
   result: QuantityResult;
   onOrigin: (origin: 'CORNER' | 'CENTER') => void;
   onShowQuantities: () => void;
+  /** Retour au Plan 2D */
+  onShowPlan?: () => void;
   /** Passe en mode « toucher un carreau » pour choisir le carreau de départ */
   onPickStart?: () => void;
   readOnly?: boolean;
@@ -128,6 +130,7 @@ export const TileSettingsSheet = ({
   result,
   onOrigin,
   onShowQuantities,
+  onShowPlan,
   onPickStart,
   readOnly = false,
 }: TileSettingsSheetProps) => {
@@ -149,15 +152,16 @@ export const TileSettingsSheet = ({
         { id: 'rotation', label: 'Rotation', icon: <RotateCw size={ICON} /> },
         { id: 'depart', label: 'Départ de la pose', icon: <Crosshair size={ICON} /> },
       ]}
-      context={
+      footer={
         result.roomArea > 0 && (
-          <>
+          <span className="truncate text-[12px]" style={{ color: 'var(--muted)' }}>
             {formatM2(result.roomArea)} ·{' '}
-            <strong style={{ color: 'var(--text2)' }}>{result.toOrder} carreaux</strong>
-          </>
+            <strong style={{ color: 'var(--text2)' }}>{result.toOrder} carreaux</strong> à commander
+          </span>
         )
       }
-      next={{ label: 'Voir le quantitatif', onClick: onShowQuantities }}
+      prev={onShowPlan ? { label: 'Plan 2D', onClick: onShowPlan } : undefined}
+      next={{ label: 'Quantitatif', onClick: onShowQuantities }}
     >
       {readOnly && (
         <p
