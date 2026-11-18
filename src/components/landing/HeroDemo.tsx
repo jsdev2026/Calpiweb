@@ -36,27 +36,37 @@ const FONT = 'system-ui, -apple-system, sans-serif';
 const W = 560;
 const H = 330;
 
-/** Temps de l'animation : boucle continue, en pause hors écran, figé si animations réduites. */
-function useDemoClock(ref: React.RefObject<HTMLElement>): number {
-  const [t, setT] = useState(0);
+/**
+ * Temps de l'animation : boucle continue, en pause hors écran, figé si animations réduites.
+ * `range` limite la boucle à un extrait du scénario (tutoriel : une étape à la fois).
+ */
+export function useDemoClock(
+  ref: React.RefObject<HTMLElement>,
+  range?: readonly [number, number],
+): number {
+  const from = range?.[0] ?? 0;
+  const to = range?.[1] ?? LOOP;
+  const hasRange = !!range;
+  const [t, setT] = useState(from);
   useEffect(() => {
     const reduce =
       typeof window !== 'undefined' &&
       window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     if (reduce) {
-      setT(STILL_FRAME);
+      setT(hasRange ? to - 0.05 : STILL_FRAME);
       return;
     }
     let visible = true;
     let raf = 0;
     let last: number | null = null;
     let acc = 0;
+    setT(from);
     const tick = (now: number) => {
       if (last !== null && visible && document.visibilityState === 'visible') {
         // Temps réel même si l'appareil affiche peu d'images par seconde (sinon ralenti) ;
         // plafond de 1 s : pas de saut au retour sur l'onglet (le temps masqué n'est pas compté)
-        acc = (acc + Math.min(1, (now - last) / 1000)) % LOOP;
-        setT(acc);
+        acc = (acc + Math.min(1, (now - last) / 1000)) % (to - from);
+        setT(from + acc);
       }
       last = now;
       raf = requestAnimationFrame(tick);
@@ -74,7 +84,7 @@ function useDemoClock(ref: React.RefObject<HTMLElement>): number {
       cancelAnimationFrame(raf);
       io?.disconnect();
     };
-  }, [ref]);
+  }, [ref, from, to, hasRange]);
   return t;
 }
 

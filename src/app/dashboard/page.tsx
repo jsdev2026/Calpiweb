@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
+  GraduationCap,
   List,
   LayoutGrid,
   LogOut,
@@ -18,6 +19,8 @@ import { useProjectStore } from '@/store/projectStore';
 import { useUiStore } from '@/store/uiStore';
 import type { Project, ProjectStatus } from '@/types/project';
 import { NewProjectModal } from '@/components/NewProjectModal';
+import { Tutorial } from '@/components/onboarding/Tutorial';
+import { useTutorialStore } from '@/store/tutorialStore';
 import { SharePanel } from '@/components/home/SharePanel';
 import { UpgradeModal } from '@/components/home/UpgradeModal';
 import { canCreateProject } from '@/lib/entitlements';
@@ -1138,6 +1141,24 @@ export default function DashboardPage() {
                   </button>
                   <button
                     type="button"
+                    onClick={() => {
+                      setShowUserMenu(false);
+                      useTutorialStore.getState().show();
+                    }}
+                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[13px] transition-colors"
+                    style={{ color: 'var(--text2)' }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.background = 'var(--surf2)';
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.background = 'transparent';
+                    }}
+                  >
+                    <GraduationCap size={14} />
+                    Tutoriel
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => void logout().then(() => router.push('/auth'))}
                     className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[13px] transition-colors"
                     style={{ color: '#ef4444' }}
@@ -1458,6 +1479,9 @@ export default function DashboardPage() {
       >
         <Plus size={26} />
       </button>
+
+      {/* Tutoriel : première visite, ou menu du compte */}
+      <Tutorial autoOpen />
 
       {showNewModal && (
         <NewProjectModal

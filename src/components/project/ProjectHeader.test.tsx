@@ -20,6 +20,7 @@ const setup = (overrides: Partial<ProjectHeaderProps> = {}) => {
     onPrint: vi.fn(),
     onOpenAccount: vi.fn(),
     onOpenPlan: vi.fn(),
+    onOpenTutorial: vi.fn(),
     onLogout: vi.fn(),
     ...overrides,
   };
@@ -85,6 +86,17 @@ describe('ProjectHeader', () => {
     fireEvent.click(within(menu).getByRole('menuitem', { name: 'Exporter en PDF' }));
     expect(p.onPrint).toHaveBeenCalled();
     expect(screen.queryByRole('menu')).toBeNull();
+  });
+
+  it('tutoriel accessible depuis le menu du compte et le menu ⋯', () => {
+    const p = setup();
+    fireEvent.click(screen.getByRole('button', { name: 'Mon compte' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Tutoriel' }));
+    expect(p.onOpenTutorial).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('menu')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Plus d’actions' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Tutoriel' }));
+    expect(p.onOpenTutorial).toHaveBeenCalledTimes(2);
   });
 
   it('lecture seule : pas de renommage ni de changement de statut', () => {

@@ -6,6 +6,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Lock, Trash2, X } from 'lucide-react';
 import { PlanEditor, type WorkspaceMode } from '@/components/plan/PlanEditor';
 import { ProjectHeader } from '@/components/project/ProjectHeader';
+import { Tutorial } from '@/components/onboarding/Tutorial';
+import { useTutorialStore } from '@/store/tutorialStore';
 import { modeFromParam, modeHref } from '@/components/project/workspaceMode';
 import {
   QuantitiesPrintView,
@@ -563,6 +565,7 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
         onPrint={handlePrint}
         onOpenAccount={() => router.push('/settings')}
         onOpenPlan={() => router.push('/settings?tab=forfait')}
+        onOpenTutorial={() => useTutorialStore.getState().show()}
         onLogout={() => void logout().then(() => router.push('/auth'))}
       />
 
@@ -594,6 +597,9 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
           onNavigateBack={() => router.push('/')}
         />
       </main>
+
+      {/* Tutoriel : première visite, ou menu en haut à droite */}
+      <Tutorial autoOpen />
 
       {/* Cible d'impression — portal sur document.body pour que @media print
           puisse masquer tous les autres enfants de body sans position:fixed */}
