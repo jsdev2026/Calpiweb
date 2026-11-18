@@ -1,7 +1,7 @@
 'use client';
 
 import { Fragment } from 'react';
-import { ArrowRight, ChevronDown, ChevronUp, PanelLeftClose } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ChevronDown, ChevronUp, PanelLeftClose } from 'lucide-react';
 import { usePanelStore } from '@/store/panelStore';
 import { ToolTooltip } from '@/components/plan/ToolTooltip';
 
@@ -48,6 +48,8 @@ export interface SidePanelProps {
   railItems?: RailItem[];
   /** Lien vers l'étape suivante (Plan 2D → Calepinage → Quantitatif → PDF), en haut du panneau */
   next?: { label: string; onClick: () => void; icon?: React.ReactNode };
+  /** Lien vers l'étape précédente (Calepinage → Plan 2D, Quantitatif → Calepinage) */
+  prev?: { label: string; onClick: () => void };
   /** Information courte affichée à gauche du lien d'étape suivante */
   context?: React.ReactNode;
   footer?: React.ReactNode;
@@ -64,6 +66,7 @@ export const SidePanel = ({
   bar,
   railItems = [],
   next,
+  prev,
   context,
   footer,
   children,
@@ -165,6 +168,17 @@ export const SidePanel = ({
         {(
           [
             ...railItems,
+            ...(prev
+              ? [
+                  {
+                    id: 'prev',
+                    label: prev.label,
+                    icon: <ArrowLeft size={16} />,
+                    onClick: prev.onClick,
+                    divider: true,
+                  },
+                ]
+              : []),
             ...(next
               ? [
                   {
@@ -172,7 +186,7 @@ export const SidePanel = ({
                     label: next.label,
                     icon: next.icon ?? <ArrowRight size={16} />,
                     onClick: next.onClick,
-                    divider: true,
+                    divider: !prev,
                   },
                 ]
               : []),
@@ -194,13 +208,27 @@ export const SidePanel = ({
         ))}
       </nav>
 
-      {(next || context) && (
+      {(next || prev || context) && (
         <div
           data-panel-next
           className={`${mobileOpen ? 'flex' : 'hidden'} shrink-0 items-center gap-2 border-y px-3 py-1.5 ${desk(false)}`}
           style={{ borderColor: 'var(--bdr)', background: 'var(--surf2)' }}
         >
-          <span className="min-w-0 flex-1 truncate text-[12px]" style={{ color: 'var(--muted)' }}>
+          {prev && (
+            <button
+              type="button"
+              onClick={prev.onClick}
+              className="flex shrink-0 items-center gap-1 text-[12.5px] font-semibold underline-offset-2 hover:underline"
+              style={{ color: 'var(--text2)' }}
+            >
+              <ArrowLeft size={14} aria-hidden />
+              {prev.label}
+            </button>
+          )}
+          <span
+            className={`min-w-0 flex-1 truncate text-[12px] ${prev ? 'text-center' : ''}`}
+            style={{ color: 'var(--muted)' }}
+          >
             {context}
           </span>
           {next && (
@@ -218,7 +246,9 @@ export const SidePanel = ({
       )}
 
       {bar && (
-        <div className={`shrink-0 px-3 pb-2 ${next || context ? 'pt-2' : ''} ${desk(false)}`}>
+        <div
+          className={`shrink-0 px-3 pb-2 ${next || prev || context ? 'pt-2' : ''} ${desk(false)}`}
+        >
           {bar}
         </div>
       )}

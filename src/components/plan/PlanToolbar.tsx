@@ -238,7 +238,7 @@ export const PlanToolbar = ({
           ? `${rooms.length} pièce${rooms.length > 1 ? 's' : ''} · ${formatM2(totalArea)}`
           : 'Aucune pièce fermée'
       }
-      next={onNext ? { label: 'Voir le calepinage', onClick: onNext } : undefined}
+      next={onNext ? { label: 'Calepinage', onClick: onNext } : undefined}
       bar={readOnly ? undefined : bar}
       railItems={readOnly ? [railItems[railItems.length - 1]!] : railItems}
     >

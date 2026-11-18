@@ -14,7 +14,6 @@ import type { ConsumableParams, TilingConfig } from '@/types/tiling';
 import type { QuantityResult } from '@/engine/quantities/quantityEngine';
 import { mergeSimilarCutGroups } from '@/engine/quantities/mergeSimilarCutGroups';
 import { formatM2 } from '@/utils/formatters';
-import { tileSummary } from '@/components/tiling/TileSettingsSheet';
 import { PanelSection, SidePanel } from '@/components/panel/SidePanel';
 import { QuantitiesRecapColumn } from './QuantitiesRecapColumn';
 import { CutGroupsTable } from './CutGroupsTable';
@@ -25,6 +24,8 @@ export interface QuantitiesSheetProps {
   onChange: (config: TilingConfig) => void;
   onHighlight: (group: number | null) => void;
   readOnly?: boolean;
+  /** Retour au Calepinage */
+  onShowTiling?: () => void;
 }
 
 const ICON = 16;
@@ -36,6 +37,7 @@ export const QuantitiesSheet = ({
   onChange,
   onHighlight,
   readOnly = false,
+  onShowTiling,
 }: QuantitiesSheetProps) => {
   const [cutsOpen, setCutsOpen] = useState(false);
   const merged = useMemo(() => mergeSimilarCutGroups(result.cutGroups), [result]);
@@ -63,7 +65,7 @@ export const QuantitiesSheet = ({
           </>
         )
       }
-      context={empty ? undefined : tileSummary(config)}
+      prev={onShowTiling ? { label: 'Calepinage', onClick: onShowTiling } : undefined}
       next={
         empty
           ? undefined

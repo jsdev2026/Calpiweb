@@ -449,6 +449,7 @@ export const PlanEditor = ({
             result={result}
             onOrigin={handleOrigin}
             onShowQuantities={() => onModeChange?.('QUANTITIES')}
+            onShowPlan={() => onModeChange?.('PLAN')}
             onPickStart={handlePickStart}
             readOnly={readOnly}
           />
@@ -473,6 +474,7 @@ export const PlanEditor = ({
             config={config}
             onChange={setConfig}
             onHighlight={setHighlightGroup}
+            onShowTiling={() => onModeChange?.('TILING')}
             readOnly={readOnly}
           />
         )}
