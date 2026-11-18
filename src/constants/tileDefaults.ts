@@ -13,6 +13,21 @@ export const DEFAULT_TILING_CONFIG: TilingConfig = {
   layout: 'STRAIGHT',
 };
 
+/** Format de carreau : [largeur, longueur] en mm. */
+export type TileFormat = [number, number];
+
+/** Formats courants proposés par défaut dans le Calepinage. */
+export const DEFAULT_TILE_FORMATS: TileFormat[] = [
+  [300, 300],
+  [450, 450],
+  [600, 600],
+  [800, 800],
+  [300, 600],
+  [600, 1200],
+  [200, 1200],
+  [150, 900],
+];
+
 export const STAGGER_PRESETS = [
   { value: 0, label: '0%', sublabel: 'Droit' },
   { value: 33, label: '33%', sublabel: '1/3' },

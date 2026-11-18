@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  ArrowLeftRight,
   BrickWall,
   Crosshair,
   LayoutGrid,
@@ -15,21 +14,10 @@ import type { TileLayout, TilingConfig } from '@/types/tiling';
 import type { QuantityResult } from '@/engine/quantities/quantityEngine';
 import { formatM2 } from '@/utils/formatters';
 import { CompactNumberInput } from './NumberStepper';
+import { TileFormatPicker } from './TileFormatPicker';
 import { PanelChip, PanelSection, SidePanel, panelChipStyle } from '@/components/panel/SidePanel';
 
 // ── Données ──────────────────────────────────────────────────────────────────
-
-/** Formats courants (mm) — largeur × longueur. */
-export const FORMAT_PRESETS: [number, number][] = [
-  [300, 300],
-  [450, 450],
-  [600, 600],
-  [800, 800],
-  [300, 600],
-  [600, 1200],
-  [200, 1200],
-  [150, 900],
-];
 
 const JOINT_PRESETS = [1, 2, 3, 5];
 const ANGLE_PRESETS = [0, 45, 90];
@@ -181,53 +169,12 @@ export const TileSettingsSheet = ({
       )}
 
       {/* Format : formats courants (défilement horizontal) + saisie libre */}
-      <PanelSection id="format" title="Format (cm)">
-        <div className="grid grid-cols-4 gap-1">
-          {FORMAT_PRESETS.map(([w, h]) => (
-            <PanelChip
-              key={`${w}x${h}`}
-              size="sm"
-              active={config.width === w && config.height === h}
-              ariaLabel={`Format ${cm(w)} par ${cm(h)} cm`}
-              onClick={() => update({ width: w, height: h })}
-            >
-              {cm(w)}×{cm(h)}
-            </PanelChip>
-          ))}
-        </div>
-        <div className="flex items-center gap-1">
-          <CompactNumberInput
-            label="Largeur"
-            unit="cm"
-            value={config.width / 10}
-            min={1}
-            max={400}
-            onChange={(v) => update({ width: Math.round(v * 10) })}
-            className="flex-1"
-          />
-          <span className="text-[13px]" style={{ color: 'var(--muted)' }}>
-            ×
-          </span>
-          <CompactNumberInput
-            label="Longueur"
-            unit="cm"
-            value={config.height / 10}
-            min={1}
-            max={400}
-            onChange={(v) => update({ height: Math.round(v * 10) })}
-            className="flex-1"
-          />
-          <PanelChip
-            size="sm"
-            ariaLabel="Inverser largeur et longueur"
-            title="Inverser"
-            onClick={() => update({ width: config.height, height: config.width })}
-            className="w-8 px-0"
-          >
-            <ArrowLeftRight size={15} />
-          </PanelChip>
-        </div>
-      </PanelSection>
+      <TileFormatPicker
+        width={config.width}
+        height={config.height}
+        onChange={([width, height]) => update({ width, height })}
+        readOnly={readOnly}
+      />
 
       <PanelSection id="joint" title="Joint (mm)">
         <div className="flex items-center gap-1.5">
