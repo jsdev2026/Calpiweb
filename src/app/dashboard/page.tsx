@@ -11,7 +11,6 @@ import {
   Plus,
   Search,
   Settings,
-  Share2,
   Sun,
   X,
 } from 'lucide-react';
@@ -22,29 +21,24 @@ import { NewProjectModal } from '@/components/NewProjectModal';
 import { Tutorial } from '@/components/onboarding/Tutorial';
 import { useTutorialStore } from '@/store/tutorialStore';
 import { SharePanel } from '@/components/home/SharePanel';
+import {
+  ConfirmDeleteDialog,
+  ProjectActionsMenu,
+  StatusFilterTiles,
+  StatusPill,
+} from '@/components/home/ProjectListParts';
+import {
+  SORT_LABELS,
+  relativeDate,
+  statusCounts,
+  visibleProjects,
+  type ProjectSort,
+  type StatusFilter,
+} from '@/components/home/projectList';
 import { UpgradeModal } from '@/components/home/UpgradeModal';
 import { canCreateProject } from '@/lib/entitlements';
 import type { ClientInfo } from '@/types/project';
 import { wallsToRooms } from '@/engine/geometry/wallFaces';
-
-const STATUS_LABELS: Record<ProjectStatus, string> = {
-  new: 'Nouveau',
-  wip: 'En cours',
-  done: 'Terminé',
-};
-const STATUS_CLASS: Record<ProjectStatus, string> = {
-  new: 'tag-new',
-  wip: 'tag-wip',
-  done: 'tag-ok',
-};
-
-type Filter = 'all' | ProjectStatus;
-const FILTERS: { id: Filter; label: string }[] = [
-  { id: 'all', label: 'Tous' },
-  { id: 'new', label: 'Nouveaux' },
-  { id: 'wip', label: 'En cours' },
-  { id: 'done', label: 'Terminés' },
-];
 
 // ── Plan miniature ────────────────────────────────────────────────────────────
 
@@ -495,302 +489,125 @@ const ProjectSettingsModal = ({
 
 // ── Project card (grid view) ──────────────────────────────────────────────────
 
-const ProjectCard = ({
-  project,
-  onOpen,
-  onDelete,
-  onSettings,
-  onShare,
-}: {
+interface ProjectItemProps {
   project: Project;
   onOpen: () => void;
   onDelete: () => void;
-  onSettings: (e: React.MouseEvent) => void;
+  onSettings: () => void;
   onShare: () => void;
-}) => {
-  const handleDelete = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onDelete();
-  };
-  const handleSettings = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onSettings(e);
-  };
+}
 
-  return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={onOpen}
-      onKeyDown={(e) => e.key === 'Enter' && onOpen()}
-      className="group cursor-pointer overflow-hidden rounded-[var(--r)] border transition-all duration-200"
-      style={{ background: 'var(--surf)', borderColor: 'var(--bdr)', boxShadow: 'var(--sh)' }}
-      onMouseEnter={(e) => {
-        (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)';
-        (e.currentTarget as HTMLDivElement).style.boxShadow = 'var(--sh-md)';
-      }}
-      onMouseLeave={(e) => {
-        (e.currentTarget as HTMLDivElement).style.transform = '';
-        (e.currentTarget as HTMLDivElement).style.boxShadow = 'var(--sh)';
-      }}
+const canShareProject = (p: Project) => !p.myRole || p.myRole === 'owner';
+const roomsLabel = (n: number) => `${n} pièce${n !== 1 ? 's' : ''}`;
+
+const SharedBadge = ({ project }: { project: Project }) =>
+  project.myRole === 'viewer' || project.myRole === 'editor' ? (
+    <span
+      className="inline-flex items-center rounded-full border px-2 py-0.5 text-[10.5px] font-semibold"
+      style={{ background: 'var(--surf)', borderColor: 'var(--accent)', color: 'var(--accent)' }}
     >
-      {/* Miniature */}
-      <div className="relative w-full overflow-hidden" style={{ height: 140 }}>
-        <PlanMiniature project={project} size={140} />
-        <button
-          type="button"
-          onClick={handleSettings}
-          aria-label="Paramètres"
-          className="absolute left-2 top-2 flex h-6 w-6 items-center justify-center rounded-md opacity-0 transition-opacity group-hover:opacity-100"
-          style={{
-            background: 'var(--surf)',
-            color: 'var(--muted)',
-            border: '1px solid var(--bdr)',
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.color = 'var(--accent)';
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.color = 'var(--muted)';
-          }}
-        >
-          <Settings size={11} />
-        </button>
-        {(!project.myRole || project.myRole === 'owner') && (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onShare();
-            }}
-            aria-label="Partager"
-            className="absolute left-10 top-2 flex h-6 w-6 items-center justify-center rounded-md opacity-0 transition-opacity group-hover:opacity-100"
-            style={{
-              background: 'var(--surf)',
-              color: 'var(--muted)',
-              border: '1px solid var(--bdr)',
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.color = 'var(--accent)';
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.color = 'var(--muted)';
-            }}
-          >
-            <Share2 size={11} />
-          </button>
-        )}
-        <button
-          type="button"
-          onClick={handleDelete}
-          aria-label="Supprimer"
-          className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-md opacity-0 transition-opacity group-hover:opacity-100"
-          style={{
-            background: 'var(--surf)',
-            color: 'var(--muted)',
-            border: '1px solid var(--bdr)',
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.color = '#ef4444';
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.color = 'var(--muted)';
-          }}
-        >
-          <svg width="11" height="11" viewBox="0 0 14 14" fill="none">
-            <path
-              d="M2 3.5h10M5 3.5V2.5a.5.5 0 01.5-.5h3a.5.5 0 01.5.5v1m1 0l-.7 8a.5.5 0 01-.5.5H5.2a.5.5 0 01-.5-.5l-.7-8"
-              stroke="currentColor"
-              strokeWidth="1.3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
-      </div>
+      Partagé · {project.myRole === 'editor' ? 'éditeur' : 'lecteur'}
+    </span>
+  ) : null;
 
-      {/* Body */}
-      <div className="p-3.5">
-        <h3
-          className="line-clamp-1 text-[14px] font-semibold leading-snug"
-          style={{ color: 'var(--text)' }}
-        >
-          {project.name}
-        </h3>
-        {project.client?.name && (
-          <p className="mt-0.5 truncate text-[12px]" style={{ color: 'var(--text2)' }}>
-            {project.client.name}
-          </p>
-        )}
-        <p className="mt-1 text-[11.5px]" style={{ color: 'var(--muted)' }}>
-          {project.rooms.length} pièce{project.rooms.length !== 1 ? 's' : ''}
-        </p>
+const ProjectCard = ({ project, onOpen, onDelete, onSettings, onShare }: ProjectItemProps) => (
+  <div
+    role="button"
+    tabIndex={0}
+    aria-label={`Ouvrir le projet ${project.name}`}
+    data-testid="project-card"
+    onClick={onOpen}
+    onKeyDown={(e) => e.key === 'Enter' && onOpen()}
+    className="group flex cursor-pointer flex-col rounded-[var(--r)] border transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[var(--sh-md)]"
+    style={{ background: 'var(--surf)', borderColor: 'var(--bdr)', boxShadow: 'var(--sh)' }}
+  >
+    {/* Miniature, statut et partage */}
+    <div className="relative w-full overflow-hidden rounded-t-[var(--r)]" style={{ height: 140 }}>
+      <PlanMiniature project={project} size={140} />
+      <div className="absolute left-2 top-2">
+        <StatusPill status={project.status} />
       </div>
-
-      {/* Footer */}
-      <div
-        className="flex items-center justify-between border-t px-3.5 py-2"
-        style={{ borderColor: 'var(--bdr)' }}
-      >
-        <span className="text-[11px]" style={{ color: 'var(--muted)' }}>
-          {new Date(project.updatedAt).toLocaleDateString('fr-FR', {
-            day: 'numeric',
-            month: 'short',
-          })}
-        </span>
-        <div className="flex items-center gap-1.5">
-          {(project.myRole === 'viewer' || project.myRole === 'editor') && (
-            <span
-              className="rounded-full px-2 py-0.5 text-[10px] font-semibold"
-              style={{
-                background: 'var(--accent-l)',
-                color: 'var(--accent)',
-                border: '1px solid var(--accent)',
-              }}
-            >
-              {project.myRole === 'editor' ? 'Éditeur' : 'Lecteur'}
-            </span>
-          )}
-          <span
-            className={`rounded-full px-2 py-0.5 text-[10.5px] font-semibold ${STATUS_CLASS[project.status]}`}
-          >
-            {STATUS_LABELS[project.status]}
-          </span>
-        </div>
+      <div className="absolute right-2 top-2">
+        <SharedBadge project={project} />
       </div>
     </div>
-  );
-};
+
+    {/* Nom et client */}
+    <div className="flex-1 px-3.5 pb-2.5 pt-3">
+      <h3
+        className="line-clamp-1 text-[14px] font-semibold leading-snug"
+        style={{ color: 'var(--text)' }}
+      >
+        {project.name}
+      </h3>
+      <p className="mt-0.5 truncate text-[12px]" style={{ color: 'var(--text2)' }}>
+        {project.client?.name || 'Sans client'}
+      </p>
+    </div>
+
+    {/* Pièces, date et actions */}
+    <div
+      className="flex items-center gap-2 border-t px-3.5 py-2"
+      style={{ borderColor: 'var(--bdr)' }}
+    >
+      <span className="min-w-0 flex-1 truncate text-[11.5px]" style={{ color: 'var(--muted)' }}>
+        {roomsLabel(project.rooms.length)} · modifié {relativeDate(project.updatedAt)}
+      </span>
+      <ProjectActionsMenu
+        projectName={project.name}
+        canShare={canShareProject(project)}
+        onOpen={onOpen}
+        onSettings={onSettings}
+        onShare={onShare}
+        onDelete={onDelete}
+      />
+    </div>
+  </div>
+);
 
 // ── Project row (list view) ───────────────────────────────────────────────────
 
-const ProjectRow = ({
-  project,
-  onOpen,
-  onDelete,
-  onSettings,
-  onShare,
-}: {
-  project: Project;
-  onOpen: () => void;
-  onDelete: () => void;
-  onSettings: (e: React.MouseEvent) => void;
-  onShare: () => void;
-}) => {
-  const handleDelete = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onDelete();
-  };
-  const handleSettings = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onSettings(e);
-  };
-
-  return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={onOpen}
-      onKeyDown={(e) => e.key === 'Enter' && onOpen()}
-      className="group flex cursor-pointer items-center gap-4 rounded-[var(--rs)] border px-4 py-3 transition-all"
-      style={{ background: 'var(--surf)', borderColor: 'var(--bdr)', boxShadow: 'var(--sh)' }}
-      onMouseEnter={(e) => {
-        (e.currentTarget as HTMLDivElement).style.background = 'var(--surf2)';
-      }}
-      onMouseLeave={(e) => {
-        (e.currentTarget as HTMLDivElement).style.background = 'var(--surf)';
-      }}
-    >
-      {/* Mini thumbnail */}
-      <div className="shrink-0 overflow-hidden rounded" style={{ width: 48, height: 48 }}>
-        <PlanMiniature project={project} size={48} />
-      </div>
-
-      {/* Info */}
-      <div className="flex min-w-0 flex-1 items-center gap-4">
-        <div className="min-w-0 flex-1">
-          <h3 className="truncate text-[13.5px] font-semibold" style={{ color: 'var(--text)' }}>
-            {project.name}
-          </h3>
-          <p className="truncate text-[12px]" style={{ color: 'var(--text2)' }}>
-            {project.client?.name || '—'} · {project.rooms.length} pièce
-            {project.rooms.length !== 1 ? 's' : ''}
-          </p>
-        </div>
-        <span
-          className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${STATUS_CLASS[project.status]}`}
-        >
-          {STATUS_LABELS[project.status]}
-        </span>
-        <span className="w-24 shrink-0 text-right text-[12px]" style={{ color: 'var(--muted)' }}>
-          {new Date(project.updatedAt).toLocaleDateString('fr-FR', {
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric',
-          })}
-        </span>
-      </div>
-
-      {/* Share + Settings + Delete */}
-      {(!project.myRole || project.myRole === 'owner') && (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onShare();
-          }}
-          aria-label="Partager"
-          className="shrink-0 rounded p-1 opacity-0 transition-opacity group-hover:opacity-100"
-          style={{ color: 'var(--muted)' }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.color = 'var(--accent)';
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.color = 'var(--muted)';
-          }}
-        >
-          <Share2 size={14} />
-        </button>
-      )}
-      <button
-        type="button"
-        onClick={handleSettings}
-        className="shrink-0 rounded p-1 opacity-0 transition-opacity group-hover:opacity-100"
-        style={{ color: 'var(--muted)' }}
-        onMouseEnter={(e) => {
-          (e.currentTarget as HTMLButtonElement).style.color = 'var(--accent)';
-        }}
-        onMouseLeave={(e) => {
-          (e.currentTarget as HTMLButtonElement).style.color = 'var(--muted)';
-        }}
-      >
-        <Settings size={14} />
-      </button>
-      <button
-        type="button"
-        onClick={handleDelete}
-        className="shrink-0 rounded p-1 opacity-0 transition-opacity group-hover:opacity-100"
-        style={{ color: 'var(--muted)' }}
-        onMouseEnter={(e) => {
-          (e.currentTarget as HTMLButtonElement).style.color = '#ef4444';
-        }}
-        onMouseLeave={(e) => {
-          (e.currentTarget as HTMLButtonElement).style.color = 'var(--muted)';
-        }}
-      >
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <path
-            d="M2 3.5h10M5 3.5V2.5a.5.5 0 01.5-.5h3a.5.5 0 01.5.5v1m1 0l-.7 8a.5.5 0 01-.5.5H5.2a.5.5 0 01-.5-.5l-.7-8"
-            stroke="currentColor"
-            strokeWidth="1.2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </button>
+const ProjectRow = ({ project, onOpen, onDelete, onSettings, onShare }: ProjectItemProps) => (
+  <div
+    role="button"
+    tabIndex={0}
+    aria-label={`Ouvrir le projet ${project.name}`}
+    data-testid="project-row"
+    onClick={onOpen}
+    onKeyDown={(e) => e.key === 'Enter' && onOpen()}
+    className="grid cursor-pointer grid-cols-[48px_minmax(0,1fr)_120px_130px_32px] items-center gap-4 rounded-[var(--rs)] border px-4 py-2.5 transition-colors hover:bg-[var(--surf2)]"
+    style={{ background: 'var(--surf)', borderColor: 'var(--bdr)', boxShadow: 'var(--sh)' }}
+  >
+    <div className="overflow-hidden rounded" style={{ width: 48, height: 48 }}>
+      <PlanMiniature project={project} size={48} />
     </div>
-  );
-};
+    <div className="min-w-0">
+      <div className="flex min-w-0 items-center gap-2">
+        <h3 className="truncate text-[13.5px] font-semibold" style={{ color: 'var(--text)' }}>
+          {project.name}
+        </h3>
+        <SharedBadge project={project} />
+      </div>
+      <p className="truncate text-[12px]" style={{ color: 'var(--text2)' }}>
+        {project.client?.name || 'Sans client'} · {roomsLabel(project.rooms.length)}
+      </p>
+    </div>
+    <div>
+      <StatusPill status={project.status} />
+    </div>
+    <span className="text-right text-[12px]" style={{ color: 'var(--muted)' }}>
+      {relativeDate(project.updatedAt)}
+    </span>
+    <ProjectActionsMenu
+      projectName={project.name}
+      canShare={canShareProject(project)}
+      onOpen={onOpen}
+      onSettings={onSettings}
+      onShare={onShare}
+      onDelete={onDelete}
+    />
+  </div>
+);
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
@@ -812,7 +629,9 @@ export default function DashboardPage() {
   const setProjectInfo = useProjectStore((s) => s.setProjectInfo);
   const setStatus = useProjectStore((s) => s.setStatus);
 
-  const [filter, setFilter] = useState<Filter>('all');
+  const [filter, setFilter] = useState<StatusFilter>('all');
+  const [sort, setSort] = useState<ProjectSort>('recent');
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [showNewModal, setShowNewModal] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
@@ -821,7 +640,6 @@ export default function DashboardPage() {
   const [settingsProjectId, setSettingsProjectId] = useState<string | null>(null);
   const [sharingProjectId, setSharingProjectId] = useState<string | null>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -887,18 +705,18 @@ export default function DashboardPage() {
     ? (projects.find((p) => p.id === settingsProjectId) ?? null)
     : null;
 
-  const filtered = projects.filter((p) => {
-    if (filter !== 'all' && p.status !== filter) return false;
-    if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false;
-    return true;
+  const filtered = visibleProjects(projects, { filter, search, sort });
+  const counts = statusCounts(projects);
+  const deletingProject = deletingId ? (projects.find((p) => p.id === deletingId) ?? null) : null;
+  const itemHandlers = (p: Project) => ({
+    onOpen: () => handleOpen(p),
+    onDelete: () => setDeletingId(p.id),
+    onSettings: () => {
+      setActive(p.id);
+      setSettingsProjectId(p.id);
+    },
+    onShare: () => setSharingProjectId(p.id),
   });
-
-  const kpis = [
-    { label: 'Total projets', value: projects.length },
-    { label: 'Nouveaux', value: projects.filter((p) => p.status === 'new').length },
-    { label: 'En cours', value: projects.filter((p) => p.status === 'wip').length },
-    { label: 'Terminés', value: projects.filter((p) => p.status === 'done').length, accent: true },
-  ];
 
   const initials =
     user?.name
@@ -963,88 +781,8 @@ export default function DashboardPage() {
             </span>
           </div>
 
-          {/* Desktop: separator + search */}
-          <div className="mx-4 hidden h-5 w-px md:block" style={{ background: 'var(--bdr)' }} />
-          <div className="relative hidden md:block">
-            <Search
-              size={13}
-              style={{
-                position: 'absolute',
-                left: 9,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                color: 'var(--muted)',
-              }}
-            />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Rechercher un projet…"
-              style={{
-                width: 240,
-                paddingLeft: 28,
-                paddingRight: 10,
-                paddingTop: 5,
-                paddingBottom: 5,
-                background: 'var(--surf2)',
-                border: '1px solid var(--bdr)',
-                borderRadius: 'var(--rs)',
-                fontSize: 13,
-                color: 'var(--text)',
-                outline: 'none',
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = 'var(--accent)';
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = 'var(--bdr)';
-              }}
-            />
-          </div>
-
           {/* Right controls */}
           <div className="ml-auto flex items-center gap-2">
-            {/* Search toggle — mobile only */}
-            <button
-              type="button"
-              onClick={() => setSearchOpen((v) => !v)}
-              className="btn-icon md:hidden"
-              aria-label="Rechercher"
-            >
-              <Search size={15} />
-            </button>
-
-            {/* View toggle — desktop only */}
-            <div
-              className="hidden rounded-[var(--rs)] p-0.5 md:flex"
-              style={{ background: 'var(--surf2)', border: '1px solid var(--bdr)' }}
-            >
-              <button
-                type="button"
-                onClick={() => setViewMode('grid')}
-                className="flex h-6 w-6 items-center justify-center rounded transition-colors"
-                style={
-                  viewMode === 'grid'
-                    ? { background: 'var(--surf)', color: 'var(--accent)', boxShadow: 'var(--sh)' }
-                    : { color: 'var(--muted)' }
-                }
-              >
-                <LayoutGrid size={13} />
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode('list')}
-                className="flex h-6 w-6 items-center justify-center rounded transition-colors"
-                style={
-                  viewMode === 'list'
-                    ? { background: 'var(--surf)', color: 'var(--accent)', boxShadow: 'var(--sh)' }
-                    : { color: 'var(--muted)' }
-                }
-              >
-                <List size={13} />
-              </button>
-            </div>
-
             {/* Dark mode toggle */}
             <button
               type="button"
@@ -1177,53 +915,10 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-
-        {/* Row 2: Search expanded (mobile only) */}
-        {searchOpen && (
-          <div className="w-full pb-2 md:hidden">
-            <div className="relative">
-              <Search
-                size={13}
-                style={{
-                  position: 'absolute',
-                  left: 9,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  color: 'var(--muted)',
-                }}
-              />
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Rechercher un projet…"
-                autoFocus
-                style={{
-                  width: '100%',
-                  paddingLeft: 28,
-                  paddingRight: 10,
-                  paddingTop: 6,
-                  paddingBottom: 6,
-                  background: 'var(--surf2)',
-                  border: '1px solid var(--bdr)',
-                  borderRadius: 'var(--rs)',
-                  fontSize: 13,
-                  color: 'var(--text)',
-                  outline: 'none',
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = 'var(--accent)';
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = 'var(--bdr)';
-                }}
-              />
-            </div>
-          </div>
-        )}
       </header>
 
       {/* Body */}
-      <main className="flex-1 px-7 py-6">
+      <main className="flex-1 px-4 pb-24 pt-6 sm:px-7 md:pb-6">
         <div className="mb-6">
           <h1
             style={{
@@ -1265,23 +960,9 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* KPIs */}
-        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {kpis.map((k) => (
-            <div key={k.label} className={`kpi-card${k.accent ? 'accent' : ''}`}>
-              <div
-                style={{
-                  fontFamily: 'var(--font-display)',
-                  fontSize: 24,
-                  fontWeight: 700,
-                  color: k.accent ? 'var(--accent)' : 'var(--text)',
-                }}
-              >
-                {k.value}
-              </div>
-              <div style={{ fontSize: 11.5, color: 'var(--text2)', marginTop: 3 }}>{k.label}</div>
-            </div>
-          ))}
+        {/* Compteurs = filtres par statut */}
+        <div className="mb-4">
+          <StatusFilterTiles counts={counts} value={filter} onChange={setFilter} />
         </div>
 
         {/* Upsell banner — free users at project limit */}
@@ -1304,167 +985,149 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Filters */}
-        <div className="mb-5 flex flex-wrap gap-2">
-          {FILTERS.map((f) => (
-            <button
-              key={f.id}
-              type="button"
-              onClick={() => setFilter(f.id)}
-              style={
-                filter === f.id
-                  ? {
-                      background: 'var(--accent)',
-                      color: '#fff',
-                      border: '1px solid var(--accent)',
-                      borderRadius: 999,
-                      padding: '5px 14px',
-                      fontSize: 13,
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                    }
-                  : {
-                      background: 'var(--surf)',
-                      color: 'var(--text2)',
-                      border: '1px solid var(--bdr2)',
-                      borderRadius: 999,
-                      padding: '5px 14px',
-                      fontSize: 13,
-                      fontWeight: 500,
-                      cursor: 'pointer',
-                    }
-              }
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Grid view — always on mobile, toggled on desktop */}
-        <div className={viewMode === 'list' ? 'block md:hidden' : 'block'}>
-          <div
-            className="grid gap-4"
-            style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))' }}
-          >
-            {filtered.map((p) => (
-              <ProjectCard
-                key={p.id}
-                project={p}
-                onOpen={() => handleOpen(p)}
-                onDelete={() => {
-                  if (confirm('Supprimer ce projet ?')) void removeProject(p.id);
-                }}
-                onSettings={() => {
-                  setActive(p.id);
-                  setSettingsProjectId(p.id);
-                }}
-                onShare={() => setSharingProjectId(p.id)}
-              />
-            ))}
-            {/* New project card — hidden on mobile (FAB is used instead) */}
-            <button
-              type="button"
-              onClick={handleNewProject}
-              className="group hidden flex-col items-center justify-center gap-3 rounded-[var(--r)] border-2 border-dashed transition-all md:flex"
-              style={{
-                minHeight: 200,
-                borderColor: 'var(--bdr2)',
-                color: 'var(--muted)',
-                cursor: 'pointer',
-                background: 'transparent',
-              }}
-              onMouseEnter={(e) => {
-                const el = e.currentTarget as HTMLButtonElement;
-                el.style.borderColor = 'var(--accent)';
-                el.style.background = 'var(--accent-l)';
-                el.style.color = 'var(--accent)';
-              }}
-              onMouseLeave={(e) => {
-                const el = e.currentTarget as HTMLButtonElement;
-                el.style.borderColor = 'var(--bdr2)';
-                el.style.background = 'transparent';
-                el.style.color = 'var(--muted)';
-              }}
-            >
-              <div
-                className="flex h-10 w-10 items-center justify-center rounded-full"
-                style={{ background: 'var(--surf3)' }}
-              >
-                <Plus size={22} />
-              </div>
-              <span
-                style={{
-                  fontSize: 12.5,
-                  fontWeight: 600,
-                  letterSpacing: '0.3px',
-                  textTransform: 'uppercase',
-                }}
-              >
-                Nouveau projet
-              </span>
-            </button>
+        {/* Barre d'outils : recherche, tri, affichage, nouveau projet */}
+        <div className="mb-5 flex flex-wrap items-center gap-2">
+          <div className="relative min-w-[200px] flex-1">
+            <Search
+              size={14}
+              aria-hidden
+              className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2"
+              style={{ color: 'var(--muted)' }}
+            />
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Projet ou client…"
+              aria-label="Rechercher un projet ou un client"
+              className="h-9 w-full rounded-[var(--rs)] border pl-8 pr-3 text-[13px] outline-none transition-colors focus:border-[var(--accent)]"
+              style={{ background: 'var(--surf)', borderColor: 'var(--bdr)', color: 'var(--text)' }}
+            />
           </div>
+          <label
+            className="flex h-9 items-center gap-1.5 rounded-[var(--rs)] border px-2.5 text-[13px]"
+            style={{ background: 'var(--surf)', borderColor: 'var(--bdr)', color: 'var(--text2)' }}
+          >
+            <span className="hidden sm:inline">Trier :</span>
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value as ProjectSort)}
+              aria-label="Trier les projets"
+              className="h-full bg-transparent text-[13px] font-semibold outline-none"
+              style={{ color: 'var(--text)' }}
+            >
+              {(Object.keys(SORT_LABELS) as ProjectSort[]).map((k) => (
+                <option key={k} value={k}>
+                  {SORT_LABELS[k]}
+                </option>
+              ))}
+            </select>
+          </label>
+          <div
+            className="hidden h-9 items-center rounded-[var(--rs)] border p-0.5 md:flex"
+            style={{ background: 'var(--surf)', borderColor: 'var(--bdr)' }}
+            role="group"
+            aria-label="Affichage"
+          >
+            {(
+              [
+                ['grid', 'Vignettes', <LayoutGrid key="g" size={15} />],
+                ['list', 'Liste', <List key="l" size={15} />],
+              ] as const
+            ).map(([mode, label, icon]) => (
+              <button
+                key={mode}
+                type="button"
+                aria-label={label}
+                aria-pressed={viewMode === mode}
+                onClick={() => setViewMode(mode)}
+                className="flex h-7 w-8 items-center justify-center rounded transition-colors"
+                style={
+                  viewMode === mode
+                    ? { background: 'var(--accent-l)', color: 'var(--accent)' }
+                    : { color: 'var(--muted)' }
+                }
+              >
+                {icon}
+              </button>
+            ))}
+          </div>
+          <span className="hidden md:flex">
+            <button type="button" onClick={handleNewProject} className="btn-primary h-9 gap-1.5">
+              <Plus size={15} aria-hidden />
+              Nouveau projet
+            </button>
+          </span>
         </div>
 
-        {/* List view — desktop only */}
-        {viewMode === 'list' && (
+        {filtered.length === 0 && (
+          <div
+            data-testid="projects-empty"
+            className="rounded-[var(--r)] border border-dashed px-6 py-12 text-center"
+            style={{ borderColor: 'var(--bdr2)' }}
+          >
+            <p className="text-[14px] font-semibold" style={{ color: 'var(--text)' }}>
+              {projects.length === 0 ? 'Créez votre premier projet' : 'Aucun projet ne correspond'}
+            </p>
+            <p className="mt-1 text-[12.5px]" style={{ color: 'var(--text2)' }}>
+              {projects.length === 0
+                ? 'Tracez la pièce, choisissez le carrelage et obtenez la liste de commande.'
+                : 'Modifiez la recherche ou choisissez un autre statut.'}
+            </p>
+            {projects.length === 0 ? (
+              <span className="mt-4 inline-flex">
+                <button type="button" onClick={handleNewProject} className="btn-primary gap-1.5">
+                  <Plus size={15} aria-hidden />
+                  Nouveau projet
+                </button>
+              </span>
+            ) : (
+              <span className="mt-4 inline-flex">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearch('');
+                    setFilter('all');
+                  }}
+                  className="btn-secondary"
+                >
+                  Afficher tous les projets
+                </button>
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Vignettes — toujours sur smartphone, au choix sur ordinateur */}
+        {filtered.length > 0 && (
+          <div className={viewMode === 'list' ? 'block md:hidden' : 'block'}>
+            <div
+              className="grid gap-4"
+              style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))' }}
+            >
+              {filtered.map((p) => (
+                <ProjectCard key={p.id} project={p} {...itemHandlers(p)} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Liste — ordinateur */}
+        {viewMode === 'list' && filtered.length > 0 && (
           <div className="hidden flex-col gap-2 md:flex">
             <div
-              className="grid grid-cols-[48px_1fr_120px_140px_32px] items-center gap-4 px-4 pb-1 text-[11px] font-semibold uppercase tracking-wider"
+              className="grid grid-cols-[48px_minmax(0,1fr)_120px_130px_32px] items-center gap-4 px-4 pb-1 text-[11px] font-semibold uppercase tracking-wider"
               style={{ color: 'var(--muted)' }}
             >
               <span />
               <span>Projet</span>
-              <span className="text-center">Statut</span>
+              <span>Statut</span>
               <span className="text-right">Modifié</span>
               <span />
             </div>
             {filtered.map((p) => (
-              <ProjectRow
-                key={p.id}
-                project={p}
-                onOpen={() => handleOpen(p)}
-                onDelete={() => {
-                  if (confirm('Supprimer ce projet ?')) void removeProject(p.id);
-                }}
-                onSettings={() => {
-                  setActive(p.id);
-                  setSettingsProjectId(p.id);
-                }}
-                onShare={() => setSharingProjectId(p.id)}
-              />
+              <ProjectRow key={p.id} project={p} {...itemHandlers(p)} />
             ))}
-            <button
-              type="button"
-              onClick={handleNewProject}
-              className="flex items-center gap-3 rounded-[var(--rs)] border-2 border-dashed px-4 py-3 transition-all"
-              style={{
-                borderColor: 'var(--bdr2)',
-                color: 'var(--muted)',
-                cursor: 'pointer',
-                background: 'transparent',
-              }}
-              onMouseEnter={(e) => {
-                const el = e.currentTarget as HTMLButtonElement;
-                el.style.borderColor = 'var(--accent)';
-                el.style.color = 'var(--accent)';
-                el.style.background = 'var(--accent-l)';
-              }}
-              onMouseLeave={(e) => {
-                const el = e.currentTarget as HTMLButtonElement;
-                el.style.borderColor = 'var(--bdr2)';
-                el.style.color = 'var(--muted)';
-                el.style.background = 'transparent';
-              }}
-            >
-              <div
-                className="flex h-8 w-8 items-center justify-center rounded"
-                style={{ background: 'var(--surf3)' }}
-              >
-                <Plus size={16} />
-              </div>
-              <span style={{ fontSize: 13, fontWeight: 600 }}>Nouveau projet</span>
-            </button>
           </div>
         )}
       </main>
@@ -1501,6 +1164,17 @@ export default function DashboardPage() {
           project={settingsProject}
           onClose={() => setSettingsProjectId(null)}
           onSave={handleSaveSettings}
+        />
+      )}
+
+      {deletingProject && (
+        <ConfirmDeleteDialog
+          projectName={deletingProject.name}
+          onCancel={() => setDeletingId(null)}
+          onConfirm={() => {
+            setDeletingId(null);
+            void removeProject(deletingProject.id);
+          }}
         />
       )}
 
