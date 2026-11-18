@@ -113,7 +113,8 @@ export default function LandingPage() {
           <nav className="flex items-center gap-2">
             <a
               href="#tarifs"
-              className="hidden rounded-lg px-3 py-1.5 text-[13px] transition-colors md:block"
+              data-testid="nav-tarifs"
+              className="rounded-lg px-3 py-1.5 text-[13px] transition-colors"
               style={{ color: 'rgba(255,255,255,0.5)' }}
               onMouseEnter={(e) => (e.currentTarget.style.color = 'rgba(255,255,255,0.9)')}
               onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(255,255,255,0.5)')}
@@ -282,6 +283,21 @@ export default function LandingPage() {
                   Voir les fonctions
                 </a>
               </div>
+
+              {/* Rappel des prix, visible dès l'arrivée sur la page */}
+              <a
+                href="#tarifs"
+                data-testid="hero-pricing"
+                className="mt-5 inline-flex flex-wrap items-center gap-x-2 gap-y-1"
+                style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}
+              >
+                <span>Gratuit pour 1 projet</span>
+                <span aria-hidden>·</span>
+                <span>{PRICE_EXTRA_PROJECT} le projet</span>
+                <span aria-hidden>·</span>
+                <span>Pro {PRICE_PRO_MONTHLY}/mois</span>
+                <span style={{ color: '#E8671A', fontWeight: 600 }}>Voir les tarifs →</span>
+              </a>
 
               {/* Social proof */}
               <div className="mt-8 flex items-center gap-4">

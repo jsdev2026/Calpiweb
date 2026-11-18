@@ -24,4 +24,15 @@ describe('page d’accueil — tarifs', () => {
     const cta = within(card).getByRole('link', { name: 'Acheter un projet' });
     expect(cta.getAttribute('href')).toBe('/auth');
   });
+
+  it('les tarifs sont accessibles dès le haut de page, y compris sur smartphone', () => {
+    render(<LandingPage />);
+    const nav = screen.getByTestId('nav-tarifs');
+    expect(nav.getAttribute('href')).toBe('#tarifs');
+    expect(nav.className).not.toMatch(/(^|\s)hidden(\s|$)/);
+    const recap = screen.getByTestId('hero-pricing');
+    expect(recap.getAttribute('href')).toBe('#tarifs');
+    expect(recap.textContent).toContain(PRICE_EXTRA_PROJECT);
+    expect(recap.textContent).toContain(PRICE_PRO_MONTHLY);
+  });
 });
