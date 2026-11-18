@@ -138,7 +138,9 @@ describe('TileSettingsSheet', () => {
     expect(onShowPlan).toHaveBeenCalledTimes(1);
     // Le bandeau ne contient que les actions (précédent / suivant), en couleur d'accent
     expect(row.textContent).toBe('Plan 2DQuantitatif');
-    for (const b of within(row).getAllByRole('button')) expect(b.style.color).toBe('var(--accent)');
+    const [prevBtn, nextBtn] = within(row).getAllByRole('button');
+    expect(prevBtn!.style.color).toBe('var(--accent)');
+    expect(nextBtn!.style.color).toBe('var(--accent)');
     const rail = screen.getByRole('navigation', { name: /Calepinage/ });
     fireEvent.click(within(rail).getByRole('button', { name: 'Plan 2D' }));
     expect(onShowPlan).toHaveBeenCalledTimes(2);

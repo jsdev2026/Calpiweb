@@ -83,20 +83,15 @@ export const SidePanel = ({
   const setMobileOpen = usePanelStore((s) => s.setMobileOpen);
   const navLearned = usePanelStore((s) => s.navLearned);
   const markNavLearned = usePanelStore((s) => s.markNavLearned);
-  const goPrev = prev
-    ? () => {
-        markNavLearned();
-        prev.onClick();
-      }
-    : undefined;
+  const goPrev = prev?.onClick;
   const goNext = next
     ? () => {
-        if (!next.disabled) markNavLearned();
+        if (!next.disabled) markNavLearned(title);
         next.onClick();
       }
     : undefined;
-  // Pulsation discrète du lien « suivant » tant que l'utilisateur ne s'en est jamais servi
-  const pulseNext = !!next && !next.disabled && !navLearned;
+  // Le bouton « suivant » pulse sur chaque étape tant qu'il n'y a jamais servi
+  const pulseNext = !!next && !next.disabled && !navLearned.includes(title);
 
   const expandTo = (sectionId?: string) => {
     setCollapsed(false);
@@ -237,17 +232,20 @@ export const SidePanel = ({
         <div
           data-panel-next
           // Toujours visible sur smartphone, même panneau replié
-          className={`flex shrink-0 items-center gap-2 border-y px-3 py-1.5 ${desk(false)}`}
+          className={`flex shrink-0 items-center gap-2 border-y px-3 py-2 ${desk(false)}`}
           style={{ borderColor: 'var(--bdr)', background: 'var(--surf2)' }}
         >
           {prev && (
             <button
               type="button"
               onClick={goPrev}
-              className="-ml-2 flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[12.5px] font-semibold underline-offset-2 hover:underline"
-              style={{ color: 'var(--accent)' }}
+              className="flex h-10 shrink-0 items-center gap-1.5 rounded-lg border px-3 text-[14px] font-semibold transition-colors hover:bg-[color-mix(in_srgb,var(--accent)_10%,transparent)] mouse:h-9"
+              style={{
+                color: 'var(--accent)',
+                borderColor: 'color-mix(in srgb, var(--accent) 45%, transparent)',
+              }}
             >
-              <ArrowLeft size={14} aria-hidden />
+              <ArrowLeft size={16} aria-hidden />
               {prev.label}
             </button>
           )}
@@ -258,13 +256,22 @@ export const SidePanel = ({
               onClick={goNext}
               aria-disabled={next.disabled || undefined}
               data-pulse={pulseNext || undefined}
-              className={`-mr-2 flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[12.5px] font-semibold underline-offset-2 ${
-                next.disabled ? 'cursor-help' : 'hover:underline'
+              className={`flex h-10 shrink-0 items-center gap-1.5 rounded-lg border px-3 text-[14px] font-semibold transition-colors mouse:h-9 ${
+                next.disabled
+                  ? 'cursor-help'
+                  : 'hover:bg-[color-mix(in_srgb,var(--accent)_10%,transparent)]'
               } ${pulseNext ? 'nav-pulse' : ''}`}
-              style={{ color: next.disabled ? 'var(--muted)' : 'var(--accent)' }}
+              style={
+                next.disabled
+                  ? { color: 'var(--muted)', borderColor: 'var(--bdr)' }
+                  : {
+                      color: 'var(--accent)',
+                      borderColor: 'color-mix(in srgb, var(--accent) 45%, transparent)',
+                    }
+              }
             >
               {next.label}
-              {next.icon ?? <ArrowRight size={14} aria-hidden />}
+              {next.icon ?? <ArrowRight size={16} aria-hidden />}
             </button>
           )}
         </div>
