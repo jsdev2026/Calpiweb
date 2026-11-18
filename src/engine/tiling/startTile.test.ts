@@ -45,14 +45,17 @@ describe('computeStartTiles', () => {
     expect(m).toBeDefined();
     // Coin le plus proche de (50, 50) : (150, 400) → d ≈ 364 ; (400, 150) → d ≈ 364 aussi ;
     // le premier rencontré gagne, mais les deux cotes doivent valoir la distance aux murs.
-    const values = m!.cotes.map((c) => Math.round(c.value)).sort((a, b) => a - b);
+    const values = m!.cotes
+      .slice(0, 2)
+      .map((c) => Math.round(c.value))
+      .sort((a, b) => a - b);
     expect(values).toEqual([100, 350]);
     expect(m!.roomCorner).toEqual({ x: 50, y: 50 });
   });
 
   it('cotes perpendiculaires : pied de la cote sur la face intérieure du mur', () => {
     const [m] = computeStartTiles([room], [tile(300, 200)], cfg(), 100);
-    const feet = m!.cotes.map((c) => c.from);
+    const feet = m!.cotes.slice(0, 2).map((c) => c.from);
     expect(feet).toContainEqual({ x: 300, y: 50 }); // mur du haut
     expect(feet).toContainEqual({ x: 50, y: 200 }); // mur de gauche
     expect(m!.corner).toEqual({ x: 300, y: 200 });
@@ -69,6 +72,36 @@ describe('computeStartTiles', () => {
     const [a, b] = m!.tile;
     expect(Math.abs(a!.x - b!.x)).toBeGreaterThan(1);
     expect(Math.abs(a!.y - b!.y)).toBeGreaterThan(1);
+  });
+});
+
+describe('second coin coté (murs pas d’équerre)', () => {
+  it('cote un second coin le long du mur le plus long', () => {
+    const [m] = computeStartTiles([room], [tile(300, 200)], cfg(), 100);
+    expect(m!.secondCorner).toEqual({ x: 900, y: 200 });
+    expect(m!.cotes[2]!.from.x).toBeCloseTo(900);
+    expect(m!.cotes[2]!.from.y).toBeCloseTo(50);
+    expect(Math.round(m!.cotes[2]!.value)).toBe(150);
+  });
+
+  it('mur de travers : les deux distances au mur d’alignement diffèrent', () => {
+    // Mur du haut qui descend de 100 mm sur 3 m
+    const skewed: Room = {
+      ...room,
+      points: [
+        { x: 0, y: 0 },
+        { x: 3000, y: 100 },
+        { x: 3000, y: 2000 },
+        { x: 0, y: 2000 },
+      ],
+    };
+    const [m] = computeStartTiles([skewed], [tile(300, 300)], cfg(), 100);
+    expect(m!.corner).toEqual({ x: 300, y: 300 });
+    expect(m!.secondCorner).toEqual({ x: 900, y: 300 });
+    const top = m!.cotes.slice(0, 2).find((c) => c.from.y < 200)!;
+    // 600 mm × pente 1/30 ≈ 20 mm d’écart
+    expect(top.value - m!.cotes[2]!.value).toBeGreaterThan(15);
+    expect(top.value - m!.cotes[2]!.value).toBeLessThan(25);
   });
 });
 
@@ -107,7 +140,9 @@ describe('carreau de départ choisi par l’utilisateur', () => {
     expect(m!.manual).toBe(true);
     expect(m!.roomCorner).toEqual({ x: 2950, y: 1950 });
     expect(m!.corner).toEqual({ x: 2800, y: 1800 });
-    expect(m!.cotes.map((c) => Math.round(c.value)).sort((a, b) => a - b)).toEqual([150, 150]);
+    expect(m!.cotes.map((c) => Math.round(c.value))).toEqual([150, 150, 150]);
+    // Second coin le long du mur du bas (le plus long)
+    expect(m!.secondCorner).toEqual({ x: 2200, y: 1800 });
   });
 
   it('le choix suit la pose quand on la fait glisser (décalage)', () => {

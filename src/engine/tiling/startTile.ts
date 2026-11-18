@@ -27,10 +27,19 @@ export interface StartTileMark {
   tile: Point[];
   /** Coin du carreau le plus proche de l'angle de référence */
   corner: Point;
+  /**
+   * Second coin coté : coin voisin le long du mur d'alignement (le plus long des deux
+   * murs de l'angle). Deux distances au même mur donnent l'alignement du carreau,
+   * même si les murs ne sont pas d'équerre sur le chantier.
+   */
+  secondCorner: Point;
   /** Angle de référence de la pièce (face intérieure des murs) */
   roomCorner: Point;
-  /** Deux cotes : une par mur formant l'angle de référence */
-  cotes: [StartCote, StartCote];
+  /**
+   * Trois cotes : premier coin → chacun des deux murs de l'angle,
+   * puis second coin → mur d'alignement.
+   */
+  cotes: [StartCote, StartCote, StartCote];
   /** Carreau choisi par l'utilisateur (sinon choix automatique) */
   manual: boolean;
 }
@@ -123,18 +132,44 @@ function markFor(
   const roomCorner = inner[refIndex]!;
   const prev = inner[(refIndex - 1 + n) % n]!;
   const next = inner[(refIndex + 1) % n]!;
-  let corner = outline[0]!;
-  for (const c of outline) if (distance(c, roomCorner) < distance(corner, roomCorner)) corner = c;
-  const cote = (a: Point, b: Point): StartCote => {
-    const from = project(corner, a, b);
-    return { from, to: corner, value: distance(from, corner) };
+  let ci = 0;
+  outline.forEach((c, i) => {
+    if (distance(c, roomCorner) < distance(outline[ci]!, roomCorner)) ci = i;
+  });
+  const corner = outline[ci]!;
+  const cote = (p: Point, a: Point, b: Point): StartCote => {
+    const from = project(p, a, b);
+    return { from, to: p, value: distance(from, p) };
   };
+
+  // Mur d'alignement : le plus long des deux murs de l'angle de référence
+  const [ax, bx] =
+    distance(prev, roomCorner) >= distance(roomCorner, next)
+      ? [prev, roomCorner]
+      : [roomCorner, next];
+  const wl = distance(ax, bx) || 1;
+  const wu = { x: (bx.x - ax.x) / wl, y: (bx.y - ax.y) / wl };
+  // Coin voisin dont l'arête est la plus parallèle à ce mur
+  const m = outline.length;
+  const neighbours = [outline[(ci - 1 + m) % m]!, outline[(ci + 1) % m]!];
+  const parallelism = (p: Point) => {
+    const d = distance(corner, p) || 1;
+    return Math.abs(((p.x - corner.x) * wu.x + (p.y - corner.y) * wu.y) / d);
+  };
+  const secondCorner =
+    parallelism(neighbours[0]!) >= parallelism(neighbours[1]!) ? neighbours[0]! : neighbours[1]!;
+
   return {
     roomId,
     tile: outline,
     corner,
+    secondCorner,
     roomCorner,
-    cotes: [cote(prev, roomCorner), cote(roomCorner, next)],
+    cotes: [
+      cote(corner, prev, roomCorner),
+      cote(corner, roomCorner, next),
+      cote(secondCorner, ax, bx),
+    ],
     manual,
   };
 }
