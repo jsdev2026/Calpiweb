@@ -32,6 +32,8 @@ export interface RailItem {
   disabled?: boolean;
   /** Séparateur avant cet élément */
   divider?: boolean;
+  /** Fait légèrement pulser l'icône (aide à la découverte) */
+  pulse?: boolean;
   /** Action directe (ex. choisir un outil). Sinon : déplie le panneau sur la section `id`. */
   onClick?: () => void;
 }
@@ -48,7 +50,13 @@ export interface SidePanelProps {
   /** Raccourcis de la barre d'icônes (ordinateur, panneau replié) */
   railItems?: RailItem[];
   /** Lien vers l'étape suivante (Plan 2D → Calepinage → Quantitatif → PDF), en haut du panneau */
-  next?: { label: string; onClick: () => void; icon?: React.ReactNode };
+  next?: {
+    label: string;
+    onClick: () => void;
+    icon?: React.ReactNode;
+    /** Grisé (ex. aucune pièce fermée) : le clic reste possible pour expliquer pourquoi */
+    disabled?: boolean;
+  };
   /** Lien vers l'étape précédente (Calepinage → Plan 2D, Quantitatif → Calepinage) */
   prev?: { label: string; onClick: () => void };
   footer?: React.ReactNode;
@@ -73,6 +81,22 @@ export const SidePanel = ({
   const setCollapsed = usePanelStore((s) => s.setCollapsed);
   const mobileOpen = usePanelStore((s) => s.mobileOpen);
   const setMobileOpen = usePanelStore((s) => s.setMobileOpen);
+  const navLearned = usePanelStore((s) => s.navLearned);
+  const markNavLearned = usePanelStore((s) => s.markNavLearned);
+  const goPrev = prev
+    ? () => {
+        markNavLearned();
+        prev.onClick();
+      }
+    : undefined;
+  const goNext = next
+    ? () => {
+        if (!next.disabled) markNavLearned();
+        next.onClick();
+      }
+    : undefined;
+  // Pulsation discrète du lien « suivant » tant que l'utilisateur ne s'en est jamais servi
+  const pulseNext = !!next && !next.disabled && !navLearned;
 
   const expandTo = (sectionId?: string) => {
     setCollapsed(false);
@@ -172,7 +196,7 @@ export const SidePanel = ({
                     id: 'prev',
                     label: prev.label,
                     icon: <ArrowLeft size={16} />,
-                    onClick: prev.onClick,
+                    onClick: goPrev,
                     divider: true,
                   },
                 ]
@@ -183,7 +207,9 @@ export const SidePanel = ({
                     id: 'next',
                     label: next.label,
                     icon: next.icon ?? <ArrowRight size={16} />,
-                    onClick: next.onClick,
+                    onClick: goNext,
+                    disabled: next.disabled,
+                    pulse: pulseNext,
                     divider: !prev,
                   },
                 ]
@@ -199,6 +225,7 @@ export const SidePanel = ({
                 active={item.active}
                 tone={item.tone}
                 disabled={item.disabled}
+                className={item.pulse ? 'nav-pulse' : undefined}
                 onClick={item.onClick ?? (() => expandTo(item.id))}
               />
             </ToolTooltip>
@@ -216,8 +243,8 @@ export const SidePanel = ({
           {prev && (
             <button
               type="button"
-              onClick={prev.onClick}
-              className="flex shrink-0 items-center gap-1 text-[12.5px] font-semibold underline-offset-2 hover:underline"
+              onClick={goPrev}
+              className="-ml-2 flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[12.5px] font-semibold underline-offset-2 hover:underline"
               style={{ color: 'var(--accent)' }}
             >
               <ArrowLeft size={14} aria-hidden />
@@ -228,9 +255,13 @@ export const SidePanel = ({
           {next && (
             <button
               type="button"
-              onClick={next.onClick}
-              className="flex shrink-0 items-center gap-1 text-[12.5px] font-semibold underline-offset-2 hover:underline"
-              style={{ color: 'var(--accent)' }}
+              onClick={goNext}
+              aria-disabled={next.disabled || undefined}
+              data-pulse={pulseNext || undefined}
+              className={`-mr-2 flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[12.5px] font-semibold underline-offset-2 ${
+                next.disabled ? 'cursor-help' : 'hover:underline'
+              } ${pulseNext ? 'nav-pulse' : ''}`}
+              style={{ color: next.disabled ? 'var(--muted)' : 'var(--accent)' }}
             >
               {next.label}
               {next.icon ?? <ArrowRight size={14} aria-hidden />}
@@ -402,6 +433,7 @@ export const IconToolButton = ({
   tone = 'default',
   onClick,
   disabled,
+  className = '',
 }: {
   label: string;
   icon: React.ReactNode;
@@ -409,6 +441,7 @@ export const IconToolButton = ({
   tone?: Tone;
   onClick: () => void;
   disabled?: boolean;
+  className?: string;
 }) => (
   <button
     type="button"
@@ -416,7 +449,7 @@ export const IconToolButton = ({
     aria-pressed={active}
     disabled={disabled}
     onClick={onClick}
-    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-colors active:scale-95 disabled:opacity-40"
+    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-colors active:scale-95 disabled:opacity-40 ${className}`}
     style={
       active
         ? styleOf(true, tone)

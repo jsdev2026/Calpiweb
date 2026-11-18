@@ -78,10 +78,14 @@ describe('PlanToolbar — panneau latéral Plan 2D', () => {
     expect(usePanelStore.getState().collapsed).toBe(true);
   });
 
-  it('lien « Calepinage → » en haut du panneau, seulement si une pièce est fermée', () => {
+  it('lien « Calepinage → » en haut du panneau, grisé sans pièce fermée', () => {
     const onNext = vi.fn();
-    const { rerender } = render(<PlanToolbar {...defaultProps} />);
-    expect(screen.queryByRole('button', { name: /^Calepinage$/ })).toBeNull();
+    const { rerender } = render(<PlanToolbar {...defaultProps} onNext={onNext} nextDisabled />);
+    const grey = within(document.querySelector('[data-panel-next]') as HTMLElement).getByRole(
+      'button',
+      { name: /^Calepinage$/ },
+    );
+    expect(grey.getAttribute('aria-disabled')).toBe('true');
     rerender(<PlanToolbar {...defaultProps} onNext={onNext} />);
     const row = document.querySelector('[data-panel-next]') as HTMLElement;
     fireEvent.click(within(row).getByRole('button', { name: /^Calepinage$/ }));

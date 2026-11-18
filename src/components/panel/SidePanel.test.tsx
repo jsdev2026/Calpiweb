@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
-import { PANEL_STORAGE_KEY, usePanelStore } from '@/store/panelStore';
+import { NAV_LEARNED_STORAGE_KEY, PANEL_STORAGE_KEY, usePanelStore } from '@/store/panelStore';
 import { PanelChip, PanelSection, PanelToolButton, SidePanel, sectionDomId } from './SidePanel';
 
 const Icon = () => <svg data-testid="mode-icon" />;
@@ -123,6 +123,45 @@ describe('liens précédent / suivant', () => {
     expect(row.className).not.toMatch(/(^|s)hidden(s|$)/);
     fireEvent.click(within(row).getByRole('button', { name: 'Quantitatif' }));
     expect(next).toHaveBeenCalled();
+  });
+});
+
+describe('aide à la découverte', () => {
+  it('le lien suivant pulse jusqu’à sa première utilisation (mémorisé)', () => {
+    act(() => usePanelStore.setState({ navLearned: false }));
+    const next = vi.fn();
+    render(
+      <SidePanel icon={<Icon />} title="Plan 2D" next={{ label: 'Calepinage', onClick: next }}>
+        <PanelSection title="Pièces">liste</PanelSection>
+      </SidePanel>,
+    );
+    const row = document.querySelector('[data-panel-next]') as HTMLElement;
+    const btn = within(row).getByRole('button', { name: 'Calepinage' });
+    expect(btn.className).toMatch(/nav-pulse/);
+    fireEvent.click(btn);
+    expect(next).toHaveBeenCalled();
+    expect(usePanelStore.getState().navLearned).toBe(true);
+    expect(window.localStorage.getItem(NAV_LEARNED_STORAGE_KEY)).toBe('true');
+    expect(btn.className).not.toMatch(/nav-pulse/);
+  });
+
+  it('lien suivant grisé : pas de pulsation, le clic explique pourquoi', () => {
+    act(() => usePanelStore.setState({ navLearned: false }));
+    const next = vi.fn();
+    render(
+      <SidePanel
+        icon={<Icon />}
+        title="Plan 2D"
+        next={{ label: 'Calepinage', onClick: next, disabled: true }}
+      />,
+    );
+    const row = document.querySelector('[data-panel-next]') as HTMLElement;
+    const btn = within(row).getByRole('button', { name: 'Calepinage' });
+    expect(btn.getAttribute('aria-disabled')).toBe('true');
+    expect(btn.className).not.toMatch(/nav-pulse/);
+    fireEvent.click(btn);
+    expect(next).toHaveBeenCalled();
+    expect(usePanelStore.getState().navLearned).toBe(false);
   });
 });
 

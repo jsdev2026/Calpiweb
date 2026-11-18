@@ -191,6 +191,14 @@ export const PlanEditor = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const [highlightGroup, setHighlightGroup] = useState<number | null>(null);
   const [gestureHint, setGestureHint] = useState(false);
+  // Plan 2D sans pièce fermée : « Calepinage → » explique ce qu'il manque
+  const hasClosedRoom = rooms.some((r) => r.points.length >= 3);
+  const [noRoomHint, setNoRoomHint] = useState(false);
+  useEffect(() => {
+    if (!noRoomHint) return;
+    const t = setTimeout(() => setNoRoomHint(false), 3500);
+    return () => clearTimeout(t);
+  }, [noRoomHint]);
   // Mode « choisir le carreau de départ » : un appui sur un carreau le désigne
   const [pickingStart, setPickingStart] = useState(false);
 
@@ -424,7 +432,13 @@ export const PlanEditor = ({
       >
         {mode === 'PLAN' && (
           <>
-            <ToolStatusBar tool={tool} />
+            {noRoomHint && !hasClosedRoom ? (
+              <CanvasHint testId="no-room-hint">
+                Tracez d’abord une pièce fermée pour passer au calepinage
+              </CanvasHint>
+            ) : (
+              <ToolStatusBar tool={tool} />
+            )}
             <PlanToolbar
               tool={tool}
               canUndo={past.length > 0}
@@ -435,9 +449,8 @@ export const PlanEditor = ({
               wallThickness={wallThickness}
               onWallThicknessChange={setWallThickness}
               readOnly={readOnly}
-              onNext={
-                rooms.some((r) => r.points.length >= 3) ? () => onModeChange?.('TILING') : undefined
-              }
+              nextDisabled={!hasClosedRoom}
+              onNext={() => (hasClosedRoom ? onModeChange?.('TILING') : setNoRoomHint(true))}
             />
           </>
         )}
