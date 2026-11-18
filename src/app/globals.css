@@ -170,9 +170,9 @@ body {
     box-shadow: 0 0 0 0 transparent;
   }
 }
-/* Bouton « étape suivante » : anneau qui s'élargit, tant qu'il n'a pas servi sur l'étape */
+/* Bouton « page suivante » : anneau qui s'élargit, 5 fois à chaque arrivée sur la page */
 .nav-pulse {
-  animation: nav-pulse 1.6s ease-out infinite;
+  animation: nav-pulse 1.6s ease-out 5;
 }
 @media (prefers-reduced-motion: reduce) {
   .nav-pulse {
