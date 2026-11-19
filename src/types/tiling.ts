@@ -9,6 +9,12 @@ export interface ConsumableParams {
   jointRendement?: number; // kg/m², si défini = override ISO 13007
   jointBagSize?: number; // kg/sac, défaut 5
   croisillonsBagSize?: number; // unités/sachet, défaut 200
+  /** Carreaux par carton (conditionnement du fabricant) : affiche le nombre de cartons */
+  tilesPerBox?: number;
+  /** Plinthes ajoutées à la commande */
+  skirting?: boolean;
+  /** Longueur d'une plinthe (mm), défaut 600 */
+  skirtingPieceLength?: number;
 }
 
 export interface TilingConfig {

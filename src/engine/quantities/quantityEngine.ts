@@ -1,3 +1,4 @@
+import { computeBoxes, computeSkirting } from './packaging';
 import type { Room } from '@/types/project';
 import type { Point } from '@/types/plan';
 import type { TilingConfig } from '@/types/tiling';
@@ -134,6 +135,13 @@ export function analyzeQuantities(
   const totalTiles = stats.whole + tilesForCuts;
   const toOrder = Math.ceil(totalTiles * (1 + margin));
   const consumables = computeConsumables(stats.roomArea, totalTiles, config);
+  const boxes = computeBoxes(toOrder, config.width, config.height, config.consumableParams);
+  const skirting = computeSkirting(
+    validRooms,
+    wallThickness,
+    doorOpenings,
+    config.consumableParams,
+  );
 
   return {
     tileW: config.width,
@@ -150,5 +158,7 @@ export function analyzeQuantities(
     roomArea: stats.roomArea,
     tiles,
     consumables,
+    boxes,
+    skirting,
   };
 }

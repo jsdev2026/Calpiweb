@@ -52,7 +52,7 @@ describe('QuantitiesRecapColumn', () => {
     const onMarginCommit = vi.fn();
     render(<QuantitiesRecapColumn {...defaultProps} onMarginCommit={onMarginCommit} />);
     fireEvent.click(screen.getByText('× 5%'));
-    const input = screen.getByRole('spinbutton');
+    const input = screen.getByRole('spinbutton', { name: 'Marge (%)' });
     fireEvent.change(input, { target: { value: '10' } });
     fireEvent.blur(input);
     expect(onMarginCommit).toHaveBeenCalledWith(10);
@@ -63,5 +63,57 @@ describe('QuantitiesRecapColumn', () => {
     expect(screen.queryByText('Colle')).toBeNull();
     fireEvent.click(screen.getByText('Consommables'));
     expect(screen.getByText('Colle')).toBeDefined();
+  });
+
+  it('cartons : à renseigner, puis nombre de cartons et surface', () => {
+    const onConsumableParamChange = vi.fn();
+    const { rerender } = render(
+      <QuantitiesRecapColumn {...defaultProps} onConsumableParamChange={onConsumableParamChange} />,
+    );
+    const card = screen.getByTestId('boxes-card');
+    expect(card.textContent).toMatch(/à renseigner/);
+    const input = screen.getByRole('spinbutton', { name: 'Carreaux par carton' });
+    fireEvent.change(input, { target: { value: '8' } });
+    fireEvent.blur(input);
+    expect(onConsumableParamChange).toHaveBeenCalledWith({ tilesPerBox: 8 });
+    rerender(
+      <QuantitiesRecapColumn
+        {...defaultProps}
+        result={makeResult({ boxes: { perBox: 8, count: 2, boxArea: 720_000 } })}
+        consumableParams={{ tilesPerBox: 8 }}
+      />,
+    );
+    expect(screen.getByTestId('boxes-card').textContent).toMatch(/2cartons/);
+    expect(screen.getByTestId('boxes-card').textContent).toMatch(
+      /0.72 m² par carton · 16 carreaux livrés/,
+    );
+  });
+
+  it('plinthes : longueur de murs, case pour les ajouter, nombre et longueur', () => {
+    const onConsumableParamChange = vi.fn();
+    const skirting = { included: false, length: 13_600, pieceLength: 600, pieces: 25, margin: 0.1 };
+    const { rerender } = render(
+      <QuantitiesRecapColumn
+        {...defaultProps}
+        result={makeResult({ skirting })}
+        onConsumableParamChange={onConsumableParamChange}
+      />,
+    );
+    const card = screen.getByTestId('skirting-card');
+    expect(card.textContent).toMatch(/13,6 m de murs, portes déduites/);
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Plinthes' }));
+    expect(onConsumableParamChange).toHaveBeenCalledWith({ skirting: true });
+    rerender(
+      <QuantitiesRecapColumn
+        {...defaultProps}
+        result={makeResult({ skirting: { ...skirting, included: true } })}
+        onConsumableParamChange={onConsumableParamChange}
+      />,
+    );
+    expect(screen.getByTestId('skirting-card').textContent).toMatch(/25plinthes/);
+    const len = screen.getByRole('spinbutton', { name: 'Longueur d’une plinthe (cm)' });
+    fireEvent.change(len, { target: { value: '120' } });
+    fireEvent.blur(len);
+    expect(onConsumableParamChange).toHaveBeenCalledWith({ skirtingPieceLength: 1200 });
   });
 });

@@ -97,6 +97,148 @@ const ConsumableCard = ({
   );
 };
 
+const inputCls =
+  'h-7 w-14 rounded-md border px-1 text-center outline-none focus:border-[var(--accent)]';
+const inputStyle = { borderColor: 'var(--bdr)', background: 'var(--surf)', color: 'var(--text)' };
+const cardStyle = { borderColor: 'var(--bdr)', background: 'var(--surf2)' };
+const meters = (mm: number) => `${(mm / 1000).toFixed(1).replace('.', ',')} m`;
+
+/** Cartons : conditionnement du fabricant → nombre de cartons à commander */
+const BoxesCard = ({
+  result,
+  tilesPerBox,
+  onChange,
+}: {
+  result: QuantityResult;
+  tilesPerBox: number | undefined;
+  onChange: (perBox: number | undefined) => void;
+}) => {
+  const boxes = result.boxes;
+  return (
+    <div data-testid="boxes-card" className="rounded-lg border px-3 py-2.5" style={cardStyle}>
+      <div className="mb-1 flex items-baseline justify-between gap-2">
+        <span className="text-[12.5px] font-semibold" style={{ color: 'var(--text)' }}>
+          Cartons
+        </span>
+        {boxes ? (
+          <span className="flex items-baseline gap-1">
+            <span className="text-[18px] font-bold tabular-nums" style={{ color: 'var(--text)' }}>
+              {boxes.count}
+            </span>
+            <span className="text-[11.5px]" style={{ color: 'var(--muted)' }}>
+              carton{boxes.count > 1 ? 's' : ''}
+            </span>
+          </span>
+        ) : (
+          <span className="text-[11.5px]" style={{ color: 'var(--muted)' }}>
+            à renseigner
+          </span>
+        )}
+      </div>
+      <label className="flex items-center gap-1 text-[11.5px]" style={{ color: 'var(--text2)' }}>
+        <span>Carreaux par carton :</span>
+        <input
+          key={tilesPerBox ?? 'vide'}
+          type="number"
+          min="1"
+          step="1"
+          inputMode="numeric"
+          placeholder="ex. 8"
+          aria-label="Carreaux par carton"
+          defaultValue={tilesPerBox ?? ''}
+          onBlur={(e) => {
+            const v = Math.floor(parseFloat(e.target.value));
+            onChange(!isNaN(v) && v > 0 ? v : undefined);
+          }}
+          onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
+          className={inputCls}
+          style={inputStyle}
+        />
+      </label>
+      <div className="mt-1 text-[10.5px]" style={{ color: 'var(--muted)' }}>
+        {boxes
+          ? `${formatM2(boxes.boxArea)} par carton · ${boxes.count * boxes.perBox} carreaux livrés`
+          : 'Indiqué sur le carton ou la fiche du fabricant.'}
+      </div>
+    </div>
+  );
+};
+
+/** Plinthes : longueur de murs (portes déduites) et nombre de plinthes */
+const SkirtingCard = ({
+  result,
+  pieceLength,
+  onChange,
+}: {
+  result: QuantityResult;
+  pieceLength: number | undefined;
+  onChange: (patch: Partial<ConsumableParams>) => void;
+}) => {
+  const s = result.skirting;
+  if (!s) return null;
+  return (
+    <div data-testid="skirting-card" className="rounded-lg border px-3 py-2.5" style={cardStyle}>
+      <div className="mb-1 flex items-center justify-between gap-2">
+        <label
+          className="flex cursor-pointer items-center gap-2 text-[12.5px] font-semibold"
+          style={{ color: 'var(--text)' }}
+        >
+          <input
+            type="checkbox"
+            checked={s.included}
+            onChange={(e) => onChange({ skirting: e.target.checked })}
+            className="h-4 w-4 accent-[var(--accent)]"
+          />
+          Plinthes
+        </label>
+        {s.included && (
+          <span className="flex items-baseline gap-1">
+            <span className="text-[18px] font-bold tabular-nums" style={{ color: 'var(--text)' }}>
+              {s.pieces}
+            </span>
+            <span className="text-[11.5px]" style={{ color: 'var(--muted)' }}>
+              plinthe{s.pieces > 1 ? 's' : ''}
+            </span>
+          </span>
+        )}
+      </div>
+      <div className="text-[11.5px]" style={{ color: 'var(--text2)' }}>
+        {meters(s.length)} de murs, portes déduites
+      </div>
+      {s.included && (
+        <>
+          <label
+            className="mt-1 flex items-center gap-1 text-[11.5px]"
+            style={{ color: 'var(--text2)' }}
+          >
+            <span>Longueur d’une plinthe :</span>
+            <input
+              key={pieceLength ?? s.pieceLength}
+              type="number"
+              min="5"
+              step="1"
+              inputMode="decimal"
+              aria-label="Longueur d’une plinthe (cm)"
+              defaultValue={s.pieceLength / 10}
+              onBlur={(e) => {
+                const v = parseFloat(e.target.value);
+                if (!isNaN(v) && v >= 5) onChange({ skirtingPieceLength: Math.round(v * 10) });
+              }}
+              onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
+              className={inputCls}
+              style={inputStyle}
+            />
+            <span>cm</span>
+          </label>
+          <div className="mt-1 text-[10.5px]" style={{ color: 'var(--muted)' }}>
+            Marge {Math.round(s.margin * 100)} % incluse (coupes d’angle).
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
 export interface QuantitiesRecapColumnProps {
   result: QuantityResult;
   marginOverride: number | undefined;
@@ -182,6 +324,7 @@ export const QuantitiesRecapColumn = ({
               ×
               <input
                 autoFocus
+                aria-label="Marge (%)"
                 type="number"
                 min="0"
                 max="100"
@@ -217,6 +360,17 @@ export const QuantitiesRecapColumn = ({
           Carreaux nets pour coupes&nbsp;: {result.tilesForCuts}
         </div>
       </div>
+
+      <BoxesCard
+        result={result}
+        tilesPerBox={consumableParams?.tilesPerBox}
+        onChange={(perBox) => onConsumableParamChange({ tilesPerBox: perBox })}
+      />
+      <SkirtingCard
+        result={result}
+        pieceLength={consumableParams?.skirtingPieceLength}
+        onChange={onConsumableParamChange}
+      />
 
       <div className="flex flex-col gap-3">
         {/* Stat list */}
