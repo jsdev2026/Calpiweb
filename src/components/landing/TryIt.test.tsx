@@ -51,14 +51,24 @@ describe('Essai sur la page d’accueil', () => {
     );
     click(1000, 4000);
     click(1000, 1000);
-    expect(screen.getByRole('status').textContent).toBe('Votre quantitatif est prêt · 12,00 m²');
+    expect(screen.getByRole('status').textContent).toBe('Votre quantitatif est prêt');
 
     const q = screen.getByTestId('try-quantities');
-    // 4 m × 3 m = 12 m², carreaux 60×60
-    expect(q.textContent).toContain('12,00 m²');
     expect(q.textContent).toMatch(/carreaux 60×60/);
     expect(Number(within(q).getByTestId('try-to-order').textContent)).toBeGreaterThan(30);
     expect(screen.getByRole('button', { name: 'Enregistrer mon projet — gratuit' })).toBeTruthy();
+  });
+
+  it('surfaces floutées : la vraie valeur n’est jamais dans la page, clic → inscription', () => {
+    render(<TryIt />);
+    drawRoom(); // 4 m × 3 m = 12 m²
+    const page = document.body.textContent ?? '';
+    expect(page).not.toMatch(/12,00 m²|12,96 m²|12\.00/);
+    const blurred = screen.getAllByTestId('blurred-area');
+    expect(blurred).toHaveLength(2);
+    for (const b of blurred) expect(b.textContent).toBe('88,88 m²');
+    fireEvent.click(blurred[0]!);
+    expect(push).toHaveBeenCalledWith(SIGNUP_URL);
   });
 
   it('un seul format et un seul outil : le reste renvoie vers l’inscription', () => {
