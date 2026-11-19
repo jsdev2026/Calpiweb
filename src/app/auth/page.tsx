@@ -3,7 +3,15 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { ACQUISITION_SOURCES, PROFILE_TYPES, type ProfileType } from '@/types/profile';
+import { ACQUISITION_SOURCES, type ProfileType } from '@/types/profile';
+import {
+  PRO_ACTIVITIES,
+  companyErrors,
+  normalizeCompany,
+  type AccountType,
+  type CompanyFields,
+} from '@/lib/accountType';
+import { pricesFor } from '@/constants/pricing';
 import { clean, phoneError } from '@/lib/validation';
 import { authErrorMessage, isExistingAccount } from '@/lib/authErrors';
 
@@ -159,8 +167,20 @@ function AuthPageInner() {
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [profileType, setProfileType] = useState<ProfileType | ''>('');
-  const [companyName, setCompanyName] = useState('');
+  /** Compte particulier ou professionnel (sans rapport avec l'abonnement Pro) */
+  const [accountType, setAccountType] = useState<AccountType | ''>('');
+  /** Activité d'un compte professionnel */
+  const [activity, setActivity] = useState<ProfileType | ''>('');
+  const [company, setCompany] = useState<CompanyFields>({
+    companyName: '',
+    siret: '',
+    vatNumber: '',
+    addressLine: '',
+    postalCode: '',
+    city: '',
+  });
+  const setCompanyField = (k: keyof CompanyFields, v: string) =>
+    setCompany((c) => ({ ...c, [k]: v }));
   const [phone, setPhone] = useState('');
   const [acquisitionSource, setAcquisitionSource] = useState('');
   const [newsletter, setNewsletter] = useState(false);
@@ -255,11 +275,16 @@ function AuthPageInner() {
     setLoading(false);
   };
 
-  const isPro = profileType !== '' && profileType !== 'particulier';
+  const isPro = accountType === 'professionnel';
 
   const validateRegister = (): string | null => {
     if (!clean(firstName) || !clean(lastName)) return 'Indiquez votre prénom et votre nom.';
-    if (!profileType) return 'Indiquez votre profil.';
+    if (!accountType) return 'Indiquez si vous êtes un particulier ou un professionnel.';
+    if (isPro) {
+      if (!activity) return 'Indiquez votre activité.';
+      const companyError = Object.values(companyErrors(company, true)).find(Boolean);
+      if (companyError) return companyError;
+    }
     if (!/^\S+@\S+\.\S+$/.test(email.trim())) return 'Adresse e-mail invalide.';
     if (password.length < 8) return 'Le mot de passe doit comporter au moins 8 caractères.';
     return phoneError(phone);
@@ -277,7 +302,9 @@ function AuthPageInner() {
     resetResend();
     const first = clean(firstName)!;
     const last = clean(lastName)!;
-    // Les métadonnées sont recopiées dans public.profiles par le trigger handle_new_user (migration 004)
+    // Les métadonnées sont recopiées dans public.profiles par le trigger handle_new_user
+    // (migrations 004 et 006 : société, SIRET, TVA, adresse)
+    const c = isPro ? normalizeCompany(company) : null;
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
@@ -287,8 +314,13 @@ function AuthPageInner() {
           full_name: `${first} ${last}`,
           first_name: first,
           last_name: last,
-          profile_type: profileType,
-          company_name: isPro ? clean(companyName) : null,
+          profile_type: isPro ? activity : 'particulier',
+          company_name: c?.companyName ?? null,
+          siret: c?.siret ?? null,
+          vat_number: c?.vatNumber ?? null,
+          address_line: c?.addressLine ?? null,
+          postal_code: c?.postalCode ?? null,
+          city: c?.city ?? null,
           phone: clean(phone),
           acquisition_source: acquisitionSource || null,
           newsletter_opt_in: newsletter,
@@ -548,36 +580,169 @@ function AuthPageInner() {
                     </div>
                   </div>
                   <div>
-                    <label className={labelCls} style={labelStyle}>
-                      Vous êtes *
-                    </label>
-                    <select
-                      value={profileType}
-                      onChange={(e) => setProfileType(e.target.value as ProfileType | '')}
-                      className={inputCls}
-                      style={inputStyle}
+                    <span className={labelCls} style={labelStyle}>
+                      Type de compte *
+                    </span>
+                    <div
+                      className="grid grid-cols-2 gap-2"
+                      role="radiogroup"
+                      aria-label="Type de compte"
                     >
-                      <option value="">Choisir…</option>
-                      {PROFILE_TYPES.map((p) => (
-                        <option key={p.value} value={p.value}>
-                          {p.label}
-                        </option>
-                      ))}
-                    </select>
+                      {(
+                        [
+                          ['particulier', 'Particulier', 'Pour mon logement'],
+                          ['professionnel', 'Professionnel', 'Artisan, entreprise, négoce…'],
+                        ] as const
+                      ).map(([value, label, hint]) => {
+                        const active = accountType === value;
+                        return (
+                          <button
+                            key={value}
+                            type="button"
+                            role="radio"
+                            aria-checked={active}
+                            onClick={() => setAccountType(value)}
+                            className="rounded-[var(--rs)] border px-3 py-2 text-left transition-colors"
+                            style={{
+                              borderColor: active ? 'var(--accent)' : 'var(--bdr2)',
+                              background: active ? 'var(--accent-l)' : 'var(--surf)',
+                            }}
+                          >
+                            <span
+                              className="block text-[13px] font-semibold"
+                              style={{ color: active ? 'var(--accent)' : 'var(--text)' }}
+                            >
+                              {label}
+                            </span>
+                            <span className="block text-[11px]" style={{ color: 'var(--muted)' }}>
+                              {hint}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                   {isPro && (
-                    <div>
-                      <label className={labelCls} style={labelStyle}>
-                        Entreprise
-                      </label>
-                      <input
-                        value={companyName}
-                        onChange={(e) => setCompanyName(e.target.value)}
-                        placeholder="Dupont Carrelage"
-                        autoComplete="organization"
-                        className={inputCls}
-                        style={inputStyle}
-                      />
+                    <div
+                      data-testid="signup-company"
+                      className="space-y-3 rounded-[var(--rs)] border p-3"
+                      style={{ borderColor: 'var(--bdr)', background: 'var(--surf2)' }}
+                    >
+                      <div>
+                        <label className={labelCls} style={labelStyle} htmlFor="signup-activity">
+                          Activité *
+                        </label>
+                        <select
+                          id="signup-activity"
+                          value={activity}
+                          onChange={(e) => setActivity(e.target.value as ProfileType | '')}
+                          className={inputCls}
+                          style={inputStyle}
+                        >
+                          <option value="">Choisir…</option>
+                          {PRO_ACTIVITIES.map((p) => (
+                            <option key={p.value} value={p.value}>
+                              {p.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className={labelCls} style={labelStyle} htmlFor="signup-companyName">
+                          Raison sociale *
+                        </label>
+                        <input
+                          id="signup-companyName"
+                          value={company.companyName ?? ''}
+                          onChange={(e) => setCompanyField('companyName', e.target.value)}
+                          className={inputCls}
+                          style={inputStyle}
+                          placeholder="Dupont Carrelage"
+                          autoComplete="organization"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className={labelCls} style={labelStyle} htmlFor="signup-siret">
+                            SIRET *
+                          </label>
+                          <input
+                            id="signup-siret"
+                            value={company.siret ?? ''}
+                            onChange={(e) => setCompanyField('siret', e.target.value)}
+                            className={inputCls}
+                            style={inputStyle}
+                            placeholder="14 chiffres"
+                            inputMode="numeric"
+                          />
+                        </div>
+                        <div>
+                          <label className={labelCls} style={labelStyle} htmlFor="signup-vatNumber">
+                            N° TVA <span className="normal-case">(facultatif)</span>
+                          </label>
+                          <input
+                            id="signup-vatNumber"
+                            value={company.vatNumber ?? ''}
+                            onChange={(e) => setCompanyField('vatNumber', e.target.value)}
+                            className={inputCls}
+                            style={inputStyle}
+                            placeholder="FR…"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className={labelCls} style={labelStyle} htmlFor="signup-addressLine">
+                          Adresse *
+                        </label>
+                        <input
+                          id="signup-addressLine"
+                          value={company.addressLine ?? ''}
+                          onChange={(e) => setCompanyField('addressLine', e.target.value)}
+                          className={inputCls}
+                          style={inputStyle}
+                          placeholder="12 rue des Lilas"
+                          autoComplete="street-address"
+                        />
+                      </div>
+                      <div className="grid grid-cols-[110px_1fr] gap-3">
+                        <div>
+                          <label
+                            className={labelCls}
+                            style={labelStyle}
+                            htmlFor="signup-postalCode"
+                          >
+                            Code postal *
+                          </label>
+                          <input
+                            id="signup-postalCode"
+                            value={company.postalCode ?? ''}
+                            onChange={(e) => setCompanyField('postalCode', e.target.value)}
+                            className={inputCls}
+                            style={inputStyle}
+                            placeholder="69003"
+                            inputMode="numeric"
+                            autoComplete="postal-code"
+                          />
+                        </div>
+                        <div>
+                          <label className={labelCls} style={labelStyle} htmlFor="signup-city">
+                            Ville *
+                          </label>
+                          <input
+                            id="signup-city"
+                            value={company.city ?? ''}
+                            onChange={(e) => setCompanyField('city', e.target.value)}
+                            className={inputCls}
+                            style={inputStyle}
+                            placeholder="Lyon"
+                            autoComplete="address-level2"
+                          />
+                        </div>
+                      </div>
+                      <p className="text-[11.5px]" style={{ color: 'var(--muted)' }}>
+                        Tarifs professionnels hors taxes : {pricesFor('professionnel').extraProject}{' '}
+                        HT le projet, abonnement Pro {pricesFor('professionnel').monthly} HT / mois.
+                      </p>
                     </div>
                   )}
                   <div>

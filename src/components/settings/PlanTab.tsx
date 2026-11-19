@@ -1,7 +1,8 @@
 'use client';
 
 import type { UserProfile } from '@/types/profile';
-import { PRICE_EXTRA_PROJECT, PRICE_PRO_MONTHLY } from '@/constants/pricing';
+import { pricesFor } from '@/constants/pricing';
+import { accountTypeOf } from '@/lib/accountType';
 import { FREE_PROJECT_LIMIT } from '@/lib/entitlements';
 import { Section } from './settingsUi';
 
@@ -13,6 +14,8 @@ export const PlanTab = ({
   ownedProjects: number;
 }) => {
   const isPro = profile.plan === 'pro';
+  const business = accountTypeOf(profile.profileType) === 'professionnel';
+  const prices = pricesFor(accountTypeOf(profile.profileType));
   const limit = FREE_PROJECT_LIMIT + profile.projectCredits;
 
   return (
@@ -56,10 +59,10 @@ export const PlanTab = ({
                 Un projet supplémentaire, sans engagement.
               </p>
               <p className="text-[15px] font-bold" style={{ color: 'var(--text)' }}>
-                {PRICE_EXTRA_PROJECT}
+                {prices.extraProject}
                 <span className="text-[11px] font-medium" style={{ color: 'var(--muted)' }}>
                   {' '}
-                  TTC / projet
+                  {prices.tax} / projet
                 </span>
               </p>
             </div>
@@ -74,14 +77,24 @@ export const PlanTab = ({
                 Partage de projets, PDF sans mention CaléPlan.
               </p>
               <p className="text-[15px] font-bold" style={{ color: 'var(--text)' }}>
-                {PRICE_PRO_MONTHLY}
+                {prices.monthly}
                 <span className="text-[11px] font-medium" style={{ color: 'var(--muted)' }}>
                   {' '}
-                  TTC / mois
+                  {prices.tax} / mois
                 </span>
               </p>
             </div>
           </div>
+          <p
+            data-testid="price-grid"
+            className="text-center text-[12px]"
+            style={{ color: 'var(--muted)' }}
+          >
+            {business
+              ? 'Tarifs professionnels, hors taxes (compte professionnel).'
+              : 'Tarifs particuliers, toutes taxes comprises.'}{' '}
+            Le type de compte se change dans l’onglet Profil.
+          </p>
           <p className="text-center text-[12px]" style={{ color: 'var(--muted)' }}>
             Paiement en ligne disponible prochainement — en attendant, faites une demande dans
             l&apos;onglet Contact.

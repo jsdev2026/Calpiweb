@@ -2,7 +2,8 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { PRICE_EXTRA_PROJECT, PRICE_PRO_MONTHLY } from '@/constants/pricing';
+import { pricesFor } from '@/constants/pricing';
+import { useUiStore } from '@/store/uiStore';
 
 interface UpgradeModalProps {
   onClose: () => void;
@@ -10,6 +11,7 @@ interface UpgradeModalProps {
 
 export function UpgradeModal({ onClose }: UpgradeModalProps) {
   const router = useRouter();
+  const prices = pricesFor(useUiStore((s) => s.user?.accountType));
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -89,7 +91,11 @@ export function UpgradeModal({ onClose }: UpgradeModalProps) {
               Un crédit projet, sans engagement.
             </span>
             <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>
-              {PRICE_EXTRA_PROJECT}
+              {prices.extraProject}
+              <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--muted)' }}>
+                {' '}
+                {prices.tax}
+              </span>
             </span>
             <button
               type="button"
@@ -144,8 +150,11 @@ export function UpgradeModal({ onClose }: UpgradeModalProps) {
               Abonnement — projets, cloud, tous appareils.
             </span>
             <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>
-              {PRICE_PRO_MONTHLY}
-              <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--muted)' }}> / mois</span>
+              {prices.monthly}
+              <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--muted)' }}>
+                {' '}
+                {prices.tax} / mois
+              </span>
             </span>
             <button
               type="button"

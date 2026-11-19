@@ -17,12 +17,11 @@ vi.mock('next/navigation', () => ({
 
 import AuthPage from './page';
 
-const fillRegister = () => {
+const fillRegister = (accountType: 'Particulier' | 'Professionnel' = 'Particulier') => {
   fireEvent.click(screen.getByRole('button', { name: 'Créer un compte' }));
   fireEvent.change(screen.getByPlaceholderText('Jean'), { target: { value: 'Jean' } });
   fireEvent.change(screen.getByPlaceholderText('Dupont'), { target: { value: 'Dupont' } });
-  // Premier menu déroulant : « Vous êtes »
-  fireEvent.change(screen.getAllByRole('combobox')[0]!, { target: { value: 'artisan' } });
+  fireEvent.click(screen.getByRole('radio', { name: new RegExp(`^${accountType}`) }));
   fireEvent.change(screen.getByPlaceholderText('vous@exemple.fr'), {
     target: { value: 'jean@exemple.fr' },
   });
@@ -36,6 +35,79 @@ const submitRegister = () =>
 beforeEach(() => {
   Object.values(auth).forEach((f) => f.mockReset());
   search.params = new URLSearchParams();
+});
+
+describe('inscription — type de compte', () => {
+  const newUser = {
+    data: { user: { id: 'x', identities: [{ provider: 'email' }] }, session: null },
+    error: null,
+  };
+
+  it('particulier : aucune information de société, activité « particulier »', async () => {
+    auth.signUp.mockResolvedValue(newUser);
+    render(<AuthPage />);
+    fillRegister('Particulier');
+    expect(screen.queryByTestId('signup-company')).toBeNull();
+    submitRegister();
+    await screen.findByTestId('confirmation-sent');
+    const meta = auth.signUp.mock.calls[0]![0].options.data;
+    expect(meta).toMatchObject({ profile_type: 'particulier', company_name: null, siret: null });
+  });
+
+  it('type de compte obligatoire', async () => {
+    render(<AuthPage />);
+    fireEvent.click(screen.getByRole('button', { name: 'Créer un compte' }));
+    fireEvent.change(screen.getByPlaceholderText('Jean'), { target: { value: 'Jean' } });
+    fireEvent.change(screen.getByPlaceholderText('Dupont'), { target: { value: 'Dupont' } });
+    submitRegister();
+    expect(await screen.findByText(/particulier ou un professionnel/)).toBeTruthy();
+    expect(auth.signUp).not.toHaveBeenCalled();
+  });
+
+  it('professionnel : activité et société obligatoires, prix HT annoncés', async () => {
+    auth.signUp.mockResolvedValue(newUser);
+    render(<AuthPage />);
+    fillRegister('Professionnel');
+    const box = screen.getByTestId('signup-company');
+    expect(box.textContent).toMatch(/1,99 € HT le projet, abonnement Pro 9,80 € HT \/ mois/);
+    submitRegister();
+    expect(await screen.findByText('Indiquez votre activité.')).toBeTruthy();
+    fireEvent.change(screen.getByLabelText('Activité *'), { target: { value: 'artisan' } });
+    submitRegister();
+    expect(await screen.findByText('La raison sociale est requise.')).toBeTruthy();
+    expect(auth.signUp).not.toHaveBeenCalled();
+
+    const fill = (label: string, value: string) =>
+      fireEvent.change(screen.getByLabelText(label), { target: { value } });
+    fill('Raison sociale *', ' Dupont  Carrelage ');
+    fill('SIRET *', '732 829 320 00074');
+    fill('Adresse *', '12 rue des Lilas');
+    fill('Code postal *', '69003');
+    fill('Ville *', 'Lyon');
+    submitRegister();
+    await screen.findByTestId('confirmation-sent');
+    expect(auth.signUp.mock.calls[0]![0].options.data).toMatchObject({
+      profile_type: 'artisan',
+      company_name: 'Dupont Carrelage',
+      siret: '73282932000074',
+      vat_number: null,
+      address_line: '12 rue des Lilas',
+      postal_code: '69003',
+      city: 'Lyon',
+    });
+  });
+
+  it('professionnel : SIRET invalide refusé', async () => {
+    render(<AuthPage />);
+    fillRegister('Professionnel');
+    fireEvent.change(screen.getByLabelText('Activité *'), { target: { value: 'negoce' } });
+    fireEvent.change(screen.getByLabelText('Raison sociale *'), {
+      target: { value: 'Négoce Sud' },
+    });
+    fireEvent.change(screen.getByLabelText('SIRET *'), { target: { value: '123' } });
+    submitRegister();
+    expect(await screen.findByText(/SIRET doit comporter 14 chiffres/)).toBeTruthy();
+  });
 });
 
 describe('inscription', () => {

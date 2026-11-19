@@ -61,5 +61,11 @@ export function useProfileForm<K extends keyof EditableProfile>(
     }
   };
 
-  return { draft, set, save, state, error, fieldErrors, dirty };
+  /** Erreur de validation propre à l'appelant (champ hors du brouillon, ex. choix en cours) */
+  const fail = (message: string) => {
+    setState('error');
+    setError(message);
+  };
+
+  return { draft, set, save, fail, state, error, fieldErrors, dirty };
 }
