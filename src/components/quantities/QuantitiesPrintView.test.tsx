@@ -201,6 +201,36 @@ describe('QuantitiesPrintView — synthèse', () => {
     ]);
   });
 
+  it('cartons et plinthes dans la liste de commande', () => {
+    (analyzeQuantities as ReturnType<typeof vi.fn>).mockReturnValue({
+      ...mockResult,
+      boxes: { perBox: 4, count: 17, boxArea: 1_440_000 },
+      skirting: { included: true, length: 13_600, pieceLength: 600, pieces: 25, margin: 0.1 },
+    });
+    view();
+    const rows = within(screen.getByTestId('print-order')).getAllByRole('row');
+    expect(rows[1]!.textContent).toBe(
+      'Carreaux 60,0 × 60,0 cmCartons de 4 (1,44 m²) · 66 carreaux, marge 5 % incluse17cartons',
+    );
+    expect(rows[5]!.textContent).toBe(
+      'Plinthes 60,0 cm13,6 m de murs, portes déduites · marge 10 % incluse25plinthes',
+    );
+    expect(
+      within(screen.getByTestId('print-key-figures')).getByText('Cartons à commander'),
+    ).toBeTruthy();
+    (analyzeQuantities as ReturnType<typeof vi.fn>).mockReturnValue(mockResult);
+  });
+
+  it('plinthes non cochées : pas de ligne plinthes', () => {
+    (analyzeQuantities as ReturnType<typeof vi.fn>).mockReturnValue({
+      ...mockResult,
+      skirting: { included: false, length: 13_600, pieceLength: 600, pieces: 25, margin: 0.1 },
+    });
+    view();
+    expect(within(screen.getByTestId('print-order')).getAllByRole('row')).toHaveLength(5);
+    (analyzeQuantities as ReturnType<typeof vi.fn>).mockReturnValue(mockResult);
+  });
+
   it('répartition par pièce avec renvoi de page', () => {
     view();
     const rows = within(screen.getByTestId('print-rooms')).getAllByRole('row');

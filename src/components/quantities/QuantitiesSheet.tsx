@@ -60,8 +60,12 @@ export const QuantitiesSheet = ({
         ) : (
           <>
             À commander :{' '}
-            <strong style={{ color: 'var(--accent)' }}>{result.toOrder} carreaux</strong> ·{' '}
-            {formatM2(result.roomArea)}
+            <strong style={{ color: 'var(--accent)' }}>
+              {result.boxes
+                ? `${result.boxes.count} carton${result.boxes.count > 1 ? 's' : ''}`
+                : `${result.toOrder} carreaux`}
+            </strong>{' '}
+            · {formatM2(result.roomArea)}
           </>
         )
       }

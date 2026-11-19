@@ -1,3 +1,4 @@
+import type { BoxesResult, SkirtingResult } from './packaging';
 // src/engine/quantities/types.ts
 import type { Tile } from '@/types/tiling';
 
@@ -73,4 +74,8 @@ export interface QuantityResult {
   roomArea: number;
   tiles: Tile[];
   consumables: Consumables;
+  /** Cartons à commander (si le conditionnement est renseigné) */
+  boxes?: BoxesResult;
+  /** Plinthes : longueur de murs et nombre de plinthes */
+  skirting?: SkirtingResult;
 }

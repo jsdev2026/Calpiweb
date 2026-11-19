@@ -343,15 +343,24 @@ export const QuantitiesPrintView = ({
     ['Surface à carreler', printM2(all.roomArea)],
     ['Carreaux posés', printNb(all.totalTiles)],
     ['dont coupes', printNb(all.cuts.length)],
-    ['Carreaux à commander', printNb(all.toOrder)],
+    all.boxes
+      ? ['Cartons à commander', printNb(all.boxes.count)]
+      : ['Carreaux à commander', printNb(all.toOrder)],
   ];
   const orderLines: { item: string; detail: string; qty: number; unit: string }[] = [
-    {
-      item: `Carreaux ${printCm(all.tileW).replace(' cm', '')} × ${printCm(all.tileH)}`,
-      detail: `Soit ${tileM2.toFixed(2).replace('.', ',')} m² · marge ${Math.round(all.margin * 100)} % incluse`,
-      qty: all.toOrder,
-      unit: 'carreaux',
-    },
+    all.boxes
+      ? {
+          item: `Carreaux ${printCm(all.tileW).replace(' cm', '')} × ${printCm(all.tileH)}`,
+          detail: `Cartons de ${all.boxes.perBox} (${printM2(all.boxes.boxArea)}) · ${printNb(all.toOrder)} carreaux, marge ${Math.round(all.margin * 100)} % incluse`,
+          qty: all.boxes.count,
+          unit: all.boxes.count > 1 ? 'cartons' : 'carton',
+        }
+      : {
+          item: `Carreaux ${printCm(all.tileW).replace(' cm', '')} × ${printCm(all.tileH)}`,
+          detail: `Soit ${tileM2.toFixed(2).replace('.', ',')} m² · marge ${Math.round(all.margin * 100)} % incluse`,
+          qty: all.toOrder,
+          unit: 'carreaux',
+        },
     {
       item: 'Mortier-colle',
       detail: `Sac de ${c.colle.bagSize} kg · ${c.colle.rendement.toFixed(1).replace('.', ',')} kg/m²`,
@@ -370,6 +379,16 @@ export const QuantitiesPrintView = ({
       qty: c.croisillons.bags,
       unit: c.croisillons.bags > 1 ? 'sachets' : 'sachet',
     },
+    ...(all.skirting?.included
+      ? [
+          {
+            item: `Plinthes ${printCm(all.skirting.pieceLength)}`,
+            detail: `${(all.skirting.length / 1000).toFixed(1).replace('.', ',')} m de murs, portes déduites · marge ${Math.round(all.skirting.margin * 100)} % incluse`,
+            qty: all.skirting.pieces,
+            unit: all.skirting.pieces > 1 ? 'plinthes' : 'plinthe',
+          },
+        ]
+      : []),
   ];
 
   return (
