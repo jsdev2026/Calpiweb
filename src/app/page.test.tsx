@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { PRICE_EXTRA_PROJECT, PRICE_PRO_MONTHLY } from '@/constants/pricing';
 
 vi.mock('@/components/landing/HeroDemo', () => ({ HeroDemo: () => <div /> }));
@@ -34,5 +34,17 @@ describe('page d’accueil — tarifs', () => {
     expect(recap.getAttribute('href')).toBe('#tarifs');
     expect(recap.textContent).toContain(PRICE_EXTRA_PROJECT);
     expect(recap.textContent).toContain(PRICE_PRO_MONTHLY);
+  });
+
+  it('tarifs particuliers TTC par défaut, professionnels HT au choix', () => {
+    render(<LandingPage />);
+    const tarifs = document.getElementById('tarifs')!;
+    const pro = () => within(tarifs).getByText(/(6,90|9,80) €/).parentElement!.textContent;
+    expect(pro()).toContain('6,90 €TTC / mois');
+    expect(within(screen.getByTestId('plan-unit')).getByText('TTC / projet')).toBeTruthy();
+    fireEvent.click(within(tarifs).getByRole('radio', { name: 'Professionnel' }));
+    expect(pro()).toContain('9,80 €HT / mois');
+    expect(within(screen.getByTestId('plan-unit')).getByText('HT / projet')).toBeTruthy();
+    expect(within(tarifs).getByText(/Prix hors taxes/)).toBeTruthy();
   });
 });

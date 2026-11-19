@@ -2,6 +2,8 @@
 
 import { create } from 'zustand';
 import { createClient } from '@/lib/supabase/client';
+import { accountTypeOf, type AccountType } from '@/lib/accountType';
+import type { ProfileType } from '@/types/profile';
 
 export interface AuthUser {
   id: string;
@@ -10,6 +12,8 @@ export interface AuthUser {
   plan: 'free' | 'pro';
   /** Crédits « +1 projet » achetés (profiles.project_credits). */
   projectCredits: number;
+  /** Compte particulier ou professionnel (détermine la grille de prix TTC / HT) */
+  accountType: AccountType;
 }
 
 interface UiState {
@@ -64,6 +68,7 @@ export const useUiStore = create<UiState>((set, get) => ({
         email: authUser.email ?? '',
         plan: profile?.plan === 'pro' ? 'pro' : 'free',
         projectCredits: (profile?.project_credits as number | null | undefined) ?? 0,
+        accountType: accountTypeOf(profile?.profile_type as ProfileType | null | undefined),
       },
     });
   },

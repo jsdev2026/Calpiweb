@@ -1,7 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { PRICE_EXTRA_PROJECT, PRICE_PRO_MONTHLY } from '@/constants/pricing';
+import { useState } from 'react';
+import { PRICE_EXTRA_PROJECT, PRICE_PRO_MONTHLY, pricesFor } from '@/constants/pricing';
+import type { AccountType } from '@/lib/accountType';
 import { HeroTry } from '@/components/landing/HeroTry';
 
 // ── Feature icons ─────────────────────────────────────────────────────────────
@@ -44,6 +46,9 @@ const IconQuant = () => (
 // ── Landing page ──────────────────────────────────────────────────────────────
 
 export default function LandingPage() {
+  // Grille de prix affichée dans la section Tarifs
+  const [audience, setAudience] = useState<AccountType>('particulier');
+  const grid = pricesFor(audience);
   return (
     <div
       className="flex min-h-screen flex-col"
@@ -512,6 +517,40 @@ export default function LandingPage() {
             >
               Simple. Transparent.
             </h2>
+            <div
+              role="radiogroup"
+              aria-label="Type de compte"
+              className="mt-6 inline-flex rounded-full p-1"
+              style={{ background: '#161B22', border: '1px solid rgba(255,255,255,0.1)' }}
+            >
+              {(
+                [
+                  ['particulier', 'Particulier'],
+                  ['professionnel', 'Professionnel'],
+                ] as const
+              ).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  role="radio"
+                  aria-checked={audience === value}
+                  onClick={() => setAudience(value)}
+                  className="rounded-full px-4 py-1.5 text-[13px] font-semibold transition-colors"
+                  style={
+                    audience === value
+                      ? { background: '#E8671A', color: '#fff' }
+                      : { color: 'rgba(255,255,255,0.6)' }
+                  }
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <p className="mt-3 text-[12.5px]" style={{ color: 'rgba(255,255,255,0.45)' }}>
+              {audience === 'professionnel'
+                ? 'Prix hors taxes, pour les entreprises (SIRET demandé à l’inscription).'
+                : 'Prix toutes taxes comprises.'}
+            </p>
           </div>
 
           <div className="mx-auto grid max-w-5xl gap-5 md:grid-cols-3">
@@ -654,9 +693,11 @@ export default function LandingPage() {
                     letterSpacing: '-0.5px',
                   }}
                 >
-                  {PRICE_EXTRA_PROJECT}
+                  {grid.extraProject}
                 </span>
-                <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>TTC / projet</span>
+                <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>
+                  {grid.tax} / projet
+                </span>
               </div>
               <ul className="mb-8 space-y-3">
                 {[
@@ -773,9 +814,11 @@ export default function LandingPage() {
                     letterSpacing: '-0.5px',
                   }}
                 >
-                  {PRICE_PRO_MONTHLY}
+                  {grid.monthly}
                 </span>
-                <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>TTC / mois</span>
+                <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>
+                  {grid.tax} / mois
+                </span>
               </div>
               <ul className="mb-8 space-y-3">
                 {[

@@ -2,7 +2,9 @@
 
 import { useRef, useState } from 'react';
 import { COMPANY_SIZES, MONTHLY_JOBS, type UserProfile } from '@/types/profile';
-import { clean, postalCodeError, siretError, vatError } from '@/lib/validation';
+import { clean } from '@/lib/validation';
+import { accountTypeOf, companyErrors, normalizeCompany } from '@/lib/accountType';
+import { CompanyFieldsForm } from './CompanyFieldsForm';
 import { profileDb } from '@/lib/supabase/profile';
 import {
   Field,
@@ -34,23 +36,14 @@ export const CompanyTab = ({
   profile: UserProfile;
   onSaved: () => Promise<void>;
 }) => {
+  const isPro = accountTypeOf(profile.profileType) === 'professionnel';
   const form = useProfileForm(
     profile,
     KEYS,
     onSaved,
+    (d) => companyErrors(d, isPro),
     (d) => ({
-      siret: siretError(d.siret ?? ''),
-      vatNumber: vatError(d.vatNumber ?? ''),
-      postalCode: postalCodeError(d.postalCode ?? ''),
-    }),
-    (d) => ({
-      ...d,
-      companyName: clean(d.companyName),
-      siret: clean(d.siret)?.replace(/\s|\./g, '') ?? null,
-      vatNumber: clean(d.vatNumber)?.replace(/\s/g, '').toUpperCase() ?? null,
-      addressLine: clean(d.addressLine),
-      postalCode: clean(d.postalCode),
-      city: clean(d.city),
+      ...normalizeCompany(d),
       interventionArea: clean(d.interventionArea),
       companySize: d.companySize || null,
       monthlyJobs: d.monthlyJobs || null,
@@ -159,56 +152,18 @@ export const CompanyTab = ({
 
       <Section
         title="Entreprise"
-        description="Ces informations apparaissent sur vos PDF et serviront à vos factures."
+        description={
+          isPro
+            ? 'Compte professionnel : raison sociale, SIRET et adresse obligatoires. Elles apparaissent sur vos PDF et serviront à vos factures.'
+            : 'Ces informations apparaissent sur vos PDF et serviront à vos factures.'
+        }
       >
-        <Field label="Raison sociale">
-          <TextInput
-            value={draft.companyName ?? ''}
-            onChange={(e) => set('companyName', e.target.value)}
-            autoComplete="organization"
-          />
-        </Field>
-        <Grid2>
-          <Field label="SIRET" error={fieldErrors.siret}>
-            <TextInput
-              inputMode="numeric"
-              value={draft.siret ?? ''}
-              onChange={(e) => set('siret', e.target.value)}
-              placeholder="14 chiffres"
-            />
-          </Field>
-          <Field label="N° de TVA intracommunautaire" error={fieldErrors.vatNumber}>
-            <TextInput
-              value={draft.vatNumber ?? ''}
-              onChange={(e) => set('vatNumber', e.target.value)}
-              placeholder="FR00123456789"
-            />
-          </Field>
-        </Grid2>
-        <Field label="Adresse">
-          <TextInput
-            value={draft.addressLine ?? ''}
-            onChange={(e) => set('addressLine', e.target.value)}
-            autoComplete="street-address"
-          />
-        </Field>
-        <div className="grid grid-cols-[120px_1fr] gap-4">
-          <Field label="Code postal" error={fieldErrors.postalCode}>
-            <TextInput
-              inputMode="numeric"
-              value={draft.postalCode ?? ''}
-              onChange={(e) => set('postalCode', e.target.value)}
-              autoComplete="postal-code"
-            />
-          </Field>
-          <Field label="Ville">
-            <TextInput
-              value={draft.city ?? ''}
-              onChange={(e) => set('city', e.target.value)}
-              autoComplete="address-level2"
-            />
-          </Field>
-        </div>
+        <CompanyFieldsForm
+          draft={draft}
+          set={(k, v) => set(k, v)}
+          errors={fieldErrors}
+          required={isPro}
+        />
       </Section>
 
       <Section title="Activité" description="Nous aide à adapter CaléPlan à votre métier.">
