@@ -180,6 +180,33 @@ body {
   }
 }
 
+/* « Cliquer pour tester » sur l'animation de la page d'accueil */
+@keyframes try-cta {
+  0% {
+    box-shadow:
+      0 6px 24px rgba(232, 103, 26, 0.5),
+      0 0 0 0 rgba(232, 103, 26, 0.55);
+  }
+  70% {
+    box-shadow:
+      0 6px 24px rgba(232, 103, 26, 0.5),
+      0 0 0 14px rgba(232, 103, 26, 0);
+  }
+  100% {
+    box-shadow:
+      0 6px 24px rgba(232, 103, 26, 0.5),
+      0 0 0 0 rgba(232, 103, 26, 0);
+  }
+}
+.try-cta {
+  animation: try-cta 2s ease-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .try-cta {
+    animation: none;
+  }
+}
+
 .btn-primary {
   display: inline-flex;
   align-items: center;
