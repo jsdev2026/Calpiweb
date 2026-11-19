@@ -177,6 +177,11 @@ function AuthPageInner() {
   const [resendError, setResendError] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(0);
 
+  // Lien direct vers l'inscription (ex. depuis l'essai de la page d'accueil)
+  useEffect(() => {
+    if (searchParams.get('step') === 'register') setStep('register');
+  }, [searchParams]);
+
   useEffect(() => {
     if (searchParams.get('error') === 'confirmation_failed') {
       setStep('login');

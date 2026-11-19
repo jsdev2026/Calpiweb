@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { PRICE_EXTRA_PROJECT, PRICE_PRO_MONTHLY } from '@/constants/pricing';
-import { HeroDemo } from '@/components/landing/HeroDemo';
+import { HeroTry } from '@/components/landing/HeroTry';
 
 // ── Feature icons ─────────────────────────────────────────────────────────────
 
@@ -333,9 +333,9 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Right — démonstration animée du produit */}
+            {/* Right — démonstration animée, puis essai au clic */}
             <div className="md:w-[52%]">
-              <HeroDemo />
+              <HeroTry />
             </div>
           </div>
         </div>

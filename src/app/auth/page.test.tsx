@@ -9,9 +9,10 @@ const auth = vi.hoisted(() => ({
 }));
 
 vi.mock('@/lib/supabase/client', () => ({ createClient: () => ({ auth }) }));
+const search = vi.hoisted(() => ({ params: new URLSearchParams() }));
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => search.params,
 }));
 
 import AuthPage from './page';
@@ -34,9 +35,16 @@ const submitRegister = () =>
 
 beforeEach(() => {
   Object.values(auth).forEach((f) => f.mockReset());
+  search.params = new URLSearchParams();
 });
 
 describe('inscription', () => {
+  it('lien direct ?step=register (essai de la page d’accueil) : ouvre la création de compte', () => {
+    search.params = new URLSearchParams('step=register&from=essai');
+    render(<AuthPage />);
+    expect(screen.getByRole('heading', { name: 'Créer un compte' })).toBeTruthy();
+  });
+
   it('adresse déjà inscrite : message clair et accès à la connexion', async () => {
     auth.signUp.mockResolvedValue({
       data: { user: { id: 'x', identities: [] }, session: null },
