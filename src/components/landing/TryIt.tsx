@@ -16,7 +16,6 @@ import {
   addPoint,
   distance,
   formatLength,
-  polygonArea,
   snapPoint,
 } from './tryItGeometry';
 
@@ -70,6 +69,26 @@ const Chip = ({
   >
     {children}
     {locked && <Lock size={10} aria-hidden />}
+  </button>
+);
+
+/**
+ * Surface floutée : la vraie valeur n'est jamais écrite dans la page (c'est un faux nombre
+ * qui est flouté) ; un clic renvoie vers l'inscription.
+ */
+export const BlurredArea = ({ onClick }: { onClick: () => void }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    aria-label="Surface (inscription requise)"
+    title="Créez un compte gratuit pour voir la surface"
+    data-testid="blurred-area"
+    className="inline-flex items-center gap-1 align-baseline"
+  >
+    <span aria-hidden className="select-none" style={{ filter: 'blur(4px)' }}>
+      88,88 m²
+    </span>
+    <Lock size={10} aria-hidden style={{ color: MUTED }} />
   </button>
 );
 
@@ -145,7 +164,7 @@ export const TryIt = ({ onClose }: { onClose?: () => void }) => {
   const nearFirst =
     !!cursor && !!first && points.length >= 3 && distance(cursor, first) <= CLOSE_RADIUS;
   const hint = closed
-    ? `${HINTS.done} · ${(polygonArea(points) / 1e6).toFixed(2).replace('.', ',')} m²`
+    ? HINTS.done
     : warning
       ? HINTS[warning]
       : points.length === 0
@@ -155,7 +174,6 @@ export const TryIt = ({ onClose }: { onClose?: () => void }) => {
           : HINTS.drawing;
   const pts = (p: Point[]) => p.map((q) => `${q.x},${q.y}`).join(' ');
   const label = 170;
-  const tileArea = TRY_CONFIG.width * TRY_CONFIG.height;
 
   return (
     <div
@@ -262,17 +280,18 @@ export const TryIt = ({ onClose }: { onClose?: () => void }) => {
                       {result.toOrder}
                     </div>
                     <div className="text-[10.5px]" style={{ color: TEXT }}>
-                      carreaux 60×60 ·{' '}
-                      {((result.toOrder * tileArea) / 1e6).toFixed(2).replace('.', ',')} m²
+                      carreaux 60×60 · <BlurredArea onClick={signup} />
                     </div>
                   </div>
                   <dl className="mt-2 space-y-1 text-[11px]" style={{ color: MUTED }}>
-                    {[
-                      ['Surface', `${(result.roomArea / 1e6).toFixed(2).replace('.', ',')} m²`],
-                      ['Carreaux entiers', String(result.wholeCount)],
-                      ['Carreaux coupés', String(result.cuts.length)],
-                      ['Marge', `${Math.round(result.margin * 100)} %`],
-                    ].map(([k, v]) => (
+                    {(
+                      [
+                        ['Surface', <BlurredArea key="surface" onClick={signup} />],
+                        ['Carreaux entiers', String(result.wholeCount)],
+                        ['Carreaux coupés', String(result.cuts.length)],
+                        ['Marge', `${Math.round(result.margin * 100)} %`],
+                      ] as [string, React.ReactNode][]
+                    ).map(([k, v]) => (
                       <div key={k} className="flex justify-between">
                         <dt>{k}</dt>
                         <dd className="font-semibold" style={{ color: TEXT }}>
