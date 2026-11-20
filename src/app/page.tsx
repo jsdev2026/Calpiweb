@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { PRICE_EXTRA_PROJECT, PRICE_PRO_MONTHLY, pricesFor } from '@/constants/pricing';
 import type { AccountType } from '@/lib/accountType';
 import { HeroTry } from '@/components/landing/HeroTry';
+import { LandingFaq, StructuredData } from '@/components/landing/seo';
 
 // ── Feature icons ─────────────────────────────────────────────────────────────
 
@@ -882,6 +883,10 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* ── FAQ (référencement : décrite aussi dans les données structurées) ── */}
+      <LandingFaq />
+      <StructuredData />
 
       {/* ── Footer ───────────────────────────────────────────────────────────── */}
       <footer style={{ background: '#06070A', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
