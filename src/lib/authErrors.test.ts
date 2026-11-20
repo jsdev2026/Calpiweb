@@ -36,4 +36,24 @@ describe('authErrorMessage', () => {
       /Trop de tentatives/,
     );
   });
+
+  it('erreurs serveur : e-mail non envoyé, compte non enregistré', () => {
+    expect(
+      authErrorMessage({
+        code: 'unexpected_failure',
+        message: 'Error sending confirmation email',
+        status: 500,
+      }),
+    ).toMatch(/e-mail n’a pas pu être envoyé.*contact@caleplan.com/);
+    expect(
+      authErrorMessage({ code: undefined, message: 'Error sending recovery email', status: 500 }),
+    ).toMatch(/e-mail n’a pas pu être envoyé/);
+    expect(
+      authErrorMessage({
+        code: 'unexpected_failure',
+        message: 'Database error saving new user',
+        status: 500,
+      }),
+    ).toMatch(/compte n’a pas pu être enregistré/);
+  });
 });
