@@ -4,3 +4,5 @@ coverage
 pnpm-lock.yaml
 package-lock.json
 yarn.lock
+# Modèles d’e-mails Supabase : HTML pour messageries, gardé tel quel (variables {{ … }})
+supabase/email-templates/*.html
