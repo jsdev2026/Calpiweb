@@ -44,5 +44,11 @@ export function authErrorMessage(error: Pick<AuthError, 'code' | 'message' | 'st
   }
   if (error.status === 429)
     return 'Trop de tentatives. Patientez quelques minutes avant de réessayer.';
+  // Erreurs serveur de Supabase : seul le texte (en anglais) dit ce qui a échoué
+  const msg = (error.message ?? '').toLowerCase();
+  if (msg.includes('sending') && msg.includes('email'))
+    return 'L’e-mail n’a pas pu être envoyé pour le moment. Réessayez dans quelques minutes ; si le problème persiste, écrivez-nous à contact@caleplan.com.';
+  if (msg.includes('database error'))
+    return 'Votre compte n’a pas pu être enregistré. Réessayez dans un instant ; si le problème persiste, écrivez-nous à contact@caleplan.com.';
   return 'Une erreur est survenue. Réessayez dans un instant.';
 }
