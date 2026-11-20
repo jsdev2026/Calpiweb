@@ -208,6 +208,11 @@ function AuthPageInner() {
       setError(
         'Le lien de confirmation est invalide ou a expiré. Si vous l’avez ouvert sur un autre appareil, votre adresse est peut-être déjà confirmée : essayez de vous connecter.',
       );
+    } else if (searchParams.get('error') === 'reset_failed') {
+      setStep('forgot');
+      setError(
+        'Ce lien de réinitialisation est invalide ou a expiré. Demandez-en un nouveau ci-dessous (ouvrez-le dans le même navigateur que celui de la demande).',
+      );
     }
   }, [searchParams]);
 
@@ -348,7 +353,9 @@ function AuthPageInner() {
     setLoading(true);
     setError(null);
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: `${window.location.origin}/auth?step=reset`,
+      // Le lien de l'e-mail passe par /auth/callback (échange du code), puis la page de
+      // choix du nouveau mot de passe
+      redirectTo: `${window.location.origin}/auth/callback?next=/auth/nouveau-mot-de-passe`,
     });
     if (error) {
       setError(authErrorMessage(error));

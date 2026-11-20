@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Bienvenue sur CaléPlan</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f5f7;">
+<!-- Aperçu affiché dans la liste des messages -->
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;">Confirmez votre adresse pour activer votre compte CaléPlan.</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f4f5f7;">
+  <tr>
+    <td align="center" style="padding:32px 16px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;">
+        <tr><td style="padding:0 4px 18px;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+  <tr>
+    <td style="width:30px;height:30px;background:#E8671A;border-radius:7px;text-align:center;vertical-align:middle;">
+      <table role="presentation" cellpadding="0" cellspacing="2" border="0" style="margin:0 auto;border-collapse:separate;">
+        <tr><td style="width:7px;height:7px;background:#ffffff;border-radius:2px;font-size:0;line-height:0;">&nbsp;</td><td style="width:7px;height:7px;background:#ffffff;opacity:.65;border-radius:2px;font-size:0;line-height:0;">&nbsp;</td></tr>
+        <tr><td style="width:7px;height:7px;background:#ffffff;opacity:.65;border-radius:2px;font-size:0;line-height:0;">&nbsp;</td><td style="width:7px;height:7px;background:#ffffff;border-radius:2px;font-size:0;line-height:0;">&nbsp;</td></tr>
+      </table>
+    </td>
+    <td style="padding-left:10px;font-family:Arial,Helvetica,sans-serif;font-size:17px;font-weight:700;color:#111827;">Calé<span style="color:#E8671A;">Plan</span></td>
+  </tr>
+</table></td></tr>
+        <tr>
+          <td style="background:#ffffff;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;">
+            <div style="height:4px;background:#E8671A;font-size:0;line-height:0;">&nbsp;</div>
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td style="padding:30px 32px 8px;font-family:Arial,Helvetica,sans-serif;">
+                  <h1 style="margin:0 0 18px;font-family:Georgia,'Times New Roman',serif;font-size:24px;line-height:1.25;font-weight:400;color:#111827;">Bienvenue sur CaléPlan</h1>
+                  <p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:#374151;">{{ if .Data.first_name }}Bonjour {{ .Data.first_name }},{{ else }}Bonjour,{{ end }}</p>
+                  <p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:#374151;">Merci pour votre inscription. Il ne reste qu’une étape : confirmez votre adresse e-mail pour activer votre compte.</p><p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:#374151;">Vous pourrez ensuite tracer vos pièces, calepiner et obtenir votre liste de commande en quelques minutes.</p>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding:10px 32px 6px;">
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                      <td style="border-radius:10px;background:#E8671A;">
+                        <a href="{{ .ConfirmationURL }}" target="_blank" style="display:inline-block;padding:13px 26px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:10px;">Confirmer mon adresse</a>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding:18px 32px 28px;font-family:Arial,Helvetica,sans-serif;">
+                  <p style="margin:0 0 8px;font-size:13.5px;line-height:1.55;color:#6b7280;">Ce lien est valable une durée limitée et ne peut servir qu’une fois.</p>
+                  <p style="margin:18px 0 0;font-size:12.5px;line-height:1.55;color:#6b7280;">Le bouton ne fonctionne pas ? Copiez ce lien dans votre navigateur :<br><a href="{{ .ConfirmationURL }}" style="color:#E8671A;word-break:break-all;">{{ .ConfirmationURL }}</a></p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:18px 8px 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.6;color:#6b7280;text-align:center;">
+            Vous recevez cet e-mail car un compte CaléPlan a été créé avec cette adresse. Si ce n’est pas vous, ignorez-le simplement.<br>
+            CaléPlan — calepinage et quantitatif de carrelage · <a href="https://www.caleplan.com" style="color:#6b7280;">www.caleplan.com</a><br>
+            Une question ? <a href="mailto:contact@caleplan.com" style="color:#6b7280;">contact@caleplan.com</a>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>
