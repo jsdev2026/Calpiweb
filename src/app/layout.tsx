@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import localFont from 'next/font/local';
 import { ThemeProvider } from '@/components/ThemeProvider';
+import { HOME_DESCRIPTION, HOME_TITLE, SITE_NAME, SITE_URL } from '@/constants/site';
 import './globals.css';
 
 // Polices auto-hébergées (Fontsource) : le build ne dépend plus de Google Fonts,
@@ -37,8 +38,30 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'CaléPlan — Calepinage professionnel',
-  description: 'Application de calepinage carrelage pour professionnels du bâtiment',
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: `${HOME_TITLE} | ${SITE_NAME}`,
+    // Pages internes : « Mes projets | CaléPlan »
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: HOME_DESCRIPTION,
+  applicationName: SITE_NAME,
+  alternates: { canonical: '/' },
+  openGraph: {
+    type: 'website',
+    locale: 'fr_FR',
+    siteName: SITE_NAME,
+    url: '/',
+    title: `${HOME_TITLE} | ${SITE_NAME}`,
+    description: HOME_DESCRIPTION,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: `${HOME_TITLE} | ${SITE_NAME}`,
+    description: HOME_DESCRIPTION,
+  },
+  robots: { index: true, follow: true },
+  formatDetection: { telephone: false },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
